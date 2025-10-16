@@ -97,19 +97,31 @@ export default function AddNomination() {
             placeholder="prasath16@srm.com"
             className="w-full mt-1 border rounded px-3 py-2 mb-3"
           />
-           <div className="mb-6">
-          <Label.Root className="block text-sm font-medium">Contest Type</Label.Root>
-          <Select.Root>
-            <Select.Trigger className="w-full mt-1 border rounded px-3 py-2">
-              <Select.Value placeholder="Innovation" />
-            </Select.Trigger>
-            <Select.Content className="bg-white border rounded shadow">
-              <Select.Item value="innovation" className="px-3 py-2">
-                Innovation
-              </Select.Item>
-            </Select.Content>
-          </Select.Root>
-        </div>
+         <div className="mb-6">
+  <label className="block text-sm font-medium text-gray-700 mb-2">
+    Contest Type
+  </label>
+  <select
+    name="contestType"
+    // value={form.contestType}
+    // onChange={handleChange}
+    className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent appearance-none bg-white"
+    style={{
+      backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3E%3Cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3E%3C/svg%3E")`,
+      backgroundPosition: "right 0.5rem center",
+      backgroundRepeat: "no-repeat",
+      backgroundSize: "1.5em 1.5em",
+      paddingRight: "2.5rem",
+    }}
+  >
+    <option value="">Select Contest Type</option>
+    <option value="innovation">Innovation</option>
+    <option value="service">Service Excellence</option>
+    <option value="talent">Talent</option>
+    <option value="leadership">Leadership</option>
+  </select>
+</div>
+
         </div>
 
         {/* Referrals */}

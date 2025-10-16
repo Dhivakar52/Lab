@@ -1,9 +1,9 @@
-// src/components/PresidentUnitLevel/PresidentLevel.tsx
 import React, { useState } from 'react';
 import * as DropdownMenu from '@radix-ui/react-dropdown-menu';
 import { Menu } from 'lucide-react';
 import SearchComponent from '../SearchComponent';
 import FilterComponent from '../FilterComponent';
+import PresidentSidePanel from './PresidentSidePanel';
 
 interface Nominee {
   nominee: string;
@@ -24,13 +24,15 @@ const data: Nominee[] = [
   { nominee: 'Balaji', entity: 'SRM Research', category: 'Best Innovation', consolidatedScore: 86, presidentScore: 89, flag: '✔', finalStatus: 'Runner-up' },
 ];
 
-const statusColors: Record<Nominee['finalStatus'], string> = {
+const statusColors = {
   Winner: 'bg-blue-100 text-blue-800',
   'Runner-up': 'bg-gray-100 text-gray-800',
 };
 
 const PresidentLevel: React.FC = () => {
   const [search, setSearch] = useState('');
+  const [selectedNominee, setSelectedNominee] = useState<Nominee | null>(null);
+  const [isPanelOpen, setIsPanelOpen] = useState(false);
 
   const filteredData = data.filter(
     (item) =>
@@ -38,6 +40,11 @@ const PresidentLevel: React.FC = () => {
       item.entity.toLowerCase().includes(search.toLowerCase()) ||
       item.category.toLowerCase().includes(search.toLowerCase())
   );
+
+  const handleView = (nominee: Nominee) => {
+    setSelectedNominee(nominee);
+    setIsPanelOpen(true);
+  };
 
   return (
     <div className="p-6 m-5 bg-white rounded-xl shadow-md">
@@ -55,14 +62,11 @@ const PresidentLevel: React.FC = () => {
         <table className="min-w-full border-collapse table-auto">
           <thead className="bg-gray-100">
             <tr>
-              <th className="px-6 py-3 text-left text-sm font-semibold text-gray-600">Nominee</th>
-              <th className="px-6 py-3 text-left text-sm font-semibold text-gray-600">Entity</th>
-              <th className="px-6 py-3 text-left text-sm font-semibold text-gray-600">Category</th>
-              <th className="px-6 py-3 text-left text-sm font-semibold text-gray-600">Consolidated Avg Score</th>
-              <th className="px-6 py-3 text-left text-sm font-semibold text-gray-600">President Score</th>
-              <th className="px-6 py-3 text-left text-sm font-semibold text-gray-600">Flag</th>
-              <th className="px-6 py-3 text-left text-sm font-semibold text-gray-600">Final Status</th>
-              <th className="px-6 py-3 text-left text-sm font-semibold text-gray-600">Actions</th>
+              {["Nominee", "Entity", "Category", "Consolidated Avg Score", "President Score", "Flag", "Final Status", "Actions"].map((header) => (
+                <th key={header} className="px-6 py-3 text-left text-sm font-semibold text-gray-600">
+                  {header}
+                </th>
+              ))}
             </tr>
           </thead>
           <tbody className="divide-y divide-gray-100">
@@ -85,7 +89,12 @@ const PresidentLevel: React.FC = () => {
                       <Menu className="w-5 h-5 text-blue-500" />
                     </DropdownMenu.Trigger>
                     <DropdownMenu.Content className="bg-white shadow-md rounded-md p-2">
-                      <DropdownMenu.Item className="px-2 py-1 hover:bg-gray-100 cursor-pointer">View</DropdownMenu.Item>
+                      <DropdownMenu.Item
+                        onClick={() => handleView(item)}
+                        className="px-2 py-1 hover:bg-gray-100 cursor-pointer"
+                      >
+                        View
+                      </DropdownMenu.Item>
                       <DropdownMenu.Item className="px-2 py-1 hover:bg-gray-100 cursor-pointer">Approve</DropdownMenu.Item>
                       <DropdownMenu.Item className="px-2 py-1 hover:bg-gray-100 cursor-pointer">Reject</DropdownMenu.Item>
                     </DropdownMenu.Content>
@@ -96,6 +105,12 @@ const PresidentLevel: React.FC = () => {
           </tbody>
         </table>
       </div>
+
+      <PresidentSidePanel
+        isOpen={isPanelOpen}
+        onClose={() => setIsPanelOpen(false)}
+        nominee={selectedNominee}
+      />
     </div>
   );
 };

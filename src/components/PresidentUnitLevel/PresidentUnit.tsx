@@ -3,6 +3,7 @@ import * as DropdownMenu from '@radix-ui/react-dropdown-menu';
 import { Menu } from 'lucide-react';
 import SearchComponent from '../SearchComponent';
 import FilterComponent from '../FilterComponent';
+import PresidentUnitPanel from './PresidentUnitPanel'; 
 
 interface Nominee {
   nominee: string;
@@ -30,6 +31,7 @@ const statusColors: Record<Nominee['finalStatus'], string> = {
 
 const PresidentUnit: React.FC = () => {
   const [search, setSearch] = useState('');
+  const [selectedNominee, setSelectedNominee] = useState<Nominee | null>(null);
 
   const filteredData = data.filter(
     (item) =>
@@ -39,7 +41,7 @@ const PresidentUnit: React.FC = () => {
   );
 
   return (
-    <div className="p-6 m-5 bg-white rounded-xl shadow-md">
+    <div className="p-6 m-5 bg-white rounded-xl shadow-md relative">
       {/* Header */}
       <div className="flex flex-col sm:flex-row justify-between items-baseline sm:items-center mb-4 gap-3">
         <h2 className="text-xl font-bold">Nominations for Review</h2>
@@ -84,7 +86,12 @@ const PresidentUnit: React.FC = () => {
                       <Menu className="w-5 h-5 text-blue-500" />
                     </DropdownMenu.Trigger>
                     <DropdownMenu.Content className="bg-white shadow-md rounded-md p-2">
-                      <DropdownMenu.Item className="px-2 py-1 hover:bg-gray-100 cursor-pointer">View</DropdownMenu.Item>
+                      <DropdownMenu.Item
+                        className="px-2 py-1 hover:bg-gray-100 cursor-pointer"
+                        onClick={() => setSelectedNominee(item)}
+                      >
+                        View
+                      </DropdownMenu.Item>
                       <DropdownMenu.Item className="px-2 py-1 hover:bg-gray-100 cursor-pointer">Approve</DropdownMenu.Item>
                       <DropdownMenu.Item className="px-2 py-1 hover:bg-gray-100 cursor-pointer">Reject</DropdownMenu.Item>
                     </DropdownMenu.Content>
@@ -95,6 +102,9 @@ const PresidentUnit: React.FC = () => {
           </tbody>
         </table>
       </div>
+
+      {/* Panel */}
+      <PresidentUnitPanel nomineeData={selectedNominee} onClose={() => setSelectedNominee(null)} />
     </div>
   );
 };

@@ -1,9 +1,9 @@
-
-import React , {useState} from "react";
+import React, { useState } from "react";
 import * as DropdownMenu from "@radix-ui/react-dropdown-menu";
-import { Menu , Flag } from "lucide-react";
+import { Menu, Flag } from "lucide-react";
 import SearchComponent from "../SearchComponent";
 import FilterComponent from "../FilterComponent";
+import BusinessPanel from "./BusinessPanel"; 
 
 type Nominee = {
   name: string;
@@ -26,14 +26,24 @@ const data: Nominee[] = [
 ];
 
 const BusinessJury: React.FC = () => {
-  const [search, setSearch] = useState<string>('');
+  const [search, setSearch] = useState<string>("");
+  const [selectedNominee, setSelectedNominee] = useState<Nominee | null>(null);
+  const [isPanelOpen, setIsPanelOpen] = useState(false);
+
+  const filteredData = data.filter(
+    (nom) =>
+      nom.name.toLowerCase().includes(search.toLowerCase()) ||
+      nom.entity.toLowerCase().includes(search.toLowerCase()) ||
+      nom.category.toLowerCase().includes(search.toLowerCase())
+  );
+
   return (
-    <div className="p-6 m-5 bg-white rounded-xl shadow-md">
+    <div className="p-6 m-5 bg-white rounded-xl shadow-md relative">
       {/* Header */}
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-4 gap-3">
         <h2 className="text-xl font-bold text-gray-800">Business Jury Evaluation</h2>
         <div className="flex gap-2 w-full sm:w-auto">
-             <SearchComponent search={search} setSearch={setSearch} />
+          <SearchComponent search={search} setSearch={setSearch} />
           <FilterComponent />
         </div>
       </div>
@@ -54,7 +64,7 @@ const BusinessJury: React.FC = () => {
             </tr>
           </thead>
           <tbody>
-            {data.map((nominee, idx) => (
+            {filteredData.map((nominee, idx) => (
               <tr
                 key={idx}
                 className={
@@ -80,7 +90,13 @@ const BusinessJury: React.FC = () => {
                       <Menu className="w-5 h-5 text-blue-500" />
                     </DropdownMenu.Trigger>
                     <DropdownMenu.Content className="bg-white shadow-md rounded-md p-2">
-                      <DropdownMenu.Item className="px-2 py-1 hover:bg-gray-100 cursor-pointer">
+                      <DropdownMenu.Item
+                        className="px-2 py-1 hover:bg-gray-100 cursor-pointer"
+                        onClick={() => {
+                          setSelectedNominee(nominee);
+                          setIsPanelOpen(true);
+                        }}
+                      >
                         View
                       </DropdownMenu.Item>
                       <DropdownMenu.Item className="px-2 py-1 hover:bg-gray-100 cursor-pointer">
@@ -97,6 +113,13 @@ const BusinessJury: React.FC = () => {
           </tbody>
         </table>
       </div>
+
+      {/* ✅ Right-Side Panel */}
+      <BusinessPanel
+        isOpen={isPanelOpen}
+        onClose={() => setIsPanelOpen(false)}
+        nominee={selectedNominee}
+      />
     </div>
   );
 };
