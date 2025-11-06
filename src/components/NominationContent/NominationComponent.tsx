@@ -4,68 +4,10 @@ import NominationTable from './NominationTable';
 import  type Nomination  from '../../dataTypes/nomination';
 import * as Tabs from '@radix-ui/react-tabs';
 import {  useNavigate } from "react-router-dom";
+import OtherNominationTable from "./OtherNominationTable"
 
 
 
-// Sample data
-const nominations: Nomination[] = [
-  {
-    id: 'NOM-00123',
-    nominee: 'Ravi Kumar',
-    entity: 'SRMAP',
-    category: 'Business Excellence',
-    status: 'Pending',
-    progress: 'Stage 2'
-  },
-  {
-    id: 'NOM-00123',
-    nominee: 'Ayesha Thomas',
-    entity: 'SRM Hospital',
-    category: 'Service Excellence',
-    status: 'Approved',
-    progress: 'Stage 3'
-  },
-  {
-    id: 'NOM-00123',
-    nominee: 'Varun Mishra',
-    entity: 'SRM Tech',
-    category: 'Innovation',
-    status: 'Under Review',
-    progress: 'Stage 1'
-  },
-  {
-    id: 'NOM-00123',
-    nominee: 'Priya Das',
-    entity: 'SRMAP',
-    category: 'Leadership',
-    status: 'Rejected',
-    progress: 'Stage 2'
-  },
-  {
-    id: 'NOM-00123',
-    nominee: 'Arjun Nair',
-    entity: 'SRM Research',
-    category: 'Team Excellence',
-    status: 'Approved',
-    progress: 'Stage 3'
-  },
-  {
-    id: 'NOM-00123',
-    nominee: 'Arjun Nair',
-    entity: 'SRM Research',
-    category: 'Team Excellence',
-    status: 'Approved',
-    progress: 'Stage 3'
-  },
-  {
-    id: 'NOM-00123',
-    nominee: 'Arjun Nair',
-    entity: 'SRM Research',
-    category: 'Team Excellence',
-    status: 'Approved',
-    progress: 'Stage 3'
-  }
-];
 const NominationComponent = () => {
     // const [activeTab, setActiveTab] = React.useState<'my' | 'others'>('my');
 
@@ -102,12 +44,12 @@ const NominationComponent = () => {
      <FilterComponent/>
   </div>
            
-          <NominationTable nominations={nominations} />
+          <NominationTable  />
         </Tabs.Content>
 
         <Tabs.Content value="form" >
             <FilterComponent/>
-        <NominationTable nominations={nominations} />
+        <OtherNominationTable  />
         </Tabs.Content>
         </div>
         

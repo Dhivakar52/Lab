@@ -1,4 +1,4 @@
-<<<<<<< HEAD
+
 # React + TypeScript + Vite
 
 This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
@@ -69,7 +69,9 @@ export default tseslint.config([
 
 1. npm i react-router-dom
 2. npx shadcn@latest init
-=======
+3. npm i axios
+4. npm install @tanstack/react-table
+
 # ExcellenceUI
 ExcellenceUI
->>>>>>> d88803dc72a41ed4a7dc6e3e65b77b327fd9f32e
+
