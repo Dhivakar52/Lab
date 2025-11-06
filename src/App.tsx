@@ -24,6 +24,7 @@ import Login from './pages/auth/Login/LoginPage';
 import ProtectedRoute from './components/ProtectedRoute';
 import type { UserRole } from './dataTypes/roles';
 import { ROLE_PAGES } from './dataTypes/roles';
+import { AuthProvider } from './components/ContextAPI/AuthContext.tsx';
 
 // -------------------------
 // Main page components
@@ -95,6 +96,7 @@ const App: React.FC = () => {
   if (userRole === undefined) return null; // wait for role
 
   return (
+    <AuthProvider>
     <Router>
       <Routes>
         {/* Public login route */}
@@ -154,6 +156,7 @@ const App: React.FC = () => {
         </Route>
       </Routes>
     </Router>
+    </AuthProvider>
   );
 };
 

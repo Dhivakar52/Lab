@@ -14,7 +14,7 @@ import type {
 import { Menu } from "lucide-react";
 import { Outlet } from "react-router-dom";
 import { useAuth } from "../ContextAPI/AuthContext";
-import NominationDetailsModal from "./NominationDetailsModal ";
+// import NominationDetailsModal from "./NominationDetailsModal";
 
 interface Nomination {
   TotalRowCount: number;
@@ -43,7 +43,7 @@ const NominationTable: React.FC = () => {
   useEffect(() => {
     const fetchNominations = async () => {
       try {
-        const res = await axios.get(`${apiUrl}/api/nominations/${userId}`, {
+        const res = await axios.get(`${apiUrl}/api/nominations`, {
           headers: { Authorization: `Bearer ${authToken}` },
         });
         setData(res.data);
@@ -198,26 +198,13 @@ const NominationTable: React.FC = () => {
       </div>
 
       {/* 🔍 Modal */}
-      {selectedNomination && (
+      {/* {selectedNomination && (
         <NominationDetailsModal
           isOpen={modalOpen}
           onClose={() => setModalOpen(false)}
-          // data={selectedNomination}
-            data={{
-      nominationId: selectedNomination.NominationID.toString(),
-      nominee: selectedNomination.Nominee,
-      entity: selectedNomination.Tenant,
-      category: selectedNomination.AwardCategory,
-      nominatedBy: selectedNomination.NominatedBy,
-      submissionDate: new Date().toLocaleDateString(), // or actual date if available
-      contestType: selectedNomination.NominationCycleName,
-      status: selectedNomination.SelfNomination === "Yes" ? "Approved" : "Pending",
-      managerEmail: "manager@example.com", 
-      referrals: [],
-      description: selectedNomination.Description,
-    }}
+          data={selectedNomination}
         />
-      )}
+      )} */}
 
       <Outlet />
     </>

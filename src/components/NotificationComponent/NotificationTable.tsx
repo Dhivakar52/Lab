@@ -1,90 +1,191 @@
-import React from "react";
+import React, { useEffect, useMemo, useState } from "react";
+import axios from "axios";
+import {
+  useReactTable,
+  getCoreRowModel,
+  getPaginationRowModel,
+  getSortedRowModel,
+  getFilteredRowModel,
+  flexRender,
+
+} from "@tanstack/react-table";
+import type {
+  ColumnDef,
+} from "@tanstack/react-table";
 
 interface Notification {
-  title: string;
-  message: string;
-  time: string;
-  type: "Referral Request" | "New Referral Request" | "Nomination Approval Required" | "Nomination Approved";
+  TotalRowCount: number;
+  NotificationID: number;
+  ReferenceIdPK: number;
+  FromUser: string;
+  ToUser: string;
+  Title: string;
+  NotificationContent: string;
+  DeviceID: string | null;
+  DeviceToken: string | null;
+  IsSent: boolean;
+  SentAt: string | null;
+  IsRead: boolean | null;
+  ReadAt: string | null;
 }
 
-const notifications: Notification[] = [
-  {
-    title: "Referral Request",
-    message: "Vijay Kumar has requested your referral for the Innovation category.",
-    time: "2 minutes ago",
-    type: "Referral Request",
-  },
-  {
-    title: "New Referral Request",
-    message: "You have a new referral request from Karthik for UI/UX category.",
-    time: "10 minutes ago",
-    type: "New Referral Request",
-  },
-  {
-    title: "Nomination Approval Required",
-    message: "You need to approve a nomination for Vijay Kumar in Innovation category.",
-    time: "1 hour ago",
-    type: "Nomination Approval Required",
-  },
-  {
-    title: "Nomination Approved",
-    message: "Your nomination for Vijay Kumar (Innovation) has been approved by the Manager.",
-    time: "2 hours ago",
-    type: "Nomination Approved",
-  },
-];
 
-const getTypeColor = (type: string) => {
-  switch (type) {
-    case "Referral Request":
-      return "bg-blue-100 text-blue-700";
-    case "New Referral Request":
-      return "bg-purple-100 text-purple-700";
-    case "Nomination Approval Required":
-      return "bg-yellow-100 text-yellow-700";
-    case "Nomination Approved":
-      return "bg-green-100 text-green-700";
-    default:
-      return "bg-gray-100 text-gray-700";
-  }
-};
 
+const apiUrl = import.meta.env.VITE_API_URL;
 const NotificationTable: React.FC = () => {
+  const [data, setData] = useState<Notification[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [globalFilter, setGlobalFilter] = useState("");
+
+  useEffect(() => {
+    const fetchNotifications = async () => {
+      try {
+        const token = localStorage.getItem("authToken");
+        if (!token) throw new Error("No auth token found");
+
+        const res = await axios.get(`${apiUrl}/api/notificationlog`, {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+
+        setData(res.data);
+      } catch (err) {
+        console.error("❌ Error fetching notifications:", err);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchNotifications();
+  }, []);
+
+  const columns = useMemo<ColumnDef<Notification>[]>(
+    () => [
+      // {
+      //   header: "#",
+      //   cell: (info) => info.row.index + 1,
+      // },
+      { accessorKey: "NotificationID", header: "Notification ID" },
+      { accessorKey: "ReferenceIdPK", header: "Reference ID" },
+      { accessorKey: "FromUser", header: "From User" },
+      { accessorKey: "ToUser", header: "To User" },
+      { accessorKey: "Title", header: "Title" },
+      { accessorKey: "NotificationContent", header: "Content" },
+      {
+        accessorKey: "IsSent",
+        header: "Is Sent",
+        cell: (info) =>
+          info.getValue() ? (
+            <span className="text-green-600 font-medium">Yes</span>
+          ) : (
+            <span className="text-red-500 font-medium">No</span>
+          ),
+      },
+      {
+        accessorKey: "IsRead",
+        header: "Is Read",
+        cell: (info) =>
+          info.getValue() ? (
+            <span className="text-green-600 font-medium">Read</span>
+          ) : (
+            <span className="text-red-500 font-medium">Unread</span>
+          ),
+      },
+    ],
+    []
+  );
+
+  const table = useReactTable({
+    data,
+    columns,
+    state: { globalFilter },
+    onGlobalFilterChange: setGlobalFilter,
+    getCoreRowModel: getCoreRowModel(),
+    getSortedRowModel: getSortedRowModel(),
+    getFilteredRowModel: getFilteredRowModel(),
+    getPaginationRowModel: getPaginationRowModel(),
+  });
+
+  if (loading) {
+    return <div className="text-center py-6 text-gray-600">Loading notifications...</div>;
+  }
+
   return (
-    <div className="bg-white rounded-xl shadow-sm overflow-hidden m-6">
-      <div className="overflow-x-auto">
-        <table className="w-full border-collapse">
+    <div className="p-6">
+      {/* 🔍 Global Search */}
+      <div className="mb-4 flex justify-between items-center">
+        <input
+          value={globalFilter ?? ""}
+          onChange={(e) => setGlobalFilter(e.target.value)}
+          placeholder="Search notifications..."
+          className="border border-gray-300 rounded-md px-4 py-2 w-1/3 text-sm"
+        />
+      </div>
+
+      {/* 🧾 Table */}
+      <div className="overflow-x-auto bg-white shadow-md rounded-lg">
+        <table className="min-w-full border border-gray-200">
           <thead className="bg-gray-50">
-            <tr>
-              <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
-                Type
-              </th>
-              <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
-                Message
-              </th>
-              <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
-                Time
-              </th>
-            </tr>
-          </thead>
-          <tbody className="divide-y divide-gray-100">
-            {notifications.map((note, index) => (
-              <tr key={index} className="hover:bg-gray-50 transition-colors">
-                <td className="px-6 py-4 text-sm">
-                  <span
-                    className={`inline-flex px-3 py-1 text-xs font-semibold rounded-full ${getTypeColor(
-                      note.type
-                    )}`}
+            {table.getHeaderGroups().map((headerGroup) => (
+              <tr key={headerGroup.id}>
+                {headerGroup.headers.map((header) => (
+                  <th
+                    key={header.id}
+                    onClick={header.column.getToggleSortingHandler()}
+                    className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase cursor-pointer select-none"
                   >
-                    {note.type}
-                  </span>
-                </td>
-                <td className="px-6 py-4 text-sm text-gray-900">{note.message}</td>
-                <td className="px-6 py-4 text-sm text-gray-500">{note.time}</td>
+                    {flexRender(header.column.columnDef.header, header.getContext())}
+                    {{
+                      asc: " 🔼",
+                      desc: " 🔽",
+                    }[header.column.getIsSorted() as string] ?? null}
+                  </th>
+                ))}
               </tr>
             ))}
+          </thead>
+          <tbody className="divide-y divide-gray-100">
+            {table.getRowModel().rows.length ? (
+              table.getRowModel().rows.map((row) => (
+                <tr key={row.id} className="hover:bg-gray-50">
+                  {row.getVisibleCells().map((cell) => (
+                    <td key={cell.id} className="px-4 py-2 text-sm text-gray-800">
+                      {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                    </td>
+                  ))}
+                </tr>
+              ))
+            ) : (
+              <tr>
+                <td colSpan={columns.length} className="text-center py-6 text-gray-500">
+                  No notifications found
+                </td>
+              </tr>
+            )}
           </tbody>
         </table>
+      </div>
+
+      {/* 📄 Pagination Controls */}
+      <div className="flex items-center justify-between mt-4">
+        <div className="text-sm text-gray-600">
+          Page {table.getState().pagination.pageIndex + 1} of {table.getPageCount()}
+        </div>
+        <div className="space-x-2">
+          <button
+            onClick={() => table.previousPage()}
+            disabled={!table.getCanPreviousPage()}
+            className="px-3 py-1 bg-gray-200 rounded disabled:opacity-50"
+          >
+            Prev
+          </button>
+          <button
+            onClick={() => table.nextPage()}
+            disabled={!table.getCanNextPage()}
+            className="px-3 py-1 bg-gray-200 rounded disabled:opacity-50"
+          >
+            Next
+          </button>
+        </div>
       </div>
     </div>
   );
