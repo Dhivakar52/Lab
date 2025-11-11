@@ -46,38 +46,39 @@ const handleLoginTwo = async () => {
     
 
     if (response.ok) {
-      const { token, role, userid, username, email, refreshtoken } = data;
+      const { token, roleid, userid, username, email, refreshtoken } = data;
 
-      if (!role) {
+      if (!roleid) {
         alert('Your role is not defined. Please contact support.');
         return;
       }
 
       let role_user: UserRole;
 
-      switch (role) {
-        case "1":
-          role_user = USER_ROLES.USER;
-          break;
-        case "2":
-          role_user = USER_ROLES.MANAGER;
-          break;
-        case "3":
-          role_user = USER_ROLES.JURY;
-          break;
-        case "4":
-          role_user = USER_ROLES.PRESIDENT_UNIT;
-          break;
-        case "5":
-          role_user = USER_ROLES.PRESIDENT_LEVEL;
-          break;
-        case "6":
-          role_user = USER_ROLES.ADMIN;
-          break;
-        default:
-          alert('Invalid role. Please contact support.');
-          return;
-      }
+switch (Number(roleid)) {
+  case 1:
+    role_user = USER_ROLES.USER;
+    break;
+  case 2:
+    role_user = USER_ROLES.MANAGER;
+    break;
+  case 3:
+    role_user = USER_ROLES.JURY;
+    break;
+  case 4:
+    role_user = USER_ROLES.PRESIDENT_UNIT;
+    break;
+  case 5:
+    role_user = USER_ROLES.PRESIDENT_LEVEL;
+    break;
+  case 6:
+    role_user = USER_ROLES.ADMIN;
+    break;
+  default:
+    alert('Invalid role. Please contact support.');
+    return;
+}
+
 
       localStorage.setItem('authToken', token);
       localStorage.setItem('refreshToken', refreshtoken);

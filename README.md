@@ -71,6 +71,8 @@ export default tseslint.config([
 2. npx shadcn@latest init
 3. npm i axios
 4. npm install @tanstack/react-table
+5. npm install react-select
+
 
 # ExcellenceUI
 ExcellenceUI
