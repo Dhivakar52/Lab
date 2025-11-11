@@ -12,6 +12,7 @@ import {
 import type {
   ColumnDef,
 } from "@tanstack/react-table";
+import { useAuth } from "../ContextAPI/AuthContext";
 
 interface Notification {
   TotalRowCount: number;
@@ -32,10 +33,12 @@ interface Notification {
 
 
 const apiUrl = import.meta.env.VITE_API_URL;
+
 const NotificationTable: React.FC = () => {
   const [data, setData] = useState<Notification[]>([]);
   const [loading, setLoading] = useState(true);
   const [globalFilter, setGlobalFilter] = useState("");
+  const {  userId } = useAuth();
 
   useEffect(() => {
     const fetchNotifications = async () => {
@@ -43,7 +46,7 @@ const NotificationTable: React.FC = () => {
         const token = localStorage.getItem("authToken");
         if (!token) throw new Error("No auth token found");
 
-        const res = await axios.get(`${apiUrl}/api/notificationlog`, {
+        const res = await axios.get(`${apiUrl}/api/notificationlog?userID=${userId}`, {
           headers: { Authorization: `Bearer ${token}` },
         });
 
@@ -60,12 +63,12 @@ const NotificationTable: React.FC = () => {
 
   const columns = useMemo<ColumnDef<Notification>[]>(
     () => [
-      // {
-      //   header: "#",
-      //   cell: (info) => info.row.index + 1,
-      // },
-      { accessorKey: "NotificationID", header: "Notification ID" },
-      { accessorKey: "ReferenceIdPK", header: "Reference ID" },
+      {
+        header: "S.NO",
+        cell: (info) => info.row.index + 1,
+      },
+      // { accessorKey: "NotificationID", header: "Notification ID" },
+      // { accessorKey: "ReferenceIdPK", header: "Reference ID" },
       { accessorKey: "FromUser", header: "From User" },
       { accessorKey: "ToUser", header: "To User" },
       { accessorKey: "Title", header: "Title" },
@@ -111,7 +114,12 @@ const NotificationTable: React.FC = () => {
 
   return (
     <div className="p-6">
-      {/* 🔍 Global Search */}
+      
+
+      {/* 🧾 Table */}
+      <div className="overflow-x-auto bg-white shadow-md rounded-lg p-6">
+
+        {/* 🔍 Global Search */}
       <div className="mb-4 flex justify-between items-center">
         <input
           value={globalFilter ?? ""}
@@ -120,9 +128,6 @@ const NotificationTable: React.FC = () => {
           className="border border-gray-300 rounded-md px-4 py-2 w-1/3 text-sm"
         />
       </div>
-
-      {/* 🧾 Table */}
-      <div className="overflow-x-auto bg-white shadow-md rounded-lg">
         <table className="min-w-full border border-gray-200">
           <thead className="bg-gray-50">
             {table.getHeaderGroups().map((headerGroup) => (
@@ -163,9 +168,9 @@ const NotificationTable: React.FC = () => {
             )}
           </tbody>
         </table>
-      </div>
 
-      {/* 📄 Pagination Controls */}
+
+              {/* 📄 Pagination Controls */}
       <div className="flex items-center justify-between mt-4">
         <div className="text-sm text-gray-600">
           Page {table.getState().pagination.pageIndex + 1} of {table.getPageCount()}
@@ -187,6 +192,9 @@ const NotificationTable: React.FC = () => {
           </button>
         </div>
       </div>
+      </div>
+
+
     </div>
   );
 };
