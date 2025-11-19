@@ -4,9 +4,12 @@ import { Filter } from 'lucide-react';
 interface TabsProps {
   activeTab: 'Feeds' | 'My Lists';
   setActiveTab: (tab: 'Feeds' | 'My Lists') => void;
+   onFilterClick: () => void; 
 }
 
-const TabsSection: React.FC<TabsProps> = ({ activeTab, setActiveTab }) => (
+const TabsSection: React.FC<TabsProps> = ({ activeTab,
+  setActiveTab,
+  onFilterClick }) => (
 
 
 
@@ -21,7 +24,7 @@ const TabsSection: React.FC<TabsProps> = ({ activeTab, setActiveTab }) => (
 
     
   <div className="border-b border-gray-200">
-    <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between px-4 sm:px-6 py-4 space-y-3 sm:space-y-0">
+    <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between px-4 sm:px-6 py-4 space-y-3 sm:space-y-0 relative">
       <div className="flex space-x-6 sm:space-x-8 overflow-x-auto">
         {['Feeds', 'My Lists'].map((tab) => (
           <button
@@ -38,9 +41,13 @@ const TabsSection: React.FC<TabsProps> = ({ activeTab, setActiveTab }) => (
         ))}
       </div>
 
-      <div className="flex items-center justify-end sm:justify-start space-x-2 cursor-pointer hover:bg-gray-50 px-3 py-1 rounded">
-        <Filter className="w-4 h-4 text-gray-500" />
-        <span className="text-sm text-gray-600">Filter</span>
+      <div className="flex items-center justify-end sm:justify-start  space-x-2 cursor-pointer hover:bg-gray-50 px-3 py-1 rounded relatives">
+         {activeTab === "Feeds" && (
+        <button className='flex justify-between' onClick={onFilterClick}>
+          <Filter className="w-5 h-5 me-2 text-gray-600 cursor-pointer" /> <span className="text-sm text-gray-600">Filter</span>
+        </button>
+      )}
+        
       </div>
     </div>
   </div>

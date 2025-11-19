@@ -1,5 +1,5 @@
 // src/pages/auth/Login.tsx
-import {  useState } from "react";
+import {  useEffect, useState } from "react";
 import SrmLogo from "../../../assets/images/srm_login_logo.png";
 import TrophyImage from "../../../assets/images/login_cup_img.png";
 import loginBg from "../../../assets/images/login_left_img.png";
@@ -26,6 +26,10 @@ export default function Login({ setUserRole }: LoginProps) {
   const [showPassword, setShowPassword] = useState(false);
   const navigate = useNavigate();
 
+const handleForgotPassword = () => {
+  navigate("/forgot-password");
+};
+ 
 
 const handleLoginTwo = async () => {
   if (!email || !password) {
@@ -120,6 +124,9 @@ switch (Number(roleid)) {
 };
 
 
+// useEffect(() => {
+//   handleLoginTwo();
+// }, [handleLoginTwo]);
 
 
 
@@ -243,7 +250,7 @@ switch (Number(roleid)) {
               <input type="checkbox" className="w-4 h-4" />
               <span className="text-sm text-gray-600">Remember me</span>
             </label>
-            <a href="#" className="text-sm text-green-700 hover:underline">
+            <a href="#" className="text-sm text-green-700 hover:underline" onClick={handleForgotPassword}>
               Forgot Password?
             </a>
           </div>

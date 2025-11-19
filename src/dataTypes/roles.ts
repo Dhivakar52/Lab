@@ -11,8 +11,8 @@ export type UserRole = typeof USER_ROLES[keyof typeof USER_ROLES];
 
 
 export const ROLE_PAGES: Record<UserRole, string[]> = {
-  user: ['Home', 'Notifications', 'Self Nominations', 'My Nominations','Add Nomination'],
-  manager: ['Home', 'Notifications', 'Self Nominations', 'My Nominations', 'Approvals','Add Nomination'],
+  user: ['Home', 'Notifications', 'Self Nominations', 'My Nominations','Add Nomination','Testing'],
+  manager: ['Home', 'Notifications', 'Self Nominations', 'My Nominations', 'Approvals','Add Nomination','Testing'],
   jury: ['Home', 'Notifications', 'Self Nominations', 'My Nominations','Add Nomination', 'Approvals', 'Business Jury'],
   presidentUnit: ['Home', 'Notifications', 'Self Nominations', 'My Nominations','Add Nomination', 'Approvals', 'President Unit'],
   presidentLevel: ['President Level'],

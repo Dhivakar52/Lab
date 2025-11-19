@@ -26,3 +26,6 @@
 table td{
   font-size: 13px;
 }
+th{
+  text-transform: capitalize;
+}

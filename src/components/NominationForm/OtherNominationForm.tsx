@@ -35,7 +35,7 @@ interface UserType {
 
 const apiUrl = import.meta.env.VITE_API_URL;
 
-export default function AddNomination() {
+export default function OtherNominationForm() {
   const [contest, setContest] = useState([]);
   const [allDepartments, setAllDepartments] = useState<DepartmentType[]>([]); 
   const [filteredDepartments, setFilteredDepartments] = useState<DepartmentType[]>([]); 
@@ -285,7 +285,7 @@ export default function AddNomination() {
 
     try {
       const res = await axios.post(
-        "http://172.16.5.106:5195/api/nomination",
+        `${apiUrl}/api/nomination`,
         payload,
         {
           headers: {
@@ -305,13 +305,10 @@ export default function AddNomination() {
 
   return (
     <>
-      <div className='p-5'>
-        <button onClick={handleBackward} className="flex items-center text-blue-600 bg-white border-gray-100 rounded-sm px-2 py-1 font-medium">
-          <span className="me-2"><ArrowLeft size={14}/></span> Back
-        </button>
+      <div className=''>
 
         <form className="mt-8 p-6 border rounded-lg bg-white shadow nominate-form">
-          <h2 className="text-xl font-semibold mb-6">Others Nominate Form 1</h2>
+          <h2 className="text-xl font-semibold mb-6">Others Nominate Form </h2>
 
           {/* Title */}
           <div className="mb-4">

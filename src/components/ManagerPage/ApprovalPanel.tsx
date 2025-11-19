@@ -1,27 +1,34 @@
 import React from "react";
 import { X } from "lucide-react";
-
+ 
 interface Nomination {
-  id: string;
-  nominee: string;
-  entity: string;
-  contest: string;
+  NominationID: number;
+  nominee: string | null;
+  entity: string | null;
+  contest: string | null;
   date: string;
   status: "Pending" | "Approved" | "Rejected";
 }
-
+ 
 interface NominationSidePanelProps {
   isOpen: boolean;
   onClose: () => void;
   nomination: Nomination | null;
 }
-
+ 
+ 
+interface NominationSidePanelProps {
+  isOpen: boolean;
+  onClose: () => void;
+  nomination: Nomination | null;
+}
+ 
 const statusColors: Record<Nomination["status"], string> = {
   Pending: "bg-orange-100 text-orange-800",
   Approved: "bg-green-100 text-green-800",
   Rejected: "bg-red-100 text-red-800",
 };
-
+ 
 const ApprovalPanel: React.FC<NominationSidePanelProps> = ({
   isOpen,
   onClose,
@@ -34,7 +41,7 @@ const ApprovalPanel: React.FC<NominationSidePanelProps> = ({
       }`}
     >
       <div className="flex justify-between items-center p-4 border-b">
-        <h2 className="text-lg font-semibold">Nomination Details</h2>
+        <h2 className="text-lg font-semibold">Approval Details</h2>
         <button
           onClick={onClose}
           className="p-1 rounded-md hover:bg-gray-100 transition"
@@ -42,12 +49,12 @@ const ApprovalPanel: React.FC<NominationSidePanelProps> = ({
           <X size={20} className="text-gray-500" />
         </button>
       </div>
-
+ 
       <div className="p-5 overflow-y-auto h-[calc(100%-64px)]">
         {nomination ? (
           <div className="space-y-3 text-sm">
             <p>
-              <strong>ID:</strong> {nomination.id}
+              <strong>Nomination ID:</strong> {nomination.NominationID}
             </p>
             <p>
               <strong>Nominee:</strong> {nomination.nominee}
@@ -77,5 +84,6 @@ const ApprovalPanel: React.FC<NominationSidePanelProps> = ({
     </div>
   );
 };
-
+ 
 export default ApprovalPanel;
+ 
