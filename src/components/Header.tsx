@@ -5,6 +5,7 @@ import {
 } from 'lucide-react';
 import NotificationModal from './Notification/NotificationModal';
 import { useAuth } from './ContextAPI/AuthContext';
+import { useLocation } from 'react-router-dom';
 import axios from 'axios';
 
 // Header Component
@@ -12,8 +13,10 @@ interface HeaderProps {
   onMobileMenuToggle: () => void;
 }
 
-interface Notification {
-  onMobileMenuToggle: () => void;
+interface NotificationCount {
+  UnReadCount: number;
+  TotalRowCount?: number;
+  UserID?: number;
 }
 
 
@@ -21,9 +24,13 @@ const apiUrl = import.meta.env.VITE_API_URL;
 const Header: React.FC<HeaderProps> = ({ onMobileMenuToggle }) => {
 
  const [isNotificationOpen, setIsNotificationOpen] = useState(false);
- const [notificationCount, setNotificationCount]= useState<any[]>([]);
-const {username, email, userId}= useAuth();
+ const [notificationCount, setNotificationCount] = useState<NotificationCount | null>(null);
+ const [headerNotification, setHeaderNotification] = useState<any[]>([]); 
+const {  userId}= useAuth();
 
+const username = localStorage.getItem('username');
+const email = localStorage.getItem('email');
+const location = useLocation();
   useEffect(() => {
     const fetchNotifications = async () => {
       try {
@@ -35,7 +42,15 @@ const {username, email, userId}= useAuth();
         });
 
         setNotificationCount(res.data[0]);
-        console.log("Notification", res.data)
+        // console.log("Notification", res.data)
+        
+      
+        const notificationList = await axios.get(`${apiUrl}/api/notificationlog/${userId}`, {
+                  headers: { Authorization: `Bearer ${token}` },
+                });
+        setHeaderNotification(notificationList.data);
+        // console.log("All Notifications:", notificationList.data);
+        
       } catch (err) {
         console.error("❌ Error fetching notifications:", err);
       } finally {
@@ -44,10 +59,36 @@ const {username, email, userId}= useAuth();
     };
 
     fetchNotifications();
+    
   }, []);
 
 
-
+ const getHeaderTitle = () => {
+    switch (location.pathname) {
+      case '/home':
+        return 'Dashboard';
+      case '/notifications':
+        return 'Notifications';
+      case '/self-nominations':
+        return 'Self Nominations';
+      case '/my-nominations':
+        return 'My Nominations';
+      case '/approvals':
+        return 'Approvals';
+      case '/business-jury':
+        return 'Business Jury';
+      case '/president-unit':
+        return 'President Unit';
+      case '/president-level':
+        return 'President Level';
+      case '/award-management':
+        return 'Award Management';
+      case '/admin-setting':
+        return 'Admin Settings';
+      default:
+        return 'Nomination Management';
+    }
+  };
 
 
 
@@ -62,7 +103,7 @@ const {username, email, userId}= useAuth();
           <Menu size={20} />
         </button>
         <h1 className="text-xl sm:text-2xl font-semibold text-gray-800">
-          Nomination Management
+         {getHeaderTitle()}
         </h1>
       </div>
       
@@ -70,7 +111,7 @@ const {username, email, userId}= useAuth();
         <div className="relative cursor-pointer"  onClick={() => setIsNotificationOpen(true)}>
           <Bell size={20} className="text-gray-600" />
           <span className="absolute -top-2 -right-2 w-5 h-5 bg-red-500 text-white text-xs rounded-full flex items-center justify-center">
-            {notificationCount.UnReadCount}
+          {notificationCount?.UnReadCount ?? 0}
           </span>
         </div>
         
@@ -86,10 +127,15 @@ const {username, email, userId}= useAuth();
           </div>
         </div>
       </div>
-      <NotificationModal
+       <NotificationModal
         isOpen={isNotificationOpen}
         onClose={() => setIsNotificationOpen(false)}
+        notifications={headerNotification}
       />
+      {/* <NotificationModal
+        isOpen={isNotificationOpen}
+        onClose={() => setIsNotificationOpen(false)}
+      /> */}
     </div>
   );
 };

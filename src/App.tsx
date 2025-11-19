@@ -25,6 +25,8 @@ import ProtectedRoute from './components/ProtectedRoute';
 import type { UserRole } from './dataTypes/roles';
 import { ROLE_PAGES } from './dataTypes/roles';
 import { AuthProvider } from './components/ContextAPI/AuthContext.tsx';
+import Testing from './components/Testing/Testing.tsx';
+import ForgotPassword from './pages/auth/Login/ForgotPassword.tsx';
 
 // -------------------------
 // Main page components
@@ -40,6 +42,8 @@ const pageComponents: Record<string, React.ReactNode> = {
   'President Level': <PresidentLevel />,
   'Award Management': <AwardManagement />,
   'Admin Setting': <AdminInner />,
+   'Forgot Password': <ForgotPassword/>,
+  'Testing': <Testing />,
 };
 
 // -------------------------
@@ -152,6 +156,7 @@ const App: React.FC = () => {
           />
 
           {/* Fallback */}
+           <Route path="/forgot" element={<ForgotPassword/>} />
           <Route path="*" element={<Navigate to="/home" replace />} />
         </Route>
       </Routes>

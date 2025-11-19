@@ -46,7 +46,7 @@ const NotificationTable: React.FC = () => {
         const token = localStorage.getItem("authToken");
         if (!token) throw new Error("No auth token found");
 
-        const res = await axios.get(`${apiUrl}/api/notificationlog?userID=${userId}`, {
+        const res = await axios.get(`${apiUrl}/api/notificationlog/${userId}`, {
           headers: { Authorization: `Bearer ${token}` },
         });
 
@@ -63,36 +63,37 @@ const NotificationTable: React.FC = () => {
 
   const columns = useMemo<ColumnDef<Notification>[]>(
     () => [
-      {
-        header: "S.NO",
-        cell: (info) => info.row.index + 1,
-      },
+      // {
+      //   header: "S.NO",
+      //   cell: (info) => info.row.index + 1,
+      // },
       // { accessorKey: "NotificationID", header: "Notification ID" },
       // { accessorKey: "ReferenceIdPK", header: "Reference ID" },
-      { accessorKey: "FromUser", header: "From User" },
-      { accessorKey: "ToUser", header: "To User" },
+      //{ accessorKey: "FromUser", header: "From User" },
+     
       { accessorKey: "Title", header: "Title" },
       { accessorKey: "NotificationContent", header: "Content" },
-      {
-        accessorKey: "IsSent",
-        header: "Is Sent",
-        cell: (info) =>
-          info.getValue() ? (
-            <span className="text-green-600 font-medium">Yes</span>
-          ) : (
-            <span className="text-red-500 font-medium">No</span>
-          ),
-      },
-      {
-        accessorKey: "IsRead",
-        header: "Is Read",
-        cell: (info) =>
-          info.getValue() ? (
-            <span className="text-green-600 font-medium">Read</span>
-          ) : (
-            <span className="text-red-500 font-medium">Unread</span>
-          ),
-      },
+       { accessorKey: "Time", header: "Time" },
+      // {
+      //   accessorKey: "IsSent",
+      //   header: "Is Sent",
+      //   cell: (info) =>
+      //     info.getValue() ? (
+      //       <span className="text-green-600 font-medium">Yes</span>
+      //     ) : (
+      //       <span className="text-red-500 font-medium">No</span>
+      //     ),
+      // },
+      // {
+      //   accessorKey: "IsRead",
+      //   header: "Is Read",
+      //   cell: (info) =>
+      //     info.getValue() ? (
+      //       <span className="text-green-600 font-medium">Read</span>
+      //     ) : (
+      //       <span className="text-red-500 font-medium">Unread</span>
+      //     ),
+      // },
     ],
     []
   );
@@ -136,7 +137,7 @@ const NotificationTable: React.FC = () => {
                   <th
                     key={header.id}
                     onClick={header.column.getToggleSortingHandler()}
-                    className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase cursor-pointer select-none"
+                    className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider"
                   >
                     {flexRender(header.column.columnDef.header, header.getContext())}
                     {{
@@ -153,7 +154,7 @@ const NotificationTable: React.FC = () => {
               table.getRowModel().rows.map((row) => (
                 <tr key={row.id} className="hover:bg-gray-50">
                   {row.getVisibleCells().map((cell) => (
-                    <td key={cell.id} className="px-4 py-2 text-sm text-gray-800">
+                    <td key={cell.id} className="px-6 py-4 text-sm text-gray-900">
                       {flexRender(cell.column.columnDef.cell, cell.getContext())}
                     </td>
                   ))}

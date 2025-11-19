@@ -29,7 +29,7 @@ const TopPerformers: React.FC = () => {
           .slice(0, 3);
 
         setPerformer(topThree);
-        console.log(" Top 3 Performers:", topThree);
+        // console.log(" Top 3 Performers:", topThree);
       } catch (err) {
         console.error("Error fetching performers:", err);
       }

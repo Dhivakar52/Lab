@@ -4,6 +4,7 @@ import {
 } from 'lucide-react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import logo from '../assets/images/layout_logo.png';
+import tree from '../assets/images/tree.png'
 import type { UserRole } from '../dataTypes/roles';
 import {ROLE_PAGES} from '../dataTypes/roles';
 
@@ -25,6 +26,7 @@ const navigationItems: NavigationItem[] = [
   { icon: Home, label: 'Home', path: '/home' },
   { icon: Bell, label: 'Notifications', path: '/notifications' },
   { icon: User, label: 'Self Nominations', path: '/self-nominations' },
+  //  { icon: User, label: 'Nominations Form', path: '/self-nominations' },
   { icon: FileText, label: 'My Nominations', path: '/my-nominations' },
   { icon: CircleCheckBig, label: 'Approvals', path: '/approvals' },
   { icon: Gavel, label: 'Business Jury', path: '/business-jury' },
@@ -32,9 +34,13 @@ const navigationItems: NavigationItem[] = [
   { icon: Users, label: 'President Level', path: '/president-level' },
    { icon: Settings, label: 'Award Management', path: '/award-management' },
   { icon: Settings, label: 'Admin Setting', path: '/admin-setting' },
+  // { icon: Settings, label: 'Testing', path: '/testing' },
+ 
   
   // { icon: LogOut, label: 'Admin Page', path: '/admin' },
 ];
+
+
 
 
 
@@ -44,7 +50,15 @@ const Sidebar: React.FC<SidebarProps> = ({ isCollapsed, isMobileOpen, onToggle, 
   const userRole = localStorage.getItem('userRole') as UserRole | null;
 const allowedPages = userRole ? ROLE_PAGES[userRole] : [];
 
-  const handleLogout = () => navigate('/');
+  // const handleLogout = () => navigate('/');
+
+
+  const handleLogout = () => {
+  localStorage.clear();    
+  sessionStorage.clear();   
+
+   navigate('/');
+};
 
   const activeStyle = {
     background: 'linear-gradient(90deg, rgba(8, 128, 94, 1) 16%, rgba(24, 97, 174, 1) 100%)',
@@ -67,9 +81,38 @@ const allowedPages = userRole ? ROLE_PAGES[userRole] : [];
         <ChevronLeft size={16} />
       </button>
 
-        <div className="p-5 flex items-center border-b-1 shadow-lg border-white/10 min-h-[70px]">
-          {(!isCollapsed || isMobileOpen) && <img src={logo} alt="logo" className='w-[106px] h-[40px]' />}
-        </div>
+       <div className="p-5 flex items-center border-b-1 shadow-lg border-white/10 min-h-[70px]">
+  <div className="relative w-[106px] h-[40px]">
+    
+    {/* Full logo */}
+    <img
+      src={logo}
+      alt="logo"
+      className={`
+        absolute inset-0 w-full h-full 
+        transition-all duration-300 ease-in-out
+        ${(!isCollapsed || isMobileOpen)
+          ? "opacity-100 scale-100"
+          : "opacity-0 scale-95"}
+      `}
+    />
+
+    {/* Tree icon */}
+    <img
+      src={tree}
+      alt="logo"
+      className={`
+        absolute inset-0 w-full h-full
+        transition-all duration-300 ease-in-out
+        ${(!isCollapsed || isMobileOpen)
+          ? "opacity-0 scale-95"
+          : "opacity-100 scale-100"}
+      `}
+    />
+
+  </div>
+</div>
+
 
         <nav className="p-3 space-y-2">
           {navigationItems
@@ -93,7 +136,7 @@ const allowedPages = userRole ? ROLE_PAGES[userRole] : [];
 
         <div className="absolute bottom-5 left-0 right-0 px-5">
           <div className={`flex items-center px-4 py-3 rounded-xl cursor-pointer transition-all duration-200 hover:bg-white/10 ${isCollapsed && !isMobileOpen ? 'justify-center px-2' : ''}`} onClick={handleLogout}>
-            <LogOut size={20} />
+           <LogOut size={20}  className="cursor-pointer" />
             {(!isCollapsed || isMobileOpen) && <span className="ml-3 text-sm">Logout</span>}
           </div>
         </div>

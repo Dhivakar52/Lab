@@ -26,7 +26,7 @@ const NominationStats: React.FC = () => {
 
         // API returns an array with one object, so take the first one
         setNomineeStat(res2.data[0]);
-        console.log("✅ Nominee Stats:", res2.data[0]);
+        // console.log("✅ Nominee Stats:", res2.data[0]);
       } catch (err) {
         console.error("❌ Error fetching user:", err);
       }

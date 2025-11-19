@@ -1,118 +1,314 @@
-import React, { useState } from "react";
-import * as DropdownMenu from "@radix-ui/react-dropdown-menu";
+import React, { useEffect, useMemo, useState } from "react";
+import axios from "axios";
+import {
+  useReactTable,
+  getCoreRowModel,
+  getPaginationRowModel,
+  getSortedRowModel,
+  getFilteredRowModel,
+  flexRender,
+ 
+} from "@tanstack/react-table";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@radix-ui/react-dropdown-menu";
+import type {
+  ColumnDef,
+} from "@tanstack/react-table";
+import { useAuth } from "../ContextAPI/AuthContext";
 import { Menu } from "lucide-react";
-import SearchComponent from "../SearchComponent";
-import FilterComponent from "../FilterComponent";
 import ApprovalPanel from "./ApprovalPanel";
-
-interface Nomination {
-  id: string;
-  nominee: string;
+ 
+ 
+interface ApprovalData {
+  id: number;
+  NominationID: number;
   entity: string;
-  contest: string;
+  NominatedBy: string;
+  SubmittedDate: string;
+  Status: "Pending" | "Approved" | "Rejected";
+  AwardCategory: string;
+  TotalRowCount: number;
+  ContestType: string;
+  Nominee: string | null;
+  Tenant: string | null;
+ 
+}
+interface ApprovalView {
+  NominationID: number;
+  nominee: string | null;
+  entity: string | null;
+  contest: string | null;
   date: string;
   status: "Pending" | "Approved" | "Rejected";
 }
-
-const nominations: Nomination[] = [
-  { id: "SELF-0851", nominee: "Ravi Kumar", entity: "SRMAP", contest: "Self Nomination", date: "07/20/2025", status: "Pending" },
-  { id: "NOM-0321", nominee: "Ayesha Thomas", entity: "SRM MHS", contest: "Nominate Others", date: "07/18/2025", status: "Pending" },
-  { id: "NOM-0456", nominee: "Varun Mishra", entity: "SRM Tech", contest: "Nominate Others", date: "07/15/2025", status: "Approved" },
-  { id: "SELF-0852", nominee: "Fatima Noor", entity: "PT", contest: "Self Nomination", date: "07/10/2025", status: "Approved" },
-  { id: "NOM-0458", nominee: "Priya Raj", entity: "SRM Sikkim", contest: "Nominate Others", date: "07/08/2025", status: "Rejected" },
-  { id: "SELF-0856", nominee: "Arjun Patel", entity: "SRM Holdings", contest: "Self Nomination", date: "07/02/2025", status: "Approved" },
-];
-
-const statusColors: Record<Nomination["status"], string> = {
+const apiUrl = import.meta.env.VITE_API_URL;
+ 
+ 
+const statusColors: Record<ApprovalData["Status"], string> = {
   Pending: "bg-orange-100 text-orange-800",
   Approved: "bg-green-100 text-green-800",
   Rejected: "bg-red-100 text-red-800",
 };
-
-const ApprovalComponent: React.FC = () => {
-  const [search, setSearch] = useState<string>("");
-  const [selectedNomination, setSelectedNomination] = useState<Nomination | null>(null);
+ 
+const ApprovalTable: React.FC = () => {
   const [isPanelOpen, setIsPanelOpen] = useState(false);
-
-  const filteredNominations = nominations.filter(
-    (nom) =>
-      nom.nominee.toLowerCase().includes(search.toLowerCase()) ||
-      nom.entity.toLowerCase().includes(search.toLowerCase()) ||
-      nom.contest.toLowerCase().includes(search.toLowerCase())
+const [selectedNomination, setSelectedNomination] = useState<ApprovalView | null>(null);
+  const [data, setData] = useState<ApprovalData[]>([]);
+   //const [reject, setRejectData] = useState<ApprovalView[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [globalFilter, setGlobalFilter] = useState("");
+  const {  authToken } = useAuth();
+ 
+  useEffect(() => {
+    const fetchApprovals = async () => {
+      try {
+     
+        if (!authToken) throw new Error("No auth token found");
+ 
+        const res = await axios.get(`${apiUrl}/api/managerevaluation`, {
+          headers: { Authorization: `Bearer ${authToken}` },
+        });
+ 
+        setData(res.data);
+        console.log("Approval", res.data)
+ 
+        // const rejectapproval = await axios.delete(`${apiUrl}/api/managerevaluation/${item.NominationID}`, {
+        //   headers: { Authorization: `Bearer ${authToken}` },
+        // });
+ 
+        // setRejectData(rejectapproval.data);
+        // console.log("Approval", rejectapproval.data)
+       
+      } catch (err) {
+        console.error("❌ Error fetching notifications:", err);
+      } finally {
+        setLoading(false);
+      }
+    };
+ 
+    fetchApprovals();
+  }, []);
+ 
+  const columns = useMemo<ColumnDef<ApprovalData>[]>(
+    () => [
+     
+      { accessorKey: "NominationID", header: "Nomination ID" },
+      { accessorKey: "Nominee", header: "Nominee Name" },
+      { accessorKey: "Tenant", header: "Entity Name" },
+      { accessorKey: "ContestType", header: "Contest Type" },
+      { accessorKey: "SubmittedDate", header: "Submitted Date" },
+     
+      {
+        accessorKey: "Status",
+        header: "Status",
+        cell: ({ getValue }) => {
+          const status = getValue() as ApprovalData["Status"];
+          const colorClass = statusColors[status] || "bg-gray-100 text-gray-700";
+          return (
+            <span
+              className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium ${colorClass}`}
+            >
+              {status}
+            </span>
+          );
+        },
+     
+     },
+   
+     {
+        id: "actions",
+        header: "Actions",
+        cell: ({ row }) => {
+          const item = row.original;
+ 
+          const handleView = () => {
+            setSelectedNomination({
+              NominationID: item.NominationID,
+              nominee: item.Nominee,
+              entity: item.Tenant,
+              contest: item.ContestType,
+              date: item.SubmittedDate,
+              status: item.Status,
+            });
+ 
+          setIsPanelOpen(true);
+        };
+ 
+          const handleApprove = () => {};
+          const handleReject = () => {};
+          // const handleReject = async () => {
+          //     try {
+          //       await axios.delete(`${apiUrl}/api/managerevaluation/${item.NominationID}`, {
+          //         headers: { Authorization: `Bearer ${authToken}` },
+          //       });
+ 
+          //       // Remove from main table data
+          //       setData((prev) =>
+          //         prev.filter((x) => x.NominationID !== item.NominationID)
+          //       );
+ 
+          //       console.log("❌ Nomination rejected & removed");
+          //     } catch (error) {
+          //       console.error("Error rejecting:", error);
+          //     }
+          //   };
+ 
+ 
+          return (
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <button
+                  type="button"
+                  className="p-2 rounded hover:bg-gray-100 transition"
+                >
+                  <Menu size={18} className="text-blue-600" />
+                </button>
+              </DropdownMenuTrigger>
+ 
+              <DropdownMenuContent
+                align="end"
+                className="w-30 bg-white shadow-xl rounded-sm border-0"
+              >
+                <DropdownMenuItem
+                  onClick={handleView}
+                  className="hover:bg-blue-50 hover:text-blue-700 p-3 rounded-sm"
+                >
+                  View
+                </DropdownMenuItem>
+ 
+                <DropdownMenuItem
+                  onClick={handleApprove}
+                  className="hover:bg-green-50 hover:text-green-700 p-3 rounded-sm"
+                >
+                  Approve
+                </DropdownMenuItem>
+ 
+                <DropdownMenuItem
+                  onClick={handleReject}
+                  className="hover:bg-red-50 hover:text-red-700 p-3 rounded-sm"
+                >
+                 
+                  Reject
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          );
+        },
+      }
+    ],
+    []
   );
-
+ 
+ 
+  const table = useReactTable({
+    data,
+    columns,
+    state: { globalFilter },
+    onGlobalFilterChange: setGlobalFilter,
+    getCoreRowModel: getCoreRowModel(),
+    getSortedRowModel: getSortedRowModel(),
+    getFilteredRowModel: getFilteredRowModel(),
+    getPaginationRowModel: getPaginationRowModel(),
+  });
+ 
+  if (loading) {
+    return <div className="text-center py-6 text-gray-600">Loading approvals...</div>;
+  }
+ 
   return (
-    <div className="p-6 m-5 bg-white rounded-xl shadow-md relative">
-      {/* Header */}
-      <div className="flex flex-col sm:flex-row justify-between items-baseline sm:items-center mb-4 gap-3">
-        <h2 className="text-xl font-bold">Nominations for Review</h2>
-        <div className="flex space-x-2 w-full sm:w-auto">
-          <SearchComponent search={search} setSearch={setSearch} />
-          <FilterComponent />
-        </div>
+    <div className="p-6">
+     
+ 
+      {/* 🧾 Table */}
+      <div className="overflow-x-auto bg-white shadow-md rounded-lg p-6">
+ 
+        {/* 🔍 Global Search */}
+      <div className="mb-4 flex justify-between items-center">
+        <input
+          value={globalFilter ?? ""}
+          onChange={(e) => setGlobalFilter(e.target.value)}
+          placeholder="Search Approvals..."
+          className="border border-gray-300 rounded-md px-4 py-2 w-1/3 text-sm"
+        />
       </div>
-
-      {/* Table */}
-      <div className="overflow-x-auto">
-        <table className="min-w-full border-collapse table-auto">
-          <thead className="bg-gray-100">
-            <tr>
-              <th className="px-6 py-3 text-left text-sm font-semibold text-gray-600">Nominate ID</th>
-              <th className="px-6 py-3 text-left text-sm font-semibold text-gray-600">Nominee</th>
-              <th className="px-6 py-3 text-left text-sm font-semibold text-gray-600">Entity</th>
-              <th className="px-6 py-3 text-left text-sm font-semibold text-gray-600">Contest Type</th>
-              <th className="px-6 py-3 text-left text-sm font-semibold text-gray-600">Submitted Date</th>
-              <th className="px-6 py-3 text-left text-sm font-semibold text-gray-600">Status</th>
-              <th className="px-6 py-3 text-left text-sm font-semibold text-gray-600">Actions</th>
-            </tr>
-          </thead>
-          <tbody className="divide-y divide-gray-100">
-            {filteredNominations.map((nom) => (
-              <tr key={nom.id} className="hover:bg-gray-50 transition-colors">
-                <td className="px-6 py-3 text-sm text-gray-900">{nom.id}</td>
-                <td className="px-6 py-3 text-sm text-gray-900">{nom.nominee}</td>
-                <td className="px-6 py-3 text-sm text-gray-900">{nom.entity}</td>
-                <td className="px-6 py-3 text-sm text-gray-900">{nom.contest}</td>
-                <td className="px-6 py-3 text-sm text-gray-900">{nom.date}</td>
-                <td className="px-6 py-3">
-                  <span className={`px-3 py-1 rounded-full text-sm font-semibold ${statusColors[nom.status]}`}>
-                    {nom.status}
-                  </span>
-                </td>
-                <td className="px-6 py-3">
-                  <DropdownMenu.Root>
-                    <DropdownMenu.Trigger className="p-2 rounded hover:bg-gray-100">
-                      <Menu className="w-5 h-5 text-blue-500" />
-                    </DropdownMenu.Trigger>
-                    <DropdownMenu.Content className="bg-white shadow-md rounded-md p-2">
-                      <DropdownMenu.Item
-                        className="px-2 py-1 hover:bg-gray-100 cursor-pointer"
-                        onClick={() => {
-                          setSelectedNomination(nom);
-                          setIsPanelOpen(true);
-                        }}
-                      >
-                        View
-                      </DropdownMenu.Item>
-                      <DropdownMenu.Item className="px-2 py-1 hover:bg-gray-100 cursor-pointer">Approve</DropdownMenu.Item>
-                      <DropdownMenu.Item className="px-2 py-1 hover:bg-gray-100 cursor-pointer">Reject</DropdownMenu.Item>
-                    </DropdownMenu.Content>
-                  </DropdownMenu.Root>
-                </td>
+        <table className="min-w-full border border-gray-200">
+          <thead className="bg-gray-50">
+            {table.getHeaderGroups().map((headerGroup) => (
+              <tr key={headerGroup.id}>
+                {headerGroup.headers.map((header) => (
+                  <th
+                    key={header.id}
+                    onClick={header.column.getToggleSortingHandler()}
+                    className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase cursor-pointer select-none"
+                  >
+                    {flexRender(header.column.columnDef.header, header.getContext())}
+                    {{
+                      asc: " 🔼",
+                      desc: " 🔽",
+                    }[header.column.getIsSorted() as string] ?? null}
+                  </th>
+                ))}
               </tr>
             ))}
+          </thead>
+          <tbody className="divide-y divide-gray-100">
+            {table.getRowModel().rows.length ? (
+              table.getRowModel().rows.map((row) => (
+                <tr key={row.id} className="hover:bg-gray-50">
+                  {row.getVisibleCells().map((cell) => (
+                    <td key={cell.id} className="px-4 py-2 text-sm text-gray-800">
+                      {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                    </td>
+                  ))}
+                </tr>
+              ))
+            ) : (
+              <tr>
+                <td colSpan={columns.length} className="text-center py-6 text-gray-500">
+                  No approvals found
+                </td>
+              </tr>
+            )}
           </tbody>
         </table>
+ 
+ 
+              {/* 📄 Pagination Controls */}
+      <div className="flex items-center justify-between mt-4">
+        <div className="text-sm text-gray-600">
+          Page {table.getState().pagination.pageIndex + 1} of {table.getPageCount()}
+        </div>
+        <div className="space-x-2">
+          <button
+            onClick={() => table.previousPage()}
+            disabled={!table.getCanPreviousPage()}
+            className="px-3 py-1 bg-gray-200 rounded disabled:opacity-50"
+          >
+            Prev
+          </button>
+          <button
+            onClick={() => table.nextPage()}
+            disabled={!table.getCanNextPage()}
+            className="px-3 py-1 bg-gray-200 rounded disabled:opacity-50"
+          >
+            Next
+          </button>
+        </div>
       </div>
-
-      {/* ✅ Separate Side Panel */}
-      <ApprovalPanel
-        isOpen={isPanelOpen}
-        onClose={() => setIsPanelOpen(false)}
-        nomination={selectedNomination}
-      />
+      </div>
+<ApprovalPanel
+  isOpen={isPanelOpen}
+  onClose={() => setIsPanelOpen(false)}
+  nomination={selectedNomination}
+/>
+ 
     </div>
   );
 };
-
-export default ApprovalComponent;
+ 
+export default ApprovalTable;
+ 

@@ -25,7 +25,7 @@ export interface FormState {
 export interface AddNominationState {
  title: string;
   nomineeName: string | null; 
-  department: string;
+  department: string | null;
   nomineeData:string;
   email: string | null; 
   entityName: string;
@@ -38,7 +38,9 @@ export interface AddNominationState {
 
 export interface Feed {
   UserID: number;
+  LikedBy: any;
   Nominee: string;
+  NominationID: number;
   Tenant: string;
   AwardCategory: string;
   NominatedCount: number;

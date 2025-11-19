@@ -16,7 +16,7 @@ interface NominationDetailsProps {
     status: string;
     managerEmail: string;
     referrals: string[];
-    description: string;
+    description: string | undefined;
   };
 }
 
@@ -85,17 +85,25 @@ const NominationDetailsModal: React.FC<NominationDetailsProps> = ({ isOpen, onCl
                   <div className="text-sm text-gray-600">{data.contestType}</div>
                 </div>
                 <div className="space-y-1">
-                  <div className="text-sm font-medium text-gray-900">Status</div>
-                  <div className="flex">
-                    <span className={`inline-flex px-3 py-1 rounded-full text-xs font-medium ${
-                      data.status === 'Pending' 
-                        ? 'bg-orange-100 text-orange-800' 
-                        : 'bg-green-100 text-green-800'
-                    }`}>
-                      {data.status}
-                    </span>
+                    <div className="text-sm font-medium text-gray-900">Status</div>
+                    <div className="flex">
+                      <span
+                        className={`inline-flex px-3 py-1 rounded-full text-xs font-medium ${
+                          data.status === "Pending"
+                            ? "bg-orange-100 text-orange-800"
+                            : data.status === "Approved"
+                            ? "bg-green-100 text-green-800"
+                            : data.status === "Rejected"
+                            ? "bg-red-100 text-red-800"
+                            : data.status === "Under Review"
+                            ? "bg-yellow-100 text-yellow-700"
+                            : "bg-gray-100 text-gray-700"
+                        }`}
+                      >
+                        {data.status}
+                      </span>
+                    </div>
                   </div>
-                </div>
               </div>
 
               {/* Row 5 */}
