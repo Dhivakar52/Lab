@@ -48,4 +48,5 @@ export interface Feed {
   Likes: number;
   Comments: number;
   Views: number;
+  CommentsData: any;
 }

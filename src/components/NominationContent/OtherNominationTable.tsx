@@ -14,19 +14,24 @@ import type {
 import { Menu } from "lucide-react";
 import { Outlet } from "react-router-dom";
 import { useAuth } from "../ContextAPI/AuthContext";
-// import NominationDetailsModal from "./NominationDetailsModal";
+import NominationDetailsModal from "./NominationDetailsModal ";
 
 interface Nomination {
   TotalRowCount: number;
   NominationID: number;
   Nominee: string;
+  "Manager ID":string;
   Tenant: string;
   NominatedBy: string;
   NominationCycleName: string;
   AwardCategory: string;
-  Description: string;
+  Descriptions: string;
+  ContestType:string;
+  SubmittedDate:string;
   SelfNomination: string;
   NominationFile: string | null;
+  Status: "Pending" | "Approved" | "Rejected" | "Under Review";
+  "Referrals ID": { Email: string }[];
 }
 
 const apiUrl = import.meta.env.VITE_API_URL;
@@ -39,6 +44,14 @@ const NominationTable: React.FC = () => {
   const [selectedNomination, setSelectedNomination] = useState<Nomination | null>(null);
 
   const { authToken, userId } = useAuth();
+
+  const statusColors: Record<Nomination["Status"], string> = {
+  Pending: "bg-orange-100 text-orange-800",
+  Approved: "bg-green-100 text-green-800",
+  Rejected: "bg-red-100 text-red-800",
+  "Under Review": "bg-yellow-100 text-yellow-700",
+};
+
 
   useEffect(() => {
     const fetchNominations = async () => {
@@ -59,30 +72,44 @@ const NominationTable: React.FC = () => {
 
   const columns = useMemo<ColumnDef<Nomination>[]>(
     () => [
-      { accessorKey: "NominationID", header: "Nomination ID" },
+     { accessorKey: "NominationID", header: "Nomination ID" },
       { accessorKey: "Nominee", header: "Nominee" },
-      { accessorKey: "Tenant", header: "Tenant" },
-      { accessorKey: "NominationCycleName", header: "Cycle Name" },
+      { accessorKey: "Tenant", header: "Entity" },
       { accessorKey: "AwardCategory", header: "Category" },
-      { accessorKey: "NominatedBy", header: "Nominated By" },
-      { accessorKey: "SelfNomination", header: "Self Nomination" },
+      
       {
-        accessorKey: "NominationFile",
-        header: "Nomination File",
-        cell: (info) =>
-          info.getValue() ? (
-            <a
-              href={info.getValue() as string}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="text-blue-600 underline"
+        accessorKey: "Status",
+        header: "Status",
+        cell: ({ getValue }) => {
+          const status = getValue() as Nomination["Status"];
+          const colorClass = statusColors[status] || "bg-gray-100 text-gray-700";
+          return (
+            <span
+              className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium ${colorClass}`}
             >
-              View File
-            </a>
-          ) : (
-            <span className="text-gray-400">No File</span>
-          ),
-      },
+              {status}
+            </span>
+          );
+        },
+     
+     },
+      // {
+      //   accessorKey: "NominationFile",
+      //   header: "Nomination File",
+      //   cell: (info) =>
+      //     info.getValue() ? (
+      //       <a
+      //         href={info.getValue() as string}
+      //         target="_blank"
+      //         rel="noopener noreferrer"
+      //         className="text-blue-600 underline"
+      //       >
+      //         View File
+      //       </a>
+      //     ) : (
+      //       <span className="text-gray-400">No File</span>
+      //     ),
+      // },
       {
         header: "Actions",
         cell: ({ row }) => (
@@ -113,9 +140,10 @@ const NominationTable: React.FC = () => {
   });
 
   if (loading) {
-    return <div className="text-center py-6 text-gray-600">Loading nominations...</div>;
+    return <div className="text-center py-6 text-gray-600">Loading other nominations...</div>;
   }
-
+ const referralEmails: string[] =
+  selectedNomination?.["Referrals ID"]?.map((r) => r.Email) || [];
   return (
     <>
       <div className="p-6">
@@ -196,6 +224,26 @@ const NominationTable: React.FC = () => {
           </div>
         </div>
       </div>
+      {selectedNomination && (
+        <NominationDetailsModal
+          isOpen={modalOpen}
+          onClose={() => setModalOpen(false)}
+          // data={selectedNomination}
+            data={{
+      nominationId: selectedNomination.NominationID.toString(),
+      nominee: selectedNomination.Nominee,
+      entity: selectedNomination.Tenant,
+      category: selectedNomination.AwardCategory,
+      nominatedBy: selectedNomination.NominatedBy,
+      submissionDate: selectedNomination.SubmittedDate, // or actual date if available
+      contestType: selectedNomination.ContestType,
+      status: selectedNomination.Status,  
+      managerEmail: selectedNomination["Manager ID"],
+       referrals: referralEmails,
+      description: selectedNomination.Descriptions,
+    }}
+        />
+      )}
 
       {/* 🔍 Modal */}
       {/* {selectedNomination && (
