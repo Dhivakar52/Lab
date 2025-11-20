@@ -4,6 +4,10 @@ import axios from "axios";
 import type { Feed } from "../../dataTypes/nomination";
 import { useAuth } from "../ContextAPI/AuthContext";
 import PostFeedModal from "./PostFeedModal";
+import FeedLikeComponent from "./FeedLikeComponent";
+import FeedLikePop from "./FeedLikePop";
+import FeedComment from "./FeedComment";
+import ViewerModal from "./ViewerModal";
 
 interface PostCardProps {
   posts: Feed[];
@@ -34,6 +38,12 @@ const PostCard: React.FC<PostCardProps> = ({ posts, setPosts }) => {
   const [comments, setComments] = useState<any[]>([]);
   const [commentText, setCommentText] = useState<{ [key: number]: string }>({});
   const [selectedPost, setSelectedPost] = useState<Feed | null>(null);
+  const [viewsMap, setViewsMap] = useState<{ [key: number]: number }>({});
+  const [showViewers, setShowViewers] = useState(false);
+  const [viewerList, setViewerList] = useState<any[]>([]);
+  const [showLikePopup, setShowLikePopup] = useState(false);
+const [likeList, setLikeList] = useState<any[]>([]);
+
 const [showModal, setShowModal] = useState(false);
 
   const { authToken, userId, username } = useAuth();
@@ -233,6 +243,77 @@ const handleAddComment = async (post: Feed) => {
     }));
   };
 
+const fetchViews = async (nominationId: number) => {
+  try {
+    const res = await axios.get(
+      `${apiUrl}/api/nominationview/${nominationId}`,
+      {
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${authToken}`,
+        },
+      }
+    );
+
+    const total = res.data?.[0]?.TotalRowCount;
+
+    console.log("Views", res.data);
+
+    setViewerList(res.data);
+
+    setViewsMap((prev) => ({
+      ...prev,
+      [nominationId]:
+        total !== undefined && total !== null ? total : prev[nominationId],
+    }));
+  } catch (err) {
+    console.error("❌ Error fetching views:", err);
+  }
+};
+
+
+// const addView = async (nominationId: number) => {
+//   try {
+//     await axios.put(
+//       `${apiUrl}/api/nominationview/${nominationId}`,
+//       null,
+//       {
+//         params: {
+//           NominationID: nominationId,
+//           Active: true,
+//           SubmittedBy: userId,
+//         },
+//         headers: {
+//           Accept: "text/plain",
+//           Authorization: `Bearer ${authToken}`,
+//         },
+//       }
+//     );
+
+//     // After API success → update view count locally
+//     setViewsMap((prev) => ({
+//       ...prev,
+//       [nominationId]: (prev[nominationId] || 0) + 1,
+//     }));
+
+//   } catch (err) {
+//     console.error("❌ Error adding view:", err);
+//   }
+// };
+
+
+
+
+useEffect(() => {
+  posts.forEach((p) => {
+    if (!viewsMap[p.NominationID]) {
+      fetchViews(p.NominationID);
+      //  addView(p.NominationID); 
+    }
+  });
+}, [posts]);
+
+
   return (
     <div>
       {posts.length === 0 ? (
@@ -294,27 +375,26 @@ const handleAddComment = async (post: Feed) => {
                     {post.Description}
                   </p>
 
-                  <div className="flex justify-between border-b-1 border-gray-200 mt-3 py-3">
-                    <span className="text-sm font-medium">
-                      {getLikeText(post.LikedBy, userId)}
-                    </span>
-                  </div>
+                  <div
+  className="flex justify-between border-b-1 border-gray-200 mt-3 py-3 cursor-pointer"
+  onClick={() => {
+    setLikeList(post.LikedBy || []);
+    setShowLikePopup(true);
+  }}
+>
+  <span className="text-sm font-medium">
+    {getLikeText(post.LikedBy, userId)}
+  </span>
+</div>
+
 
                   <div className="flex justify-between mt-3 pt-3">
                     <div className="flex items-center space-x-6">
-                      <button
-                        onClick={() => handleLike(post)}
-                        className={`flex items-center space-x-2 ${
-                          isLiked
-                            ? "text-red-500"
-                            : "text-gray-500 hover:text-red-500"
-                        }`}
-                      >
-                        <Heart className="w-4 h-4" fill={isLiked ? "red" : "none"} />
-                        <span className="text-sm font-medium">
-                          {post.LikedBy?.length || 0} Likes
-                        </span>
-                      </button>
+                      <FeedLikeComponent
+  post={post}
+  isLiked={isLiked}
+  onLike={() => handleLike(post)}
+/>
 
                       <button
                         onClick={() => toggleComments(NominationID)}
@@ -326,117 +406,37 @@ const handleAddComment = async (post: Feed) => {
                         </span>
                       </button>
 
-                      <button className="text-gray-500 hover:text-gray-700">
+                      {/* <button className="text-gray-500 hover:text-gray-700">
                         <Share className="w-4 h-4" />
-                      </button>
+                      </button> */}
                     </div>
 
-                    <div className="flex items-center text-gray-500 text-sm">
-                      <Eye className="w-4 h-4 mr-1" />
-                      <span>{post.Views} Views</span>
-                    </div>
+                    <div
+  className="flex items-center text-gray-500 text-sm cursor-pointer"
+  onClick={() => {
+    fetchViews(post.NominationID);  
+    setShowViewers(true);      
+  }}
+>
+  <Eye className="w-4 h-4 mr-1" />
+  <span>{viewsMap[post.NominationID] || 0} Views</span>
+</div>
+
                   </div>
 
-                  {isCommentOpen && (
-                    <div className="mt-4 pt-4 border-t border-gray-200">
-                      <div className="flex space-x-2">
-                        <div className="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center text-blue-600 font-semibold text-sm">
-                          {username?.charAt(0).toUpperCase()}
-                        </div>
-
-                        <div className="flex-1 relative">
-                          <textarea
-                            placeholder="Add a comment..."
-                            rows={1}
-                            value={commentText[NominationID] || ""}
-                            onChange={(e) =>
-                              setCommentText((prev) => ({
-                                ...prev,
-                                [NominationID]: e.target.value,
-                              }))
-                            }
-                            className="
-                              w-full px-4 py-2 pr-20 border border-gray-300 rounded-md
-                              text-sm resize-none focus:outline-none focus:border-blue-500
-                              focus:ring-1 focus:ring-blue-500 overflow-hidden
-                            "
-                            style={{ minHeight: "38px" }}
-                            onInput={(e) => {
-                              const target = e.target as HTMLTextAreaElement;
-                              target.style.height = "38px";
-                              target.style.height = target.scrollHeight + "px";
-                            }}
-                          />
-
-                          <div className="absolute right-3 top-[10px]">
-                            <button
-                              onClick={() => handleAddComment(post)}
-                              className="text-gray-400 hover:text-gray-600"
-                            >
-                              <Send className="w-5 h-5" />
-                            </button>
-                          </div>
-                        </div>
-                      </div>
-
-{filteredComments.length === 0 ? (
-  <p className="text-center text-gray-500 text-xs mt-4">
-    No comments yet. Be the first to comment!
-  </p>
-) : (
-  <div className="mt-4">
-
-    {/* Show first 5 comments normally */}
-    {filteredComments.slice(0, 5).map((c) => (
-      <div
-        key={c.NominationCommentsID}
-        className="bg-gray-50 p-3 rounded-md border border-gray-200 flex space-x-3 mb-2"
-      >
-        <div className="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center text-blue-600 font-semibold text-sm">
-          {c.CommentedBy?.charAt(0).toUpperCase()}
-        </div>
-
-        <div>
-          <p className="text-sm font-semibold text-gray-800">{c.CommentedBy}</p>
-          <p className="text-sm text-gray-700 mt-1">{c.CommentsText}</p>
-          <p className="text-[10px] text-gray-400 mt-1">
-            {new Date(c.CommentedAt).toLocaleString()}
-          </p>
-        </div>
-      </div>
-    ))}
-
-    {/* Remaining comments inside scroll box */}
-    {filteredComments.length > 5 && (
-      <div className="max-h-40 overflow-y-auto pr-1 mt-2 space-y-2 border border-gray-200 rounded-md p-2 bg-gray-50">
-
-        {filteredComments.slice(5).map((c) => (
-          <div
-            key={c.NominationCommentsID}
-            className="bg-white p-3 rounded-md border border-gray-200 flex space-x-3"
-          >
-            <div className="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center text-blue-600 font-semibold text-sm">
-              {c.CommentedBy?.charAt(0).toUpperCase()}
-            </div>
-
-            <div>
-              <p className="text-sm font-semibold text-gray-800">{c.CommentedBy}</p>
-              <p className="text-sm text-gray-700 mt-1">{c.CommentsText}</p>
-              <p className="text-[10px] text-gray-400 mt-1">
-                {new Date(c.CommentedAt).toLocaleString()}
-              </p>
-            </div>
-          </div>
-        ))}
-
-      </div>
-    )}
-
-  </div>
+                   {isCommentOpen && (
+  <FeedComment
+    post={post}
+    username={username || ""}
+    comments={filteredComments}
+    commentText={commentText[NominationID] || ""}
+    setCommentText={(v) =>
+      setCommentText((prev) => ({ ...prev, [NominationID]: v }))
+    }
+    handleAddComment={() => handleAddComment(post)}
+  />
 )}
 
-                    </div>
-                  )}
                 </div>
               </div>
               <PostFeedModal
@@ -449,6 +449,23 @@ const handleAddComment = async (post: Feed) => {
           );
         })
       )}
+
+
+
+    {/* Like Modal */}
+      {showLikePopup && (
+  <FeedLikePop
+    likedBy={likeList}
+    onClose={() => setShowLikePopup(false)}
+  />
+)}
+ {/* View Modal */}
+<ViewerModal
+        open={showViewers}
+        viewers={viewerList}
+        onClose={() => setShowViewers(false)}
+      />
+
     </div>
   );
 };
