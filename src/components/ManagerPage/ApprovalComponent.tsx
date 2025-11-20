@@ -14,6 +14,7 @@ import { useAuth } from "../ContextAPI/AuthContext";
 import { Menu } from "lucide-react";
 import ApprovalPanel from "./ApprovalPanel";
 
+
 interface ApprovalData {
   id: number;
   NominationID: number;
@@ -73,6 +74,9 @@ const ApprovalTable: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [globalFilter, setGlobalFilter] = useState("");
   const { userId, authToken } = useAuth();
+  const [successMessage, setSuccessMessage] = useState("");
+  const [toastType, setToastType] = useState<"success" | "error">("success");
+
 
   
   useEffect(() => {
@@ -120,6 +124,10 @@ const ApprovalTable: React.FC = () => {
           item.NominationID === nominationID ? { ...item, Status: "Approved" } : item
         )
       );
+       setToastType("success");
+        setSuccessMessage("Nomination Approved Successfully!");
+        setTimeout(() => setSuccessMessage(""), 3000);
+        setIsPanelOpen(false);
     } catch (error) {
       console.error("Approve Error:", error);
       alert("Approval failed");
@@ -151,6 +159,10 @@ const ApprovalTable: React.FC = () => {
           item.NominationID === nominationID ? { ...item, Status: "Rejected" } : item
         )
       );
+      setToastType("error");
+      setSuccessMessage("Nomination Rejected Successfully!");
+        setTimeout(() => setSuccessMessage(""), 3000);
+        setIsPanelOpen(false); 
     } catch (error) {
       console.error("Reject Error:", error);
       alert("Reject failed");
@@ -203,6 +215,7 @@ const ApprovalTable: React.FC = () => {
 
             setIsPanelOpen(true);
           };
+          
 
           return (
             <DropdownMenu>
@@ -258,6 +271,17 @@ const ApprovalTable: React.FC = () => {
   }
 
   return (
+    <div className="p-6">
+
+      
+      {successMessage && (
+        <div
+          className={`fixed  right-5 px-4 py-2 rounded-lg shadow-lg animate-slide-in z-[9999]
+            ${toastType === "success" ? "bg-green-600" : "bg-red-600"} text-white`}
+        >
+          {successMessage}
+        </div>
+      )}
     <div className="p-6">
       <div className="overflow-x-auto bg-white shadow-md rounded-lg p-6">
         <div className="mb-4 flex justify-between items-center">
@@ -332,7 +356,7 @@ const ApprovalTable: React.FC = () => {
           </div>
         </div>
       </div>
-
+  </div>
       {/* SIDE PANEL */}
       <ApprovalPanel
         isOpen={isPanelOpen}
