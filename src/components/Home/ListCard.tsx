@@ -189,6 +189,11 @@ const ListCard: React.FC<ListCardProps> = ({ list }) => {
                   {item.Nominee?.charAt(0)}
                 </div>
 
+
+                <div className="flex-1 min-w-0">
+                  <div className="flex  items-start justify-between">
+                    <div className="flex-1 min-w-0">
+
                 <div className="flex-1 flex-1 min-w-0">
                   <div className="flex  items-start justify-between">
                     <div className="flex flex-col sm:flex-row sm:items-center sm:space-x-3 mb-1">
@@ -205,7 +210,14 @@ const ListCard: React.FC<ListCardProps> = ({ list }) => {
                           🏆 {item.AwardCategory}
                         </span>
                       </div>
+                        <p className="text-xs sm:text-sm text-gray-600 mb-1">
+                        {item.Tenant}
+                      </p>
                     </div>
+
+                    </div>
+                    
+
 
                     <MoreHorizontal className="w-5 h-5 text-gray-400 hover:text-gray-600 cursor-pointer" />
                   </div>
