@@ -41,6 +41,7 @@ const PostCard: React.FC<PostCardProps> = ({ posts, setPosts }) => {
   const [viewsMap, setViewsMap] = useState<{ [key: number]: number }>({});
   const [showViewers, setShowViewers] = useState(false);
   const [viewerList, setViewerList] = useState<any[]>([]);
+  const [viewed, setViewed] = useState<{ [key:number]: boolean }>({});
   const [showLikePopup, setShowLikePopup] = useState(false);
 const [likeList, setLikeList] = useState<any[]>([]);
 
@@ -179,7 +180,7 @@ const handleAddComment = async (post: Feed) => {
 
   try {
     const res = await axios.post(
-      `http://172.16.5.106:5195/api/nominationcomments`,
+      `${apiUrl}/api/nominationcomments`,
       {
         nominationID: post.NominationID,
         commentedBy: userId,
@@ -272,34 +273,29 @@ const fetchViews = async (nominationId: number) => {
 };
 
 
-// const addView = async (nominationId: number) => {
-//   try {
-//     await axios.put(
-//       `${apiUrl}/api/nominationview/${nominationId}`,
-//       null,
-//       {
-//         params: {
-//           NominationID: nominationId,
-//           Active: true,
-//           SubmittedBy: userId,
-//         },
-//         headers: {
-//           Accept: "text/plain",
-//           Authorization: `Bearer ${authToken}`,
-//         },
-//       }
-//     );
+const addView = async (nominationId: number) => {
+  try {
+    await axios.post(
+      `${apiUrl}/api/nominationview`,
+      null,
+      {
+        params: {
+          NominationID: nominationId,
+          Active: true,
+          SubmittedBy: userId,
+        },
+        headers: {
+          Accept: "text/plain",
+          Authorization: `Bearer ${authToken}`,
+        },
+      }
+    );
 
-//     // After API success → update view count locally
-//     setViewsMap((prev) => ({
-//       ...prev,
-//       [nominationId]: (prev[nominationId] || 0) + 1,
-//     }));
-
-//   } catch (err) {
-//     console.error("❌ Error adding view:", err);
-//   }
-// };
+    console.log("View added for: ", nominationId);
+  } catch (err) {
+    console.error("❌ Error adding view:", err);
+  }
+};
 
 
 
@@ -413,10 +409,20 @@ useEffect(() => {
 
                     <div
   className="flex items-center text-gray-500 text-sm cursor-pointer"
-  onClick={() => {
-    fetchViews(post.NominationID);  
-    setShowViewers(true);      
-  }}
+onClick={async (e) => {
+  e.preventDefault();
+  e.stopPropagation();
+e.nativeEvent.stopImmediatePropagation();
+  if (!viewed[post.NominationID]) {
+     await addView(post.NominationID);
+     setViewed(prev => ({ ...prev, [post.NominationID]: true }));
+  }
+
+  await fetchViews(post.NominationID);
+  setShowViewers(true);
+}}
+
+
 >
   <Eye className="w-4 h-4 mr-1" />
   <span>{viewsMap[post.NominationID] || 0} Views</span>

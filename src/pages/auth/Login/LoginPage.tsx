@@ -113,6 +113,7 @@ switch (Number(roleid)) {
         default:
           navigate('/home');
       }
+      window.location.reload();
     } else {
     
       alert(data.message || 'Invalid email or password');

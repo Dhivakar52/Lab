@@ -21,7 +21,7 @@ const ViewerModal: React.FC<ViewersModalProps> = ({ open, onClose, viewers }) =>
     >
       <div
         className="bg-white w-80 rounded-xl shadow-lg p-4"
-        onClick={(e) => e.stopPropagation()} // ❗ PREVENT CLOSE WHEN CLICK INSIDE
+        onClick={(e) => e.stopPropagation()}
       >
         <h2 className="text-lg font-semibold mb-3">Viewed By</h2>
 

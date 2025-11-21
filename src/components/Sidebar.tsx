@@ -56,7 +56,6 @@ const allowedPages = userRole ? ROLE_PAGES[userRole] : [];
   const handleLogout = () => {
   localStorage.clear();    
   sessionStorage.clear();   
-
    navigate('/');
 };
 
