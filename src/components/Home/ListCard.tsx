@@ -170,92 +170,66 @@ const ListCard: React.FC<ListCardProps> = ({ list }) => {
   };
 
   return (
-    <div className="space-y-6">
-      {safeList.length === 0 ? (
-        <p className="text-gray-500 text-sm text-center">No items in your list.</p>
+    <div className="space-y-4 max-w-2xl mx-auto w-full">
+      {list.length === 0 ? (
+        <p className="text-gray-500 text-sm text-center">No items found.</p>
       ) : (
-        safeList.map((item) => {
-          const NominationID = item.NominationID;
-          const isLiked = likedPosts.includes(NominationID);
-          const filteredComments = comments.filter((c) => c.NominationID === NominationID);
+        list.map((item: any, index: number) => {
+          const feed = item.feed ?? item;
 
           return (
             <div
-              key={NominationID}
-               className="p-4 sm:p-6 bg-white border-b-2 border-b-gray-100 hover:shadow-md transition"
+              key={index}
+              className="bg-white rounded-2xl p-4 shadow-sm border border-gray-100 hover:shadow-md transition"
             >
-              <div className="flex space-x-3">
-                <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-blue-100 flex items-center justify-center text-blue-600 font-semibold">
-                  {item.Nominee?.charAt(0)}
+              <div className="flex gap-3">
+
+                {/* Avatar */}
+                <div className="w-12 h-12 rounded-full bg-blue-100 flex items-center justify-center text-blue-700 font-semibold">
+                  {feed.Nominee?.charAt(0)?.toUpperCase()}
                 </div>
 
-                <div className="flex-1 min-w-0">
-                  <div className="flex  items-start justify-between">
-                    <div className="flex-1 min-w-0">
-                    <div className="flex flex-col sm:flex-row sm:items-center sm:space-x-3 mb-1">
-                      <h3 className="font-semibold text-gray-900 text-sm sm:text-base truncate">
-                        {item.Nominee}
-                      </h3>
-                       <div className="flex flex-wrap gap-1 sm:gap-1">
-                        <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
-                          👥 {item.NominatedCount}  Nominated
+                <div className="flex-1">
+                  <div className="flex justify-between">
+                    <div>
+                      <h3 className="font-semibold text-gray-900">{feed.Nominee}</h3>
+
+                      {/* CHIPS */}
+                      <div className="flex flex-wrap gap-2 mt-1">
+                        <span className="px-2 py-0.5 rounded-full bg-purple-100 text-purple-700 text-xs">
+                          🏆 {feed.AwardCategory}
+                        </span>
+
+                        <span className="px-2 py-0.5 rounded-full bg-blue-100 text-blue-700 text-xs">
+                          👥 {feed.NominatedCount} Nominated
                         </span>
                       </div>
-                      <div className="flex flex-wrap gap-1 sm:gap-2">
-                        <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-purple-100 text-purple-800">
-                          🏆 {item.AwardCategory}
-                        </span>
-                      </div>
-                        <p className="text-xs sm:text-sm text-gray-600 mb-1">
-                        {item.Tenant}
-                      </p>
-                    </div>
-                    </div>
-                    
 
-                    <MoreHorizontal className="w-5 h-5 text-gray-400 hover:text-gray-600 cursor-pointer" />
+                      <p className="text-xs text-gray-500 mt-1">{feed.Tenant}</p>
+                    </div>
+
+                    <MoreHorizontal className="text-gray-400" />
                   </div>
 
-                  <p className="text-gray-800 mt-2 text-sm">{item.Description}</p>
+                  {/* Description */}
+                  <p className="mt-2 text-gray-700 text-sm">{feed.Description}</p>
 
-                  <div className="flex justify-between border-b-1 border-gray-200 mt-3 py-3">
-                    <span className="text-sm font-medium">
-                      {getLikeText(item.LikedBy ?? [], userId)}
-                    </span>
-                  </div>
+                  {/* Footer */}
+                  <div className="flex justify-between items-center mt-4 pt-3 border-t">
+                    <div className="flex items-center gap-6 text-gray-500 text-sm">
+                      <span className="flex items-center gap-1">
+                        <Heart className="w-4" /> {feed.Likes} Likes
+                      </span>
 
-                  <div className="flex justify-between mt-3">
-                    <div className="flex items-center space-x-6">
-                      <button
-                        onClick={() => handleLike(item)}
-                        className={`flex items-center space-x-2 ${
-                          isLiked ? "text-red-500" : "text-gray-500 hover:text-red-500"
-                        }`}
-                      >
-                        <Heart className="w-4 h-4" fill={isLiked ? "red" : "none"} />
-                        <span className="text-sm font-medium">
-                          {(item.LikedBy ?? []).length} Likes
-                        </span>
-                      </button>
+                      <span className="flex items-center gap-1">
+                        <MessageCircle className="w-4" /> {feed.Comments} Comments
+                      </span>
 
-                      <button
-                        onClick={() => toggleComments(NominationID)}
-                        className="flex items-center space-x-2 text-gray-500 hover:text-blue-500"
-                      >
-                        <MessageCircle className="w-4 h-4" />
-                        <span className="text-sm font-medium">
-                          {item.Comments ?? 0} Comments
-                        </span>
-                      </button>
-
-                      <button className="text-gray-500 hover:text-gray-700">
-                        <Share className="w-4 h-4" />
-                      </button>
+                      <Share className="w-4 cursor-pointer" />
                     </div>
 
-                    <div className="flex items-center text-gray-500 text-sm">
-                      <Eye className="w-4 h-4 mr-1" />
-                      {item.Views ?? 0} Views
+                    <div className="flex items-center text-gray-500 text-xs">
+                      <Eye className="w-4 mr-1" /> {feed.Views} Views
                     </div>
                   </div>
 
