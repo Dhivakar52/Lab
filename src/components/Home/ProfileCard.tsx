@@ -3,6 +3,14 @@ import { Heart, MessageCircle } from 'lucide-react';
 import { useAuth } from '../ContextAPI/AuthContext';
 import avatar from '../../assets/images/profile.png'
 
+import "swiper/css";
+import "swiper/css/pagination";
+import "swiper/css/navigation";
+
+ import { Swiper, SwiperSlide } from "swiper/react";
+
+import { Keyboard, Pagination, Autoplay,Navigation } from "swiper/modules";
+
 
 interface Feed {
   UserID: number;
@@ -76,7 +84,7 @@ const ProfileCard: React.FC<PostCardProps> = ({ profile }) => {
             <p className="text-xs sm:text-sm text-gray-500 break-all">{email}</p>
 
             {/* Category Blocks */}
-            <div className="mt-4 space-y-4">
+            {/* <div className="mt-4 space-y-4">
               {user.categories.map((cat: any, i: number) => (
                 <div key={i} className="p-3 ">
                   <div className="flex justify-between text-sm">
@@ -106,7 +114,65 @@ const ProfileCard: React.FC<PostCardProps> = ({ profile }) => {
                   </div>
                 </div>
               ))}
-            </div>
+            </div> */}
+           
+
+<Swiper
+  slidesPerView={1}
+  spaceBetween={20}
+  keyboard={{ enabled: true }}
+  pagination={{ clickable: true }}
+  navigation={true}
+  autoplay={{
+    delay: 3000,
+    disableOnInteraction: false,
+    pauseOnMouseEnter: true,
+  }}
+  modules={[Keyboard, Pagination, Autoplay,Navigation]}
+  className="mySwiper"
+>
+
+  <div className="mt-4 space-y-4">
+     {user.categories.map((cat: any, i: number) => (
+    <SwiperSlide key={i}>
+      <div className="p-3 bg-white rounded-xl border border-gray-200
+       shadow text-black my-3">
+        <div className='my-3'>
+        <div className="flex justify-between text-sm ">
+          <span className="text-gray-600">Category:</span>
+          <span className="font-medium text-gray-900">
+            {cat.AwardCategory || 0}
+          </span>
+        </div>
+
+        <div className="flex justify-between text-sm mt-1">
+          <span className="text-gray-600">Nominated:</span>
+          <span className="font-medium text-gray-900">
+            {cat.NominatedCount || 0}
+          </span>
+        </div>
+
+        <div className="flex justify-center mt-3 space-x-4">
+          <div className="flex items-center space-x-1">
+            <Heart className="w-4 h-4 text-red-500" />
+            <span>{cat.Likes || 0} Likes</span>
+          </div>
+
+          <div className="flex items-center space-x-1">
+            <MessageCircle className="w-4 h-4 text-blue-500" />
+            <span>{cat.Comments || 0} Comments</span>
+          </div>
+        </div>
+        </div>
+      </div>
+    </SwiperSlide>
+  ))}
+  </div>
+ 
+</Swiper>
+
+
+
 
           </div>
         </div>

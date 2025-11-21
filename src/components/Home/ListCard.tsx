@@ -3,6 +3,9 @@ import { Heart, MessageCircle, Share, MoreHorizontal, Eye, Send } from "lucide-r
 import axios from "axios";
 import type { Feed } from "../../dataTypes/nomination";
 import { useAuth } from "../ContextAPI/AuthContext";
+import FeedLikePop from "./FeedLikePop";
+import ViewerModal from "./ViewerModal";
+
 
 interface ListCardProps {
   list: Feed[] | null | undefined;
@@ -35,6 +38,11 @@ const ListCard: React.FC<ListCardProps> = ({ list }) => {
   const [showComments, setShowComments] = useState<{ [key: number]: boolean }>({});
   const [commentText, setCommentText] = useState<{ [key: number]: string }>({});
   const [comments, setComments] = useState<any[]>([]);
+  const [showLikePopup, setShowLikePopup] = useState(false);
+  const [likeList, setLikeList] = useState<any[]>([]);
+  const [viewerList, setViewerList] = useState<any[]>([]);
+  const [viewsMap, setViewsMap] = useState<{ [key: number]: number }>({});
+  const [showViewers, setShowViewers] = useState(false);
 
   // Load liked posts
   useEffect(() => {
@@ -60,7 +68,40 @@ const ListCard: React.FC<ListCardProps> = ({ list }) => {
 
     fetchComments();
   }, []);
+ const fetchViews = async (nominationId: number) => {
+  try {
+    const res = await axios.get(
+      `${apiUrl}/api/nominationview/${nominationId}`,
+      {
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${authToken}`,
+        },
+      }
+    );
 
+    const total = res.data?.[0]?.TotalRowCount;
+
+    console.log("Views", res.data);
+
+    setViewerList(res.data);
+
+    setViewsMap((prev) => ({
+      ...prev,
+      [nominationId]:
+        total !== undefined && total !== null ? total : prev[nominationId],
+    }));
+  } catch (err) {
+    console.error("❌ Error fetching views:", err);
+  }
+};
+useEffect(() => {
+    safeList.forEach((p) => {
+      if (!viewsMap[p.NominationID]) {
+        fetchViews(p.NominationID);
+      }
+    });
+  }, [safeList]);
   const handleLike = async (item: Feed) => {
     const NominationID = item.NominationID;
     const isLiked = likedPosts.includes(NominationID);
@@ -196,16 +237,13 @@ const ListCard: React.FC<ListCardProps> = ({ list }) => {
                       <h3 className="font-semibold text-gray-900 text-sm sm:text-base truncate">
                         {item.Nominee}
                       </h3>
-                       <div className="flex flex-wrap gap-1 sm:gap-1">
-                        <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
-                          👥 {item.NominatedCount}  Nominated
+                       <span className="px-2 py-1 rounded-full text-xs bg-blue-100 text-blue-800">
+                          👥 {item.NominatedCount} Nominated
                         </span>
-                      </div>
-                      <div className="flex flex-wrap gap-1 sm:gap-2">
-                        <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-purple-100 text-purple-800">
+
+                        <span className="px-2 py-1 rounded-full text-xs bg-purple-100 text-purple-800">
                           🏆 {item.AwardCategory}
                         </span>
-                      </div>
                         <p className="text-xs sm:text-sm text-gray-600 mb-1">
                         {item.Tenant}
                       </p>
@@ -218,11 +256,25 @@ const ListCard: React.FC<ListCardProps> = ({ list }) => {
 
                   <p className="text-gray-800 mt-2 text-sm">{item.Description}</p>
 
-                  <div className="flex justify-between border-b-1 border-gray-200 mt-3 py-3">
+                   <div
+                      className="flex justify-between border-b-1 border-gray-200 mt-3 py-3 cursor-pointer"
+                      onClick={() => {
+                        setLikeList(item.LikedBy || []);
+                        setShowLikePopup(true);
+                      }}
+                    >
+                      <span className="text-sm font-medium">
+                        {getLikeText(item.LikedBy, userId)}
+                      </span>
+                    </div>
+
+
+
+                  {/* <div className="flex justify-between border-b-1 border-gray-200 mt-3 py-3">
                     <span className="text-sm font-medium">
                       {getLikeText(item.LikedBy ?? [], userId)}
                     </span>
-                  </div>
+                  </div> */}
 
                   <div className="flex justify-between mt-3">
                     <div className="flex items-center space-x-6">
@@ -252,11 +304,18 @@ const ListCard: React.FC<ListCardProps> = ({ list }) => {
                         <Share className="w-4 h-4" />
                       </button>
                     </div>
-
-                    <div className="flex items-center text-gray-500 text-sm">
-                      <Eye className="w-4 h-4 mr-1" />
-                      {item.Views ?? 0} Views
-                    </div>
+                       <div
+                        className="flex items-center text-gray-500 text-sm cursor-pointer"
+                        onClick={() => {
+                          fetchViews(item.NominationID);  
+                          setShowViewers(true);      
+                        }}
+                      >
+                        <Eye className="w-4 h-4 mr-1" />
+                        <span>{viewsMap[item.NominationID] || 0} Views</span>
+                      </div>
+                      
+                   
                   </div>
 
                   {/* COMMENT SECTION */}
@@ -322,7 +381,10 @@ const ListCard: React.FC<ListCardProps> = ({ list }) => {
                               </div>
                             ))}
                         </div>
+                        
                       )}
+                      
+ 
                     </div>
                   )}
                 </div>
@@ -331,7 +393,21 @@ const ListCard: React.FC<ListCardProps> = ({ list }) => {
           );
         })
       )}
+      {/* Like Modal */}
+      {showLikePopup && (
+        <FeedLikePop
+          likedBy={likeList}
+          onClose={() => setShowLikePopup(false)}
+        />
+      )}
+      {/* View Modal */}
+<ViewerModal
+        open={showViewers}
+        viewers={viewerList}
+        onClose={() => setShowViewers(false)}
+      />
     </div>
+    
   );
 };
 
