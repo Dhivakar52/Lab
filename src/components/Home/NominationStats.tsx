@@ -1,72 +1,49 @@
-import React, { useEffect, useState } from "react";
-import { useAuth } from "../ContextAPI/AuthContext";
-import axios from "axios";
+import React from "react";
 
-interface NomineeStats {
-  "Nomination Others"?: number;
-  "Self Nomination"?: number;
-  "Pending Status"?: number;
-  "Approved"?: number;
+interface NominationStatsProps {
+  nominationOthers?: number;
+  selfNomination?: number;
+  pending?: number;
+  approved?: number;
+  rejected?: number;
 }
 
-const NominationStats: React.FC = () => {
-  const [nomineeStat, setNomineeStat] = useState<NomineeStats | null>(null);
-  const { authToken, userId } = useAuth();
-  const apiUrl = import.meta.env.VITE_API_URL;
-
-  useEffect(() => {
-    const fetchUser = async () => {
-      try {
-        const res2 = await axios.get(`${apiUrl}/api/nominationstats/${userId}`, {
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${authToken}`,
-          },
-        });
-
-        // API returns an array with one object, so take the first one
-        setNomineeStat(res2.data[0]);
-        // console.log("✅ Nominee Stats:", res2.data[0]);
-      } catch (err) {
-        console.error("❌ Error fetching user:", err);
-      }
-    };
-
-    fetchUser();
-  }, [authToken, userId, apiUrl]);
-
-  // Optional: Loading state
-  if (!nomineeStat) {
-    return (
-      <div className="bg-white rounded-lg shadow-sm p-4 sm:p-6 text-center text-gray-500">
-        Loading stats...
-      </div>
-    );
-  }
-
-  // Build the data dynamically
-  const stats = [
-    { label: "Nomination Others", value: nomineeStat["Nomination Others"] || 0, color: "text-blue-600" },
-    { label: "Self Nomination", value: nomineeStat["Self Nomination"] || 0, color: "text-blue-600" },
-    { label: "Pending Status", value: nomineeStat["Pending Status"] || 0, color: "text-orange-600" },
-    { label: "Approved", value: nomineeStat["Approved"] || 0, color: "text-green-600" },
-  ];
-
+const NominationStats: React.FC<NominationStatsProps> = ({
+  nominationOthers = 0,
+  selfNomination = 0,
+  pending = 0,
+  approved = 0,
+  rejected = 0,
+}) => {
   return (
-    <div className="bg-white rounded-lg shadow-sm p-4 sm:p-6">
-      <h3 className="font-semibold text-gray-900 mb-4 text-base sm:text-lg">
-        Nomination Stats
-      </h3>
+    <div className="bg-white rounded-lg shadow-sm p-4">
+      <h4 className="text-base font-semibold text-gray-900 mb-3">Nomination Stats</h4>
 
-      <div className="space-y-3">
-        {stats.map((stat) => (
-          <div key={stat.label} className="flex justify-between items-center">
-            <span className="text-gray-600 text-sm">{stat.label}</span>
-            <span className={`font-semibold text-lg ${stat.color}`}>
-              {stat.value}
-            </span>
-          </div>
-        ))}
+      <div className="space-y-3 text-sm text-gray-600">
+        <div className="flex justify-between">
+          <span>Nomination Others</span>
+          <span className="font-semibold text-indigo-600">{nominationOthers}</span>
+        </div>
+
+        <div className="flex justify-between">
+          <span>Self Nomination</span>
+          <span className="font-semibold text-indigo-600">{selfNomination}</span>
+        </div>
+
+        <div className="flex justify-between">
+          <span>Pending Status</span>
+          <span className="font-semibold text-indigo-600">{pending}</span>
+        </div>
+
+        <div className="flex justify-between">
+          <span>Approved</span>
+          <span className="font-semibold text-green-600">{approved}</span>
+        </div>
+
+        <div className="flex justify-between">
+          <span>Rejected</span>
+          <span className="font-semibold text-red-600">{rejected}</span>
+        </div>
       </div>
     </div>
   );
