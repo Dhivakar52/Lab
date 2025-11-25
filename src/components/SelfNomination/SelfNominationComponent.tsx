@@ -7,6 +7,7 @@ import { useAuth } from "../ContextAPI/AuthContext";
 import Select from "react-select";
 import type { SingleValue } from "react-select";
 
+import { useNavigate } from "react-router-dom";
 
 
 
@@ -34,7 +35,7 @@ export default function AddNomination() {
 
   const {  authToken, userId } = useAuth();
 
- 
+ const navigate = useNavigate();
 
 
   const [form, setForm] = useState<FormState>({
@@ -208,6 +209,7 @@ const handleSubmit = async (e: React.FormEvent) => {
  
     console.log("✅ Success:", res.data);
     alert("Nomination submitted successfully!");
+    navigate("/my-nominations");
   } catch (err) {
     console.error("❌ Error submitting nomination:", err);
     alert("Failed to submit nomination. Please check the console.");
@@ -432,7 +434,11 @@ const handleSubmit = async (e: React.FormEvent) => {
           >
             Cancel
           </button>
-          <button type="submit" className="px-4 py-2 btn-theme">
+         <button
+              onClick={handleSubmit}
+              type="submit"
+              className="px-4 py-2 btn-theme"
+            >
             Submit Nomination
           </button>
         </div>

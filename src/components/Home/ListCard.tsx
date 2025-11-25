@@ -1,11 +1,19 @@
 import React, { useEffect, useState } from "react";
-import { Heart, MessageCircle, Share, MoreHorizontal, Eye, Send } from "lucide-react";
+import {
+  Heart,
+  MessageCircle,
+  Share,
+  MoreHorizontal,
+  Eye,
+  Send,
+} from "lucide-react";
 import axios from "axios";
 import type { Feed } from "../../dataTypes/nomination";
 import { useAuth } from "../ContextAPI/AuthContext";
 import FeedLikePop from "./FeedLikePop";
 import ViewerModal from "./ViewerModal";
-
+import PostFeedModal from "./PostFeedModal";
+import FeedComment from "./FeedComment";
 
 interface ListCardProps {
   list: Feed[] | null | undefined;
@@ -30,12 +38,14 @@ const getLikeText = (likedByList: any[] = [], currentUserId: number | null) => {
 };
 
 const ListCard: React.FC<ListCardProps> = ({ list }) => {
-  const safeList = list ?? []; // 💥 MAIN FIX
+  const safeList = list ?? [];
   const { authToken, userId, username } = useAuth();
   const apiUrl = import.meta.env.VITE_API_URL;
 
   const [likedPosts, setLikedPosts] = useState<number[]>([]);
-  const [showComments, setShowComments] = useState<{ [key: number]: boolean }>({});
+  const [showComments, setShowComments] = useState<{ [key: number]: boolean }>(
+    {}
+  );
   const [commentText, setCommentText] = useState<{ [key: number]: string }>({});
   const [comments, setComments] = useState<any[]>([]);
   const [showLikePopup, setShowLikePopup] = useState(false);
@@ -43,8 +53,11 @@ const ListCard: React.FC<ListCardProps> = ({ list }) => {
   const [viewerList, setViewerList] = useState<any[]>([]);
   const [viewsMap, setViewsMap] = useState<{ [key: number]: number }>({});
   const [showViewers, setShowViewers] = useState(false);
+  const [selectedPost, setSelectedPost] = useState<any>(null);
+   const [viewed, setViewed] = useState<{ [key:number]: boolean }>({});
+  const [showModal, setShowModal] = useState(false);
 
-  // Load liked posts
+  // ---------------- LIKE LOAD ----------------
   useEffect(() => {
     const liked = safeList
       .filter((p) => p.LikedBy?.some((like: any) => like.UserID === userId))
@@ -53,7 +66,7 @@ const ListCard: React.FC<ListCardProps> = ({ list }) => {
     setLikedPosts(liked);
   }, [safeList, userId]);
 
-  // Load comments
+  // ---------------- COMMENT LOAD ----------------
   useEffect(() => {
     const fetchComments = async () => {
       try {
@@ -65,43 +78,69 @@ const ListCard: React.FC<ListCardProps> = ({ list }) => {
         console.error("Comments error:", err);
       }
     };
-
     fetchComments();
   }, []);
- const fetchViews = async (nominationId: number) => {
+ const addView = async (nominationId: number) => {
   try {
-    const res = await axios.get(
-      `${apiUrl}/api/nominationview/${nominationId}`,
+    await axios.post(
+      `${apiUrl}/api/nominationview`,
+      null,
       {
+        params: {
+          NominationID: nominationId,
+          Active: true,
+          SubmittedBy: userId,
+        },
         headers: {
-          "Content-Type": "application/json",
+          Accept: "text/plain",
           Authorization: `Bearer ${authToken}`,
         },
       }
     );
 
-    const total = res.data?.[0]?.TotalRowCount;
-
-    console.log("Views", res.data);
-
-    setViewerList(res.data);
-
-    setViewsMap((prev) => ({
-      ...prev,
-      [nominationId]:
-        total !== undefined && total !== null ? total : prev[nominationId],
-    }));
+    console.log("View added for: ", nominationId);
   } catch (err) {
-    console.error("❌ Error fetching views:", err);
+    console.error("❌ Error adding view:", err);
   }
 };
-useEffect(() => {
+
+  // ---------------- FETCH VIEWS ----------------
+  const fetchViews = async (nominationId: number) => {
+    try {
+      const res = await axios.get(
+        `${apiUrl}/api/nominationview/${nominationId}`,
+        {
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${authToken}`,
+          },
+        }
+      );
+
+      const total = res.data?.[0]?.TotalRowCount;
+
+      setViewerList(res.data);
+
+      setViewsMap((prev) => ({
+        ...prev,
+        [nominationId]: total !== undefined ? total : prev[nominationId],
+      }));
+    } catch (err) {
+      console.error("❌ Error fetching views:", err);
+    }
+  };
+
+  useEffect(() => {
     safeList.forEach((p) => {
       if (!viewsMap[p.NominationID]) {
         fetchViews(p.NominationID);
       }
     });
   }, [safeList]);
+const toggleComments = (id: number) => {
+    setShowComments((prev) => ({ ...prev, [id]: !prev[id] }));
+  };
+  // ---------------- LIKE HANDLER ----------------
   const handleLike = async (item: Feed) => {
     const NominationID = item.NominationID;
     const isLiked = likedPosts.includes(NominationID);
@@ -113,7 +152,6 @@ useEffect(() => {
     };
 
     try {
-      // LIKE
       if (!isLiked) {
         const response = await axios.post(
           `${apiUrl}/api/nominationlike`,
@@ -138,26 +176,29 @@ useEffect(() => {
         item.LikedBy.push({
           NominationLikeID: newLikeId,
           UserID: userId,
-          UserName: "You",
+          UserName: username,
         });
 
         setLikedPosts((p) => [...p, NominationID]);
         return;
       }
 
-      // UNLIKE
-      const likeRecords = item.LikedBy?.filter((l: any) => l.UserID === userId) ?? [];
+      const likeRecords =
+        item.LikedBy?.filter((l: any) => l.UserID === userId) ?? [];
 
       for (const like of likeRecords) {
-        await axios.delete(`${apiUrl}/api/nominationlike/${like.NominationLikeID}`, {
-          headers,
-          data: {
+        await axios.delete(
+          `${apiUrl}/api/nominationlike/${like.NominationLikeID}`,
+          {
+            headers,
+            data: {
               nominationID: item.NominationID,
               likedBy: userId,
               active: false,
               submittedBy: userId,
             },
-        });
+          }
+        );
       }
 
       item.LikedBy = (item.LikedBy ?? []).filter((l: any) => l.UserID !== userId);
@@ -168,6 +209,7 @@ useEffect(() => {
     }
   };
 
+  // ---------------- COMMENT ADD ----------------
   const handleAddComment = async (item: Feed) => {
     const text = commentText[item.NominationID]?.trim();
     if (!text) return;
@@ -206,208 +248,236 @@ useEffect(() => {
     }
   };
 
-  const toggleComments = (id: number) => {
-    setShowComments((prev) => ({ ...prev, [id]: !prev[id] }));
+  // ---------------- REPLY COMMENT ----------------
+  const handleReply = async (postId: any, text: any, parentId: any) => {
+    if (!text.trim()) return;
+
+    try {
+      const res = await axios.post(
+        `${apiUrl}/api/nominationcomments`,
+        {
+          nominationID: postId,
+          commentedBy: userId,
+          commentsText: text,
+          parentCommentID: parentId,
+          active: true,
+          submittedBy: userId,
+        },
+        {
+          params: { id: postId },
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${authToken}`,
+          },
+        }
+      );
+
+      const newId = res.data;
+
+      setComments((prev) => [
+        ...prev,
+        {
+          NominationCommentsID: newId,
+          NominationID: postId,
+          ParentCommentID: parentId,
+          CommentedBy: username,
+          CommentsText: text,
+          CommentedAt: new Date().toISOString(),
+          ChildComments: [],
+        },
+      ]);
+    } catch (err) {
+      console.error("Reply failed:", err);
+    }
   };
+
+  
 
   return (
     <div className="space-y-6">
-      {safeList.length === 0 ? (
-        <p className="text-gray-500 text-sm text-center">No items in your list.</p>
-      ) : (
-        safeList.map((item) => {
-          const NominationID = item.NominationID;
-          const isLiked = likedPosts.includes(NominationID);
-          const filteredComments = comments.filter((c) => c.NominationID === NominationID);
+      {safeList.map((item) => {
+        const NominationID = item.NominationID;
+        const isLiked = likedPosts.includes(NominationID);
+        const filteredComments = comments.filter(
+          (c) => c.NominationID === NominationID
+        );
 
-          return (
-            <div
-              key={NominationID}
-               className="p-4 sm:p-6 bg-white border-b-2 border-b-gray-100 hover:shadow-md transition"
-            >
-              <div className="flex space-x-3">
-                <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-blue-100 flex items-center justify-center text-blue-600 font-semibold">
-                  {item.Nominee?.charAt(0)}
-                </div>
+        return (
+          <div
+            key={NominationID}
+            className="p-4 sm:p-6 bg-white border-b-2 border-b-gray-100 hover:shadow-md transition"
+          >
+            <div className="flex space-x-3">
+              <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-blue-100 flex items-center justify-center text-blue-600 font-semibold">
+                {item.Nominee?.charAt(0)}
+              </div>
 
-                <div className="flex-1 min-w-0">
-                  <div className="flex  items-start justify-between">
-                    <div className="flex-1 min-w-0">
+              <div className="flex-1 min-w-0">
+                <div className="flex items-start justify-between">
+                  <div>
                     <div className="flex flex-col sm:flex-row sm:items-center sm:space-x-3 mb-1">
                       <h3 className="font-semibold text-gray-900 text-sm sm:text-base truncate">
                         {item.Nominee}
                       </h3>
-                       <span className="px-2 py-1 rounded-full text-xs bg-blue-100 text-blue-800">
-                          👥 {item.NominatedCount} Nominated
-                        </span>
 
-                        <span className="px-2 py-1 rounded-full text-xs bg-purple-100 text-purple-800">
-                          🏆 {item.AwardCategory}
-                        </span>
-                        <p className="text-xs sm:text-sm text-gray-600 mb-1">
-                        {item.Tenant}
-                      </p>
-                    </div>
-                    </div>
-                    
+                      <span className="px-2 py-1 rounded-full text-xs bg-blue-100 text-blue-800">
+                        👥 {item.NominatedCount} Nominated
+                      </span>
 
-                    <MoreHorizontal className="w-5 h-5 text-gray-400 hover:text-gray-600 cursor-pointer" />
-                  </div>
-
-                  <p className="text-gray-800 mt-2 text-sm">{item.Description}</p>
-
-                   <div
-                      className="flex justify-between border-b-1 border-gray-200 mt-3 py-3 cursor-pointer"
-                      onClick={() => {
-                        setLikeList(item.LikedBy || []);
-                        setShowLikePopup(true);
-                      }}
-                    >
-                      <span className="text-sm font-medium">
-                        {getLikeText(item.LikedBy, userId)}
+                      <span className="px-2 py-1 rounded-full text-xs bg-purple-100 text-purple-800">
+                        🏆 {item.AwardCategory}
                       </span>
                     </div>
 
-
-
-                  {/* <div className="flex justify-between border-b-1 border-gray-200 mt-3 py-3">
-                    <span className="text-sm font-medium">
-                      {getLikeText(item.LikedBy ?? [], userId)}
-                    </span>
-                  </div> */}
-
-                  <div className="flex justify-between mt-3">
-                    <div className="flex items-center space-x-6">
-                      <button
-                        onClick={() => handleLike(item)}
-                        className={`flex items-center space-x-2 ${
-                          isLiked ? "text-red-500" : "text-gray-500 hover:text-red-500"
-                        }`}
-                      >
-                        <Heart className="w-4 h-4" fill={isLiked ? "red" : "none"} />
-                        <span className="text-sm font-medium">
-                          {(item.LikedBy ?? []).length} Likes
-                        </span>
-                      </button>
-
-                      <button
-                        onClick={() => toggleComments(NominationID)}
-                        className="flex items-center space-x-2 text-gray-500 hover:text-blue-500"
-                      >
-                        <MessageCircle className="w-4 h-4" />
-                        <span className="text-sm font-medium">
-                          {item.Comments ?? 0} Comments
-                        </span>
-                      </button>
-
-                      <button className="text-gray-500 hover:text-gray-700">
-                        <Share className="w-4 h-4" />
-                      </button>
-                    </div>
-                       <div
-                        className="flex items-center text-gray-500 text-sm cursor-pointer"
-                        onClick={() => {
-                          fetchViews(item.NominationID);  
-                          setShowViewers(true);      
-                        }}
-                      >
-                        <Eye className="w-4 h-4 mr-1" />
-                        <span>{viewsMap[item.NominationID] || 0} Views</span>
-                      </div>
-                      
-                   
+                    <p className="text-xs sm:text-sm text-gray-600">
+                      {item.Tenant}
+                    </p>
                   </div>
 
-                  {/* COMMENT SECTION */}
-                  {showComments[NominationID] && (
-                    <div className="mt-4 pt-4 border-t border-gray-200">
-                      <div className="flex space-x-2">
-                        <div className="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center text-blue-600 font-semibold">
-                          {username?.charAt(0)}
-                        </div>
-
-                        <div className="flex-1 relative">
-                          <textarea
-                            placeholder="Add a comment..."
-                            rows={1}
-                            value={commentText[NominationID] || ""}
-                            onChange={(e) =>
-                              setCommentText((prev) => ({
-                                ...prev,
-                                [NominationID]: e.target.value,
-                              }))
-                            }
-                           className="
-                              w-full px-4 py-2 pr-20 border border-gray-300 rounded-md
-                              text-sm resize-none focus:outline-none focus:border-blue-500
-                              focus:ring-1 focus:ring-blue-500 overflow-hidden
-                            "
-                          />
-
-                          <button
-                            onClick={() => handleAddComment(item)}
-                            className="absolute right-2 top-2 text-gray-400 hover:text-gray-600"
-                          >
-                            <Send className="w-5 h-5" />
-                          </button>
-                        </div>
-                      </div>
-
-                      {/* COMMENTS LIST */}
-                      {(filteredComments ?? []).length === 0 ? (
-                        <p className="text-center text-gray-500 text-xs mt-4">
-                          No comments yet.
-                        </p>
-                      ) : (
-                        <div className="mt-4">
-                          {(filteredComments ?? [])
-                            .slice(0, 5)
-                            .map((c) => (
-                              <div
-                                key={c.NominationCommentsID}
-                                className="bg-gray-50 p-3 rounded-md border border-gray-200 flex space-x-3 mb-2"
-                              >
-                                <div className="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center text-blue-600 font-semibold">
-                                  {c.CommentedBy?.charAt(0)}
-                                </div>
-
-                                <div className="ml-3">
-                                  <p className="text-sm font-semibold">{c.CommentedBy}</p>
-                                  <p className="text-sm">{c.CommentsText}</p>
-                                  <p className="text-[10px] text-gray-400">
-                                    {new Date(c.CommentedAt).toLocaleString()}
-                                  </p>
-                                </div>
-                              </div>
-                            ))}
-                        </div>
-                        
-                      )}
-                      
- 
-                    </div>
-                  )}
+                  <MoreHorizontal className="w-5 h-5 text-gray-400" />
                 </div>
+
+                <p className="text-gray-800 mt-2 text-sm">{item.Description}</p>
+
+                {/* LIKE BAR */}
+                <div
+                  className="flex justify-between border-b-1 border-gray-200 mt-3 py-3 cursor-pointer"
+                  onClick={() => {
+                    setLikeList(item.LikedBy || []);
+                    setShowLikePopup(true);
+                  }}
+                >
+                  <span className="text-sm font-medium">
+                    {getLikeText(item.LikedBy ?? [], userId)}
+                  </span>
+                </div>
+
+                {/* ACTIONS */}
+                <div className="flex justify-between mt-3">
+                  <div className="flex items-center space-x-6">
+                    <button
+                      onClick={() => handleLike(item)}
+                      className={`flex items-center space-x-2 ${
+                        isLiked
+                          ? "text-red-500"
+                          : "text-gray-500 hover:text-red-500"
+                      }`}
+                    >
+                      <Heart
+                        className="w-4 h-4"
+                        fill={isLiked ? "red" : "none"}
+                      />
+                      <span className="text-sm font-medium">
+                        {(item.LikedBy ?? []).length} Likes
+                      </span>
+                    </button>
+
+                    <button
+                      onClick={() => toggleComments(NominationID)}
+                      className="flex items-center space-x-2 text-gray-500 hover:text-blue-500"
+                    >
+                      <MessageCircle className="w-4 h-4" />
+                      <span className="text-sm font-medium">
+                        {item.Comments ?? 0} Comments
+                      </span>
+                    </button>
+
+                    <button className="text-gray-500 hover:text-gray-700">
+                      <Share className="w-4 h-4" />
+                    </button>
+                  </div>
+
+                  {/* <div
+                    className="flex items-center text-gray-500 text-sm cursor-pointer"
+                    onClick={() => {
+                      fetchViews(item.NominationID);
+                      setShowViewers(true);
+                    }}
+                  > */}
+                   <div
+                        className="flex items-center text-gray-500 text-sm cursor-pointer"
+                      onClick={async (e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                      e.nativeEvent.stopImmediatePropagation();
+                        if (!viewed[item.NominationID]) {
+                          await addView(item.NominationID);
+                          setViewed(prev => ({ ...prev, [item.NominationID]: true }));
+                        }
+
+                        await fetchViews(item.NominationID);
+                        setShowViewers(true);
+                      }}
+
+
+                      >
+                    <Eye className="w-4 h-4 mr-1" />
+                    <span>{viewsMap[item.NominationID] || 0} Views</span>
+                  </div>
+                </div>
+
+                {/* COMMENT SECTION */}
+                {showComments[NominationID] && (
+                  <div className="mt-4">
+                    <FeedComment
+                      post={item}
+                      username={username || ""}
+                      comments={filteredComments}
+                      commentText={commentText[NominationID] || ""}
+                      setCommentText={(v: any) =>
+                        setCommentText((prev) => ({
+                          ...prev,
+                          [NominationID]: v,
+                        }))
+                      }
+                      handleAddComment={() => handleAddComment(item)}
+                      handleReply={handleReply}
+                    />
+                  </div>
+                )}
               </div>
             </div>
-          );
-        })
-      )}
-      {/* Like Modal */}
+          </div>
+        );
+      })}
+
+      {/* LIKE POPUP */}
       {showLikePopup && (
         <FeedLikePop
           likedBy={likeList}
           onClose={() => setShowLikePopup(false)}
         />
       )}
-      {/* View Modal */}
-<ViewerModal
+
+      {/* VIEWERS POPUP */}
+      <ViewerModal
         open={showViewers}
         viewers={viewerList}
         onClose={() => setShowViewers(false)}
       />
+
+      {/* POST FEED MODAL */}
+      <PostFeedModal
+        post={selectedPost}
+        open={showModal}
+        onClose={() => setShowModal(false)}
+        onLike={handleLike}
+        onComment={handleAddComment}
+        onReply={handleReply}
+        comments={comments.filter(
+          (c) => c.NominationID === selectedPost?.NominationID
+        )}
+        commentText={commentText[selectedPost?.NominationID ?? 0] || ""}
+        setCommentText={(v: any) =>
+          setCommentText((prev) => ({
+            ...prev,
+            [selectedPost?.NominationID ?? 0]: v,
+          }))
+        }
+        userId={userId}
+        likeList={likeList}
+      />
     </div>
-    
   );
 };
 
