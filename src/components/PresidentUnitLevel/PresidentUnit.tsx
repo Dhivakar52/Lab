@@ -1,110 +1,390 @@
-import React, { useState } from 'react';
-import * as DropdownMenu from '@radix-ui/react-dropdown-menu';
-import { Menu } from 'lucide-react';
-import SearchComponent from '../SearchComponent';
-import FilterComponent from '../FilterComponent';
-import PresidentUnitPanel from './PresidentUnitPanel'; 
+// PresidentUnit.tsx
+import React, { useState, useEffect, useMemo } from "react";
+import axios from "axios";
+import * as DropdownMenu from "@radix-ui/react-dropdown-menu";
+import {
+  useReactTable,
+  getCoreRowModel,
+  getPaginationRowModel,
+  getSortedRowModel,
+  getFilteredRowModel,
+  flexRender,
+} from "@tanstack/react-table";
+import type { ColumnDef } from "@tanstack/react-table";
+import { CheckCircle, XCircle, Clock, Menu } from "lucide-react";
+import PresidentSidePanel from "./PresidentUnitPanel";
+import { useAuth } from "../ContextAPI/AuthContext";
 
-interface Nominee {
-  nominee: string;
-  entity: string;
-  category: string;
-  consolidatedScore: number;
-  presidentScore: number;
-  flag: string;
-  finalStatus: 'Winner' | 'Runner-up';
+interface SupportingDocument {
+  OriginalFileName: string;
+  FileType: string;
+  FileNameGUID: string;
+  FilePath: string;
 }
 
-const data: Nominee[] = [
-  { nominee: 'Ravi Kumar', entity: 'SRMAP', category: 'Innovation', consolidatedScore: 95, presidentScore: 96, flag: '✔', finalStatus: 'Winner' },
-  { nominee: 'Riya Sharma', entity: 'SRM Tech', category: 'Service Excellence', consolidatedScore: 85, presidentScore: 92, flag: '✔', finalStatus: 'Winner' },
-  { nominee: 'Amit Verma', entity: 'SRM Media', category: 'Talent', consolidatedScore: 90, presidentScore: 93, flag: '✔', finalStatus: 'Winner' },
-  { nominee: 'Suresh Iyer', entity: 'Puthiya Thalaimurai', category: 'Customer Focus', consolidatedScore: 87, presidentScore: 90, flag: '✔', finalStatus: 'Winner' },
-  { nominee: 'Sathish Kumar', entity: 'SRMAP', category: 'Leadership Excellence', consolidatedScore: 85, presidentScore: 87, flag: '✔', finalStatus: 'Runner-up' },
-  { nominee: 'Balaji', entity: 'SRM Research', category: 'Best Innovation', consolidatedScore: 86, presidentScore: 89, flag: '✔', finalStatus: 'Runner-up' },
-];
+export interface Nominee {
+  TotalRowCount: number;
+  NominationID: number;
+  Nominee: string;
+  Tenant: string;
+  CategoryName: string;
+  SubmittedOn: string;              // "Submitted On"
+  BusinessJuryRemarks: string;      // "BusinessJury Remarks"
+  Score: number;
+  GeneralJuryRemarks: string;       // "GeneralJury Remarks"
+  Status: "Approved" | "Rejected" | "Pending" | string;
+  ConsolidatedAvgScore?: number;
+  FinalStatus?: "Winner" | "Runner-up" | string;
+  SupportingDocuments: SupportingDocument[] | null; // "Supporting Documents"
+}
 
-const statusColors: Record<Nominee['finalStatus'], string> = {
-  'Winner': 'bg-blue-100 text-blue-800',
-  'Runner-up': 'bg-gray-100 text-gray-800',
+const apiUrl = import.meta.env.VITE_API_URL;
+
+const statusBadgeColors: Record<string, string> = {
+  Approved: "bg-green-100 text-green-800",
+  Rejected: "bg-red-100 text-red-800",
+  Pending: "bg-orange-100 text-orange-800",
 };
 
 const PresidentUnit: React.FC = () => {
-  const [search, setSearch] = useState('');
   const [selectedNominee, setSelectedNominee] = useState<Nominee | null>(null);
+  const [data, setData] = useState<Nominee[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [globalFilter, setGlobalFilter] = useState("");
+  const { authToken, userId } = useAuth();
+  const [isPanelOpen, setIsPanelOpen] = useState(false);
+  const [successMessage, setSuccessMessage] = useState("");
+  const [toastType, setToastType] = useState<"success" | "error">("success");
 
-  const filteredData = data.filter(
-    (item) =>
-      item.nominee.toLowerCase().includes(search.toLowerCase()) ||
-      item.entity.toLowerCase().includes(search.toLowerCase()) ||
-      item.category.toLowerCase().includes(search.toLowerCase())
+  // ------------------------------------------------------------
+  // 📌 FETCH API
+  // ------------------------------------------------------------
+  useEffect(() => {
+    const fetchNominee = async () => {
+      try {
+        if (!authToken) throw new Error("No auth token found");
+
+        const res = await axios.get(`${apiUrl}/api/generaljuryevaluation`, {
+          headers: { Authorization: `Bearer ${authToken}` },
+        });
+
+        // 🔥 IMPORTANT: map API fields with spaces → TS-friendly keys
+        const formatted: Nominee[] = res.data.map((item: any) => ({
+          TotalRowCount: item.TotalRowCount,
+          NominationID: item.NominationID,
+          Nominee: item.Nominee,
+          Tenant: item.Tenant,
+          CategoryName: item.CategoryName,
+          SubmittedOn: item["Submitted On"] ?? "",
+          BusinessJuryRemarks: item["BusinessJury Remarks"] ?? "",
+          Score: item.Score,
+          GeneralJuryRemarks: item["GeneralJury Remarks"] ?? "",
+          Status: item.Status,
+          ConsolidatedAvgScore: item.ConsolidatedAvgScore ?? 0,
+          FinalStatus: item.FinalStatus ?? item.Status,
+          SupportingDocuments: item["Supporting Documents"] ?? null,
+        }));
+
+        setData(formatted);
+      } catch (err) {
+        console.error("❌ Error fetching President Evaluation:", err);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchNominee();
+  }, [authToken]);
+
+  // ------------------------------------------------------------
+  // 📌 Approve / Reject Handlers
+  // ------------------------------------------------------------
+  const handleApprove = async (nominationID: number) => {
+    try {
+      await axios.put(
+        `${apiUrl}/api/generaljuryevaluation/${nominationID}`,
+        {
+          nominationID,
+          isManagerApproved: true,
+          approvalComments: "Approved",
+          submittedBy: userId,
+          active: true,
+        },
+        {
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${authToken}`,
+          },
+        }
+      );
+
+      setData((prev) =>
+        prev.map((item) =>
+          item.NominationID === nominationID
+            ? { ...item, Status: "Approved" }
+            : item
+        )
+      );
+
+      setToastType("success");
+      setSuccessMessage("Nominee approved successfully!");
+      setTimeout(() => setSuccessMessage(""), 3000);
+      setIsPanelOpen(false);
+    } catch (error) {
+      console.error("Approve Error:", error);
+      alert("Approval failed");
+    }
+  };
+
+  const handleReject = async (nominationID: number) => {
+    try {
+      await axios.put(
+        `${apiUrl}/api/generaljuryevaluation/${nominationID}`,
+        {
+          nominationID,
+          isManagerApproved: false,
+          approvalComments: "Rejected",
+          submittedBy: userId,
+          active: true,
+        },
+        {
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${authToken}`,
+          },
+        }
+      );
+
+      setData((prev) =>
+        prev.map((item) =>
+          item.NominationID === nominationID
+            ? { ...item, Status: "Rejected" }
+            : item
+        )
+      );
+
+      setToastType("error");
+      setSuccessMessage("Nominee rejected successfully!");
+      setTimeout(() => setSuccessMessage(""), 3000);
+      setIsPanelOpen(false);
+    } catch (error) {
+      console.error("Reject Error:", error);
+      alert("Reject failed");
+    }
+  };
+
+  // ------------------------------------------------------------
+  // 📌 Table Columns
+  // ------------------------------------------------------------
+  const columns = useMemo<ColumnDef<Nominee>[]>(
+    () => [
+      { accessorKey: "Nominee", header: "Nominee" },
+      { accessorKey: "Tenant", header: "Entity" },
+      { accessorKey: "CategoryName", header: "Category" },
+      { accessorKey: "ConsolidatedAvgScore", header: "Consolidated Avg Score" },
+      { accessorKey: "Score", header: "President Score" },
+
+      {
+        accessorKey: "Status",
+        header: "Flag",
+        cell: ({ getValue }) => {
+          const flag = getValue<string>();
+          if (flag === "Approved")
+            return <CheckCircle className="text-green-500 w-5 h-5" />;
+          if (flag === "Rejected")
+            return <XCircle className="text-red-500 w-5 h-5" />;
+          return <Clock className="text-yellow-500 w-5 h-5" />;
+        },
+      },
+
+      {
+        accessorKey: "Status",
+        header: "Status",
+        cell: ({ getValue }) => {
+          const status = getValue<string>();
+          const cls = statusBadgeColors[status] ?? "bg-gray-100 text-gray-800";
+          return (
+            <span
+              className={`px-3 py-1 rounded-full text-sm font-semibold ${cls}`}
+            >
+              {status}
+            </span>
+          );
+        },
+      },
+
+      {
+        id: "actions",
+        header: "Actions",
+        cell: ({ row }) => {
+          const item = row.original;
+          return (
+            <DropdownMenu.Root>
+              <DropdownMenu.Trigger className="p-2 rounded hover:bg-gray-100">
+                <Menu className="w-5 h-5 text-blue-500" />
+              </DropdownMenu.Trigger>
+
+              <DropdownMenu.Content className="bg-white shadow-md rounded-md p-2">
+                <DropdownMenu.Item
+                  onClick={() => {
+                    setSelectedNominee(item);
+                    setIsPanelOpen(true);
+                  }}
+                  className="px-2 py-2 hover:bg-gray-100 cursor-pointer"
+                >
+                  View
+                </DropdownMenu.Item>
+
+                <DropdownMenu.Item
+                  onClick={() => handleApprove(item.NominationID)}
+                  className="px-2 py-2 hover:bg-green-100 text-green-700 cursor-pointer"
+                >
+                  Approve
+                </DropdownMenu.Item>
+
+                <DropdownMenu.Item
+                  onClick={() => handleReject(item.NominationID)}
+                  className="px-2 py-2 hover:bg-red-100 text-red-700 cursor-pointer"
+                >
+                  Reject
+                </DropdownMenu.Item>
+              </DropdownMenu.Content>
+            </DropdownMenu.Root>
+          );
+        },
+      },
+    ],
+    []
   );
 
+  const table = useReactTable({
+    data,
+    columns,
+    state: { globalFilter },
+    onGlobalFilterChange: setGlobalFilter,
+    getCoreRowModel: getCoreRowModel(),
+    getSortedRowModel: getSortedRowModel(),
+    getFilteredRowModel: getFilteredRowModel(),
+    getPaginationRowModel: getPaginationRowModel(),
+  });
+
+  if (loading) {
+    return (
+      <div className="text-center py-6 text-gray-600">
+        Loading President Level Evaluation...
+      </div>
+    );
+  }
+
   return (
-    <div className="p-6 m-5 bg-white rounded-xl shadow-md relative">
-      {/* Header */}
-      <div className="flex flex-col sm:flex-row justify-between items-baseline sm:items-center mb-4 gap-3">
-        <h2 className="text-xl font-bold">Nominations for Review</h2>
-        <div className="flex space-x-2 w-full sm:w-auto">
-          <SearchComponent search={search} setSearch={setSearch} />
-          <FilterComponent />
+    <div className="p-6 bg-white rounded-xl shadow-md relative">
+      {/* Toast */}
+      {successMessage && (
+        <div
+          className={`fixed right-5 px-4 py-2 rounded-lg shadow-lg animate-slide-in z-[9999]
+            ${toastType === "success" ? "bg-green-600" : "bg-red-600"} text-white`}
+        >
+          {successMessage}
         </div>
+      )}
+
+      {/* Search */}
+      <div className="mb-4 flex justify-between items-center">
+        <input
+          value={globalFilter ?? ""}
+          onChange={(e) => setGlobalFilter(e.target.value)}
+          placeholder="Search..."
+          className="border border-gray-300 rounded-md px-4 py-2 w-1/3 text-sm"
+        />
       </div>
 
       {/* Table */}
       <div className="overflow-x-auto">
         <table className="min-w-full border-collapse table-auto">
-          <thead className="bg-gray-100">
-            <tr>
-              <th className="px-6 py-3 text-left text-sm font-semibold text-gray-600">Nominee</th>
-              <th className="px-6 py-3 text-left text-sm font-semibold text-gray-600">Entity</th>
-              <th className="px-6 py-3 text-left text-sm font-semibold text-gray-600">Category</th>
-              <th className="px-6 py-3 text-left text-sm font-semibold text-gray-600">Consolidated Avg Score</th>
-              <th className="px-6 py-3 text-left text-sm font-semibold text-gray-600">President Score</th>
-              <th className="px-6 py-3 text-left text-sm font-semibold text-gray-600">Flag</th>
-              <th className="px-6 py-3 text-left text-sm font-semibold text-gray-600">Final Status</th>
-              <th className="px-6 py-3 text-left text-sm font-semibold text-gray-600">Actions</th>
-            </tr>
-          </thead>
-          <tbody className="divide-y divide-gray-100">
-            {filteredData.map((item, index) => (
-              <tr key={index} className="hover:bg-gray-50 transition-colors">
-                <td className="px-6 py-3 text-sm text-gray-900">{item.nominee}</td>
-                <td className="px-6 py-3 text-sm text-gray-900">{item.entity}</td>
-                <td className="px-6 py-3 text-sm text-gray-900">{item.category}</td>
-                <td className="px-6 py-3 text-sm text-gray-900">{item.consolidatedScore}</td>
-                <td className="px-6 py-3 text-sm text-gray-900">{item.presidentScore}</td>
-                <td className="px-6 py-3 text-green-600 font-bold">{item.flag}</td>
-                <td className="px-6 py-3">
-                  <span className={`px-3 py-1 rounded-full text-sm font-semibold ${statusColors[item.finalStatus]}`}>
-                    {item.finalStatus}
-                  </span>
-                </td>
-                <td className="px-6 py-3">
-                  <DropdownMenu.Root>
-                    <DropdownMenu.Trigger className="p-2 rounded hover:bg-gray-100">
-                      <Menu className="w-5 h-5 text-blue-500" />
-                    </DropdownMenu.Trigger>
-                    <DropdownMenu.Content className="bg-white shadow-md rounded-md p-2">
-                      <DropdownMenu.Item
-                        className="px-2 py-1 hover:bg-gray-100 cursor-pointer"
-                        onClick={() => setSelectedNominee(item)}
-                      >
-                        View
-                      </DropdownMenu.Item>
-                      <DropdownMenu.Item className="px-2 py-1 hover:bg-gray-100 cursor-pointer">Approve</DropdownMenu.Item>
-                      <DropdownMenu.Item className="px-2 py-1 hover:bg-gray-100 cursor-pointer">Reject</DropdownMenu.Item>
-                    </DropdownMenu.Content>
-                  </DropdownMenu.Root>
-                </td>
+          <thead className="bg-gray-100 text-sm">
+            {table.getHeaderGroups().map((headerGroup) => (
+              <tr key={headerGroup.id}>
+                {headerGroup.headers.map((header) => (
+                  <th
+                    key={header.id}
+                    onClick={header.column.getToggleSortingHandler()}
+                    className="px-4 py-3 text-left cursor-pointer"
+                  >
+                    {flexRender(
+                      header.column.columnDef.header,
+                      header.getContext()
+                    )}
+                    {{
+                      asc: " 🔼",
+                      desc: " 🔽",
+                    }[header.column.getIsSorted() as string] ?? null}
+                  </th>
+                ))}
               </tr>
             ))}
+          </thead>
+
+          <tbody className="divide-y divide-gray-100">
+            {table.getRowModel().rows.length ? (
+              table.getRowModel().rows.map((row) => (
+                <tr key={row.id} className="hover:bg-gray-50">
+                  {row.getVisibleCells().map((cell) => (
+                    <td key={cell.id} className="px-6 py-3 text-sm">
+                      {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                    </td>
+                  ))}
+                </tr>
+              ))
+            ) : (
+              <tr>
+                <td
+                  colSpan={columns.length}
+                  className="text-center py-6 text-gray-500"
+                >
+                  No President Unit Evaluation found
+                </td>
+              </tr>
+            )}
           </tbody>
         </table>
       </div>
 
+      {/* Pagination */}
+      <div className="flex justify-between mt-4">
+        <div className="text-sm">
+          Page {table.getState().pagination.pageIndex + 1}
+        </div>
+
+        <div className="space-x-2">
+          <button
+            onClick={() => table.previousPage()}
+            disabled={!table.getCanPreviousPage()}
+            className="px-3 py-1 bg-gray-200 rounded disabled:opacity-50"
+          >
+            Prev
+          </button>
+          <button
+            onClick={() => table.nextPage()}
+            disabled={!table.getCanNextPage()}
+            className="px-3 py-1 bg-gray-200 rounded disabled:opacity-50"
+          >
+            Next
+          </button>
+        </div>
+      </div>
+
       {/* Panel */}
-      <PresidentUnitPanel nomineeData={selectedNominee} onClose={() => setSelectedNominee(null)} />
+      <PresidentSidePanel
+        nomineeData={selectedNominee}
+        isOpen={isPanelOpen}
+        onClose={() => setIsPanelOpen(false)}
+        onApprove={() =>
+          selectedNominee && handleApprove(selectedNominee.NominationID)
+        }
+        onReject={() =>
+          selectedNominee && handleReject(selectedNominee.NominationID)
+        }
+      />
     </div>
   );
 };
