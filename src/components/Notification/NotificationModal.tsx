@@ -1,7 +1,10 @@
-import React from 'react';
+import React,{useState} from 'react';
 import * as Dialog from '@radix-ui/react-dialog';
 import { Bell, X, FileText } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
+import { useAuth } from "../ContextAPI/AuthContext";
+import axios from "axios";
+import NotificationDetailPanel from './NotificationDetailPanel';
 
 interface Notification {
   id: string;
@@ -19,7 +22,7 @@ interface Notification {
 interface NotificationModalProps {
   isOpen: boolean;
   onClose: () => void;
-  notifications?: Notification[];
+  notifications: Notification[];
 }
 
 const NotificationModal: React.FC<NotificationModalProps> = ({
@@ -27,13 +30,49 @@ const NotificationModal: React.FC<NotificationModalProps> = ({
   onClose,
   notifications = []
 }) => {
+    const [isPanelOpen, setIsPanelOpen] = useState(false);
+      const [selectedNominee, setSelectedNominee] = useState<Notification | null>(null);
+    
+    const { authToken, userId } = useAuth();
+    const apiUrl = import.meta.env.VITE_API_URL;
 
   const navigate = useNavigate();
 
   const handleView = () => {
      onClose();   
     navigate("/notifications");
-    
+  };
+   const handleSidePanelView = (notification: Notification) => {
+    setSelectedNominee(notification);
+    setIsPanelOpen(true);
+  };
+  const handleMarkAllRead = async () => {
+    const headers = {
+      Accept: "text/plain",
+      Authorization: `Bearer ${authToken}`,
+      "Content-Type": "application/json",   
+    };
+ 
+    const requests = notifications.map((post) => {
+      return axios.put(
+        `${apiUrl}/api/notificationread/notification`,
+        {
+          LogID: post.NotificationID,
+          SubmittedBy: userId,
+        },
+        { headers }
+      );
+    });
+ 
+    try {
+      await Promise.all(requests);
+      console.log("✅ All notifications marked as read successfully.");
+      //navigate("/home");
+      //alert("HI");
+       }
+    catch (err) {
+      console.error("❌ Error while Marking as Read:", err);
+    }
   };
 
   return (
@@ -61,6 +100,7 @@ const NotificationModal: React.FC<NotificationModalProps> = ({
                 <div
                   key={n.NotificationID}
                   className="px-6 py-4 border-b border-gray-100 hover:bg-gray-50 cursor-pointer transition-colors"
+                  onClick={() => handleSidePanelView(n)}
                 >
                   <div className="flex space-x-3">
                     <div className="flex-shrink-0">
@@ -74,8 +114,8 @@ const NotificationModal: React.FC<NotificationModalProps> = ({
                         <h4
                           className={`text-sm mb-1 ${
                             !n.IsRead
-                              ? "font-bold text-gray-900"
-                              : "font-medium text-gray-500"
+                              ? 'font-bold text-gray-900'
+                              : 'font-medium text-gray-500'
                           }`}
                         >
                           {n.Title}
@@ -98,13 +138,21 @@ const NotificationModal: React.FC<NotificationModalProps> = ({
 
           <div className="px-6 py-4 border-t border-gray-200 bg-gray-50 fixed bottom-0 w-full max-w-md">
             <div className="flex justify-between space-x-3">
+         
+          {notifications.length > 0 ? (
               <button
-                onClick={() => console.log("Mark all as read")}
+                onClick={handleMarkAllRead}
                 className="px-4 py-2 text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 border border-gray-300 rounded-md transition-colors"
               >
                 Mark All Read
               </button>
-
+ 
+           ): (
+              <div className="text-center text-gray-500 py-2">
+                All Notifications are Marked Read
+              </div>
+            )}
+           
               <button
                 onClick={handleView}
                 className="px-4 py-2 text-sm font-medium text-white bg-teal-600 hover:bg-teal-700 rounded-md transition-colors"
@@ -113,9 +161,14 @@ const NotificationModal: React.FC<NotificationModalProps> = ({
               </button>
             </div>
           </div>
-
+ <NotificationDetailPanel
+        isOpen={isPanelOpen}
+        onClose={() => setIsPanelOpen(false)}
+        notification={selectedNominee}
+      />
         </Dialog.Content>
       </Dialog.Portal>
+      
     </Dialog.Root>
   );
 };
