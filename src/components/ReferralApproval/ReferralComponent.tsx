@@ -8,16 +8,24 @@ import {
   getFilteredRowModel,
   flexRender,
 } from "@tanstack/react-table";
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@radix-ui/react-dropdown-menu";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@radix-ui/react-dropdown-menu";
 import type { ColumnDef } from "@tanstack/react-table";
 import { useAuth } from "../ContextAPI/AuthContext";
 import { Menu } from "lucide-react";
-import ApprovalPanel from "./ApprovalPanel";
 
+// Correct Component Import
+import ReferralPanel from "./ReferralPanel";
 
-interface ApprovalData {
+interface ReferralData {
   id: number;
   NominationID: number;
+  ReferralID: number;
+  ReferralUserID:number;
   entity: string;
   NominatedBy: string;
   SubmittedDate: string;
@@ -28,7 +36,6 @@ interface ApprovalData {
   Nominee: string | null;
   Tenant: string | null;
   ManagerEmailID: string;
-
   Descriptions: string;
   "Referrals ID": { Email: string }[];
   "Supporting Documents": {
@@ -39,8 +46,9 @@ interface ApprovalData {
   }[];
 }
 
-interface ApprovalView {
+interface ReferralView {
   NominationID: number;
+  ReferralUserID:number;
   nominee: string | null;
   entity: string | null;
   contest: string | null;
@@ -57,38 +65,40 @@ interface ApprovalView {
     FilePath: string;
   }[];
   Descriptions: string;
+  ReferralID: number;
 }
 
 const apiUrl = import.meta.env.VITE_API_URL;
 
-const statusColors: Record<ApprovalData["Status"], string> = {
+const statusColors: Record<ReferralData["Status"], string> = {
   Pending: "bg-orange-100 text-orange-800",
   Approved: "bg-green-100 text-green-800",
   Rejected: "bg-red-100 text-red-800",
 };
 
-const ApprovalTable: React.FC = () => {
+const ReferralTable: React.FC = () => {
   const [isPanelOpen, setIsPanelOpen] = useState(false);
-  const [selectedNomination, setSelectedNomination] = useState<ApprovalView | null>(null);
-  const [data, setData] = useState<ApprovalData[]>([]);
+  const [selectedNomination, setSelectedNomination] =
+    useState<ReferralView | null>(null);
+
+  const [data, setData] = useState<ReferralData[]>([]);
   const [loading, setLoading] = useState(true);
   const [globalFilter, setGlobalFilter] = useState("");
   const { userId, authToken } = useAuth();
   const [successMessage, setSuccessMessage] = useState("");
   const [toastType, setToastType] = useState<"success" | "error">("success");
 
-
-  
   useEffect(() => {
     const fetchApprovals = async () => {
       try {
         if (!authToken) throw new Error("No auth token found");
 
-        const res = await axios.get(`${apiUrl}/api/managerevaluation`, {
+        const res = await axios.get(`${apiUrl}/api/referralvaluations/${userId}`, {
           headers: { Authorization: `Bearer ${authToken}` },
         });
-
         setData(res.data);
+        console.log("approval:", res.data);
+
       } catch (err) {
         console.error("❌ Error fetching approvals:", err);
       } finally {
@@ -100,15 +110,18 @@ const ApprovalTable: React.FC = () => {
   }, []);
 
   const handleApprove = async (nominationID: number) => {
+     if (!selectedNomination) return;
     try {
       await axios.put(
-        `${apiUrl}/api/managerevaluation/${nominationID}`,
+        `${apiUrl}/api/referralvaluations/${selectedNomination.ReferralID}`,
         {
-          nominationID,
-          isManagerApproved: true,
-         // approvalComments: "yes",
-          submittedBy: userId,
-          active: true,
+          
+            referralUserID: selectedNomination.ReferralUserID,
+            nominationID: nominationID,
+            isReferralApproved: true,       // REJECT
+           // approvalComments: "Rejected",
+            active: true,
+            submittedBy: userId
         },
         {
           headers: {
@@ -118,16 +131,18 @@ const ApprovalTable: React.FC = () => {
         }
       );
 
-      // Update UI instantly
       setData((prev) =>
         prev.map((item) =>
-          item.NominationID === nominationID ? { ...item, Status: "Approved" } : item
+          item.NominationID === nominationID
+            ? { ...item, Status: "Approved" }
+            : item
         )
       );
-       setToastType("success");
-        setSuccessMessage("Nomination Approved Successfully!");
-        setTimeout(() => setSuccessMessage(""), 3000);
-        setIsPanelOpen(false);
+
+      setToastType("success");
+      setSuccessMessage("Nomination Approved Successfully!");
+      setTimeout(() => setSuccessMessage(""), 3000);
+      setIsPanelOpen(false);
     } catch (error) {
       console.error("Approve Error:", error);
       alert("Approval failed");
@@ -135,15 +150,17 @@ const ApprovalTable: React.FC = () => {
   };
 
   const handleReject = async (nominationID: number) => {
+     if (!selectedNomination) return;
     try {
       await axios.put(
-        `${apiUrl}/api/managerevaluation/${nominationID}`,
+        `${apiUrl}/api/referralvaluations/${selectedNomination.ReferralID}`,
         {
-          nominationID,
-          isManagerApproved: false,
-         // approvalComments: "Rejected",
-          submittedBy: userId,
-          active: true,
+          referralUserID: selectedNomination.ReferralUserID,
+            nominationID: nominationID,
+            isReferralApproved: false,       // REJECT
+           // approvalComments: "Rejected",
+            active: true,
+            submittedBy: userId
         },
         {
           headers: {
@@ -153,24 +170,26 @@ const ApprovalTable: React.FC = () => {
         }
       );
 
-      // Update UI instantly
       setData((prev) =>
         prev.map((item) =>
-          item.NominationID === nominationID ? { ...item, Status: "Rejected" } : item
+          item.NominationID === nominationID
+            ? { ...item, Status: "Rejected" }
+            : item
         )
       );
+
       setToastType("error");
       setSuccessMessage("Nomination Rejected Successfully!");
-        setTimeout(() => setSuccessMessage(""), 3000);
-        setIsPanelOpen(false); 
+      setTimeout(() => setSuccessMessage(""), 3000);
+      setIsPanelOpen(false);
     } catch (error) {
       console.error("Reject Error:", error);
       alert("Reject failed");
     }
   };
 
-  const columns = useMemo<ColumnDef<ApprovalData>[]>(
-    () => [
+  const columns = useMemo<ColumnDef<ReferralData>[]>(() => {
+    return [
       { accessorKey: "NominationID", header: "Nomination ID" },
       { accessorKey: "Nominee", header: "Nominee Name" },
       { accessorKey: "Tenant", header: "Entity Name" },
@@ -181,7 +200,7 @@ const ApprovalTable: React.FC = () => {
         accessorKey: "Status",
         header: "Status",
         cell: ({ getValue }) => {
-          const status = getValue() as ApprovalData["Status"];
+          const status = getValue() as ReferralData["Status"];
           const colorClass = statusColors[status];
           return (
             <span className={`px-3 py-1 rounded-full text-sm font-medium ${colorClass}`}>
@@ -211,11 +230,12 @@ const ApprovalTable: React.FC = () => {
               "Referrals ID": item["Referrals ID"],
               "Supporting Documents": item["Supporting Documents"],
               Descriptions: item.Descriptions,
+              ReferralUserID: item.ReferralUserID,
+              ReferralID: item.ReferralID,
             });
 
             setIsPanelOpen(true);
           };
-          
 
           return (
             <DropdownMenu>
@@ -232,28 +252,13 @@ const ApprovalTable: React.FC = () => {
                 >
                   View
                 </DropdownMenuItem>
-
-                {/* <DropdownMenuItem
-                  onClick={() => handleApprove(item.NominationID)}
-                  className="hover:bg-green-50 hover:text-green-700 p-3"
-                >
-                  Approve
-                </DropdownMenuItem> */}
-
-                {/* <DropdownMenuItem
-                  onClick={() => handleReject(item.NominationID)}
-                  className="hover:bg-red-50 hover:text-red-700 p-3"
-                >
-                  Reject
-                </DropdownMenuItem> */}
               </DropdownMenuContent>
             </DropdownMenu>
           );
         },
       },
-    ],
-    []
-  );
+    ];
+  }, []);
 
   const table = useReactTable({
     data,
@@ -272,94 +277,95 @@ const ApprovalTable: React.FC = () => {
 
   return (
     <div className="p-6">
-
-      
       {successMessage && (
         <div
-          className={`fixed  right-5 px-4 py-2 rounded-lg shadow-lg animate-slide-in z-[9999]
-            ${toastType === "success" ? "bg-green-600" : "bg-red-600"} text-white`}
+          className={`fixed right-5 px-4 py-2 rounded-lg shadow-lg animate-slide-in z-[9999]
+            ${
+              toastType === "success" ? "bg-green-600" : "bg-red-600"
+            } text-white`}
         >
           {successMessage}
         </div>
       )}
-      
-    <div className="p-6">
-      <div className="overflow-x-auto bg-white shadow-md rounded-lg p-6">
-        <div className="mb-4 flex justify-between items-center">
-          <input
-            value={globalFilter ?? ""}
-            onChange={(e) => setGlobalFilter(e.target.value)}
-            placeholder="Search..."
-            className="border border-gray-300 rounded-md px-4 py-2 w-1/3 text-sm"
-          />
-        </div>
 
-        <table className="min-w-full border border-gray-200">
-          <thead className="bg-gray-50">
-            {table.getHeaderGroups().map((headerGroup) => (
-              <tr key={headerGroup.id}>
-                {headerGroup.headers.map((header) => (
-                  <th
-                    key={header.id}
-                    onClick={header.column.getToggleSortingHandler()}
-                    className="px-4 py-3 text-left text-xs font-semibold uppercase cursor-pointer"
-                  >
-                    {flexRender(header.column.columnDef.header, header.getContext())}
-                    {header.column.getIsSorted() === "asc" ? " 🔼" : ""}
-                    {header.column.getIsSorted() === "desc" ? " 🔽" : ""}
-                  </th>
-                ))}
-              </tr>
-            ))}
-          </thead>
-
-          <tbody className="divide-y divide-gray-100">
-            {table.getRowModel().rows.length ? (
-              table.getRowModel().rows.map((row) => (
-                <tr key={row.id} className="hover:bg-gray-50">
-                  {row.getVisibleCells().map((cell) => (
-                    <td key={cell.id} className="px-4 py-2 text-sm text-gray-800">
-                      {flexRender(cell.column.columnDef.cell, cell.getContext())}
-                    </td>
-                  ))}
-                </tr>
-              ))
-            ) : (
-              <tr>
-                <td colSpan={columns.length} className="text-center py-6 text-gray-500">
-                  No approvals found
-                </td>
-              </tr>
-            )}
-          </tbody>
-        </table>
-
-        <div className="flex items-center justify-between mt-4">
-          <div className="text-sm text-gray-600">
-            Page {table.getState().pagination.pageIndex + 1} of {table.getPageCount()}
+      <div className="p-6">
+        <div className="overflow-x-auto bg-white shadow-md rounded-lg p-6">
+          <div className="mb-4 flex justify-between items-center">
+            <input
+              value={globalFilter ?? ""}
+              onChange={(e) => setGlobalFilter(e.target.value)}
+              placeholder="Search..."
+              className="border border-gray-300 rounded-md px-4 py-2 w-1/3 text-sm"
+            />
           </div>
 
-          <div className="space-x-2">
-            <button
-              onClick={() => table.previousPage()}
-              disabled={!table.getCanPreviousPage()}
-              className="px-3 py-1 bg-gray-200 rounded disabled:opacity-50"
-            >
-              Prev
-            </button>
-            <button
-              onClick={() => table.nextPage()}
-              disabled={!table.getCanNextPage()}
-              className="px-3 py-1 bg-gray-200 rounded disabled:opacity-50"
-            >
-              Next
-            </button>
+          <table className="min-w-full border border-gray-200">
+            <thead className="bg-gray-50">
+              {table.getHeaderGroups().map((headerGroup) => (
+                <tr key={headerGroup.id}>
+                  {headerGroup.headers.map((header) => (
+                    <th
+                      key={header.id}
+                      onClick={header.column.getToggleSortingHandler()}
+                      className="px-4 py-3 text-left text-xs font-semibold uppercase cursor-pointer"
+                    >
+                      {flexRender(header.column.columnDef.header, header.getContext())}
+                      {header.column.getIsSorted() === "asc" ? " 🔼" : ""}
+                      {header.column.getIsSorted() === "desc" ? " 🔽" : ""}
+                    </th>
+                  ))}
+                </tr>
+              ))}
+            </thead>
+
+            <tbody className="divide-y divide-gray-100">
+              {table.getRowModel().rows.length ? (
+                table.getRowModel().rows.map((row) => (
+                  <tr key={row.id} className="hover:bg-gray-50">
+                    {row.getVisibleCells().map((cell) => (
+                      <td key={cell.id} className="px-4 py-2 text-sm text-gray-800">
+                        {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                      </td>
+                    ))}
+                  </tr>
+                ))
+              ) : (
+                <tr>
+                  <td colSpan={columns.length} className="text-center py-6 text-gray-500">
+                    No approvals found
+                  </td>
+                </tr>
+              )}
+            </tbody>
+          </table>
+
+          <div className="flex items-center justify-between mt-4">
+            <div className="text-sm text-gray-600">
+              Page {table.getState().pagination.pageIndex + 1} of {table.getPageCount()}
+            </div>
+
+            <div className="space-x-2">
+              <button
+                onClick={() => table.previousPage()}
+                disabled={!table.getCanPreviousPage()}
+                className="px-3 py-1 bg-gray-200 rounded disabled:opacity-50"
+              >
+                Prev
+              </button>
+              <button
+                onClick={() => table.nextPage()}
+                disabled={!table.getCanNextPage()}
+                className="px-3 py-1 bg-gray-200 rounded disabled:opacity-50"
+              >
+                Next
+              </button>
+            </div>
           </div>
         </div>
       </div>
-  </div>
-      {/* SIDE PANEL */}
-      <ApprovalPanel
+
+      {/* Final Correct Component */}
+      <ReferralPanel
         isOpen={isPanelOpen}
         onClose={() => setIsPanelOpen(false)}
         nomination={selectedNomination}
@@ -374,4 +380,4 @@ const ApprovalTable: React.FC = () => {
   );
 };
 
-export default ApprovalTable;
+export default ReferralTable;

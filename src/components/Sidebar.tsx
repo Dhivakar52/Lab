@@ -28,13 +28,14 @@ const navigationItems: NavigationItem[] = [
   { icon: User, label: 'Self Nominations', path: '/self-nominations' },
   //  { icon: User, label: 'Nominations Form', path: '/self-nominations' },
   { icon: FileText, label: 'My Nominations', path: '/my-nominations' },
+  { icon: Settings, label: 'Referral Approval', path: '/referral-approval' },
   { icon: CircleCheckBig, label: 'Approvals', path: '/approvals' },
   { icon: Gavel, label: 'Business Jury', path: '/business-jury' },
   { icon: Gavel, label: 'President Unit', path: '/president-unit' },
   { icon: Users, label: 'President Level', path: '/president-level' },
    { icon: Settings, label: 'Award Management', path: '/award-management' },
   { icon: Settings, label: 'Admin Setting', path: '/admin-setting' },
-  // { icon: Settings, label: 'Testing', path: '/testing' },
+   
  
   
   // { icon: LogOut, label: 'Admin Page', path: '/admin' },

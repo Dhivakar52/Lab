@@ -27,6 +27,7 @@ import { ROLE_PAGES } from './dataTypes/roles';
 import { AuthProvider } from './components/ContextAPI/AuthContext.tsx';
 import Testing from './components/Testing/Testing.tsx';
 import ForgotPassword from './pages/auth/Login/ForgotPassword.tsx';
+import ReferralComponent from './components/ReferralApproval/ReferralComponent.tsx';
 
 // -------------------------
 // Main page components
@@ -44,6 +45,7 @@ const pageComponents: Record<string, React.ReactNode> = {
   'Admin Setting': <AdminInner />,
    'Forgot Password': <ForgotPassword/>,
   'Testing': <Testing />,
+  'Referral Approval': <ReferralComponent />,
 };
 
 // -------------------------
