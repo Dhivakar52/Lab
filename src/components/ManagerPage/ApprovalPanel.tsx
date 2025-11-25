@@ -47,6 +47,7 @@ const ApprovalPanel: React.FC<NominationSidePanelProps> = ({
    onApprove,
   onReject
 }) => {
+  
   return (
     <div
       className={`fixed top-0 right-0 h-full w-[400px] bg-white shadow-2xl transform transition-transform duration-300 ease-in-out z-50 ${
@@ -165,7 +166,7 @@ const ApprovalPanel: React.FC<NominationSidePanelProps> = ({
               ))}
               </div>
             </div>
-           <div className="flex justify-around items-center gap-4 mt-4">
+          <div className="flex justify-around items-center gap-4 mt-4">
                  {/* Reject Button */}
                   <button
                    onClick={() => {
@@ -190,7 +191,7 @@ const ApprovalPanel: React.FC<NominationSidePanelProps> = ({
                   </button>
                 </div>
 
-
+          
 
              
           </div>
