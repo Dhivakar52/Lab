@@ -13,6 +13,8 @@ import type {
   ColumnDef,
 } from "@tanstack/react-table";
 import { useAuth } from "../ContextAPI/AuthContext";
+import NotificationDetailSidePanel from "../Notification/NotificationDetailSidePanel";
+import * as Dialog from '@radix-ui/react-dialog';
 
 interface Notification {
   TotalRowCount: number;
@@ -28,26 +30,47 @@ interface Notification {
   SentAt: string | null;
   IsRead: boolean | null;
   ReadAt: string | null;
+  CreatedAt:string;
+  Nomination: Nomination[] ; 
+
 }
-
-
+interface Nomination {
+  NominationID: number;
+  Nominee: string;
+  Tenant: string;
+  NominatedBy: string;
+  AwardCategory: string;
+  Descriptions:string;
+}
+interface NotificationTableProps {
+  isOpen: boolean;
+  onClose: () => void;
+  notifications: Notification[];
+}
 
 const apiUrl = import.meta.env.VITE_API_URL;
 
-const NotificationTable: React.FC = () => {
+const NotificationTable: React.FC<NotificationTableProps> = ({
+  isOpen,
+  onClose,
+  notifications = []
+}) => {
   const [data, setData] = useState<Notification[]>([]);
   const [loading, setLoading] = useState(true);
   const [globalFilter, setGlobalFilter] = useState("");
-  const {  userId } = useAuth();
+  const { userId , authToken} = useAuth();
+      const [isPanelOpen, setIsPanelOpen] = useState(false);
+        const [selectedNominee, setSelectedNominee] = useState<Notification | null>(null);
+  
 
   useEffect(() => {
     const fetchNotifications = async () => {
       try {
-        const token = localStorage.getItem("authToken");
-        if (!token) throw new Error("No auth token found");
+       
+        if (!authToken) throw new Error("No auth token found");
 
         const res = await axios.get(`${apiUrl}/api/notificationlog/${userId}`, {
-          headers: { Authorization: `Bearer ${token}` },
+          headers: { Authorization: `Bearer ${authToken}` },
         });
 
         setData(res.data);
@@ -108,12 +131,19 @@ const NotificationTable: React.FC = () => {
     getFilteredRowModel: getFilteredRowModel(),
     getPaginationRowModel: getPaginationRowModel(),
   });
+   const handleSidePanelView = (notification: Notification) => {
+    setSelectedNominee(notification);
+    setIsPanelOpen(true);
+  };
 
   if (loading) {
     return <div className="text-center py-6 text-gray-600">Loading notifications...</div>;
   }
 
+  
   return (
+        <Dialog.Root open={isOpen} onOpenChange={onClose}>
+    
     <div className="p-6">
       
 
@@ -152,7 +182,7 @@ const NotificationTable: React.FC = () => {
           <tbody className="divide-y divide-gray-100">
             {table.getRowModel().rows.length ? (
               table.getRowModel().rows.map((row) => (
-                <tr key={row.id} className="hover:bg-gray-50">
+                <tr key={row.id} className="hover:bg-gray-50" onClick={() => handleSidePanelView(row.original)}>
                   {row.getVisibleCells().map((cell) => (
                     <td key={cell.id} className="px-6 py-4 text-sm text-gray-900">
                       {flexRender(cell.column.columnDef.cell, cell.getContext())}
@@ -194,10 +224,16 @@ const NotificationTable: React.FC = () => {
         </div>
       </div>
       </div>
-
+<NotificationDetailSidePanel
+        isOpen={isPanelOpen}
+        onClose={() => setIsPanelOpen(false)}
+        notification={selectedNominee}
+      />
 
     </div>
+    </Dialog.Root>
   );
+
 };
 
 export default NotificationTable;
