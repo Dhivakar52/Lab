@@ -2,6 +2,8 @@ import React from "react";
 
 interface Viewer {
   NominationID: number;
+  Department: string;
+  Tenant : string;
   TotalRowCount: number;
   ViewedBy: string;
   ViewedAt: string;
@@ -34,16 +36,35 @@ const ViewerModal: React.FC<ViewersModalProps> = ({ open, onClose, viewers }) =>
           ) : (
             viewers.map((v, index) => (
               <div
-                key={index}
-                className="flex items-center gap-3 bg-gray-50 p-2 rounded"
-              >
-                <div className="w-9 h-9 bg-green-200 text-green-800 rounded-full flex items-center justify-center font-semibold">
-                  {v.ViewedBy?.charAt(0).toUpperCase()}
-                </div>
-                <span className="text-gray-800 text-sm font-medium">
-                  {v.ViewedBy}
-                </span>
-              </div>
+  key={index}
+  className="flex items-start gap-3 bg-gray-50 p-3 rounded"
+>
+  <div className="w-9 h-9 bg-green-200 text-green-800 rounded-full flex items-center justify-center font-semibold">
+    {v.ViewedBy?.charAt(0).toUpperCase()}
+  </div>
+
+  <div className="flex flex-col">
+    <span className="text-gray-900 text-sm font-semibold">
+      {v.ViewedBy}
+    </span>
+
+    
+    <span className="text-gray-600 text-xs">
+      {v.Department}
+    </span>
+
+
+    <span className="text-gray-800 text-sm font-medium">
+      {v.Tenant}
+    </span>
+
+    <span className="text-gray-500 text-xs">
+      {new Date(v.ViewedAt).toLocaleString()}
+    </span>
+  </div>
+</div>
+
+              
             ))
           )}
         </div>
