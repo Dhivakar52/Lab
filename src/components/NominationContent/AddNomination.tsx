@@ -7,6 +7,7 @@ import { useAuth } from "../ContextAPI/AuthContext";
 import type { AddNominationState } from "../../dataTypes/nomination";
 import Select from "react-select";
 import type { SingleValue } from "react-select";
+import { useNavigate } from "react-router-dom";
 
 interface OptionType {
   value: number;
@@ -59,6 +60,7 @@ export default function AddNomination() {
   });
 
   const { authToken, userId } = useAuth();
+  const navigate = useNavigate();
 
   useEffect(() => {
     const fetchUser = async () => {
@@ -228,6 +230,7 @@ export default function AddNomination() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    
 
     if (!authToken) {
       alert("⚠️ You are not authorized. Please log in again.");
@@ -297,6 +300,7 @@ export default function AddNomination() {
 
       console.log("✅ Success:", res.data);
       alert("Nomination submitted successfully!");
+      navigate("/my-nominations");
     } catch (err) {
       console.error("❌ Error submitting nomination:", err);
       alert("Failed to submit nomination. Please check the console.");
