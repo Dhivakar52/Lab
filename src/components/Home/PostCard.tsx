@@ -190,7 +190,7 @@ const handleAddComment = async (post: Feed) => {
       },
       {
         params: {
-          id: post.NominationID, // required by API
+          id: post.NominationID, 
         },
         headers: {
           "Content-Type": "application/json",
@@ -199,9 +199,9 @@ const handleAddComment = async (post: Feed) => {
       }
     );
 
-    const newID = res.data; // API returns numeric ID
+    const newID = res.data; 
 
-    // 👌 match your filteredComments structure
+
     const newComment = {
       NominationCommentsID: newID,
       NominationID: post.NominationID,
@@ -310,6 +310,82 @@ useEffect(() => {
 }, [posts]);
 
 
+const buildCommentTree = (flatComments: any[]) => {
+  const map: Record<number, any> = {};
+  const roots: any[] = [];
+
+  flatComments.forEach((c) => {
+    // ensure ChildComments array exists for easier recursion
+    map[c.NominationCommentsID] = { ...c, ChildComments: c.ChildComments || [] };
+  });
+
+  flatComments.forEach((c) => {
+    if (c.ParentCommentID && map[c.ParentCommentID]) {
+      map[c.ParentCommentID].ChildComments.push(map[c.NominationCommentsID]);
+    } else {
+      roots.push(map[c.NominationCommentsID]);
+    }
+  });
+
+  return roots;
+};
+
+
+
+const handleReply = async (postId : any, text : any, parentId : any) => {
+  if (!text.trim()) return;
+
+  try {
+    const res = await axios.post(
+      `${apiUrl}/api/nominationcomments`,
+      {
+        nominationID: postId,
+        commentedBy: userId,
+        commentsText: text,
+        parentCommentID: parentId,  
+        active: true,
+        submittedBy: userId,
+      },
+      {
+        params: { id: postId },
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${authToken}`,
+        },
+      }
+    );
+
+    const newId = res.data;
+
+    // Add new nested comment into global list
+    setComments((prev) => [
+      ...prev,
+      {
+        NominationCommentsID: newId,
+        NominationID: postId,
+        ParentCommentID: parentId,
+        CommentedBy: username,
+        CommentsText: text,
+        CommentedAt: new Date().toISOString(),
+        ChildComments: [],
+      },
+    ]);
+
+  } catch (err) {
+    console.error("Reply failed:", err);
+  }
+};
+
+
+
+
+
+
+
+
+
+
+
   return (
     <div>
       {posts.length === 0 ? (
@@ -322,9 +398,8 @@ useEffect(() => {
           const isLiked = likedPosts.includes(NominationID);
           const isCommentOpen = showComments[NominationID] || false;
 
-          const filteredComments = comments.filter(
-            (c) => c.NominationID === post.NominationID
-          );
+         const filteredFlat = comments.filter(c => c.NominationID === post.NominationID);
+const nestedComments = buildCommentTree(filteredFlat);
 
           return (
             <div
@@ -431,25 +506,41 @@ e.nativeEvent.stopImmediatePropagation();
                   </div>
 
                    {isCommentOpen && (
-  <FeedComment
-    post={post}
-    username={username || ""}
-    comments={filteredComments}
-    commentText={commentText[NominationID] || ""}
-    setCommentText={(v) =>
-      setCommentText((prev) => ({ ...prev, [NominationID]: v }))
-    }
-    handleAddComment={() => handleAddComment(post)}
-  />
+<FeedComment
+  post={post}
+  username={username || ""}
+  comments={nestedComments}        
+  commentText={commentText[NominationID] || ""}
+  setCommentText={(v) =>
+    setCommentText((prev) => ({ ...prev, [NominationID]: v }))
+  }
+  handleAddComment={() => handleAddComment(post)}
+  handleReply={handleReply}        
+/>
 )}
 
                 </div>
               </div>
-              <PostFeedModal
+<PostFeedModal
   post={selectedPost}
   open={showModal}
   onClose={() => setShowModal(false)}
+  onLike={handleLike}
+  onComment={handleAddComment}
+  onReply={handleReply}
+  comments={comments.filter(c => c.NominationID === selectedPost?.NominationID)}
+  commentText={commentText[selectedPost?.NominationID ?? 0] || ""}
+  setCommentText={(v : any) =>
+    setCommentText((prev) => ({
+      ...prev,
+      [selectedPost?.NominationID ?? 0]: v,
+    }))
+  }
+  userId={userId}
+  likeList={likeList}
 />
+
+
             </div>
             
           );

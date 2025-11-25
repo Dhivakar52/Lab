@@ -52,7 +52,7 @@ th{
 
 /* Position arrows near card edge */
 .mySwiper .swiper-button-prev {
-  left: 0px;
+  left: 10px;
 }
 
 .mySwiper .swiper-button-next {

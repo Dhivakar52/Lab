@@ -1,5 +1,6 @@
 import React, { useEffect, useRef } from "react";
 import { Send } from "lucide-react";
+import FeedNestedComment from "./FeedNestedComment";
 
 interface CommentSectionProps {
   post: any;
@@ -8,6 +9,7 @@ interface CommentSectionProps {
   commentText: string;
   setCommentText: (v: string) => void;
   handleAddComment: () => void;
+  handleReply: (postId: number, text: string, parentId: number) => Promise<void>;
 }
 
 const FeedComment: React.FC<CommentSectionProps> = ({
@@ -17,6 +19,7 @@ const FeedComment: React.FC<CommentSectionProps> = ({
   commentText,
   setCommentText,
   handleAddComment,
+  handleReply 
 }) => {
   const scrollRef = useRef<HTMLDivElement | null>(null);
 
@@ -66,61 +69,18 @@ const FeedComment: React.FC<CommentSectionProps> = ({
       </div>
 
       {/* Comments List */}
-      {comments.length === 0 ? (
-        <p className="text-center text-gray-500 text-xs mt-4">
-          No comments yet. Be the first to comment!
-        </p>
-      ) : (
-        <div className="mt-4">
 
-          {/* FIRST 5 COMMENTS */}
-          {comments.slice(0, 5).map((c) => (
-            <div
-              key={c.NominationCommentsID}
-              className="bg-gray-50 p-3 rounded-md border border-gray-200 flex space-x-3 mb-2"
-            >
-              <div className="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center text-blue-600 font-semibold text-sm">
-                {c.CommentedBy?.charAt(0).toUpperCase()}
-              </div>
 
-              <div>
-                <p className="text-sm font-semibold text-gray-800">{c.CommentedBy}</p>
-                <p className="text-sm text-gray-700 mt-1">{c.CommentsText}</p>
-                <p className="text-[10px] text-gray-400 mt-1">
-                  {new Date(c.CommentedAt).toLocaleString()}
-                </p>
-              </div>
-            </div>
-          ))}
-
-          {/* EXTRA COMMENTS IN SCROLL ZONE */}
-          {comments.length > 5 && (
-            <div
-              ref={scrollRef}
-              className="max-h-40 overflow-y-auto pr-1 mt-2 space-y-2 border border-gray-200 rounded-md p-2 bg-gray-50"
-            >
-              {comments.slice(5).map((c) => (
-                <div
-                  key={c.NominationCommentsID}
-                  className="bg-white p-3 rounded-md border border-gray-200 flex space-x-3"
-                >
-                  <div className="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center text-blue-600 font-semibold text-sm">
-                    {c.CommentedBy?.charAt(0).toUpperCase()}
-                  </div>
-
-                  <div>
-                    <p className="text-sm font-semibold text-gray-800">{c.CommentedBy}</p>
-                    <p className="text-sm text-gray-700 mt-1">{c.CommentsText}</p>
-                    <p className="text-[10px] text-gray-400 mt-1">
-                      {new Date(c.CommentedAt).toLocaleString()}
-                    </p>
-                  </div>
-                </div>
-              ))}
-            </div>
-          )}
-        </div>
-      )}
+      <div className="mt-3">
+      {comments.map((c) => (
+        <FeedNestedComment
+          key={c.NominationCommentsID}
+          comment={c}
+          postId={post.NominationID}
+          handleReply={handleReply}
+        />
+      ))}
+    </div>
     </div>
   );
 };

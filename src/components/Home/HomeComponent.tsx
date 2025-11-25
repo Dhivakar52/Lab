@@ -170,7 +170,7 @@ useEffect(() => {
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 pt-10">
             
             {/* Main Content */}
-            <div className="xl:col-span-9 lg:col-span-8">
+            <div className="xl:col-span-8 lg:col-span-8">
               <div className="bg-white rounded-lg shadow-sm relative">
 
                 <TabsSection activeTab={activeTab} setActiveTab={setActiveTab} 
@@ -222,7 +222,8 @@ useEffect(() => {
             </div>
 
             {/* Sidebar */}
-            <div className="xl:col-span-3 lg:col-span-4 space-y-6 mt-6 lg:mt-0 ">
+            <div className="xl:col-span-4 lg:col-span-4 space-y-6 mt-6 lg:mt-0 
+            ">
               <ProfileCard profile={profile} />
               <NominationStats />
               <TopPerformers />
