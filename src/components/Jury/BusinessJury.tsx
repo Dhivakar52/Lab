@@ -1,59 +1,246 @@
-import React, { useState } from "react";
+import React, { useState,useEffect,useMemo } from "react";
 import * as DropdownMenu from "@radix-ui/react-dropdown-menu";
 import { Menu, Flag } from "lucide-react";
 import SearchComponent from "../SearchComponent";
 import FilterComponent from "../FilterComponent";
 import BusinessPanel from "./BusinessPanel"; 
+import axios from "axios";
+import { useAuth } from "../ContextAPI/AuthContext";
+import {
+  useReactTable,
+  getCoreRowModel,
+  getPaginationRowModel,
+  getSortedRowModel,
+  getFilteredRowModel,
+  flexRender,
+} from "@tanstack/react-table";
+import type {
+  ColumnDef,
+} from "@tanstack/react-table";
 
-type Nominee = {
-  name: string;
-  entity: string;
-  category: string;
-  score: number;
-  flag?: boolean;
+
+interface BusinessJury {
+  id: number;
+  NominationID: number;
+  TotalRowCount: number;
+  //UserID: number;
+  Nominee: string;
+  Tenant: number;
+  CategoryName: string;
+  SubmittedOn: string;
+  Score: number;
+  Comments: string;
+  Status: string; 
+  "Supporting Documents": {
+    OriginalFileName: string;
+    FileType: string;
+    FileNameGUID: string;
+    FilePath: string;
+  }[]; 
+}
+
+//api/businessjuryevaluation
+const statusColors: Record<BusinessJury["Status"], string> = {
+  Pending: "bg-orange-100 text-orange-800",
+  Approved: "bg-green-100 text-green-800",
+  Rejected: "bg-red-100 text-red-800",
 };
 
-const data: Nominee[] = [
-  { name: "Ravi Kumar", entity: "SRMAP", category: "Innovation", score: 95 },
-  { name: "Riya Sharma", entity: "SRM Tech", category: "Service Excellence", score: 85 },
-  { name: "Amit Verma", entity: "SRM Media", category: "Talent", score: 70, flag: true },
-  { name: "Suresh Iyer", entity: "Puthiya thalaimurai", category: "Customer Focus", score: 82 },
-  { name: "Sathish Kumar", entity: "SRMAP", category: "Leadership Excellence", score: 80 },
-  { name: "Balaji", entity: "SRM Research", category: "Best Innovation", score: 84 },
-  { name: "Manikandan", entity: "SRM Research", category: "Service", score: 82 },
-  { name: "Prakash", entity: "SRM Research", category: "Customer Focus", score: 80 },
-  { name: "Kumaran", entity: "SRM Research", category: "Best Innovation", score: 86 },
-];
+const apiUrl = import.meta.env.VITE_API_URL;
 
 const BusinessJury: React.FC = () => {
+  const { authToken, userId } = useAuth();
   const [search, setSearch] = useState<string>("");
-  const [selectedNominee, setSelectedNominee] = useState<Nominee | null>(null);
+  const [data, setData] = useState<BusinessJury[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [globalFilter, setGlobalFilter] = useState("");
+  const [modalOpen, setModalOpen] = useState(false);
+  const [selectedNomination, setSelectedNomination] = useState<BusinessJury | null>(null);
   const [isPanelOpen, setIsPanelOpen] = useState(false);
+  const [successMessage, setSuccessMessage] = useState("");
+  const [toastType, setToastType] = useState<"success" | "error">("success");
 
-  const filteredData = data.filter(
-    (nom) =>
-      nom.name.toLowerCase().includes(search.toLowerCase()) ||
-      nom.entity.toLowerCase().includes(search.toLowerCase()) ||
-      nom.category.toLowerCase().includes(search.toLowerCase())
-  );
+ 
+const handleApprove = async (nominationID: number) => {
+    try {
+      await axios.put(
+        `${apiUrl}/api/businessjuryevaluation/${nominationID}`,
+        {
+          nominationID,
+          isManagerApproved: true,
+          approvalComments: "yes",
+          submittedBy: userId,
+          active: true,
+        },
+        {
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${authToken}`,
+          },
+        }
+      );
+
+      // Update UI instantly
+      setData((prev) =>
+        prev.map((item) =>
+          item.NominationID === nominationID ? { ...item, Status: "Approved" } : item
+        )
+      );
+       setToastType("success");
+        setSuccessMessage("Nomination Approved Successfully!");
+        setTimeout(() => setSuccessMessage(""), 3000);
+        setIsPanelOpen(false);
+        
+    } catch (error) {
+      console.error("Approve Error:", error);
+      alert("Approval failed");
+    }
+  };
+
+  const handleReject = async (nominationID: number) => {
+    try {
+      await axios.put(
+        `${apiUrl}/api/businessjuryevaluation/${nominationID}`,
+        {
+          nominationID,
+          isManagerApproved: false,
+          approvalComments: "Rejected",
+          submittedBy: userId,
+          active: true,
+        },
+        {
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${authToken}`,
+          },
+        }
+      );
+
+      // Update UI instantly
+      setData((prev) =>
+        prev.map((item) =>
+          item.NominationID === nominationID ? { ...item, Status: "Rejected" } : item
+        )
+      );
+      setToastType("error");
+      
+      setSuccessMessage("Business Jury Rejected Successfully!");
+        setTimeout(() => setSuccessMessage(""), 3000);
+        setIsPanelOpen(false); 
+        
+    } catch (error) {
+      console.error("Reject Error:", error);
+      alert("Reject failed");
+    }
+  };
+
+useEffect(() => {
+      const fetchBusinessJury = async () => {
+      try {
+        //const token = localStorage.getItem("authToken");
+        if (!authToken) throw new Error("No auth token found");
+
+        const res = await axios.get(`${apiUrl}/api/businessjuryevaluation/${userId}`, {
+          headers: { Authorization: `Bearer ${authToken}` },
+        });
+        
+        setData(res.data);
+      } catch (err) {
+        console.error("❌ Error fetching users:", err);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchBusinessJury();
+  }, []);
+
+
+  const columns = useMemo<ColumnDef<BusinessJury>[]>(
+      () => [
+        //{ accessorKey: "Nomination", header: "Nomination" },
+        { accessorKey: "Nominee", header: "Nomination" },
+        { accessorKey: "Tenant", header: "Tenant" },
+        { accessorKey: "CategoryName", header: "Category Name" },
+        { accessorKey: "Score", header: "Score" },
+        {
+        accessorKey: "Status",
+        header: "Status",
+        cell: ({ getValue }) => {
+          const status = getValue() as BusinessJury["Status"];
+          const colorClass = statusColors[status] || "bg-gray-100 text-gray-700";
+          return (
+            <span
+              className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium ${colorClass}`}
+            >
+              {status}
+            </span>
+          );
+        },     
+     },             
+        {
+        id: 'actions', // Use a unique ID for columns not tied to an accessorKey
+        header: 'Actions',
+        cell: ({ row }) => { // Access the entire row data using 'row' prop
+          const item = row.original; // This is the full Nominee object for the current row
+ 
+          return (
+            <DropdownMenu.Root>
+                <DropdownMenu.Trigger className="p-2 rounded hover:bg-gray-100"  onClick={() => {setSelectedNomination(item);
+                          setIsPanelOpen(true);
+                        }}>
+                    <Menu className="w-5 h-5 text-blue-500" />
+                </DropdownMenu.Trigger>
+               
+            </DropdownMenu.Root>
+          );
+        },
+      },
+      ],
+      []
+    );
+  const table = useReactTable({
+      data,
+      columns,
+      state: { globalFilter },
+      onGlobalFilterChange: setGlobalFilter,
+      getCoreRowModel: getCoreRowModel(),
+      getSortedRowModel: getSortedRowModel(),
+      getFilteredRowModel: getFilteredRowModel(),
+      getPaginationRowModel: getPaginationRowModel(),
+    });
+  
+  if (loading) {
+      return <div className="text-center py-6 text-gray-600">Loading...</div>;
+    }
 
   return (
     <div className="p-6 m-5 bg-white rounded-xl shadow-md relative">
-      {/* Header */}
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-4 gap-3">
-        <h2 className="text-xl font-bold text-gray-800">Business Jury Evaluation</h2>
-        <div className="flex gap-2 w-full sm:w-auto">
-          <SearchComponent search={search} setSearch={setSearch} />
-          <FilterComponent />
+      
+{successMessage && (
+        <div
+          className={`fixed  right-5 px-4 py-2 rounded-lg shadow-lg animate-slide-in z-[9999]
+            ${toastType === "success" ? "bg-green-600" : "bg-red-600"} text-white`}
+        >
+          {successMessage}
         </div>
-      </div>
+      )}
 
       {/* Table */}
       <div className="overflow-x-auto">
-        <table className="min-w-full border border-gray-200 rounded-lg">
-          <thead className="bg-gray-100 rounded-t-lg">
+        <div className="mb-4 flex justify-between items-center">
+          <input
+            value={globalFilter ?? ""}
+            onChange={(e) => setGlobalFilter(e.target.value)}
+            placeholder="Search..."
+            className="border border-gray-300 rounded-md px-4 py-2 w-1/3 text-sm"
+          />
+        </div>
+
+        <table className="min-w-full border border-gray-200">
+          <thead className="bg-gray-50">
             <tr>
-              {["Nominee", "Entity", "Category", "Score", "Flag", "Actions"].map((header) => (
+              {["Nominee", "Entity", "Category", "Score", "Status", "Actions"].map((header) => (
                 <th
                   key={header}
                   className="px-6 py-3 text-left text-sm font-semibold text-gray-600"
@@ -63,63 +250,41 @@ const BusinessJury: React.FC = () => {
               ))}
             </tr>
           </thead>
-          <tbody>
-            {filteredData.map((nominee, idx) => (
-              <tr
-                key={idx}
-                className={
-                  idx % 2 === 0
-                    ? "bg-white hover:bg-gray-50 transition-colors"
-                    : "bg-gray-50 hover:bg-gray-100 transition-colors"
-                }
-              >
-                <td className="px-6 py-3 text-gray-900">{nominee.name}</td>
-                <td className="px-6 py-3 text-gray-900">{nominee.entity}</td>
-                <td className="px-6 py-3 text-gray-900">{nominee.category}</td>
-                <td className="px-6 py-3 text-gray-900">{nominee.score}</td>
-                <td className="px-6 py-3 text-gray-900">
-                  {nominee.flag ? (
-                    <Flag className="w-4 h-4 text-red-500" />
-                  ) : (
-                    <span className="px-2 py-1 bg-gray-100 text-gray-500 rounded-full text-sm">NA</span>
-                  )}
-                </td>
-                <td className="px-6 py-3">
-                  <DropdownMenu.Root>
-                    <DropdownMenu.Trigger className="p-2 rounded hover:bg-gray-100">
-                      <Menu className="w-5 h-5 text-blue-500" />
-                    </DropdownMenu.Trigger>
-                    <DropdownMenu.Content className="bg-white shadow-md rounded-md p-2">
-                      <DropdownMenu.Item
-                        className="px-2 py-1 hover:bg-gray-100 cursor-pointer"
-                        onClick={() => {
-                          setSelectedNominee(nominee);
-                          setIsPanelOpen(true);
-                        }}
-                      >
-                        View
-                      </DropdownMenu.Item>
-                      <DropdownMenu.Item className="px-2 py-1 hover:bg-gray-100 cursor-pointer">
-                        Edit
-                      </DropdownMenu.Item>
-                      <DropdownMenu.Item className="px-2 py-1 hover:bg-gray-100 cursor-pointer">
-                        Delete
-                      </DropdownMenu.Item>
-                    </DropdownMenu.Content>
-                  </DropdownMenu.Root>
-                </td>
-              </tr>
-            ))}
-          </tbody>
+          <tbody className="divide-y divide-gray-100">
+                        {table.getRowModel().rows.length ? (
+                          table.getRowModel().rows.map((row) => (
+                            <tr key={row.id} className="hover:bg-gray-50">
+                              {row.getVisibleCells().map((cell) => (
+                                <td key={cell.id} className="px-4 py-2 text-sm text-gray-800">
+                                  {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                                </td>                               
+                                
+                              ))}
+                            </tr>
+                            
+                          ))
+                        ) : (
+                          <tr>
+                            <td colSpan={columns.length} className="text-center py-6 text-gray-500">
+                              No nominations found
+                            </td>
+                          </tr>
+                        )}
+            </tbody>          
         </table>
       </div>
 
-      {/* ✅ Right-Side Panel */}
-      <BusinessPanel
-        isOpen={isPanelOpen}
-        onClose={() => setIsPanelOpen(false)}
-        nominee={selectedNominee}
-      />
+    <BusinessPanel
+  isOpen={isPanelOpen}
+  onClose={() => setIsPanelOpen(false)}
+  nominee={selectedNomination}
+  onApprove={() =>
+          selectedNomination && handleApprove(selectedNomination.NominationID)
+        }
+  onReject={() =>    
+          selectedNomination && handleReject(selectedNomination.NominationID)
+        }
+/>    
     </div>
   );
 };
