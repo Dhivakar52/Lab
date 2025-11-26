@@ -318,9 +318,14 @@ const toggleComments = (id: number) => {
       {safeList.map((item) => {
         const NominationID = item.NominationID;
         const isLiked = likedPosts.includes(NominationID);
-        const filteredComments = comments.filter(
+        // const filteredComments = comments.filter(
+        //   (c) => c.NominationID === NominationID
+        // );
+         const filteredFlat = comments.filter(
           (c) => c.NominationID === NominationID
         );
+       // const filteredFlat = comments.filter(c => c.NominationID === NominationID);
+        const nestedComments = buildCommentTree(filteredFlat);
 
         return (
           <div
@@ -448,7 +453,7 @@ const toggleComments = (id: number) => {
                     <FeedComment
                       post={item}
                       username={username || ""}
-                      comments={filteredComments}
+                      comments={nestedComments}
                       commentText={commentText[NominationID] || ""}
                       setCommentText={(v: any) =>
                         setCommentText((prev) => ({

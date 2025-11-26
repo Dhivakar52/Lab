@@ -266,12 +266,12 @@ switch (Number(roleid)) {
           </button>
 
           {/* Signup Link */}
-          <p className="text-center mt-4 text-sm">
+          {/* <p className="text-center mt-4 text-sm">
             Don’t have an account?{" "}
             <a href="#" className="text-green-700 font-semibold hover:underline">
               Sign up
             </a>
-          </p>
+          </p> */}
 
         
          
