@@ -166,7 +166,7 @@ const ApprovalPanel: React.FC<NominationSidePanelProps> = ({
               ))}
               </div>
             </div>
-          <div className="flex justify-around items-center gap-4 mt-4">
+          <div className="flex bottom-5 justify-around items-center gap-4 mt-4">
                  {/* Reject Button */}
                   <button
                    onClick={() => {

@@ -291,6 +291,26 @@ const toggleComments = (id: number) => {
     }
   };
 
+  const buildCommentTree = (flatComments: any[]) => {
+  const map: Record<number, any> = {};
+  const roots: any[] = [];
+
+  flatComments.forEach((c) => {
+    // ensure ChildComments array exists for easier recursion
+    map[c.NominationCommentsID] = { ...c, ChildComments: c.ChildComments || [] };
+  });
+
+  flatComments.forEach((c) => {
+    if (c.ParentCommentID && map[c.ParentCommentID]) {
+      map[c.ParentCommentID].ChildComments.push(map[c.NominationCommentsID]);
+    } else {
+      roots.push(map[c.NominationCommentsID]);
+    }
+  });
+
+  return roots;
+};
+
   
 
   return (
@@ -334,7 +354,13 @@ const toggleComments = (id: number) => {
                     </p>
                   </div>
 
-                  <MoreHorizontal className="w-5 h-5 text-gray-400" />
+                 <MoreHorizontal
+                   className="w-5 h-5 text-gray-400 hover:text-gray-600 cursor-pointer"
+                   onClick={() => {
+                     setSelectedPost(item);
+                     setShowModal(true);
+                   }}
+                 />
                 </div>
 
                 <p className="text-gray-800 mt-2 text-sm">{item.Description}</p>
