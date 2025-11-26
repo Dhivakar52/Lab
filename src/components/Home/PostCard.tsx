@@ -70,7 +70,8 @@ const [showModal, setShowModal] = useState(false);
             Authorization: `Bearer ${authToken}`,
           },
         });
-        setComments(res.data);
+           const data = res.data;
+       setComments(Array.isArray(data) ? data : []);
         console.log("Comments", res.data)
       } catch (err) {
         console.error("❌ Error fetching comments:", err);
@@ -81,60 +82,74 @@ const [showModal, setShowModal] = useState(false);
   }, []);
 
   // LIKE / UNLIKE
-  const handleLike = async (post: Feed) => {
-    const NominationID = post.NominationID;
-    const isLiked = likedPosts.includes(NominationID);
+ const handleLike = async (post: Feed) => {
+  const NominationID = post.NominationID;
+  const isLiked = likedPosts.includes(NominationID);
 
-    const headers = {
-      Accept: "text/plain",
-      Authorization: `Bearer ${authToken}`,
-      "Content-Type": "application/json",
-    };
+  const headers = {
+    Accept: "text/plain",
+    Authorization: `Bearer ${authToken}`,
+    "Content-Type": "application/json",
+  };
 
-    try {
-      if (!isLiked) {
-        const response = await axios.post(
-          `${apiUrl}/api/nominationlike`,
-          null,
-          {
-            params: {
-              NominationID,
-              LikedBy: userId,
-              Active: true,
-              SubmittedBy: userId,
+  try {
+    if (!isLiked) {
+      const response = await axios.post(
+        `${apiUrl}/api/nominationlike`,
+        null,
+        {
+          params: {
+            NominationID,
+            LikedBy: userId,
+            Active: true,
+            SubmittedBy: userId,
+          },
+          headers,
+        }
+      );
+
+      const newLikeId =
+        response?.data?.NominationLikeID ||
+        response?.data?.nominationLikeId ||
+        Date.now();
+
+      // Update the post in the state to reflect the like immediately
+      setPosts((prev) =>
+        prev.map((p) =>
+          p.NominationID === NominationID
+            ? {
+                ...p,
+                LikedBy: [
+                  ...(p.LikedBy || []),
+                  {
+                    NominationLikeID: newLikeId,
+                    UserID: userId,
+                    UserName: "You",
+                  },
+                ],
+              }
+            : p
+        )
+      );
+
+      setLikedPosts((prev) => [...prev, NominationID]);
+
+      // Trigger modal to update the like count
+      if (selectedPost?.NominationID === NominationID) {
+        setSelectedPost({
+          ...selectedPost,
+          LikedBy: [
+            ...(selectedPost.LikedBy || []),
+            {
+              NominationLikeID: newLikeId,
+              UserID: userId,
+              UserName: "You",
             },
-            headers,
-          }
-        );
-
-        const newLikeId =
-          response?.data?.NominationLikeID ||
-          response?.data?.nominationLikeId ||
-          Date.now();
-
-        setPosts((prev) =>
-          prev.map((p) =>
-            p.NominationID === NominationID
-              ? {
-                  ...p,
-                  LikedBy: [
-                    ...(p.LikedBy || []),
-                    {
-                      NominationLikeID: newLikeId,
-                      UserID: userId,
-                      UserName: "You",
-                    },
-                  ],
-                }
-              : p
-          )
-        );
-
-        setLikedPosts((prev) => [...prev, NominationID]);
-        return;
+          ],
+        });
       }
 
-      // UNLIKE
+    } else {
       const likeRecords = post.LikedBy?.filter(
         (like: any) => like.UserID === userId
       );
@@ -154,6 +169,7 @@ const [showModal, setShowModal] = useState(false);
         );
       }
 
+      // Update the post in the state to reflect the un-like immediately
       setPosts((prev) =>
         prev.map((p) =>
           p.NominationID === NominationID
@@ -168,10 +184,22 @@ const [showModal, setShowModal] = useState(false);
       );
 
       setLikedPosts((prev) => prev.filter((id) => id !== NominationID));
-    } catch (err) {
-      console.error("❌ Error in like/unlike:", err);
+
+      // Trigger modal to update the like count
+      if (selectedPost?.NominationID === NominationID) {
+        setSelectedPost({
+          ...selectedPost,
+          LikedBy: selectedPost.LikedBy?.filter(
+            (like: any) => like.UserID !== userId
+          ),
+        });
+      }
     }
-  };
+  } catch (err) {
+    console.error("❌ Error in like/unlike:", err);
+  }
+};
+
 
   // COMMENT POST API
 const handleAddComment = async (post: Feed) => {
@@ -332,17 +360,38 @@ const buildCommentTree = (flatComments: any[]) => {
 
 
 
-const handleReply = async (postId : any, text : any, parentId : any) => {
+const handleReply = async (postId: number, text: string, parentId: number) => {
   if (!text.trim()) return;
 
+  // Optimistically update the UI to show the new reply
+  const newComment = {
+    NominationCommentsID: Date.now(), // Temporarily use the current timestamp as ID (optimistic approach)
+    NominationID: postId,
+    ParentCommentID: parentId,
+    CommentedBy: username, 
+    CommentsText: text,
+    CommentedAt: new Date().toISOString(),
+    ChildComments: [], // Start with no child comments, can be updated later
+  };
+
+  // Update the state to include the new reply immediately
+  setComments((prev) => [
+    ...prev,
+    {
+      ...newComment,
+      ChildComments: [], // Empty initially
+    },
+  ]);
+
   try {
+    // Make the API call to persist the new comment
     const res = await axios.post(
       `${apiUrl}/api/nominationcomments`,
       {
         nominationID: postId,
         commentedBy: userId,
         commentsText: text,
-        parentCommentID: parentId,  
+        parentCommentID: parentId,
         active: true,
         submittedBy: userId,
       },
@@ -355,26 +404,23 @@ const handleReply = async (postId : any, text : any, parentId : any) => {
       }
     );
 
+    // Get the actual comment ID from the response
     const newId = res.data;
 
-    // Add new nested comment into global list
-    setComments((prev) => [
-      ...prev,
-      {
-        NominationCommentsID: newId,
-        NominationID: postId,
-        ParentCommentID: parentId,
-        CommentedBy: username,
-        CommentsText: text,
-        CommentedAt: new Date().toISOString(),
-        ChildComments: [],
-      },
-    ]);
-
+    // Update the comment ID and other details once the response is received
+    setComments((prev) =>
+      prev.map((comment) =>
+        comment.NominationCommentsID === newComment.NominationCommentsID
+          ? { ...comment, NominationCommentsID: newId }
+          : comment
+      )
+    );
   } catch (err) {
-    console.error("Reply failed:", err);
+    console.error("Error posting reply:", err);
+    // Optionally, you could revert the optimistic update here in case of an error
   }
 };
+
 
 
 
@@ -398,7 +444,8 @@ const handleReply = async (postId : any, text : any, parentId : any) => {
           const isLiked = likedPosts.includes(NominationID);
           const isCommentOpen = showComments[NominationID] || false;
 
-         const filteredFlat = comments.filter(c => c.NominationID === post.NominationID);
+         const filteredFlat = (comments || []).filter(c => c.NominationID === post.NominationID);
+
 const nestedComments = buildCommentTree(filteredFlat);
 
           return (
@@ -538,6 +585,7 @@ e.nativeEvent.stopImmediatePropagation();
   }
   userId={userId}
   likeList={likeList}
+   likedPosts={likedPosts}
 />
 
 

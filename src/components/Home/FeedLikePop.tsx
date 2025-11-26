@@ -6,6 +6,8 @@ interface LikeListPopupProps {
 }
 
 const FeedLikePop: React.FC<LikeListPopupProps> = ({ likedBy, onClose }) => {
+
+    console.log(likedBy)
   return (
     <div className="fixed inset-0 bg-black/30 flex items-center justify-center z-[999]" onClick={onClose}>
       <div className="bg-white w-80 rounded-xl shadow-xl p-4">
@@ -25,18 +27,36 @@ const FeedLikePop: React.FC<LikeListPopupProps> = ({ likedBy, onClose }) => {
               No likes yet
             </p>
           ) : (
-            likedBy.map((u) => (
-              <div
-                key={u.NominationLikeID}
-                className="flex items-center p-2  bg-gray-50"
-              >
-                <div className="w-9 h-9 rounded-full bg-blue-100 flex items-center justify-center text-blue-600 font-semibold">
-                  {u.UserName?.charAt(0).toUpperCase()}
-                </div>
-                <span className="ml-3 text-sm font-medium text-gray-800">
-                  {u.UserName}
-                </span>
-              </div>
+            likedBy.map((v , index) => (
+             <div
+  key={index}
+  className="flex items-start gap-3 bg-gray-50 p-3 rounded"
+>
+  <div className="w-9 h-9 bg-green-200 text-green-800 rounded-full flex items-center justify-center font-semibold">
+    {v.UserName?.charAt(0).toUpperCase()}
+  </div>
+
+  <div className="flex flex-col">
+    <span className="text-gray-900 text-sm font-semibold">
+      {v.UserName}
+    </span>
+
+    
+    <span className="text-gray-600 text-xs">
+      {v.Department}
+    </span>
+
+
+    <span className="text-gray-800 text-sm font-medium">
+      {v.Tenant}
+    </span>
+
+    {/* <span className="text-gray-500 text-xs">
+      {new Date(v.ViewedAt).toLocaleString()}
+    </span> */}
+  </div>
+</div>
+
             ))
           )}
         </div>

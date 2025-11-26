@@ -2,13 +2,14 @@ import React from "react";
 import { Eye, MessageCircle } from "lucide-react";
 import FeedLikeComponent from "./FeedLikeComponent";
 import FeedComment from "./FeedComment";
+import { useAuth } from "../ContextAPI/AuthContext";
 
 interface Props {
   post: any;
   open: boolean;
   onClose: () => void;
+ likedPosts: number[];
 
-  // NEW props passed from PostCard
   onLike: (post: any) => void;
   onComment: (post: any) => void;
 onReply: (postId: number, text: string, parentId: number) => Promise<void>;
@@ -44,19 +45,19 @@ const PostFeedModal: React.FC<Props> = ({
   post,
   open,
   onClose,
-
+likedPosts,
   onLike,
   onComment,
   onReply,
-
   comments,
   commentText,
   setCommentText,
   userId
 }) => {
   if (!open || !post) return null;
+  const {username}= useAuth();
+  const isLiked = likedPosts.includes(post.NominationID);
 
-  const isLiked = post.LikedBy?.some((l: any) => l.UserID === userId);
 
   return (
     <div
@@ -124,20 +125,21 @@ const PostFeedModal: React.FC<Props> = ({
         </div>
 
         {/* Comments Section SAME LIKE POST CARD */}
-        <FeedComment
-          post={post}
-          username={post.username}
-          comments={comments}
-          commentText={commentText[post.NominationID] || ""}
-          setCommentText={(v: string) =>
-            setCommentText((prev: any) => ({
-              ...prev,
-              [post.NominationID]: v
-            }))
-          }
-          handleAddComment={() => onComment(post)}
-          handleReply={onReply}
-        />
+       <FeedComment
+  post={post}
+  username={username || ""}
+  comments={comments}
+  commentText={commentText[post.NominationID] || ""}
+  setCommentText={(v: string) =>
+    setCommentText((prev: any) => ({
+      ...prev,
+      [post.NominationID]: v,
+    }))
+  }
+  handleAddComment={() => onComment(post)}
+  handleReply={onReply}
+/>
+
       </div>
     </div>
   );
