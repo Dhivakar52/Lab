@@ -483,22 +483,22 @@ const nestedComments = buildCommentTree(filteredFlat);
                     </div>
 
                     <div
-  className="flex items-center text-gray-500 text-sm cursor-pointer"
-onClick={async (e) => {
-  e.preventDefault();
-  e.stopPropagation();
-e.nativeEvent.stopImmediatePropagation();
-  if (!viewed[post.NominationID]) {
-     await addView(post.NominationID);
-     setViewed(prev => ({ ...prev, [post.NominationID]: true }));
-  }
+                      className="flex items-center text-gray-500 text-sm cursor-pointer"
+                    onClick={async (e) => {
+                      e.preventDefault();
+                      e.stopPropagation();
+                    e.nativeEvent.stopImmediatePropagation();
+                      if (!viewed[post.NominationID]) {
+                        await addView(post.NominationID);
+                        setViewed(prev => ({ ...prev, [post.NominationID]: true }));
+                      }
 
-  await fetchViews(post.NominationID);
-  setShowViewers(true);
-}}
+                      await fetchViews(post.NominationID);
+                      setShowViewers(true);
+                    }}
 
 
->
+                    >
   <Eye className="w-4 h-4 mr-1" />
   <span>{viewsMap[post.NominationID] || 0} Views</span>
 </div>
