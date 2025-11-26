@@ -303,6 +303,7 @@ const fetchViews = async (nominationId: number) => {
 
 const addView = async (nominationId: number) => {
   try {
+    
     await axios.post(
       `${apiUrl}/api/nominationview`,
       null,
@@ -310,6 +311,7 @@ const addView = async (nominationId: number) => {
         params: {
           NominationID: nominationId,
           Active: true,
+           ViewedBy: userId,
           SubmittedBy: userId,
         },
         headers: {
@@ -318,7 +320,7 @@ const addView = async (nominationId: number) => {
         },
       }
     );
-
+debugger;
     console.log("View added for: ", nominationId);
   } catch (err) {
     console.error("❌ Error adding view:", err);
