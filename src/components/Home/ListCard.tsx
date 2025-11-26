@@ -73,7 +73,8 @@ const ListCard: React.FC<ListCardProps> = ({ list }) => {
         const res = await axios.get(`${apiUrl}/api/nominationcomments`, {
           headers: { Authorization: `Bearer ${authToken}` },
         });
-        setComments(res.data);
+       const data = res.data;
+       setComments(Array.isArray(data) ? data : []);
       } catch (err) {
         console.error("Comments error:", err);
       }
@@ -321,7 +322,7 @@ const toggleComments = (id: number) => {
         // const filteredComments = comments.filter(
         //   (c) => c.NominationID === NominationID
         // );
-         const filteredFlat = comments.filter(
+         const filteredFlat = (comments || []).filter(
           (c) => c.NominationID === NominationID
         );
        // const filteredFlat = comments.filter(c => c.NominationID === NominationID);
@@ -488,26 +489,25 @@ const toggleComments = (id: number) => {
       />
 
       {/* POST FEED MODAL */}
-      <PostFeedModal
-        post={selectedPost}
-        open={showModal}
-        onClose={() => setShowModal(false)}
-        onLike={handleLike}
-        onComment={handleAddComment}
-        onReply={handleReply}
-        comments={comments.filter(
-          (c) => c.NominationID === selectedPost?.NominationID
-        )}
-        commentText={commentText[selectedPost?.NominationID ?? 0] || ""}
-        setCommentText={(v: any) =>
-          setCommentText((prev) => ({
-            ...prev,
-            [selectedPost?.NominationID ?? 0]: v,
-          }))
-        }
-        userId={userId}
-        likeList={likeList}
-      />
+<PostFeedModal
+  post={selectedPost}
+  open={showModal}
+  onClose={() => setShowModal(false)}
+  onLike={handleLike}
+  onComment={handleAddComment}
+  onReply={handleReply}
+  comments={comments.filter(c => c.NominationID === selectedPost?.NominationID)}
+  commentText={commentText[selectedPost?.NominationID ?? 0] || ""}
+  setCommentText={(v : any) =>
+    setCommentText((prev) => ({
+      ...prev,
+      [selectedPost?.NominationID ?? 0]: v,
+    }))
+  }
+  userId={userId}
+  likeList={likeList}
+   likedPosts={likedPosts}
+/>
     </div>
   );
 };
