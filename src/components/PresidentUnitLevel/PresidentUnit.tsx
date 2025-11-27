@@ -235,19 +235,8 @@ const PresidentUnit: React.FC = () => {
                   View
                 </DropdownMenu.Item>
 
-                <DropdownMenu.Item
-                  onClick={() => handleApprove(item.NominationID)}
-                  className="px-2 py-2 hover:bg-green-100 text-green-700 cursor-pointer"
-                >
-                  Approve
-                </DropdownMenu.Item>
+             
 
-                <DropdownMenu.Item
-                  onClick={() => handleReject(item.NominationID)}
-                  className="px-2 py-2 hover:bg-red-100 text-red-700 cursor-pointer"
-                >
-                  Reject
-                </DropdownMenu.Item>
               </DropdownMenu.Content>
             </DropdownMenu.Root>
           );
