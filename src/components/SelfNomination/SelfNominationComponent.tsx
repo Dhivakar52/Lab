@@ -32,7 +32,7 @@ export default function AddNomination() {
   const [contest, setContest]= useState([]);
    const [users, setUsers] = useState<any[]>([]);
   const [referrals, setReferrals] = useState<any[]>([]);
-
+   const [successMsg, setSuccessMsg] = useState("");
   const {  authToken, userId } = useAuth();
 
  const navigate = useNavigate();
@@ -208,8 +208,14 @@ const handleSubmit = async (e: React.FormEvent) => {
 
  
     console.log("✅ Success:", res.data);
-    alert("Nomination submitted successfully!");
-    navigate("/my-nominations");
+   // alert("Nomination submitted successfully!");
+   setSuccessMsg("Nomination submitted successfully!");
+
+      setTimeout(() => {
+        setSuccessMsg("");
+        navigate("/my-nominations");
+      }, 2000);
+    //navigate("/my-nominations");
   } catch (err) {
     console.error("❌ Error submitting nomination:", err);
     alert("Failed to submit nomination. Please check the console.");
@@ -232,7 +238,19 @@ const handleSubmit = async (e: React.FormEvent) => {
 
 
 
-  return (
+ return (
+  <>
+    {/* Success message on top */}
+    {successMsg && (
+      <div
+        className="fixed top-4 left-1/2 transform -translate-x-1/2 
+                   bg-green-500 text-white px-6 py-3 rounded shadow-lg 
+                   z-50 text-sm font-medium"
+      >
+        {successMsg}
+      </div>
+    )}
+
     <div className="p-5">
       <form
         onSubmit={handleSubmit}
@@ -255,31 +273,24 @@ const handleSubmit = async (e: React.FormEvent) => {
           />
         </div>
 
-        {/* Nominee Name & Department */}
+        {/* Nominee & Department */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-4">
           <div>
-            <Label.Root className="block text-sm font-medium">
-              Nominee Name
-            </Label.Root>
+            <Label.Root className="block text-sm font-medium">Nominee Name</Label.Root>
             <input
               type="text"
-              placeholder=""
-            value={form.nomineeName || ""}
+              value={form.nomineeName || ""}
               disabled
-              // onChange={(e) => setForm({ ...form, nomineeName: e.target.value })}
               className="w-full mt-1 border rounded px-3 py-2"
             />
           </div>
+
           <div>
-            <Label.Root className="block text-sm font-medium">
-              Department
-            </Label.Root>
+            <Label.Root className="block text-sm font-medium">Department</Label.Root>
             <input
               type="text"
-              placeholder="Research & Innovation"
               value={form.department}
-                 disabled
-              // onChange={(e) => setForm({ ...form, department: e.target.value })}
+              disabled
               className="w-full mt-1 border rounded px-3 py-2"
             />
           </div>
@@ -288,34 +299,26 @@ const handleSubmit = async (e: React.FormEvent) => {
         {/* Email & Mobile */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-4">
           <div>
-            <Label.Root className="block text-sm font-medium">
-              Email ID
-            </Label.Root>
+            <Label.Root className="block text-sm font-medium">Email ID</Label.Root>
             <input
               type="email"
-              placeholder="ravikumar@srm.com"
               value={form.email || ""}
-               disabled
-              // onChange={(e) => setForm({ ...form, email: e.target.value })}
+              disabled
               className="w-full mt-1 border rounded px-3 py-2"
             />
           </div>
           <div>
-            <Label.Root className="block text-sm font-medium">
-              Mobile Number
-            </Label.Root>
+            <Label.Root className="block text-sm font-medium">Mobile Number</Label.Root>
             <input
               type="tel"
-              placeholder="+91 98456 87321"
               value={form.mobile}
-                 disabled
-              // onChange={(e) => setForm({ ...form, mobile: e.target.value })}
+              disabled
               className="w-full mt-1 border rounded px-3 py-2"
             />
           </div>
         </div>
 
-        {/* Manager Email & Contest Type */}
+        {/* Manager & Contest */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <div className="mb-2">
             <Label.Root className="block text-sm font-medium">
@@ -323,127 +326,111 @@ const handleSubmit = async (e: React.FormEvent) => {
             </Label.Root>
             <input
               type="email"
-              placeholder="Manager Email"
               value={form.managerEmail}
-                 disabled
-              // onChange={(e) =>
-              //   setForm({ ...form, managerEmail: e.target.value })
-              // }
+              disabled
               className="w-full mt-1 border rounded px-3 py-2 mb-3"
             />
 
+            {/* Contest Dropdown */}
             <div className="mb-6">
-  <label className="block text-sm font-medium text-gray-700 mb-2">
-    Contest Type
-  </label>
+              <label className="block text-sm font-medium mb-2">Contest Type</label>
 
-  <Select
-    name="contestType"
-    value={contest
-      .filter((c: any) => c.AwardCategoryID === Number(form.contestType))
-      .map((c: any) => ({
-        value: c.AwardCategoryID,
-        label: c.CategoryName,
-      }))[0] || null}
-    onChange={(selectedOption: any) =>
-      setForm({ ...form, contestType: selectedOption?.value || "" })
-    }
-    options={contest.map((c: any) => ({
-      value: c.AwardCategoryID,
-      label: c.CategoryName,
-    }))}
-    placeholder="Select Contest Type"
-    className="text-sm"
-  />
-</div>
+              <Select
+                name="contestType"
+                value={
+                  contest
+                    .filter((c: any) => c.AwardCategoryID === Number(form.contestType))
+                    .map((c: any) => ({
+                      value: c.AwardCategoryID,
+                      label: c.CategoryName,
+                    }))[0] || null
+                }
+                onChange={(selectedOption: any) =>
+                  setForm({ ...form, contestType: selectedOption?.value || "" })
+                }
+                options={contest.map((c: any) => ({
+                  value: c.AwardCategoryID,
+                  label: c.CategoryName,
+                }))}
+                placeholder="Select Contest Type"
+                className="text-sm"
+              />
+            </div>
           </div>
 
           {/* Referrals */}
-           <div className="mb-6">
-      <label className="block text-sm font-medium mb-2">
-        Referrals Email ID <span className="text-red-500">(mandatory 3*)</span>
-      </label>
+          <div className="mb-6">
+            <label className="block text-sm font-medium mb-2">
+              Referrals Email ID <span className="text-red-500">(mandatory 3*)</span>
+            </label>
 
-      {/* Searchable Dropdown */}
-      <Select
-        options={users.map((u) => ({
-          value: u.UserID,
-          label: u.UserInfo,
-        }))}
-        onChange={handleSelectReferral}
-        placeholder="Search and select referral..."
-        isSearchable
-        className="text-sm"
-      />
+            <Select
+              options={users.map((u) => ({
+                value: u.UserID,
+                label: u.UserInfo,
+              }))}
+              onChange={handleSelectReferral}
+              placeholder="Search and select referral..."
+              isSearchable
+              className="text-sm"
+            />
 
-      {/* Selected Referrals */}
-      <div className="mt-3 space-y-2">
-        {referrals.map((ref) => (
-          <div
-            key={ref.UserID}
-            className="flex items-center justify-between bg-gray-100 px-3 py-2 rounded"
-          >
-            <span>{ref.UserInfo}</span>
-            <button
-              type="button"
-              onClick={() => removeReferral(ref.UserID)}
-              className="px-2 py-1 bg-red-500 text-white rounded"
-            >
-              ✕
-            </button>
+            {/* Selected Referrals */}
+            <div className="mt-3 space-y-2">
+              {referrals.map((ref) => (
+                <div
+                  key={ref.UserID}
+                  className="flex items-center justify-between bg-gray-100 px-3 py-2 rounded"
+                >
+                  <span>{ref.UserInfo}</span>
+                  <button
+                    type="button"
+                    onClick={() => removeReferral(ref.UserID)}
+                    className="px-2 py-1 bg-red-500 text-white rounded"
+                  >
+                    ✕
+                  </button>
+                </div>
+              ))}
+            </div>
           </div>
-        ))}
-      </div>
-    </div>
         </div>
 
-        {/* Supporting Document */}
+        {/* File Upload */}
         <div className="mb-6">
           <Label.Root className="block text-sm font-medium">
             Supporting Documents
           </Label.Root>
           <input
             type="file"
-            onChange={(e) =>
-              setForm({ ...form, file: e.target.files?.[0] || null })
-            }
+            onChange={(e) => setForm({ ...form, file: e.target.files?.[0] || null })}
             className="mt-1 border p-2 rounded w-full"
           />
         </div>
 
         {/* Description */}
         <div className="mb-6">
-          <Label.Root className="block text-sm font-medium">
-            Description
-          </Label.Root>
+          <Label.Root className="block text-sm font-medium">Description</Label.Root>
           <textarea
-            placeholder="Describe your submission..."
             value={form.description}
-            onChange={(e) =>
-              setForm({ ...form, description: e.target.value })
-            }
+            onChange={(e) => setForm({ ...form, description: e.target.value })}
             className="w-full mt-1 border rounded px-3 py-2 h-28 resize-none"
           />
         </div>
 
         {/* Buttons */}
         <div className="flex justify-end space-x-4">
-          <button
-            type="button"
-            className="px-4 py-2 border rounded text-gray-600 hover:bg-gray-100"
-          >
+          <button type="button" className="px-4 py-2 border rounded text-gray-600 hover:bg-gray-100">
             Cancel
           </button>
-         <button
-              onClick={handleSubmit}
-              type="submit"
-              className="px-4 py-2 btn-theme"
-            >
+          <button type="submit" className="px-4 py-2 btn-theme">
             Submit Nomination
           </button>
         </div>
       </form>
+
       <Outlet />
     </div>
-  );
+  </>
+);
 }

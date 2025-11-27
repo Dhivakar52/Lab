@@ -44,6 +44,7 @@ export default function OtherNominationForm() {
   const [users, setUsers] = useState<any[]>([]);
   const [referrals, setReferrals] = useState<any[]>([]);
   const [entitydropdown, setEntityName] = useState<any[]>([]);
+  const [successMsg, setSuccessMsg] = useState("");
   const [form, setForm] = useState<AddNominationState>({
     title: "",
     nomineeName: "",
@@ -296,7 +297,9 @@ export default function OtherNominationForm() {
       );
 
       console.log("✅ Success:", res.data);
-      alert("Nomination submitted successfully!");
+      setSuccessMsg("Nomination submitted successfully!");
+      setTimeout(() => setSuccessMsg(""), 3000);
+      //navigate("/my-nominations");
     } catch (err) {
       console.error("❌ Error submitting nomination:", err);
       alert("Failed to submit nomination. Please check the console.");
@@ -306,6 +309,14 @@ export default function OtherNominationForm() {
   return (
     <>
       <div className=''>
+          {/* ⭐ Success Message UI */}
+        {successMsg && (
+            <div className="fixed top-4 left-1/2 transform -translate-x-1/2 
+                            bg-green-500 text-white px-6 py-3 rounded shadow-lg 
+                            z-50 text-sm font-medium">
+              {successMsg}
+            </div>
+          )}
 
         <form className="mt-8 p-6 border rounded-lg bg-white shadow nominate-form">
           <h2 className="text-xl font-semibold mb-6">Others Nominate Form </h2>
