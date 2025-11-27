@@ -150,7 +150,8 @@ const ReferralPanel: React.FC<NominationSidePanelProps> = ({
                   {nomination["Referrals ID"]?.map((ref, i) => (
                     <div key={i} className="border-b pb-2">
                       <div>
-                       {ref.ReferralName}
+                       {/* {ref.ReferralName} */}
+                        <p className="text-sm font-semibold">{ref.ReferralName}</p>
                       </div>
                       <div>
                         {ref.TenantName}

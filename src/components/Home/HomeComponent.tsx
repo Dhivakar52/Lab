@@ -164,9 +164,20 @@ const filteredPosts = useMemo(() => {
 
 
                 <div className="divide-y divide-gray-100">
-                  {activeTab === "Feeds" ? (
+                  {/* {activeTab === "Feeds" ? (
                     <PostCard posts={filteredPosts} setPosts={setPosts} />
                   ) : (
+                    <ListCard list={list} />
+                  )}
+                   */}
+                    {/* TAB CONTENT FIXED */}
+                
+
+                  {activeTab === "Feeds" && (
+                    <PostCard posts={filteredPosts} setPosts={setPosts} />
+                  )}
+
+                  {activeTab === "My Lists" && (
                     <ListCard list={list} />
                   )}
                 </div>

@@ -215,7 +215,6 @@ const handleSubmit = async (e: React.FormEvent) => {
         setSuccessMsg("");
         navigate("/my-nominations");
       }, 2000);
-    //navigate("/my-nominations");
   } catch (err) {
     console.error("❌ Error submitting nomination:", err);
     alert("Failed to submit nomination. Please check the console.");
