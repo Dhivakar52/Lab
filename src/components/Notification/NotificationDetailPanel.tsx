@@ -38,7 +38,7 @@ interface NotificationDetailPanelProps {
  
 const NotificationDetailPanel: React.FC<NotificationDetailPanelProps> = ({ isOpen, onClose, notification }) => {
   if (!isOpen || !notification) return null;
- 
+
   const dateString = notification.CreatedAt;
   const date = new Date(dateString);
 
@@ -58,7 +58,7 @@ const NotificationDetailPanel: React.FC<NotificationDetailPanelProps> = ({ isOpe
         className="absolute inset-0 bg-black opacity-40"
         onClick={onClose}
       ></div>
- 
+
       {/* Side Panel */}
       <div className={`relative w-150 bg-white h-full shadow-xl p-6 overflow-y-auto rounded-l-2xl transform ${isOpen ? 'translate-x-0' : '-translate-x-full'} transition-transform duration-300`}>
         <h2 className="text-xl font-semibold mb-4">Notification Details</h2>
@@ -70,20 +70,48 @@ const NotificationDetailPanel: React.FC<NotificationDetailPanelProps> = ({ isOpe
         </div> 
         <p>Received {formattedDate}</p>
 
-<br></br>
-        <p><strong>REQUESTER INFORMATION</strong> </p>
-        <div style={{ display: 'flex', alignItems: 'center' }}>
-          <span style={{ marginRight: '8px' }}><User/></span>
-          <span>{notification.Nomination[0].Nominee}</span>
-        </div>
-         <div style={{ display: 'flex', alignItems: 'center' }}>
-          <span style={{ marginRight: '8px' }}><Building/></span>
-          <span>{notification.Nomination[0].Tenant}</span>
-        </div>
         <br></br>
+         {notification.Nomination && notification.Nomination.length > 0 ? (
+          <>
+           <p><strong>REQUESTER INFORMATION</strong> </p>
+            <div style={{ display: 'flex', alignItems: 'center' }}>
+
+           <span style={{ marginRight: '8px' }}>
+              <User />
+            </span>
+            <span>
+              {notification.Nomination[0].Nominee}
+            </span>
+            </div>
+             <div style={{ display: 'flex', alignItems: 'center' }}>
+            <span style={{ marginRight: '8px' }}>
+              <Building />
+            </span>
+            <span>
+              {notification.Nomination[0].Tenant}
+            </span>
+            </div>
+            <br></br>
+          </>
+        ) : (
+          ''
+        )}
+
+         
         <p><strong>REQUEST DETAILS</strong> </p>
-         <p><strong>Category:</strong> {notification.Nomination[0].AwardCategory}</p>
-          <p><strong>Message:</strong> {notification.NotificationContent}</p>
+        {notification.Nomination && notification.Nomination.length > 0 ? (
+          <>
+            <p><strong>Category:</strong>
+         {notification.Nomination && notification.Nomination.length > 0
+          ? notification.Nomination[0].AwardCategory
+          : ''}
+        </p>
+          </>
+        ) : (
+          ''
+        )}
+
+        <p><strong>Message:</strong> {notification.NotificationContent}</p>
  
         </div>
  

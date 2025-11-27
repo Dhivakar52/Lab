@@ -35,6 +35,65 @@ const PresidentSidePanel: React.FC<PresidentSidePanelProps> = ({
   onApprove,
   onReject
 }) => {
+  const baseClasses = "px-2 py-2 text-white rounded-md shadow transition flex items-center";
+  const rejectClasses = `${baseClasses} bg-red-600 hover:bg-red-700`;
+  const approveClasses = `${baseClasses} bg-green-600 hover:bg-green-700`;
+  const containerClasses = "flex justify-around items-center gap-4 mt-4";
+  const ActionButtons = () => {
+    if (!nominee) return null; // Safety check
+
+    // Helper functions for specific buttons (using props from BusinessPanel scope)
+    const RejectButton = () => (
+      <button
+        onClick={() => {
+          onReject(nominee.NominationID);
+          onClose();
+        }}
+        className={rejectClasses}
+      >
+        ✖ Reject Nomination
+      </button>
+    );
+
+    const ApproveButton = () => (
+      <button
+        onClick={() => {
+          onApprove(nominee.NominationID);
+          onClose();
+        }}
+        className={approveClasses}
+      >
+        ✔ Approve Nomination
+      </button>
+    );
+    
+    // Switch logic for rendering the correct combination
+    switch (nominee.Status) {
+      case 'Pending':
+        return (
+          <div className={containerClasses}>
+            <RejectButton />
+            <ApproveButton />
+          </div>
+        );
+      case 'Approved':
+        // If approved, only the reject button should show up
+        return (
+          <div className={containerClasses}>
+            <RejectButton />
+          </div>
+        );
+      case 'Rejected':
+        // If rejected, only the approve button should show up
+        return (
+          <div className={containerClasses}>
+            <ApproveButton />
+          </div>
+        );
+      default:
+        return null;
+    }
+  };
    return (
    <div
       className={`fixed top-0 right-0 h-full w-[400px] bg-white shadow-2xl transform transition-transform duration-300 ease-in-out z-50 ${
@@ -126,29 +185,7 @@ const PresidentSidePanel: React.FC<PresidentSidePanelProps> = ({
                 <textarea className="border" placeholder="Add your evaluation comments..." rows={5} // Sets the initial visible height
                />
           </div>
-            <div className="flex justify-around items-center gap-4 mt-4">
-                 {/* Reject Button */}
-                  <button
-                    onClick={() => {
-                        onReject(nominee.NominationID);
-                        onClose();
-                      }}
-                      className="px-2 py-2 bg-red-600 text-white rounded-md shadow hover:bg-red-700 transition flex items-center"
-                    >
-                      ✖ Reject Nomination
-                  </button>
-
-                  {/* Approve Button */}
-                  <button
-                   onClick={() => {
-                        onApprove(nominee.NominationID);
-                        onClose(); 
-                      }}
-                    className="px-2 py-2 bg-green-600 text-white rounded-md shadow hover:bg-green-700 transition flex items-center"
-                  >
-                    ✔ Approve Nomination
-                  </button>
-                </div>
+            <ActionButtons/>
           </div>
         ) : null}
         </div>
