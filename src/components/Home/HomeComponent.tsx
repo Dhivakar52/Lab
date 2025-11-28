@@ -64,7 +64,7 @@ const [tenants, setTenants] = useState<string[]>([]);
         });
 
         setList(listCard.data);
-        console.log("my list count", listCard.data);
+        console.log("List ", listCard.data)
 
       } catch (err) {
         console.error("❌ Error fetching feeds:", err);
