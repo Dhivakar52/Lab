@@ -57,7 +57,7 @@ const ListCard: React.FC<ListCardProps> = ({ list }) => {
    const [viewed, setViewed] = useState<{ [key:number]: boolean }>({});
   const [showModal, setShowModal] = useState(false);
 
-  // ---------------- LIKE LOAD ----------------
+
   useEffect(() => {
     const liked = safeList
       .filter((p) => p.LikedBy?.some((like: any) => like.UserID === userId))
@@ -66,7 +66,7 @@ const ListCard: React.FC<ListCardProps> = ({ list }) => {
     setLikedPosts(liked);
   }, [safeList, userId]);
 
-  // ---------------- COMMENT LOAD ----------------
+
   useEffect(() => {
     const fetchComments = async () => {
       try {
