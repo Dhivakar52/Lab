@@ -311,7 +311,9 @@ const addView = async (nominationId: number) => {
         params: {
           NominationID: nominationId,
           Active: true,
-           ViewedBy: userId,
+
+          ViewedBy:userId,
+
           SubmittedBy: userId,
         },
         headers: {

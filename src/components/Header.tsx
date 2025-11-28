@@ -31,8 +31,7 @@ const {  userId}= useAuth();
 const username = localStorage.getItem('username');
 const email = localStorage.getItem('email');
 const location = useLocation();
-  useEffect(() => {
-    const fetchNotifications = async () => {
+const fetchNotifications = async () => {
       try {
         const token = localStorage.getItem("authToken");
         if (!token) throw new Error("No auth token found");
@@ -57,9 +56,9 @@ const location = useLocation();
        
       }
     };
-
-    fetchNotifications();
     
+  useEffect(() => {
+   fetchNotifications();
   }, []);
 
 
@@ -135,6 +134,7 @@ const location = useLocation();
         isOpen={isNotificationOpen}
         onClose={() => setIsNotificationOpen(false)}
         notifications={headerNotification}
+        notificationcount={fetchNotifications()}
       />
       {/* <NotificationModal
         isOpen={isNotificationOpen}

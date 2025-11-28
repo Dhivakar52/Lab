@@ -37,7 +37,13 @@ interface ReferralData {
   Tenant: string | null;
   ManagerEmailID: string;
   Descriptions: string;
-  "Referrals ID": { Email: string }[];
+ // "Referrals ID": { Email: string }[];
+ "Referrals ID": {
+  Email: string;
+  TenantName: string;
+  DeptName: string;
+  ReferralName:string;
+}[];
   "Supporting Documents": {
     OriginalFileName: string;
     FileType: string;
@@ -57,7 +63,13 @@ interface ReferralView {
   AwardCategory: string;
   NominatedBy: string;
   ManagerEmailID: string;
-  "Referrals ID": { Email: string }[];
+  //"Referrals ID": { Email: string }[];
+  "Referrals ID": {
+  Email: string;
+  TenantName: string;
+  DeptName: string;
+  ReferralName:string;
+}[];
   "Supporting Documents": {
     OriginalFileName: string;
     FileType: string;

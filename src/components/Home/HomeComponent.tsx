@@ -26,20 +26,10 @@ const [tenants, setTenants] = useState<string[]>([]);
   const [profile, setProfile] = useState([]);
   const { authToken, userId } = useAuth();
   const [showDropdown, setShowDropdown] = useState(false);
-  const [visibleCount, setVisibleCount] = useState(5);
-const loadMoreRef = React.useRef<HTMLDivElement | null>(null);
-  const [state, dispatch] = useReducer(filterReducer, initialFilterState);
   const apiUrl = import.meta.env.VITE_API_URL;
 
   // ⭐ ADD FILTER REDUCER HERE
-
-
-
-
-
-
-
-
+  const [state, dispatch] = useReducer(filterReducer, initialFilterState);
 
   useEffect(() => {
     const fetchFeeds = async () => {
@@ -51,11 +41,11 @@ const loadMoreRef = React.useRef<HTMLDivElement | null>(null);
           },
         });
 
- const cat = [...new Set(res.data.map((x: any) => x.AwardCategory))] as string[];
-setCategories(cat);
+        const cat = [...new Set(res.data.map((x: any) => x.AwardCategory))] as string[];
+        setCategories(cat);
 
-const ten = [...new Set(res.data.map((x: any) => x.Tenant))] as string[];
-setTenants(ten);
+        const ten = [...new Set(res.data.map((x: any) => x.Tenant))] as string[];
+        setTenants(ten);
 
 
 
@@ -139,24 +129,6 @@ const filteredPosts = useMemo(() => {
 
   
 
-useEffect(() => {
-  if (!loadMoreRef.current) return;
-
-  const observer = new IntersectionObserver(
-    (entries) => {
-      if (entries[0].isIntersecting) {
-        setVisibleCount((prev) => prev + 5); 
-      }
-    },
-    { threshold: 0.5 }
-  );
-
-  observer.observe(loadMoreRef.current);
-
-  return () => observer.disconnect();
-}, [filteredPosts]);
-
-
   return (
     <div className="min-h-screen bg-gray-50">
       <div
@@ -167,11 +139,11 @@ useEffect(() => {
           height: "200px",
         }}
       >
-        <div className=" mx-auto px-4 sm:px-6 lg:px-8 -mt-4">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 -mt-4">
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 pt-10">
             
             {/* Main Content */}
-            <div className="xl:col-span-8 lg:col-span-8">
+            <div className="lg:col-span-8">
               <div className="bg-white rounded-lg shadow-sm relative">
 
                 <TabsSection activeTab={activeTab} setActiveTab={setActiveTab} 
@@ -191,40 +163,29 @@ useEffect(() => {
 )}
 
 
-<div className="divide-y divide-gray-100 pb-3 overflow-visible">
-  {activeTab === "Feeds" ? (
-    <>
+                <div className="divide-y divide-gray-100">
+                  {/* {activeTab === "Feeds" ? (
+                    <PostCard posts={filteredPosts} setPosts={setPosts} />
+                  ) : (
+                    <ListCard list={list} />
+                  )}
+                   */}
+                    {/* TAB CONTENT FIXED */}
+                
 
-      <PostCard
-        posts={filteredPosts.slice(0, visibleCount)}
-        setPosts={setPosts}
-      />
+                  {activeTab === "Feeds" && (
+                    <PostCard posts={filteredPosts} setPosts={setPosts} />
+                  )}
 
-      {visibleCount < filteredPosts.length ? (
-        <div
-          ref={loadMoreRef}
-          className="h-16 flex items-center justify-center"
-        >
-          <div className="animate-spin w-6 h-6 border-2 border-gray-300 border-t-gray-600 rounded-full" />
-        </div>
-      ) : filteredPosts.length > 0 ? (
-        <div className="py-6 text-center text-gray-400 text-sm">
-           No more Details
-        </div>
-      ) : null}
-    </>
-  ) : (
-    <ListCard list={list} />
-  )}
-</div>
-
-
+                  {activeTab === "My Lists" && (
+                    <ListCard list={list} />
+                  )}
+                </div>
               </div>
             </div>
 
             {/* Sidebar */}
-            <div className="xl:col-span-4 lg:col-span-4 space-y-6 mt-6 lg:mt-0 
-            ">
+            <div className="lg:col-span-4 space-y-6 mt-6 lg:mt-0 ">
               <ProfileCard profile={profile} />
               <NominationStats />
               <TopPerformers />

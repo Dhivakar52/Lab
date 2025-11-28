@@ -23,15 +23,19 @@ interface NotificationModalProps {
   isOpen: boolean;
   onClose: () => void;
   notifications: Notification[];
+  notificationcount:any;
 }
 
 const NotificationModal: React.FC<NotificationModalProps> = ({
   isOpen,
   onClose,
-  notifications = []
+  notifications = [],
+  notificationcount
 }) => {
     const [isPanelOpen, setIsPanelOpen] = useState(false);
       const [selectedNominee, setSelectedNominee] = useState<Notification | null>(null);
+        const [data, setData] = useState<Notification[]>([]);
+      
     
     const { authToken, userId } = useAuth();
     const apiUrl = import.meta.env.VITE_API_URL;
@@ -46,6 +50,36 @@ const NotificationModal: React.FC<NotificationModalProps> = ({
     setSelectedNominee(notification);
     setIsPanelOpen(true);
   };
+
+  const handleSingleRead = async (notificationID: number) => {
+      try {
+        await axios.put(
+          `${apiUrl}/api/notificationread/notification`,
+          {
+           LogID: notificationID,
+           SubmittedBy: userId,
+          },
+          {
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${authToken}`,
+            },
+          }
+        );
+  
+        // Update UI instantly
+        setData((prev) =>
+          prev.map((item) =>
+            item.NotificationID === notificationID ? { ...item} : item
+          )
+          
+        );
+      
+      } catch (error) {
+        console.error("Notification Read", error);
+      }
+    }
+
   const handleMarkAllRead = async () => {
     const headers = {
       Accept: "text/plain",
@@ -63,12 +97,12 @@ const NotificationModal: React.FC<NotificationModalProps> = ({
         { headers }
       );
     });
- 
+      
     try {
       await Promise.all(requests);
       console.log("✅ All notifications marked as read successfully.");
-      //navigate("/home");
-      //alert("HI");
+      notificationcount;
+      onClose(); 
        }
     catch (err) {
       console.error("❌ Error while Marking as Read:", err);
@@ -100,7 +134,10 @@ const NotificationModal: React.FC<NotificationModalProps> = ({
                 <div
                   key={n.NotificationID}
                   className="px-6 py-4 border-b border-gray-100 hover:bg-gray-50 cursor-pointer transition-colors"
-                  onClick={() => handleSidePanelView(n)}
+                  onClick={() => {
+                        handleSidePanelView(n);
+                        handleSingleRead(n.NotificationID);
+                      }}
                 >
                   <div className="flex space-x-3">
                     <div className="flex-shrink-0">

@@ -12,7 +12,14 @@ interface ReferralPopup {
   NominatedBy: string;
   ManagerEmailID: string;
 
-  "Referrals ID": { Email: string }[];
+ // "Referrals ID": { Email: string }[];
+ "Referrals ID": {
+    Email: string;
+    TenantName: string;
+    DeptName: string;
+    ReferralName:string;
+  }[];
+
   "Supporting Documents": {
     OriginalFileName: string;
     FileType: string;
@@ -128,14 +135,35 @@ const ReferralPanel: React.FC<NominationSidePanelProps> = ({
                 <div className="text-gray-600">{nomination.ManagerEmailID}</div>
               </div>
 
-              <div>
+              {/* <div>
                 <div className="font-medium">Referrals</div>
                 <div className="text-gray-600 space-y-1">
                   {nomination["Referrals ID"]?.map((ref, i) => (
-                    <div key={i}>{ref.Email}</div>
+                    <div key={i}>{ref.Email} - {ref.TenantName} - {ref.DeptName}</div>
                   ))}
                 </div>
-              </div>
+              </div> */}
+              <div >
+                 <div className="font-medium">Referrals</div>
+              <div className="text-gray-600 space-y-3">
+                 
+                  {nomination["Referrals ID"]?.map((ref, i) => (
+                    <div key={i} className="border-b pb-2">
+                      <div>
+                       {/* {ref.ReferralName} */}
+                        <p className="text-sm font-semibold">{ref.ReferralName}</p>
+                      </div>
+                      <div>
+                        {ref.TenantName}
+                      </div>
+                      <div>
+                        {ref.DeptName}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+            </div>
+
             </div>
 
             {/* Description */}
@@ -174,7 +202,6 @@ const ReferralPanel: React.FC<NominationSidePanelProps> = ({
               >
                 ✖ Reject Nomination
               </button>
-
               <button
                 onClick={() => {
                   onApprove();
@@ -182,6 +209,7 @@ const ReferralPanel: React.FC<NominationSidePanelProps> = ({
                 }}
                 className="px-3 py-2 bg-green-600 text-white rounded-md shadow hover:bg-green-700"
               >
+                
                 ✔ Approve Nomination
               </button>
             </div>

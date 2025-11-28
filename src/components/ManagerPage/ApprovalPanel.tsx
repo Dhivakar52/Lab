@@ -13,8 +13,12 @@ interface Nomination {
   NominatedBy: string;
   ManagerEmailID: string;
 
-  //"Manager ID": string;
-  "Referrals ID": { Email: string }[];
+  "Referrals ID": {
+    Email: string;
+    TenantName: string;
+    DeptName: string;
+    ReferralName:string;
+  }[];
   "Supporting Documents": {
     OriginalFileName: string;
     FileType: string;
@@ -133,14 +137,33 @@ const ApprovalPanel: React.FC<NominationSidePanelProps> = ({
                 <div className="text-gray-600">{nomination.ManagerEmailID}</div>
               </div>
 
-              <div>
+              {/* <div>
                 <div className="font-medium">Referrals</div>
                 <div className="text-gray-600 space-y-1">
                   {nomination["Referrals ID"]?.map((ref, i) => (
                     <div key={i}>{ref.Email}</div>
                   ))}
                 </div>
-              </div>
+              </div> */}
+               <div >
+                 <div className="font-medium">Referrals</div>
+              <div className="text-gray-600 space-y-3">
+                 
+                  {nomination["Referrals ID"]?.map((ref, i) => (
+                    <div key={i} className="border-b pb-2">
+                      <div>
+                      <p className="text-sm font-semibold">{ref.ReferralName}</p>
+                      </div>
+                      <div>
+                        {ref.TenantName}
+                      </div>
+                      <div>
+                        {ref.DeptName}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+            </div>
             </div>
 
               {/* Row 6 */}
