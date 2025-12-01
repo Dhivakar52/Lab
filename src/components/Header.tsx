@@ -48,7 +48,7 @@ const fetchNotifications = async () => {
                   headers: { Authorization: `Bearer ${token}` },
                 });
         setHeaderNotification(notificationList.data);
-        // console.log("All Notifications:", notificationList.data);
+         console.log("All Notifications:", notificationList.data);
         
       } catch (err) {
         console.error("❌ Error fetching notifications:", err);
@@ -110,12 +110,13 @@ const fetchNotifications = async () => {
       
       
        <div className="flex items-center space-x-3 sm:space-x-5">
-        <div className="relative cursor-pointer"  onClick={() => setIsNotificationOpen(true)}>
+        <div className="relative cursor-pointer" onClick={() => setIsNotificationOpen(true)}>
           <Bell size={20} className="text-gray-600" />
-          <span className="absolute -top-2 -right-2 w-5 h-5 bg-red-500 text-white text-xs rounded-full flex items-center justify-center">
-          {notificationCount?.UnReadCount ?? 0}
-          </span>
-          
+          {notificationCount?.UnReadCount && notificationCount.UnReadCount > 0 && (
+  <span className="absolute -top-2 -right-2 w-5 h-5 bg-red-500 text-white text-xs rounded-full flex items-center justify-center">
+    {notificationCount.UnReadCount}
+  </span>
+)}
         </div>
         
         <div className="flex items-center space-x-3 cursor-pointer hover:bg-gray-50 px-2 sm:px-3 py-2 rounded-lg transition-colors">

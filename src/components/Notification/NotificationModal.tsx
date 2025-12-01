@@ -30,7 +30,7 @@ const NotificationModal: React.FC<NotificationModalProps> = ({
   isOpen,
   onClose,
   notifications = [],
-  notificationcount
+  notificationcount,
 }) => {
     const [isPanelOpen, setIsPanelOpen] = useState(false);
       const [selectedNominee, setSelectedNominee] = useState<Notification | null>(null);
