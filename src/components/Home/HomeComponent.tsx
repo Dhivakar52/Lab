@@ -128,6 +128,25 @@ const filteredPosts = useMemo(() => {
 }, [state, posts]);
 
   
+const filteredList = useMemo(() => {
+  let data = [...list];
+
+  if (state.search) {
+    data = data.filter((p) =>
+      p.Nominee.toLowerCase().includes(state.search.toLowerCase())
+    );
+  }
+
+  if (state.category) {
+    data = data.filter((p) => p.AwardCategory === state.category);
+  }
+
+  if (state.tenant) {
+    data = data.filter((p) => p.Tenant === state.tenant);
+  }
+
+  return data;
+}, [state, list]);
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -178,7 +197,7 @@ const filteredPosts = useMemo(() => {
                   )}
 
                   {activeTab === "My Lists" && (
-                    <ListCard list={list} />
+                    <ListCard list={filteredList} />
                   )}
                 </div>
               </div>
