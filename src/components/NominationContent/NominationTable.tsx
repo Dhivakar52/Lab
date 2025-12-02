@@ -14,13 +14,13 @@ import type {
 import { Menu } from "lucide-react";
 import { Outlet } from "react-router-dom";
 import { useAuth } from "../ContextAPI/AuthContext";
-import NominationDetailsModal from "./NominationDetailsModal ";
+import NominationDetailsModal from "./NominationDetailsModal";
 
 interface Nomination {
   TotalRowCount: number;
   NominationID: number;
   Nominee: string;
-  "Manager ID":string;
+  ManagerName:string;
   Tenant: string;
   NominatedBy: string;
   NominationCycleName: string;
@@ -30,8 +30,22 @@ interface Nomination {
   SubmittedDate:string;
   SelfNomination: string;
   NominationFile: string | null;
+  ManagerEmailID:string;
   Status: "Pending" | "Approved" | "Rejected" | "Under Review";
-  "Referrals ID": { Email: string }[];
+  "Referrals ID": {
+    Email: string;
+    TenantName: string;
+    DeptName: string;
+    ReferralName:string;
+  }[];
+
+  "Supporting Documents": {
+    OriginalFileName: string;
+    FileType: string;
+    FileNameGUID: string;
+    FilePath: string;
+  }[];
+  //"Referrals ID": { Email: string }[];
 }
 
 const apiUrl = import.meta.env.VITE_API_URL;
@@ -55,8 +69,15 @@ const NominationTable: React.FC = () => {
   useEffect(() => {
     const fetchNominations = async () => {
       try {
-        const res = await axios.get(`${apiUrl}/api/nominations/${userId}`, {
-          headers: { Authorization: `Bearer ${authToken}` },
+        // const res = await axios.get(`${apiUrl}/api/nominations/${userId}`, {
+        //   headers: { Authorization: `Bearer ${authToken}` },
+        // });
+         const res = await axios.get(`${apiUrl}/api/nominationsbyuser`, {
+          params: {
+            userID: userId,
+            NominatedBy: 0,
+          },
+          headers: { Authorization: `Bearer ${authToken}`,},
         });
         setData(res.data);
         console.log("Nomination Table", res.data)
@@ -240,9 +261,12 @@ const NominationTable: React.FC = () => {
       submissionDate: selectedNomination.SubmittedDate, // or actual date if available
       contestType: selectedNomination.ContestType,
       status: selectedNomination.Status,  
-      managerEmail: selectedNomination["Manager ID"],
-       referrals: referralEmails,
+      managerEmail: selectedNomination.ManagerName,
+      referrals: referralEmails,
       description: selectedNomination.Descriptions,
+      managerEmailID: selectedNomination.ManagerEmailID,
+      "Referrals ID": selectedNomination["Referrals ID"],
+      "Supporting Documents": selectedNomination["Supporting Documents"],
     }}
         />
       )}
