@@ -76,7 +76,7 @@ const apiUrl = import.meta.env.VITE_API_URL;
 const statusColors: Record<ApprovalData["Status"], string> = {
   Pending: "bg-orange-100 text-orange-800",
   Approved: "bg-green-100 text-green-800",
-  Rejected: "bg-red-100 text-red-800",
+  Rejected: "font-semibold bg-red-100 text-red-800",
 };
 
 const ApprovalTable: React.FC = () => {
