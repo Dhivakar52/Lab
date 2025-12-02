@@ -191,28 +191,40 @@ const ReferralPanel: React.FC<NominationSidePanelProps> = ({
               </div>
             </div>
 
-            {/* Buttons */}
-            <div className="flex justify-around gap-4 mt-6">
-              <button
-                onClick={() => {
-                  onReject();
-                  onClose();
-                }}
-                className="px-3 py-2 bg-red-600 text-white rounded-md shadow hover:bg-red-700"
-              >
-                ✖ Reject Nomination
-              </button>
-              <button
-                onClick={() => {
-                  onApprove();
-                  onClose();
-                }}
-                className="px-3 py-2 bg-green-600 text-white rounded-md shadow hover:bg-green-700"
-              >
-                
-                ✔ Approve Nomination
-              </button>
+         <div className="px-6 py-4 border-t border-gray-200 bg-gray-50 fixed bottom-0 w-full max-w-md">
+            <div
+              className={`flex space-x-3 ${
+                nomination.status === "Pending" ? "justify-between" : "justify-end"
+              }`}
+            >
+              {/* Reject → show for Pending + Approved */}
+              {(nomination.status === "Pending" || nomination.status === "Approved") && (
+                <button
+                  onClick={() => {
+                    onReject();
+                    onClose();
+                  }}
+                  className="px-2 py-2 bg-red-600 text-white rounded-md shadow hover:bg-red-700 transition flex items-center"
+                >
+                  ✖ Reject Nomination
+                </button>
+              )}
+
+              {/* Approve → show for Pending + Rejected */}
+              {(nomination.status === "Pending" || nomination.status === "Rejected") && (
+                <button
+                  onClick={() => {
+                    onApprove();
+                    onClose();
+                  }}
+                  className="px-2 py-2 bg-green-600 text-white rounded-md shadow hover:bg-green-700 transition flex items-center"
+                >
+                  ✔ Approve Nomination
+                </button>
+              )}
             </div>
+          </div>
+
           </div>
         ) : null}
       </div>
