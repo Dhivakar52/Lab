@@ -20,7 +20,7 @@ const HomeComponent: React.FC = () => {
   const [activeTab, setActiveTab] = useState<"Feeds" | "My Lists">("Feeds");
   const [posts, setPosts] = useState<Feed[]>([]);
   const [categories, setCategories] = useState<string[]>([]);
-const [tenants, setTenants] = useState<string[]>([]);
+    const [tenants, setTenants] = useState<string[]>([]);
 
   const [list, setList] = useState<Feed[]>([]);
   const [profile, setProfile] = useState([]);
@@ -54,7 +54,6 @@ const [tenants, setTenants] = useState<string[]>([]);
 
         setPosts(res.data);
         setProfile(filtered);
-
         // List Card
         const listCard = await axios.get(`${apiUrl}/api/nomiantionmylist`, {
           headers: {
@@ -207,6 +206,7 @@ const filteredList = useMemo(() => {
             <div className="lg:col-span-4 space-y-6 mt-6 lg:mt-0 ">
               <ProfileCard profile={profile} />
               <NominationStats />
+               
               <TopPerformers />
             </div>
 

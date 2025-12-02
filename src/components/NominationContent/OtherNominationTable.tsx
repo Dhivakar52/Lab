@@ -14,13 +14,14 @@ import type {
 import { Menu } from "lucide-react";
 import { Outlet } from "react-router-dom";
 import { useAuth } from "../ContextAPI/AuthContext";
-import NominationDetailsModal from "./NominationDetailsModal ";
+import NominationDetailsModal from "./NominationDetailsModal";
 
 interface Nomination {
   TotalRowCount: number;
   NominationID: number;
   Nominee: string;
-  "Manager ID":string;
+  ManagerName:string;
+  ManagerEmailID:string;
   Tenant: string;
   NominatedBy: string;
   NominationCycleName: string;
@@ -31,7 +32,20 @@ interface Nomination {
   SelfNomination: string;
   NominationFile: string | null;
   Status: "Pending" | "Approved" | "Rejected" | "Under Review";
-  "Referrals ID": { Email: string }[];
+  "Referrals ID": {
+    Email: string;
+    TenantName: string;
+    DeptName: string;
+    ReferralName:string;
+  }[];
+
+  "Supporting Documents": {
+    OriginalFileName: string;
+    FileType: string;
+    FileNameGUID: string;
+    FilePath: string;
+  }[];
+  //"Referrals ID": { Email: string }[];
 }
 
 const apiUrl = import.meta.env.VITE_API_URL;
@@ -56,9 +70,16 @@ const NominationTable: React.FC = () => {
   useEffect(() => {
     const fetchNominations = async () => {
       try {
-        const res = await axios.get(`${apiUrl}/api/nominations`, {
-          headers: { Authorization: `Bearer ${authToken}` },
-        });
+        // const res = await axios.get(`${apiUrl}/api/nominations`, {
+        //   headers: { Authorization: `Bearer ${authToken}` },
+        // });
+        const res = await axios.get(`${apiUrl}/api/nominationsbyuser`, {
+                  params: {
+                    userID: 0,
+                    NominatedBy: userId,
+                  },
+                  headers: { Authorization: `Bearer ${authToken}`,},
+                });
         setData(res.data);
       } catch (err) {
         console.error("❌ Error fetching nominations:", err);
@@ -228,7 +249,7 @@ const NominationTable: React.FC = () => {
         <NominationDetailsModal
           isOpen={modalOpen}
           onClose={() => setModalOpen(false)}
-          // data={selectedNomination}
+          // data={selectedNomination}s
             data={{
       nominationId: selectedNomination.NominationID.toString(),
       nominee: selectedNomination.Nominee,
@@ -238,9 +259,12 @@ const NominationTable: React.FC = () => {
       submissionDate: selectedNomination.SubmittedDate, // or actual date if available
       contestType: selectedNomination.ContestType,
       status: selectedNomination.Status,  
-      managerEmail: selectedNomination["Manager ID"],
-       referrals: referralEmails,
+      managerEmail: selectedNomination.ManagerName,
+      managerEmailID:selectedNomination.ManagerEmailID,
+      referrals: referralEmails,
       description: selectedNomination.Descriptions,
+      "Referrals ID": selectedNomination["Referrals ID"],
+      "Supporting Documents": selectedNomination["Supporting Documents"],
     }}
         />
       )}

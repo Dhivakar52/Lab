@@ -8,12 +8,17 @@ import type { AddNominationState } from "../../dataTypes/nomination";
 import Select from "react-select";
 import type { SingleValue } from "react-select";
 import { useNavigate } from "react-router-dom";
+//import React, { useState, useEffect } from "react";
 
 interface OptionType {
   value: number;
   label: string;
 }
-
+interface SearchResult {
+  UserName: string;
+  DeptName: string;
+  TenantName: string;
+}
 interface DepartmentType {
   DeptID: number;
   DeptName: string;
@@ -44,7 +49,13 @@ export default function AddNomination() {
   const [filteredUsers, setFilteredUsers] = useState<UserType[]>([]); 
   const [users, setUsers] = useState<any[]>([]);
   const [referrals, setReferrals] = useState<any[]>([]);
-  const [entitydropdown, setEntityName] = useState<any[]>([]);
+  // const [entitydropdown, setEntityName] = useState<any[]>([]);
+  const [successMsg, setSuccessMsg] = useState("");
+  const [searchText, setSearchText] = useState("");
+  const [results, setResults] = useState<SearchResult[]>([]);
+  const [showList, setShowList] = useState(false);
+  const [selectedUserID, setSelectedUserID] = useState<number | null>(null);
+  const [selectedTenantID, setSelectedTenantID] = useState<number | null>(null);
   const [form, setForm] = useState<AddNominationState>({
     title: "",
     nomineeName: "",
@@ -61,6 +72,45 @@ export default function AddNomination() {
 
   const { authToken, userId } = useAuth();
   const navigate = useNavigate();
+
+useEffect(() => {
+    const fetchData = async () => {
+      if (searchText.length < 3) {
+        setResults([]);
+        setShowList(false);
+        return;
+      }
+
+      try {
+        const response = await axios.get(
+        `${apiUrl}/api/users?searchText=${searchText}`,
+          {
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${authToken}`,
+            },
+          }
+        );
+    console.log("Search", response.data);
+        setResults(response.data);
+        setShowList(true);
+      } catch (error) {
+        console.error("User Search API Error:", error);
+      }
+    };
+
+    const delay = setTimeout(fetchData, 400);
+    return () => clearTimeout(delay);
+  }, [searchText, apiUrl, authToken]);
+
+  // ✔ Select result → fill textbox
+  const handleSelect = (item : any) => {
+    const formatted = `${item.UserName} - ${item.DeptName} - ${item.TenantName}`;
+    setSearchText(formatted);
+    setShowList(false);
+    setSelectedUserID(item.UserID);
+    setSelectedTenantID(item.TenantID);
+  };
 
   useEffect(() => {
     const fetchUser = async () => {
@@ -102,13 +152,13 @@ export default function AddNomination() {
         setAllDepartments(departmentResponse.data);
         console.log("All Departments:", departmentResponse.data);
 
-        const entitydropdown = await axios.get(`${apiUrl}/api/tenants`, {
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${authToken}`,
-          },
-        });
-        setEntityName(entitydropdown.data);
+        // const entitydropdown = await axios.get(`${apiUrl}/api/tenants`, {
+        //   headers: {
+        //     "Content-Type": "application/json",
+        //     Authorization: `Bearer ${authToken}`,
+        //   },
+        // });
+        // setEntityName(entitydropdown.data);
 
         // Fetch all users for nominee names
         const usersResponse = await axios.get(`${apiUrl}/api/users`, {
@@ -181,28 +231,28 @@ export default function AddNomination() {
     console.log("Filtered Users:", filtered);
   }, [form.entityName, form.department, allUsers, filteredDepartments]);
 
-  const handleEntityChange = (selectedOption: any) => {
-    const tenantID = selectedOption?.value || "";
-    setForm({ ...form, entityName: tenantID, department: "", nomineeData: "" });
-  };
+  // const handleEntityChange = (selectedOption: any) => {
+  //   const tenantID = selectedOption?.value || "";
+  //   setForm({ ...form, entityName: tenantID, department: "", nomineeData: "" });
+  // };
 
-  const handleDepartmentChange = (selectedOption: any) => {
-    const deptName = selectedOption?.value || "";
-    setForm({ ...form, department: deptName, nomineeData: "" });
-  };
+  // const handleDepartmentChange = (selectedOption: any) => {
+  //   const deptName = selectedOption?.value || "";
+  //   setForm({ ...form, department: deptName, nomineeData: "" });
+  // };
 
-  const handleNomineeChange = (selectedOption: any) => {
-    const nomineeName = selectedOption?.value || "";
-    const selectedUser = filteredUsers.find(user => user.UserName === nomineeName);
+  // const handleNomineeChange = (selectedOption: any) => {
+  //   const nomineeName = selectedOption?.value || "";
+  //   const selectedUser = filteredUsers.find(user => user.UserName === nomineeName);
     
-    setForm({ 
-      ...form, 
-      nomineeData: nomineeName,
-      email: selectedUser?.Email || "",
-      mobile: selectedUser?.PhoneNo || "",
-      managerEmail: selectedUser?.ManagerEmail || ""
-    });
-  };
+  //   setForm({ 
+  //     ...form, 
+  //     nomineeData: nomineeName,
+  //     email: selectedUser?.Email || "",
+  //     mobile: selectedUser?.PhoneNo || "",
+  //     managerEmail: selectedUser?.ManagerEmail || ""
+  //   });
+  // };
 
   const handleSelectReferral = (selectedOption: SingleValue<OptionType>) => {
     if (!selectedOption) return;
@@ -230,8 +280,7 @@ export default function AddNomination() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
-
+  
     if (!authToken) {
       alert("⚠️ You are not authorized. Please log in again.");
       return;
@@ -240,8 +289,10 @@ export default function AddNomination() {
     const payload = {
       nomination: {
         cycleID: 1,
-        awardCategoryID: Number(form.contestType),
-        userID: Number(userId),
+        // awardCategoryID: Number(form.contestType),
+        // userID: Number(userId),
+        awardCategoryID: selectedTenantID,
+        userID: selectedUserID,
         nominationTitle: form.title,
         isSelf: false,
         nominationCreatedBy: Number(userId),
@@ -299,8 +350,13 @@ export default function AddNomination() {
       );
 
       console.log("✅ Success:", res.data);
-      alert("Nomination submitted successfully!");
-      navigate("/my-nominations");
+      setSuccessMsg("Nomination submitted successfully!");
+      setTimeout(() => {
+        setSuccessMsg("");
+        navigate("/my-nominations");
+      }, 2000);
+      // alert("Nomination submitted successfully!");
+      // navigate("/my-nominations");
     } catch (err) {
       console.error("❌ Error submitting nomination:", err);
       alert("Failed to submit nomination. Please check the console.");
@@ -309,16 +365,27 @@ export default function AddNomination() {
 
   return (
     <>
+    {successMsg && (
+      <div
+        className="fixed top-4 left-1/2 transform -translate-x-1/2 
+                   bg-green-500 text-white px-6 py-3 rounded shadow-lg 
+                   z-50 text-sm font-medium"
+      >
+        {successMsg}
+      </div>
+    )}
+
       <div className='p-5'>
         <button onClick={handleBackward} className="flex items-center text-blue-600 bg-white border-gray-100 rounded-sm px-2 py-1 font-medium">
           <span className="me-2"><ArrowLeft size={14}/></span> Back
         </button>
 
         <form className="mt-8 p-6 border rounded-lg bg-white shadow nominate-form">
-          <h2 className="text-xl font-semibold mb-6">Others Nominate Form 1</h2>
-
+          <h2 className="text-xl font-semibold mb-6">Others Nominate Form </h2>
+      
           {/* Title */}
-          <div className="mb-4">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-4">
+          <div className="mb-6">
             <Label.Root htmlFor="title" className="block text-sm font-medium">
               Title of Submission
             </Label.Root>
@@ -330,10 +397,7 @@ export default function AddNomination() {
               onChange={(e) => setForm({ ...form, title: e.target.value })}
               className="w-full mt-1 border rounded px-3 py-2"
             />
-          </div>
-
-          {/* Award Category & Entity */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-4">
+             </div>
             <div className="mb-6">
               <label className="block text-sm font-medium text-gray-700 mb-2">
                 Contest Type
@@ -357,90 +421,35 @@ export default function AddNomination() {
                 className="text-sm"
               />
             </div>
-
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Entity Name
-              </label>
-              <Select
-                name="entityName"
-                value={
-                  entitydropdown
-                    .filter((t: any) => t.TenantID === Number(form.entityName))
-                    .map((t: any) => ({
-                      value: t.TenantID,
-                      label: t.TenantName,
-                    }))[0] || null
-                }
-                onChange={handleEntityChange}
-                options={entitydropdown.map((t: any) => ({
-                  value: t.TenantID,
-                  label: t.TenantName,
-                }))}
-                placeholder="Select Entity"
-                className="text-sm"
-              />
-            </div>
           </div>
+        
+<div className="relative mb-3">
+      <input
+        type="text"
+        placeholder="Nomination search"
+        value={searchText}
+        onChange={(e) => setSearchText(e.target.value)}
+        className="w-full p-2.5 rounded border border-gray-300"
+      />
 
-          {/* Department & Nominee Name */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-4">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Department
-              </label>
-              <Select
-                options={filteredDepartments.map((dept) => ({
-                  value: dept.DeptName,
-                  label: dept.DeptName,
-                }))}
-                value={
-                  form.department
-                    ? { value: form.department, label: form.department }
-                    : null
-                }
-                onChange={handleDepartmentChange}
-                placeholder={form.entityName ? "Select Department" : "Select Department"}
-                isDisabled={!form.entityName}
-                className="w-full text-sm"
-              />
-              {!form.entityName && (
-                <p className="text-xs text-gray-500 mt-1">Please select an Entity first</p>
-              )}
-            </div>
-
-            <div>
-              <Label.Root className="block text-sm font-medium">
-                Nominee Name
-              </Label.Root>
-              <Select
-                options={filteredUsers.map((user) => ({
-                  value: user.UserName,
-                  label: user.UserName,
-                }))}
-                value={
-                  form.nomineeData
-                    ? { value: form.nomineeData, label: form.nomineeData }
-                    : null
-                }
-                onChange={handleNomineeChange}
-                placeholder={
-                  !form.entityName ? "Select  Nominee Name" :
-                  !form.department ? "Select  Nominee Name" :
-                  "Select Nominee"
-                }
-                isDisabled={!form.entityName || !form.department}
-                className="w-full text-sm"
-              />
-              {!form.entityName && (
-                <p className="text-xs text-gray-500 mt-1">Please select an Entity first</p>
-              )}
-              {form.entityName && !form.department && (
-                <p className="text-xs text-gray-500 mt-1">Please select a Department</p>
-              )}
-            </div>
-          </div>
-
+      {showList && results.length > 0 && (
+        <ul
+           className="list-none m-0 p-1 absolute top-[45px] w-full bg-white border border-gray-300 
+           rounded max-h-[220px] overflow-y-auto z-50 "
+        >
+          {results.map((item, index) => (
+            <li
+              key={index}
+              onClick={() => handleSelect(item)}
+              className="p-2 border-b border-gray-200 cursor-pointer"
+            >
+              <strong>{item.UserName}</strong> – {item.DeptName} - {item.TenantName}{" "}
+              
+            </li>
+          ))}
+        </ul>
+      )}
+    </div>
           {/* Nominated By & Manager Email */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-4">
             <div>
@@ -540,13 +549,16 @@ export default function AddNomination() {
             >
               Cancel
             </button>
-            <button
+            {/* <button type="submit" className="px-4 py-2 btn-theme">
+            Submit Nomination
+          </button> */}
+            { <button
               onClick={handleSubmit}
               type="submit"
               className="px-4 py-2 btn-theme"
             >
               Submit Nomination
-            </button>
+            </button> }
           </div>
         </form>
 
