@@ -189,7 +189,24 @@ const ApprovalPanel: React.FC<NominationSidePanelProps> = ({
               ))}
               </div>
             </div>
-         
+                        {/* Reason Input */}
+                <div className="space-y-2">
+                  <label className="text-sm font-medium text-gray-900">
+                    Reason <span className="text-red-600">*</span>
+                  </label>
+
+                  <textarea
+                    className="w-full h-24 border rounded-lg p-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-400"
+                    placeholder="Enter your reason here..."
+                  ></textarea>
+                    {/* <textarea
+                      value={reason}
+                      onChange={(e) => setReason(e.target.value)}
+                      className="w-full h-24 border rounded-lg p-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-400"
+                      placeholder="Enter your reason here..."
+                    ></textarea> */}
+                </div>
+
              <div className="px-6 py-4 border-t border-gray-200 bg-gray-50 fixed bottom-0 w-full max-w-md">
             <div
               className={`flex space-x-3 ${

@@ -63,13 +63,11 @@ const Header: React.FC<HeaderProps> = ({ onMobileMenuToggle }) => {
 //  useEffect(() => {
 //    fetchNotifications();
 //   }, []);
-  // // Run only when userId is available (NO infinite loop)
+  // Run only when userId is available (NO infinite loop)
   useEffect(() => {
     if (userId) 
     {
-       console.log("1");
       fetchNotifications();
-     
     }
   }, [userId]);
 

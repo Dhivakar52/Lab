@@ -73,18 +73,45 @@ const NotificationDetailSidePanel: React.FC<NotificationDetailSidePanelProps> = 
         <p>Received {formattedDate}</p>
 
        <br></br>
-        <p><strong>REQUESTER INFORMATION</strong> </p>
-        <div style={{ display: 'flex', alignItems: 'center' }}>
-          <span style={{ marginRight: '8px' }}><User/></span>
-          <span>{notification.Nomination[0].Nominee}</span>
-        </div>
-         <div style={{ display: 'flex', alignItems: 'center' }}>
-          <span style={{ marginRight: '8px' }}><Building/></span>
-          <span>{notification.Nomination[0].Tenant}</span>
-        </div>
-        <br></br>
-        <p><strong>REQUEST DETAILS</strong> </p>
-         <p><strong>Category:</strong> {notification.Nomination[0].AwardCategory}</p>
+                {notification.Nomination && notification.Nomination.length > 0 ? (
+                 <>
+                  <p><strong>REQUESTER INFORMATION</strong> </p>
+                   <div style={{ display: 'flex', alignItems: 'center' }}>
+
+                  <span style={{ marginRight: '8px' }}>
+                     <User />
+                   </span>
+                   <span>
+                     {notification.Nomination[0].Nominee}
+                   </span>
+                   </div>
+                    <div style={{ display: 'flex', alignItems: 'center' }}>
+                   <span style={{ marginRight: '8px' }}>
+                     <Building />
+                   </span>
+                   <span>
+                     {notification.Nomination[0].Tenant}
+                   </span>
+                   </div>
+                   <br></br>
+                 </>
+               ) : (
+                 ''
+               )}
+
+
+               <p><strong>REQUEST DETAILS</strong> </p>
+               {notification.Nomination && notification.Nomination.length > 0 ? (
+                 <>
+                   <p><strong>Category:</strong>
+                {notification.Nomination && notification.Nomination.length > 0
+                 ? notification.Nomination[0].AwardCategory
+                 : ''}
+               </p>
+                 </>
+               ) : (
+                 ''
+               )}
           <p><strong>Message:</strong> {notification.NotificationContent}</p>
  
         </div>

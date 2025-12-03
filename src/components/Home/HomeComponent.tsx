@@ -10,6 +10,7 @@ import TopPerformers from "./TopPerformers";
 import ListCard from "./ListCard";
 import type { Feed } from "../../dataTypes/nomination";
 
+
 import {
   filterReducer,
   initialFilterState,
@@ -24,8 +25,11 @@ const HomeComponent: React.FC = () => {
 
   const [list, setList] = useState<Feed[]>([]);
   const [profile, setProfile] = useState([]);
+  
   const { authToken, userId } = useAuth();
   const [showDropdown, setShowDropdown] = useState(false);
+   // ⭐ user profile detail (FIX)
+  const [userDetail, setUserDetail] = useState<any>(null);
   const apiUrl = import.meta.env.VITE_API_URL;
 
   // ⭐ ADD FILTER REDUCER HERE
@@ -40,6 +44,19 @@ const HomeComponent: React.FC = () => {
             Authorization: `Bearer ${authToken}`,
           },
         });
+         //user profile card detail 
+         const fetchUserDetail = await axios.get(
+            `${apiUrl}/api/users?userId=${userId}`,
+            {
+              headers: {
+                "Content-Type": "application/json",
+                Authorization: `Bearer ${authToken}`,
+              },
+            }
+          );
+
+         setUserDetail(fetchUserDetail.data);
+         console.log("profileDetails", fetchUserDetail.data)
 
         const cat = [...new Set(res.data.map((x: any) => x.AwardCategory))] as string[];
         setCategories(cat);
@@ -204,7 +221,8 @@ const filteredList = useMemo(() => {
 
             {/* Sidebar */}
             <div className="lg:col-span-4 space-y-6 mt-6 lg:mt-0 ">
-              <ProfileCard profile={profile} />
+              {/* <ProfileCard profile={profile} /> */}
+              <ProfileCard profile={profile} userDetail={userDetail} />
               <NominationStats />
                
               <TopPerformers />

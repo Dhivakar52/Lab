@@ -66,7 +66,7 @@ const NotificationModal: React.FC<NotificationModalProps> = ({
             },
           }
         );
-  
+         await notificationcount(); 
         // Update UI instantly
         setData((prev) =>
           prev.map((item) =>
@@ -80,34 +80,36 @@ const NotificationModal: React.FC<NotificationModalProps> = ({
       }
     }
 
-  const handleMarkAllRead = async () => {
-    const headers = {
-      Accept: "text/plain",
-      Authorization: `Bearer ${authToken}`,
-      "Content-Type": "application/json",   
-    };
  
-    const requests = notifications.map((post) => {
-      return axios.put(
-        `${apiUrl}/api/notificationread/notification`,
-        {
-          LogID: post.NotificationID,
-          SubmittedBy: userId,
-        },
-        { headers }
-      );
-    });
-      
-    try {
-      await Promise.all(requests);
-      console.log("✅ All notifications marked as read successfully.");
-      notificationcount;
-      onClose(); 
-       }
-    catch (err) {
-      console.error("❌ Error while Marking as Read:", err);
-    }
+
+  const handleMarkAllRead = async () => {
+  const headers = {
+    Accept: "text/plain",
+    Authorization: `Bearer ${authToken}`,
+    "Content-Type": "application/json",
   };
+
+  const requests = notifications.map((post) => {
+    return axios.put(
+      `${apiUrl}/api/notificationread/notification`,
+      {
+        LogID: post.NotificationID,
+        SubmittedBy: userId,
+      },
+      { headers }
+    );
+  });
+
+  try {
+    await Promise.all(requests);
+    console.log("✅ All notifications marked as read successfully.");
+    await notificationcount();
+    onClose();
+  } catch (err) {
+    console.error("❌ Error while Marking as Read:", err);
+  }
+};
+
 
   return (
     <Dialog.Root open={isOpen} onOpenChange={onClose}>

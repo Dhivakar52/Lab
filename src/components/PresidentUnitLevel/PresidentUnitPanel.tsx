@@ -113,7 +113,8 @@ const PresidentUnitPanel: React.FC<PresidentUnitPanelProps> = ({
     }}
     className="px-3 py-2 bg-red-600 text-white rounded-md shadow hover:bg-red-700"
     style={{
-      visibility: nomineeData.Status === "Rejected" ? "hidden" : "visible",
+      visibility:
+        nomineeData.Status === "Rejected" ? "hidden" : "visible",
     }}
   >
     ✖ Reject Nomination
@@ -127,7 +128,8 @@ const PresidentUnitPanel: React.FC<PresidentUnitPanelProps> = ({
     }}
     className="px-3 py-2 bg-green-600 text-white rounded-md shadow hover:bg-green-700"
     style={{
-      visibility: nomineeData.Status === "Approved" ? "hidden" : "visible",
+      visibility:
+        nomineeData.Status === "Approved" ? "hidden" : "visible",
     }}
   >
     ✔ Approve Nomination
