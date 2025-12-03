@@ -497,18 +497,31 @@ const nestedComments = buildCommentTree(filteredFlat);
                     {post.Description}
                   </p>
 
-                  <div
-  className="flex justify-between border-b-1 border-gray-200 mt-3 py-3 cursor-pointer"
+                  {/* <div
+       className="flex justify-between border-b-1 border-gray-200 mt-3 py-3 cursor-pointer"
+  
   onClick={() => {
     setLikeList(post.LikedBy || []);
     setShowLikePopup(true);
   }}
 >
+  
   <span className="text-sm font-medium">
     {getLikeText(post.LikedBy, userId)}
   </span>
-</div>
-
+</div> */}
+                <div className="flex justify-between border-b-1 border-gray-200 mt-3 py-3">
+                  <span
+                    className="text-sm font-medium cursor-pointer hover:text-blue-600"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setLikeList(post.LikedBy || []);
+                      setShowLikePopup(true);
+                    }}
+                  >
+                    {getLikeText(post.LikedBy, userId)}
+                  </span>
+                </div>
 
                   <div className="flex justify-between mt-3 pt-3">
                     <div className="flex items-center space-x-6">

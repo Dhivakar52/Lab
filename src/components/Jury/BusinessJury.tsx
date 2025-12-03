@@ -67,7 +67,7 @@ const handleApprove = async (nominationID: number) => {
         `${apiUrl}/api/businessjuryevaluation/${nominationID}`,
         {
           nominationID,
-          isManagerApproved: true,
+          isGeneralJuryApproved: true,
           approvalComments: "yes",
           submittedBy: userId,
           active: true,

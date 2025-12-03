@@ -1,16 +1,13 @@
 import React from 'react';
-import { Heart, MessageCircle } from 'lucide-react';
-import { useAuth } from '../ContextAPI/AuthContext';
-import avatar from '../../assets/images/profile.png'
+import { Heart, MessageCircle,Eye } from 'lucide-react';
+import avatar from '../../assets/images/profile.png';
 
 import "swiper/css";
 import "swiper/css/pagination";
 import "swiper/css/navigation";
 
- import { Swiper, SwiperSlide } from "swiper/react";
-
-import { Keyboard, Pagination, Autoplay,Navigation } from "swiper/modules";
-
+import { Swiper, SwiperSlide } from "swiper/react";
+import { Keyboard, Pagination, Autoplay, Navigation } from "swiper/modules";
 
 interface Feed {
   UserID: number;
@@ -24,164 +21,100 @@ interface Feed {
   Views: number;
 }
 
-interface PostCardProps {
+interface ProfileCardProps {
   profile: Feed[];
-//   setProfile: React.Dispatch<React.SetStateAction<Feed[]>>;
+  userDetail: any; 
 }
 
-const ProfileCard: React.FC<PostCardProps> = ({ profile }) => {
-  const { email } = useAuth();
+const ProfileCard: React.FC<ProfileCardProps> = ({ profile, userDetail }) => {
 
-
-  const grouped = profile.reduce((acc: any, item) => {
-    if (!acc[item.UserID]) {
-      acc[item.UserID] = {
-        Nominee: item.Nominee,
-        Tenant: item.Tenant,
-        categories: []
-      };
-    }
-
-    acc[item.UserID].categories.push({
-      AwardCategory: item.AwardCategory,
-      NominatedCount: item.NominatedCount,
-      Likes: item.Likes,
-      Comments: item.Comments
-    });
-
-    return acc;
-  }, {});
-
-  const finalProfiles = Object.values(grouped);
-  // console.log("Profiles", finalProfiles)
-  
+  const user = userDetail ? userDetail[0] : null; // user details from API
 
   return (
-  <div className="space-y-4">
-    {finalProfiles.length === 0 ? (
-      <p className="bg-white p-4 rounded text-gray-500 text-center text-sm">No profiles found</p>
-    ) : (
-      finalProfiles.map((user: any, index: number) => (
-        <div
-          key={index}
-          className="bg-white rounded-lg shadow-sm overflow-hidden"
-        >
-          <div className="bg-gradient-to-r from-teal-500 to-teal-600 px-4 sm:px-6 py-4">
-            <div className="text-center">
-              <img
-                src={avatar}
-                alt="Profile"
-                className="w-12 h-12 sm:w-16 sm:h-16 rounded-full mx-auto border-3 border-white"
-              />
-            </div>
-          </div>
+    <div className="bg-white rounded-lg shadow-sm overflow-hidden">
 
-          <div className="px-4 sm:px-6 py-4 text-center">
-            <h3 className="font-semibold text-gray-900 text-base sm:text-lg">
-              {user.Nominee}
-            </h3>
-            <p className="text-sm text-gray-600">{user.Tenant}</p>
-            <p className="text-xs sm:text-sm text-gray-500 break-all">{email}</p>
+      {/* Card Top: User Info */}
+      <div className="bg-gradient-to-r from-teal-500 to-teal-600 px-4 py-4">
+        <div className="text-center">
+          <img
+            src={avatar}
+            alt="Profile"
+            className="w-16 h-16 rounded-full mx-auto border-4 border-white"
+          />
+        </div>
+      </div>
 
-            {/* Category Blocks */}
-            {/* <div className="mt-4 space-y-4">
-              {user.categories.map((cat: any, i: number) => (
-                <div key={i} className="p-3 ">
-                  <div className="flex justify-between text-sm">
-                    <span className="text-gray-600">Category:</span>
-                    <span className="font-medium text-gray-900">
-                      {cat.AwardCategory || 0}
-                    </span> 
-                  </div>
+      {/* User Details */}
+      <div className="px-4 sm:px-6 py-4 text-center">
+        <h3 className="font-semibold text-gray-900 text-lg">
+          {user?.UserName}
+        </h3>
 
-                  <div className="flex justify-between text-sm mt-1">
-                    <span className="text-gray-600">Nominated:</span>
-                    <span className="font-medium text-gray-900">
-                      {cat.NominatedCount || 0}
+        <p className="text-sm text-gray-600">
+          {user?.TenantName}
+        </p>
+
+        <p className="text-xs sm:text-sm text-gray-500 break-all">
+          {user?.Email}
+        </p>
+
+        {/* Category Slider */}
+        {profile.length > 0 ? (
+          <Swiper
+            slidesPerView={1}
+            spaceBetween={20}
+            keyboard={{ enabled: true }}
+            pagination={{ clickable: true }}
+            navigation={true}
+            autoplay={{
+              delay: 3000,
+              disableOnInteraction: false,
+              pauseOnMouseEnter: true,
+            }}
+            modules={[Keyboard, Pagination, Autoplay, Navigation]}
+            className="mySwiper mt-4"
+          >
+           {profile.map((cat: Feed, index) => (
+              <SwiperSlide key={index}>
+                <div className="p-4 bg-white rounded-xl border border-gray-200 shadow text-black my-3">
+                  <div className="flex items-center justify-center space-x-3 mb-3 whitespace-nowrap overflow-hidden">
+                    <span className="px-2 py-1 rounded-full text-xs bg-purple-100 text-purple-800 max-w-[200px]">
+                      🏆 {cat.AwardCategory || "-"}
+                    </span>
+
+                    <span className="px-2 py-1 rounded-full text-xs bg-blue-100 text-blue-800">
+                      👥 {cat.NominatedCount || 0} Nominated
                     </span>
                   </div>
 
-                  <div className="flex justify-center mt-3 space-x-4">
-                    <div className="flex items-center space-x-1">
-                      <Heart className="w-4 h-4 text-red-500" />
+                  <div className="flex justify-between items-center border-b border-gray-200 pb-3">
+                    <span className="text-sm font-medium flex items-center space-x-1 text-gray-700">
+                      <Heart className="w-4 h-4 text-red-500" /> 
                       <span>{cat.Likes || 0} Likes</span>
-                    </div>
+                    </span>
 
-                    <div className="flex items-center space-x-1">
-                      <MessageCircle className="w-4 h-4 text-blue-500" />
+                    <span className="text-sm font-medium flex items-center space-x-1 text-gray-600">
+                      <MessageCircle className="w-4 h-4 text-blue-500" /> 
                       <span>{cat.Comments || 0} Comments</span>
-                    </div>
+                    </span>
+
+                    <span className="text-sm font-medium flex items-center space-x-1 text-gray-600">
+                      <Eye className="w-4 h-4" /> 
+                      <span>{cat.Views || 0} Views</span>
+                    </span>
                   </div>
                 </div>
-              ))}
-            </div> */}
-           
+              </SwiperSlide>
+            ))}
 
-<Swiper
-  slidesPerView={1}
-  spaceBetween={20}
-  keyboard={{ enabled: true }}
-  pagination={{ clickable: true }}
-  navigation={true}
-  autoplay={{
-    delay: 3000,
-    disableOnInteraction: false,
-    pauseOnMouseEnter: true,
-  }}
-  modules={[Keyboard, Pagination, Autoplay,Navigation]}
-  className="mySwiper"
->
+          </Swiper>
+        ) : (
+          <p className="text-gray-500 text-sm mt-4">No nominations</p>
+        )}
 
-  <div className="mt-4 space-y-4">
-     {user.categories.map((cat: any, i: number) => (
-    <SwiperSlide key={i}>
-      <div className="p-3 bg-white rounded-xl border border-gray-200
-       shadow text-black my-3">
-        <div className='my-3'>
-        <div className="flex justify-between text-sm ">
-          <span className="text-gray-600">Category:</span>
-          <span className="font-medium text-gray-900">
-            {cat.AwardCategory || 0}
-          </span>
-        </div>
-
-        <div className="flex justify-between text-sm mt-1">
-          <span className="text-gray-600">Nominated:</span>
-          <span className="font-medium text-gray-900">
-            {cat.NominatedCount || 0}
-          </span>
-        </div>
-
-        <div className="flex justify-center mt-3 space-x-4">
-          <div className="flex items-center space-x-1">
-            <Heart className="w-4 h-4 text-red-500" />
-            <span>{cat.Likes || 0} Likes</span>
-          </div>
-
-          <div className="flex items-center space-x-1">
-            <MessageCircle className="w-4 h-4 text-blue-500" />
-            <span>{cat.Comments || 0} Comments</span>
-          </div>
-        </div>
-        </div>
       </div>
-    </SwiperSlide>
-  ))}
-  </div>
- 
-</Swiper>
-
-
-
-
-          </div>
-        </div>
-      ))
-    )}
-  </div>
-);
-
+    </div>
+  );
 };
-
 
 export default ProfileCard;
