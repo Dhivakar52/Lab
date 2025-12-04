@@ -14,7 +14,7 @@ interface PostCardProps {
   setPosts: React.Dispatch<React.SetStateAction<Feed[]>>;
 }
 
-const getLikeText = (likedByList: any[], currentUserId: number | null) => {
+const getLikeText = (likedByList: any[], currentUserId: number | null ,username : any) => {
   if (!likedByList || likedByList.length === 0) return "0 Likes";
 
   const isLikedByYou = likedByList.some(l => l.UserID === currentUserId);
@@ -22,7 +22,7 @@ const getLikeText = (likedByList: any[], currentUserId: number | null) => {
   if (isLikedByYou) {
     const others = likedByList.length - 1;
     if (others === 0) return "You liked this";
-    return `You & ${others} others`;
+    return `${username} & ${others} others`;
   }
 
   const firstUser = likedByList[0]?.UserName || "Someone";
@@ -124,7 +124,7 @@ const [showModal, setShowModal] = useState(false);
                   {
                     NominationLikeID: newLikeId,
                     UserID: userId,
-                    UserName: "You",
+                    UserName: username,
                   },
                 ],
               }
@@ -143,7 +143,7 @@ const [showModal, setShowModal] = useState(false);
             {
               NominationLikeID: newLikeId,
               UserID: userId,
-              UserName: "You",
+              UserName: username,
             },
           ],
         });
@@ -443,7 +443,7 @@ const handleReply = async (postId: number, text: string, parentId: number) => {
           Loading feeds...
         </p>
       ) : (
-        posts.map((post) => {
+        posts.map((post ,index) => {
           const NominationID = post.NominationID;
           const isLiked = likedPosts.includes(NominationID);
           const isCommentOpen = showComments[NominationID] || false;
@@ -454,7 +454,7 @@ const nestedComments = buildCommentTree(filteredFlat);
 
           return (
             <div
-              key={NominationID}
+              key={index}
               className="p-4 sm:p-6 bg-white border-b-2 border-b-gray-100 hover:shadow-md transition"
             >
               <div className="flex space-x-3">
@@ -469,14 +469,14 @@ const nestedComments = buildCommentTree(filteredFlat);
                         <h3 className="font-semibold text-gray-900 text-sm sm:text-base truncate">
                           {post.Nominee}
                         </h3>
-
+                          <span className="px-2 py-1 rounded-full text-xs bg-purple-100 text-purple-800">
+                          🏆 {post.AwardCategory}
+                        </span>
                         <span className="px-2 py-1 rounded-full text-xs bg-blue-100 text-blue-800">
                           👥 {post.NominatedCount} Nominated
                         </span>
 
-                        <span className="px-2 py-1 rounded-full text-xs bg-purple-100 text-purple-800">
-                          🏆 {post.AwardCategory}
-                        </span>
+                       
                       </div>
 
                       <p className="text-xs sm:text-sm text-gray-600 mb-1">
@@ -521,7 +521,7 @@ const nestedComments = buildCommentTree(filteredFlat);
 
                     }}
                   >
-                    {getLikeText(post.LikedBy, userId)}
+                    {getLikeText(post.LikedBy, userId, username )}
                   </span>
                 </div>
 
@@ -561,6 +561,8 @@ const nestedComments = buildCommentTree(filteredFlat);
 
                       await fetchViews(post.NominationID);
                       setShowViewers(true);
+
+                      setSelectedPost(post);
                     }}
 
 
@@ -587,25 +589,14 @@ const nestedComments = buildCommentTree(filteredFlat);
 
                 </div>
               </div>
-<PostFeedModal
-  post={selectedPost}
-  open={showModal}
-  onClose={() => setShowModal(false)}
-  onLike={handleLike}
-  onComment={handleAddComment}
-  onReply={handleReply}
-  comments={comments.filter(c => c.NominationID === selectedPost?.NominationID)}
-  commentText={commentText[selectedPost?.NominationID ?? 0] || ""}
-  setCommentText={(v : any) =>
-    setCommentText((prev) => ({
-      ...prev,
-      [selectedPost?.NominationID ?? 0]: v,
-    }))
-  }
-  userId={userId}
-  likeList={likeList}
-   likedPosts={likedPosts}
-/>
+
+
+            </div>
+            
+          );
+        })
+      )}
+
 
 {/* Like Modal */}
       {showLikePopup && (
@@ -616,21 +607,34 @@ const nestedComments = buildCommentTree(filteredFlat);
     item
   />
 )}
-            </div>
-            
-          );
-        })
-      )}
-
-
-
     
  {/* View Modal */}
 <ViewerModal
+item
+post={selectedPost}
         open={showViewers}
         viewers={viewerList}
         onClose={() => setShowViewers(false)}
       />
+
+
+
+      <PostFeedModal
+ viewers={viewerList}
+  post={selectedPost}
+  open={showModal}
+  onClose={() => setShowModal(false)}
+  onLike={handleLike}
+  onComment={handleAddComment}
+  onReply={handleReply}
+  comments={comments.filter(c => c.NominationID === selectedPost?.NominationID)}
+  commentText={commentText}
+  setCommentText={setCommentText}
+  userId={userId}
+  likeList={likeList}
+   likedPosts={likedPosts}
+/>
+
 
     </div>
   );

@@ -50,9 +50,9 @@ const TopPerformers: React.FC = () => {
           {performer.length === 0 ? (
             <p className="text-gray-500 text-sm">Loading...</p>
           ) : (
-            performer.map((person) => (
+            performer.map((person , index) => (
               <div
-                key={person.Name}
+                key={index}
                 className="flex justify-between items-center"
               >
                 <span className="text-blue-600 text-sm font-medium">

@@ -13,18 +13,35 @@ interface ViewersModalProps {
   open: boolean;
   onClose: () => void;
   viewers: Viewer[];
+  post: any;
+  item:any;
 }
 
-const ViewerModal: React.FC<ViewersModalProps> = ({ open, onClose, viewers }) => {
+const ViewerModal: React.FC<ViewersModalProps> = ({ open, onClose, viewers, post , item }) => {
+
+  if (!open || !post) return null;
   return (
     <div
       className={`${open ? "fixed" : "hidden"} inset-0 bg-black/30 flex items-center justify-center z-[999]`}
-      onClick={onClose}   // CLOSE WHEN CLICKED OUTSIDE
+      onClick={onClose}
     >
       <div
         className="bg-white w-80 rounded-xl shadow-lg p-4"
         onClick={(e) => e.stopPropagation()}
       >
+        <div className="flex justify-between items-center mb-3">
+          <h2 className="text-lg font-semibold text-gray-800">
+            {post.Nominee || item.Nominee } - <span className="px-2 py-1 rounded-full text-xs bg-purple-100 text-purple-800">
+                          🏆 {post.AwardCategory || item.AwardCategory}
+                        </span>
+          </h2>
+          <button
+            onClick={onClose}
+            className="text-gray-500 hover:text-gray-700"
+          >
+            ✕
+          </button>
+        </div>
         <h2 className="text-lg font-semibold mb-3">Viewed By</h2>
 
         {/* Scroll only here */}
