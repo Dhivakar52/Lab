@@ -114,7 +114,7 @@ const allowedPages = userRole ? ROLE_PAGES[userRole] : [];
 </div>
 
 
-        <nav className="p-3 space-y-2">
+        <nav className="p-3 space-y-2 max-h-[70vh] overflow-y-auto">
           {navigationItems
            .filter(item => allowedPages.includes(item.label))
             .map((item) => {
@@ -134,7 +134,7 @@ const allowedPages = userRole ? ROLE_PAGES[userRole] : [];
             })}
         </nav>
 
-        <div className="absolute bottom-5 left-0 right-0 px-5">
+        <div className="absolute bg-white bottom-5 left-0 right-0 px-5">
           <div className={`flex items-center px-4 py-3 rounded-xl cursor-pointer transition-all duration-200 hover:bg-white/10 ${isCollapsed && !isMobileOpen ? 'justify-center px-2' : ''}`} onClick={handleLogout}>
            <LogOut size={20}  className="cursor-pointer" />
             {(!isCollapsed || isMobileOpen) && <span className="ml-3 text-sm">Logout</span>}

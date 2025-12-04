@@ -13,6 +13,8 @@ import type { ColumnDef } from "@tanstack/react-table";
 import { useAuth } from "../ContextAPI/AuthContext";
 import { Menu } from "lucide-react";
 import ApprovalPanel from "./ApprovalPanel";
+import TenantBadges from "../TenantBadges";
+import { ColorBadge } from "../TenantBadges";
 
 
 interface ApprovalData {
@@ -188,7 +190,16 @@ const ApprovalTable: React.FC = () => {
     () => [
       { accessorKey: "NominationID", header: "Nomination ID" },
       { accessorKey: "Nominee", header: "Nominee Name" },
-      { accessorKey: "Tenant", header: "Entity Name" },
+      // { accessorKey: "Tenant", header: "Entity Name" },
+      {
+  accessorKey: "Tenant",
+  header: "Entity Name",
+  cell: ({ getValue }) => {
+    const tenant = getValue() as string;
+    return <ColorBadge label={tenant} />;
+  },
+},
+
       { accessorKey: "ContestType", header: "Contest Type" },
       { accessorKey: "SubmittedDate", header: "Submitted Date" },
 

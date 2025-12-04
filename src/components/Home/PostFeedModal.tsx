@@ -1,4 +1,4 @@
-import React from "react";
+import React ,{useState} from "react";
 import { Eye, MessageCircle } from "lucide-react";
 import FeedLikeComponent from "./FeedLikeComponent";
 import FeedComment from "./FeedComment";
@@ -9,7 +9,7 @@ interface Props {
   open: boolean;
   onClose: () => void;
  likedPosts: number[];
-
+viewers:any;
   onLike: (post: any) => void;
   onComment: (post: any) => void;
 onReply: (postId: number, text: string, parentId: number) => Promise<void>;
@@ -23,7 +23,7 @@ onReply: (postId: number, text: string, parentId: number) => Promise<void>;
   likeList: any[];
 }
 
-const getLikeText = (likedByList: any[], currentUserId: number | null) => {
+const getLikeText = (likedByList: any[], currentUserId: number | null ,username : any) => {
   if (!likedByList || likedByList.length === 0) return "0 Likes";
 
   const isLikedByYou = likedByList.some(l => l.UserID === currentUserId);
@@ -31,7 +31,7 @@ const getLikeText = (likedByList: any[], currentUserId: number | null) => {
   if (isLikedByYou) {
     const others = likedByList.length - 1;
     if (others === 0) return "You liked this";
-    return `You & ${others} others`;
+    return `${username} & ${others} others`;
   }
 
   const firstUser = likedByList[0]?.UserName || "Someone";
@@ -51,21 +51,27 @@ likedPosts,
   onReply,
   comments,
   commentText,
-  setCommentText,
-  userId
+  setCommentText: updateCommentText,
+  userId, viewers
 }) => {
-  if (!open || !post) return null;
-  const {username}= useAuth();
+
+const [activeTab, setActiveTab] = useState("like");
+ const {username}= useAuth();
+
+  
+ 
+ 
+ if (!open || !post) return null;
   const isLiked = likedPosts.includes(post.NominationID);
 
 
   return (
     <div
-      className="fixed inset-0 bg-black/40 flex items-center justify-center z-[999]"
+      className="fixed inset-0 bg-black/5 flex items-center justify-center z-[999] pointer-events-auto"
       onClick={onClose}
     >
       <div
-        className="bg-white rounded-xl shadow-lg w-11/12 sm:w-3/4 lg:w-1/2 p-6 relative overflow-y-auto max-h-[90vh]"
+        className="bg-white rounded-xl shadow-sm w-11/12 sm:w-3/4 lg:w-1/2 p-6 relative overflow-y-auto max-h-[90vh]"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Close Button */}
@@ -97,41 +103,111 @@ likedPosts,
         {/* Like text line */}
         <div className="flex justify-between border-b border-gray-200 mt-4 py-3">
           <span className="text-sm font-medium">
-            {getLikeText(post.LikedBy || [], userId)}
+            {getLikeText(post.LikedBy || [], userId , username)}
           </span>
         </div>
 
         {/* Like / Comment / Views EXACT same UI */}
-        <div className="flex justify-between mt-4 pt-3">
-          <div className="flex items-center space-x-6">
-            <FeedLikeComponent
-              post={post}
-              isLiked={isLiked}
-              onLike={() => onLike(post)}
-            />
+        <div className="mt-4 pt-3">
+ <div className="flex">
 
-            <button
-              className="flex items-center space-x-2 text-gray-500"
-            >
-              <MessageCircle className="w-4 h-4" />
-              <span>{post.Comments} Comments</span>
-            </button>
+  {/* Like Tab */}
+  <div
+    className={`flex items-center space-x-2 pb-2 px-4 cursor-pointer 
+      ${activeTab === "like" ? "border-b-2 border-blue-500 text-blue-600" : "border-b-2 border-transparent"}`}
+    onClick={(e) => {
+      e.stopPropagation();
+      setActiveTab("like");
+    }}
+  >
+    <FeedLikeComponent
+      post={post}
+      isLiked={isLiked}
+      onLike={() => onLike(post)}
+    />
+  </div>
+
+  {/* Comments Tab */}
+  <div
+    className={`flex items-center space-x-2 pb-2 px-4 cursor-pointer 
+      ${activeTab === "comments" ? "border-b-2 border-blue-500 text-blue-600" : "border-b-2 border-transparent"}`}
+    onClick={(e) => {
+      e.stopPropagation();
+      setActiveTab("comments");
+    }}
+  >
+    <MessageCircle className="w-4 h-4" />
+    <span>{post.Comments} Comments</span>
+  </div>
+
+  {/* Views Tab */}
+  <div
+    className={`flex items-center space-x-2 pb-2 px-4 cursor-pointer 
+      ${activeTab === "views" ? "border-b-2 border-blue-500 text-blue-600" : "border-b-2 border-transparent"}`}
+    onClick={(e) => {
+      e.stopPropagation();
+      setActiveTab("views");
+    }}
+  >
+    <Eye className="w-4 h-4" />
+    <span>{post.Views || 0} Views</span>
+  </div>
+
+</div>
+
+
+  {/* CONTENT AREA */}
+  <div className="mt-3">
+   {activeTab === "like" && (
+  <div className="max-h-48 overflow-y-auto space-y-2 pr-1">
+    {(post.LikedBy?.length || 0) === 0 ? (
+      <p className="text-gray-500 text-sm text-center py-6">
+        No likes yet
+      </p>
+    ) : (
+      post.LikedBy.map((v: any, index: number) => (
+        <div
+        key={v.UserID || `${v.UserName}-${index}`}
+
+          className="flex items-start gap-3 bg-gray-50 p-3 rounded"
+        >
+          {/* Avatar */}
+          <div className="w-9 h-9 bg-green-200 text-green-800 rounded-full flex items-center justify-center font-semibold">
+            {v.UserName?.charAt(0).toUpperCase()}
           </div>
 
-          <div className="flex items-center text-gray-500">
-            <Eye className="w-4 h-4 mr-1" />
-            <span>{post.Views || 0} Views</span>
+          {/* User Info */}
+          <div className="flex flex-col">
+            <span className="text-gray-900 text-sm font-semibold">
+              {v.UserName}
+            </span>
+
+            <span className="text-gray-600 text-xs">
+              {v.Department}
+            </span>
+
+            <span className="text-gray-800 text-sm font-medium">
+              {v.Tenant}
+            </span>
           </div>
         </div>
+      ))
+    )}
+  </div>
+)}
 
-        {/* Comments Section SAME LIKE POST CARD */}
-       <FeedComment
+
+    {activeTab === "comments" && (
+      
+<div>
+  {/* Comments Section SAME LIKE POST CARD */}
+<FeedComment
   post={post}
   username={username || ""}
   comments={comments}
   commentText={commentText[post.NominationID] || ""}
   setCommentText={(v: string) =>
-    setCommentText((prev: any) => ({
+    updateCommentText((prev: any) => ({
       ...prev,
       [post.NominationID]: v,
     }))
@@ -139,6 +215,60 @@ likedPosts,
   handleAddComment={() => onComment(post)}
   handleReply={onReply}
 />
+
+</div>
+
+
+
+     
+    )}
+
+    {activeTab === "views" && (
+      <div className="max-h-40 overflow-y-auto space-y-2 pr-1">
+          {viewers.length === 0 ? (
+            <p className="text-gray-600 text-sm text-center py-4">
+              No viewers yet
+            </p>
+          ) : (
+            viewers.map((v : any, index : number) => (
+              <div
+  key={index}
+  className="flex items-start gap-3 bg-gray-50 p-3 rounded"
+>
+  <div className="w-9 h-9 bg-green-200 text-green-800 rounded-full flex items-center justify-center font-semibold">
+    {v.ViewedBy?.charAt(0).toUpperCase()}
+  </div>
+
+  <div className="flex flex-col">
+    <span className="text-gray-900 text-sm font-semibold">
+      {v.ViewedBy}
+    </span>
+
+    
+    <span className="text-gray-600 text-xs">
+      {v.Department}
+    </span>
+
+
+    <span className="text-gray-800 text-sm font-medium">
+      {v.Tenant}
+    </span>
+
+    <span className="text-gray-500 text-xs">
+      {new Date(v.ViewedAt).toLocaleString()}
+    </span>
+  </div>
+</div>
+
+              
+            ))
+          )}
+        </div>
+    )}
+  </div>
+</div>
+
+      
 
       </div>
     </div>

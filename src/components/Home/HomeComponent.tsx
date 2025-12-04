@@ -174,7 +174,7 @@ const filteredList = useMemo(() => {
           height: "200px",
         }}
       >
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 -mt-4">
+        <div className="px-4 sm:px-6 lg:px-8 -mt-4">
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 pt-10">
             
             {/* Main Content */}

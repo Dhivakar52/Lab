@@ -441,6 +441,7 @@ const toggleComments = (id: number) => {
 
                         await fetchViews(item.NominationID);
                         setShowViewers(true);
+                        setSelectedPost(item)
                       }}
 
 
@@ -488,6 +489,8 @@ const toggleComments = (id: number) => {
 
       {/* VIEWERS POPUP */}
       <ViewerModal
+      post
+        item= {selectedPost}
         open={showViewers}
         viewers={viewerList}
         onClose={() => setShowViewers(false)}
@@ -495,6 +498,7 @@ const toggleComments = (id: number) => {
 
       {/* POST FEED MODAL */}
 <PostFeedModal
+ viewers={viewerList}
   post={selectedPost}
   open={showModal}
   onClose={() => setShowModal(false)}
@@ -502,13 +506,8 @@ const toggleComments = (id: number) => {
   onComment={handleAddComment}
   onReply={handleReply}
   comments={comments.filter(c => c.NominationID === selectedPost?.NominationID)}
-  commentText={commentText[selectedPost?.NominationID ?? 0] || ""}
-  setCommentText={(v : any) =>
-    setCommentText((prev) => ({
-      ...prev,
-      [selectedPost?.NominationID ?? 0]: v,
-    }))
-  }
+   commentText={commentText}
+  setCommentText={setCommentText}
   userId={userId}
   likeList={likeList}
    likedPosts={likedPosts}
