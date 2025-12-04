@@ -87,6 +87,7 @@ const ApprovalTable: React.FC = () => {
   const [globalFilter, setGlobalFilter] = useState("");
   const { userId, authToken } = useAuth();
   const [successMessage, setSuccessMessage] = useState("");
+  const [reason, setReason] = useState("");
   const [toastType, setToastType] = useState<"success" | "error">("success");
 
 
@@ -118,7 +119,7 @@ const ApprovalTable: React.FC = () => {
         {
           nominationID,
           isManagerApproved: true,
-         // approvalComments: "yes",
+          approvalComments: reason,
           submittedBy: userId,
           active: true,
         },
@@ -153,7 +154,7 @@ const ApprovalTable: React.FC = () => {
         {
           nominationID,
           isManagerApproved: false,
-         // approvalComments: "Rejected",
+          approvalComments: reason,
           submittedBy: userId,
           active: true,
         },
@@ -381,6 +382,8 @@ const ApprovalTable: React.FC = () => {
         onReject={() =>
           selectedNomination && handleReject(selectedNomination.NominationID)
         }
+         reason={reason}
+        setReason={setReason}
       />
     </div>
   );

@@ -29,6 +29,10 @@ import Testing from './components/Testing/Testing.tsx';
 import ForgotPassword from './pages/auth/Login/ForgotPassword.tsx';
 import ReferralComponent from './components/ReferralApproval/ReferralComponent.tsx';
 
+
+import VerifyOtp from './pages/auth/Login/VerifyOtp';
+import ResetPassword from './pages/auth/Login/ResetPassword';
+
 // -------------------------
 // Main page components
 // -------------------------
@@ -104,65 +108,51 @@ const App: React.FC = () => {
   return (
     <AuthProvider>
     <Router>
-      <Routes>
-        {/* Public login route */}
-        <Route path="/" element={<Login setUserRole={setUserRole} />} />
-
-        {/* Protected routes */}
-        <Route element={<Layout />}>
-          {/* Main pages */}
-          {Object.entries(pageComponents).map(([label, component]) => {
-            const path = '/' + label.toLowerCase().replace(/\s+/g, '-');
-            const allowedRoles = getAllowedRoles(label);
-
-            return (
+        <Routes>
+ 
+          {/* ---------------- Public Routes ---------------- */}
+          <Route path="/" element={<Login setUserRole={setUserRole} />} />
+          <Route path="/forgot-password" element={<ForgotPassword />} />
+          <Route path="/verify-otp" element={<VerifyOtp />} />
+          <Route path="/reset-password" element={<ResetPassword />} />
+ 
+          {/* ---------------- Protected Routes ---------------- */}
+          <Route element={<Layout />}>
+            {Object.entries(pageComponents).map(([label, component]) => (
               <Route
                 key={label}
-                path={path}
+                path={`/${label.replace(/\s+/g, '-').toLowerCase()}`}
                 element={
-                  <ProtectedRoute userRole={userRole} allowedRoles={allowedRoles}>
+                  <ProtectedRoute allowedRoles={getAllowedRoles(label)} userRole={userRole}>
                     {component}
                   </ProtectedRoute>
                 }
               />
-            );
-          })}
-
-          {/* Admin sub-pages */}
-          {Object.entries(adminSubPages).map(([slug, component]) => (
-            <Route
-              key={slug}
-              path={`/admin-setting/${slug}`}
-              element={
-                <ProtectedRoute
-                  userRole={userRole}
-                  allowedRoles={adminSubPageRoles[slug]}
-                >
-                  {component}
-                </ProtectedRoute>
-              }
-            />
-          ))}
-
-          {/* Add Nomination nested route */}
-          <Route
-            path="/my-nominations/add-nomination"
-            element={
-              <ProtectedRoute
-                userRole={userRole}
-                allowedRoles={getAllowedRoles('Add Nomination')}
-              >
-                <AddNomination />
-              </ProtectedRoute>
-            }
-          />
-
-          {/* Fallback */}
-           <Route path="/forgot" element={<ForgotPassword/>} />
-          <Route path="*" element={<Navigate to="/home" replace />} />
-        </Route>
-      </Routes>
-    </Router>
+            ))}
+ 
+            {/* Admin Sub Routes */}
+            {Object.entries(adminSubPages).map(([path, component]) => (
+              <Route
+                key={path}
+                path={`/admin-setting/${path}`}
+                element={
+                  <ProtectedRoute
+                    allowedRoles={adminSubPageRoles[path]}
+                    userRole={userRole}
+                  >
+                    {component}
+                  </ProtectedRoute>
+                }
+              />
+            ))}
+ 
+            {/* Extra */}
+            <Route path="/add-nomination" element={<AddNomination />} />
+          </Route>
+ 
+        </Routes>
+      </Router>
+ 
     </AuthProvider>
   );
 };

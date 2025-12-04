@@ -1,4 +1,5 @@
-import React from "react";
+//import React from "react";
+import React, { useState } from "react";
 import { X } from "lucide-react";
 import { FileText } from "lucide-react";
  
@@ -35,6 +36,8 @@ interface NominationSidePanelProps {
   nomination: Nomination | null;
     onApprove: () => void;
   onReject: () => void;
+   reason: string;
+  setReason: (value: string) => void;
 }
  
  
@@ -49,7 +52,9 @@ const ApprovalPanel: React.FC<NominationSidePanelProps> = ({
   onClose,
   nomination,
    onApprove,
-  onReject
+  onReject,
+   reason,
+  setReason
 }) => {
   
   return (
@@ -67,7 +72,7 @@ const ApprovalPanel: React.FC<NominationSidePanelProps> = ({
           <X size={20} className="text-gray-500" />
         </button>
       </div>
-     <div className="p-5 overflow-y-auto h-[calc(100%-64px)]">
+     <div className="p-5 overflow-y-auto h-[calc(100%-96px)]">
         {nomination ? (
           <div className="space-y-5 text-sm">
 
@@ -194,17 +199,12 @@ const ApprovalPanel: React.FC<NominationSidePanelProps> = ({
                   <label className="text-sm font-medium text-gray-900">
                     Reason <span className="text-red-600">*</span>
                   </label>
-
-                  <textarea
-                    className="w-full h-24 border rounded-lg p-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-400"
-                    placeholder="Enter your reason here..."
-                  ></textarea>
-                    {/* <textarea
+                    <textarea
                       value={reason}
                       onChange={(e) => setReason(e.target.value)}
                       className="w-full h-24 border rounded-lg p-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-400"
                       placeholder="Enter your reason here..."
-                    ></textarea> */}
+                    ></textarea>
                 </div>
 
              <div className="px-6 py-4 border-t border-gray-200 bg-gray-50 fixed bottom-0 w-full max-w-md">
@@ -217,6 +217,10 @@ const ApprovalPanel: React.FC<NominationSidePanelProps> = ({
               {(nomination.status === "Pending" || nomination.status === "Approved") && (
                 <button
                   onClick={() => {
+                    if (!reason.trim()) {
+                      alert("Please enter reason");
+                      return;
+                    }
                     onReject();
                     onClose();
                   }}
@@ -230,6 +234,10 @@ const ApprovalPanel: React.FC<NominationSidePanelProps> = ({
               {(nomination.status === "Pending" || nomination.status === "Rejected") && (
                 <button
                   onClick={() => {
+                     if (!reason.trim()) {
+                      alert("Please enter reason");
+                      return;
+                    }
                     onApprove();
                     onClose();
                   }}
