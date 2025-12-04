@@ -50,28 +50,28 @@ interface Nomination {
 
 const apiUrl = import.meta.env.VITE_API_URL;
 
-const NominationTable: React.FC = () => {
+ const NominationTable: React.FC = () => {
   const [data, setData] = useState<Nomination[]>([]);
   const [loading, setLoading] = useState(true);
   const [globalFilter, setGlobalFilter] = useState("");
   const [modalOpen, setModalOpen] = useState(false);
   const [selectedNomination, setSelectedNomination] = useState<Nomination | null>(null);
+  const [successMessage, setSuccessMessage] = useState("");
 
   const { authToken, userId } = useAuth();
-
+  const refreshNominations = async () => {
+  setLoading(true);
+  await fetchNominations();  // this updates `data`
+  setLoading(false);
+};
   const statusColors: Record<Nomination["Status"], string> = {
   Pending: "bg-orange-100 text-orange-800",
   Approved: "bg-green-100 text-green-800",
   Rejected: "bg-red-100 text-red-800",
   "Under Review": "bg-yellow-100 text-yellow-700",
 };
-
-  useEffect(() => {
-    const fetchNominations = async () => {
+ const fetchNominations = async () => {
       try {
-        // const res = await axios.get(`${apiUrl}/api/nominations/${userId}`, {
-        //   headers: { Authorization: `Bearer ${authToken}` },
-        // });
          const res = await axios.get(`${apiUrl}/api/nominationsbyuser`, {
           params: {
             userID: userId,
@@ -87,9 +87,12 @@ const NominationTable: React.FC = () => {
         setLoading(false);
       }
     };
-
+  useEffect(() => {
     fetchNominations();
   }, [authToken, userId]);
+const [refreshKey, setRefreshKey] = useState(0);
+
+
 
   const columns = useMemo<ColumnDef<Nomination>[]>(
     () => [
@@ -97,7 +100,6 @@ const NominationTable: React.FC = () => {
       { accessorKey: "Nominee", header: "Nominee" },
       { accessorKey: "Tenant", header: "Entity" },
       { accessorKey: "AwardCategory", header: "Category" },
-      
       {
         accessorKey: "Status",
         header: "Status",
@@ -167,6 +169,14 @@ const NominationTable: React.FC = () => {
   selectedNomination?.["Referrals ID"]?.map((r) => r.Email) || [];
   return (
     <>
+    {successMessage && (
+  <div
+    className="fixed top-5 right-5 px-4 py-2 rounded-lg shadow-lg z-[99999] bg-green-600 text-white"
+  >
+    {successMessage}
+  </div>
+)}
+    <div key={refreshKey}> 
       <div className="p-6">
         {/* 🔍 Global Search */}
         <div className="mb-4 flex justify-between items-center">
@@ -245,12 +255,14 @@ const NominationTable: React.FC = () => {
           </div>
         </div>
       </div>
-
+</div>
       {/* 🔍 Modal */}
       {selectedNomination && (
         <NominationDetailsModal
           isOpen={modalOpen}
+          onRefresh={refreshNominations}  
           onClose={() => setModalOpen(false)}
+          setSuccessMessage={setSuccessMessage} 
           // data={selectedNomination}
             data={{
       nominationId: selectedNomination.NominationID.toString(),

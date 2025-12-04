@@ -1,26 +1,30 @@
-
 import FilterComponent from '../FilterComponent';
 import NominationTable from './NominationTable';
 import  type Nomination  from '../../dataTypes/nomination';
 import * as Tabs from '@radix-ui/react-tabs';
-import {  useNavigate } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
+import React, { useEffect, useState } from "react";
 import OtherNominationTable from "./OtherNominationTable"
-
-
 
 
 const NominationComponent = () => {
     // const [activeTab, setActiveTab] = React.useState<'my' | 'others'>('my');
-
+    const location = useLocation();
     const navigate=useNavigate();
-
+    const [tab, setTab] = React.useState("table");
     const handleForm=()=>{
-     navigate("add-nomination"); 
+     navigate("add-nomination");
     }
+    useEffect(() => {
+  if (location.state?.tab) {
+    setTab(location.state.tab);
+  }
+}, [location.state]);
   return (
     <div className='p-6 shadow-sm bg-white rounded-lg'>
        <div className=" border-b border-gray-200 mb-6 lg:mb-8 overflow-x-auto">
-                 <Tabs.Root defaultValue="table" className="">
+                 {/* <Tabs.Root defaultValue="table" className="">  */}
+            <Tabs.Root value={tab} onValueChange={setTab}>
         {/* Tab Buttons */}
         <Tabs.List className="flex md:w-[40%] sm:w-[50%] border-b border-gray-300 mb-4">
           <Tabs.Trigger
@@ -41,17 +45,17 @@ const NominationComponent = () => {
         <div>
 
  
-<Tabs.Content value="table" >
- 
-           
-          <NominationTable  />
+ {/* <Tabs.Content value="table" >  */}
+<Tabs.Content value="table">
+  {/* <NominationTable refresh={refreshFlag} /> */}
+           <NominationTable  /> 
         </Tabs.Content>
 
         <Tabs.Content value="form" >
             {/* <FilterComponent/> */}
                      <div>
              <div className='flex justify-end items-baseline'>
-     <button className="bg-[#08805E] text-white rounded-sm px-3 py-1 me-3" onClick={handleForm}>Add Nomination</button>
+     <button className="px-4 py-2 btn-theme" onClick={handleForm}>Add Nomination</button>
      {/* <FilterComponent/> */}
   </div>
           </div>

@@ -1,27 +1,18 @@
 import * as Label from "@radix-ui/react-label";
-import { useEffect, useState} from "react";
+import { useEffect, useState,useRef } from "react";
 import { Outlet } from "react-router-dom";
 import axios from "axios";
 import type { FormState } from "../../dataTypes/nomination";
 import { useAuth } from "../ContextAPI/AuthContext";
 import Select from "react-select";
 import type { SingleValue } from "react-select";
-
 import { useNavigate } from "react-router-dom";
-
-
 
 interface OptionType {
   value: number;
   label: string;
 }
-
-
-
 const apiUrl = import.meta.env.VITE_API_URL;
-
-
-
 
 export default function AddNomination() {
   // const [referrals, setReferrals] = useState([
@@ -29,11 +20,13 @@ export default function AddNomination() {
   //   "kumaran@srm.com",
   //   "manikandan@srm.com",
   // ]);
+  
   const [contest, setContest]= useState([]);
    const [users, setUsers] = useState<any[]>([]);
   const [referrals, setReferrals] = useState<any[]>([]);
    const [successMsg, setSuccessMsg] = useState("");
   const {  authToken, userId } = useAuth();
+  const [showSuccessModal, setShowSuccessModal] = useState(false);
 
  const navigate = useNavigate();
 
@@ -48,10 +41,98 @@ export default function AddNomination() {
     managerEmail: "",
     contestType: "",
     description: "",
+    files: [], 
     file: null as File | null,
   });
+//  const [nominee, setNominee] = useState("");
+//   const [category, setCategory] = useState("");
+//   const [entity, setEntity] = useState("");
+  const [errors, setErrors] = useState<{ [key: string]: string }>({});
+  const [showErrorModal, setShowErrorModal] = useState(false);
+  const [fileError, setFileError] = useState("");
+  const [totalSelfNominations, setTotalSelfNominations] = useState(0);
+  const fileInputRef = useRef<HTMLInputElement | null>(null);
 
+  const validateForm = () => {
+  const newErrors: { [key: string]: string } = {};
 
+  if (!form.title.trim()) newErrors.title = "Title is required.";
+  if (!form.contestType) newErrors.contestType = "Contest type is required.";
+  //if (referrals.length < 3) newErrors.referrals = "Please select 3 referrals.";
+
+  setErrors(newErrors);
+  return Object.keys(newErrors).length === 0;
+};
+
+useEffect(() => {
+  const fetchSelfNominationsCount = async () => {
+    try {
+      const res = await axios.get(`${apiUrl}/api/nominationsbyuser`, {
+        params: { userID: userId, NominatedBy: 0 },
+        headers: { Authorization: `Bearer ${authToken}` },
+      });
+      setTotalSelfNominations(res.data[0]?.TotalRowCount || 0);
+    } catch (err) {
+      console.error("❌ Error fetching nominations count:", err);
+      setTotalSelfNominations(0);
+    }
+  };
+
+  fetchSelfNominationsCount();
+}, [authToken, userId]);
+
+const handleSingleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const selectedFiles = Array.from(e.target.files || []);
+  setFileError("");
+
+  // Clear the input immediately
+  if (fileInputRef.current) {
+    fileInputRef.current.value = "";
+  }
+
+  // Check duplicates and size
+  for (const file of selectedFiles) {
+
+    // Duplicate check
+    const isDuplicate = form.files.some(
+      (f) => f.name === file.name && f.size === file.size
+    );
+
+    if (isDuplicate) {
+      setFileError(`"${file.name}" already added.`);
+      return;
+    }
+
+    // Size check
+    if (file.size > 2 * 1024 * 1024) {
+      setFileError(`"${file.name}" exceeds 2 MB limit.`);
+      return;
+    }
+  }
+
+  // Max 5 validation
+  if (form.files.length + selectedFiles.length > 5) {
+    setFileError("Maximum 5 files allowed.");
+    return;
+  }
+
+  // Add the files
+  setForm((prev) => ({
+    ...prev,
+    files: [...prev.files, ...selectedFiles],
+  }));
+};
+
+const handleRemoveFile = (index: number) => {
+  const updatedFiles = [...form.files];
+  updatedFiles.splice(index, 1);
+
+  setForm((prev) => ({ ...prev, files: updatedFiles }));
+
+  if (fileInputRef.current) {
+    fileInputRef.current.value = "";
+  }
+};
 
 useEffect(() => {
   const fetchUser = async () => {
@@ -75,11 +156,8 @@ const res3 = await axios.get(`${apiUrl}/api/awardCategory`, {
   },
 });
 
-
-
 setContest(res3.data); 
 console.log("Contest Type", res3.data); 
-
 
 const res4 = await axios.get(`${apiUrl}/api/usersbyname?pageNumber=1&pageSize=100`, {
   headers: {
@@ -88,11 +166,7 @@ const res4 = await axios.get(`${apiUrl}/api/usersbyname?pageNumber=1&pageSize=10
   },
 });
 setUsers(res4.data.Users || []);
-console.log("Contest Type", res4.data); 
-
-
-
-     
+console.log("Contest Type", res4.data);    
  setForm((prev) => ({
         ...prev,
         nomineeName: user?.UserName?.trim() || "",
@@ -110,32 +184,59 @@ console.log("Contest Type", res4.data);
   fetchUser();
 }, [authToken, userId]);
  
-  const handleSelectReferral = (selectedOption: SingleValue<OptionType>) => {
-    if (!selectedOption) return;
+  // const handleSelectReferral = (selectedOption: SingleValue<OptionType>) => {
+  //   if (!selectedOption) return;
 
-    const exists = referrals.some((r) => r.UserID === selectedOption.value);
-    if (referrals.length >= 3) {
-      alert("⚠️ You can select only up to 3 referrals");
-      return;
-    }
-    if (!exists) {
-      setReferrals([
-        ...referrals,
-        { UserID: selectedOption.value, UserInfo: selectedOption.label },
-      ]);
-    }
-  };
+  //   const exists = referrals.some((r) => r.UserID === selectedOption.value);
+  //   // if (referrals.length >= 3) {
+  //   //   //alert("⚠️ You can select only up to 3 referrals");
+  //   //   return;
+  //   // }
+  //   if (!exists) {
+  //     setReferrals([
+  //       ...referrals,
+  //       { UserID: selectedOption.value, UserInfo: selectedOption.label },
+  //     ]);
+  //   }
+  // };
+const handleSelectReferral = (selected: { value: string; label: string } | null) => {
+  if (!selected) return;
+  if (!referrals.some((r) => r.UserID === selected.value)) {
+    setReferrals([...referrals, { UserID: selected.value, UserInfo: selected.label }]);
+  }
+};
 
   const removeReferral = (userID: number) => {
     setReferrals(referrals.filter((r) => r.UserID !== userID));
   };
 
+const handleModalOk = () => {
+    setShowSuccessModal(false);
+    navigate("/my-nominations");
+  };
+const handleClear = () => {
+  setForm({
+    title: "",
+    nomineeName: form.nomineeName,
+    department: form.department,
+    email: form.email,
+    mobile: form.mobile,
+    managerEmail: form.managerEmail,
+    contestType: "",
+    description: "",
+    files: [],
+    nomineeData: form.nomineeData ?? null, 
+    file: null, 
+  });
 
+  setReferrals([]);
+  setErrors({});
+};
 
 const handleSubmit = async (e: React.FormEvent) => {
   e.preventDefault();
 
-  
+  if (!validateForm()) return; 
   if (!authToken) {
     alert("⚠️ You are not authorized. Please log in again.");
     return;
@@ -144,7 +245,7 @@ const handleSubmit = async (e: React.FormEvent) => {
   const payload = {
     nomination: {
       cycleID: 1,
-     awardCategoryID: Number(form.contestType),
+      awardCategoryID: Number(form.contestType),
       userID: Number(userId),
       nominationTitle: form.title,
       isSelf: true,
@@ -170,30 +271,21 @@ const handleSubmit = async (e: React.FormEvent) => {
       updatedBy: Number(userId),
        referralEmail: ref.UserInfo
     })),
-    documents: form.file
-      ? [
-          {
-            nominationFileID: Number(userId),
-            nominationID: Number(userId),
-            originalFileName: form.file.name,
-            fileType: form.file.type,
-            fileSize: `${(form.file.size / 1024).toFixed(2)} KB`,
-            fileNameGUID: crypto.randomUUID(),
-            filePath: `/uploads/${form.file.name}`,
-            active: true,
-            createdBy: Number(userId),
-            updatedBy: Number(userId),
-          },
-        ]
-      : [],
+    documents: form.files.map((file) => ({
+    nominationFileID: Number(userId),
+    nominationID: Number(userId),
+    originalFileName: file.name,
+    fileType: file.type,
+    fileSize: `${(file.size / 1024).toFixed(2)} KB`,
+    fileNameGUID: crypto.randomUUID(),
+    filePath: `/uploads/${file.name}`,
+    active: true,
+    createdBy: Number(userId),
+    updatedBy: Number(userId),
+  })),
   };
 
   console.log("📦 Sending payload:", payload);
-
-
-
- 
-
   try {
     const res = await axios.post(
       "http://172.16.5.106:5195/api/nomination",
@@ -205,37 +297,14 @@ const handleSubmit = async (e: React.FormEvent) => {
         },
       }
     );
+       setShowSuccessModal(true);
 
- 
     console.log("✅ Success:", res.data);
-   // alert("Nomination submitted successfully!");
-   setSuccessMsg("Nomination submitted successfully!");
-
-      setTimeout(() => {
-        setSuccessMsg("");
-        navigate("/my-nominations");
-      }, 2000);
   } catch (err) {
     console.error("❌ Error submitting nomination:", err);
-    alert("Failed to submit nomination. Please check the console.");
+    setShowErrorModal(true);
   }
 };
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
  return (
   <>
@@ -244,8 +313,7 @@ const handleSubmit = async (e: React.FormEvent) => {
       <div
         className="fixed top-4 left-1/2 transform -translate-x-1/2 
                    bg-green-500 text-white px-6 py-3 rounded shadow-lg 
-                   z-50 text-sm font-medium"
-      >
+                   z-50 text-sm font-medium">
         {successMsg}
       </div>
     )}
@@ -253,23 +321,37 @@ const handleSubmit = async (e: React.FormEvent) => {
     <div className="p-5">
       <form
         onSubmit={handleSubmit}
-        className="p-6 border rounded-lg bg-white shadow nominate-form"
-      >
-        <h2 className="text-xl font-semibold mb-6">Self Nominate Form</h2>
-
+        className="p-6 border rounded-lg bg-white shadow nominate-form">
+      <div className="flex items-center justify-between mb-6">
+          <h2 className="text-xl font-semibold">Self Nominate Form</h2>
+          <a
+            href={totalSelfNominations > 0 ? "/my-nominations" : undefined}
+            onClick={(e) => {
+              if (totalSelfNominations === 0) {
+                e.preventDefault();
+              }
+            }}
+            className="text-blue-600 underline cursor-pointer"
+          >
+            You have {totalSelfNominations} nominations
+          </a>
+        </div>
         {/* Title */}
         <div className="mb-4">
           <Label.Root htmlFor="title" className="block text-sm font-medium">
-            Title of Submission
+            Title of Submission<span className="text-red-500"> *</span>
           </Label.Root>
           <input
             id="title"
             type="text"
             placeholder="Best Innovation"
             value={form.title}
-            onChange={(e) => setForm({ ...form, title: e.target.value })}
+            onChange={(e: React.ChangeEvent<HTMLInputElement>) => {const value = e.target.value;
+            setForm(prevForm => ({...prevForm,title: value }));
+            if (value) {setErrors(prevErrors => ({...prevErrors, title: ""}));}}}         
             className="w-full mt-1 border rounded px-3 py-2"
           />
+          {errors.title && <p className="text-red-500 text-sm mt-1">{errors.title}</p>}
         </div>
 
         {/* Nominee & Department */}
@@ -332,8 +414,9 @@ const handleSubmit = async (e: React.FormEvent) => {
 
             {/* Contest Dropdown */}
             <div className="mb-6">
-              <label className="block text-sm font-medium mb-2">Contest Type</label>
-
+              <label className="block text-sm font-medium mb-2">Contest Type
+                <span className="text-red-500"> *</span>
+              </label>
               <Select
                 name="contestType"
                 value={
@@ -344,30 +427,41 @@ const handleSubmit = async (e: React.FormEvent) => {
                       label: c.CategoryName,
                     }))[0] || null
                 }
-                onChange={(selectedOption: any) =>
-                  setForm({ ...form, contestType: selectedOption?.value || "" })
-                }
+                // onChange={(selectedOption: any) =>
+                //   setForm({ ...form, contestType: selectedOption?.value || "" })
+                  
+                // }
+                onChange={(selectedOption: { value: string } | null) => {setForm(prevForm => ({
+                  ...prevForm,
+                  contestType: selectedOption?.value ?? ""
+                  }));
+                if (selectedOption?.value) {
+                  setErrors(prevErrors => ({...prevErrors, contestType: ""
+                  }));
+                  }}}
                 options={contest.map((c: any) => ({
                   value: c.AwardCategoryID,
                   label: c.CategoryName,
-                }))}
+                  }))}
                 placeholder="Select Contest Type"
                 className="text-sm"
               />
+              {errors.contestType && <p className="text-red-500 text-sm mt-1">{errors.contestType}</p>}
             </div>
           </div>
 
           {/* Referrals */}
           <div className="mb-6">
             <label className="block text-sm font-medium mb-2">
-              Referrals Email ID <span className="text-red-500">(mandatory 3*)</span>
+              Referrals Email ID <span className="text-red-500">(Mandatory 3*)</span>
             </label>
-
             <Select
               options={users.map((u) => ({
                 value: u.UserID,
                 label: u.UserInfo,
               }))}
+              value={referrals.length ? { value: referrals[referrals.length - 1].UserID, 
+              label: referrals[referrals.length - 1].UserInfo } : null}
               onChange={handleSelectReferral}
               placeholder="Search and select referral..."
               isSearchable
@@ -392,37 +486,71 @@ const handleSubmit = async (e: React.FormEvent) => {
                 </div>
               ))}
             </div>
-          </div>
-        </div>
-
-        {/* File Upload */}
-        <div className="mb-6">
+         <div className="mb-6">
           <Label.Root className="block text-sm font-medium">
-            Supporting Documents
+            Supporting Documents <span className="text-red-500">(Maximum 5 files allowed & File must be below 2 MB)</span>
           </Label.Root>
+           <label
+            htmlFor="fileUpload"
+            className="inline-block bg-gray-100 text-gray-700 border border-gray-300 px-6 py-2 rounded cursor-pointer mt-2 hover:bg-gray-200">
+            Choose File
+           </label>
           <input
+            id="fileUpload"
+            ref={fileInputRef}
             type="file"
-            onChange={(e) => setForm({ ...form, file: e.target.files?.[0] || null })}
-            className="mt-1 border p-2 rounded w-full"
+            multiple
+            onChange={handleSingleFileUpload}
+            className="hidden"
+            //className="mt-1 border p-2 rounded w-full"
           />
+          {fileError && (
+            <p className="text-red-500 text-sm mt-1">{fileError}</p>
+          )}
+          <div className="mt-3 flex flex-wrap gap-2">
+            {form.files?.map((file, index) => (
+            <div
+             key={index}
+             className="flex items-center gap-2 bg-gray-100 px-3 py-1 rounded-lg shadow-sm border relative">
+             <span className="text-sm truncate max-w-[180px]"> {file.name}</span>
+            <button
+             type="button" 
+             onClick={() => handleRemoveFile(index)}
+             className="text-red-500 hover:text-red-700 font-bold text-lg leading-none"> ×
+            </button>
+           </div>
+            ))}
+         </div>
+        </div>
+          </div>
         </div>
 
         {/* Description */}
         <div className="mb-6">
-          <Label.Root className="block text-sm font-medium">Description</Label.Root>
+          <Label.Root className="block text-sm font-medium">Description  (Max 1000 chars)</Label.Root>
           <textarea
+            placeholder="Describe the nomination..."
             value={form.description}
-            onChange={(e) => setForm({ ...form, description: e.target.value })}
+            onChange={(e) => { const value = e.target.value;
+            if (value.length <= 1000) {
+            setForm({ ...form, description: value });
+            }
+           }}
+            // onChange={(e) => setForm({ ...form, description: e.target.value })}
             className="w-full mt-1 border rounded px-3 py-2 h-28 resize-none"
           />
+           <p className="text-gray-500 text-sm mt-1">
+    {form.description.length}/1000 characters
+  </p>
         </div>
 
         {/* Buttons */}
         <div className="flex justify-end space-x-4">
-          <button type="button" className="px-4 py-2 border rounded text-gray-600 hover:bg-gray-100">
-            Cancel
+          <button onClick={handleClear}
+          type="button" className="px-4 py-2 border rounded text-gray-600 hover:bg-gray-100">
+            Clear
           </button>
-          <button type="submit" className="px-4 py-2 btn-theme">
+          <button onClick={handleSubmit} type="submit" className="px-4 py-2 btn-theme">
             Submit Nomination
           </button>
         </div>
@@ -430,6 +558,27 @@ const handleSubmit = async (e: React.FormEvent) => {
 
       <Outlet />
     </div>
+    {showErrorModal && (
+  <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+    <div className="bg-white p-6 rounded shadow-md w-96 text-center">
+      <h2 className="text-lg font-semibold mb-4 text-red-600">Error</h2>
+      <p className="mb-6">Failed to submit nomination. Please try again</p>
+      <button
+        onClick={() => setShowErrorModal(false)}
+        className="px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700">OK
+      </button>
+    </div>
+  </div>
+)}
+   {showSuccessModal && (
+  <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+    <div className="bg-white p-6 rounded shadow-md w-96 text-center">
+      {/* <h2 className="text-lg font-semibold mb-4">Success!</h2> */}
+      <p className="mb-6">Nomination submitted successfully!</p>
+      <button onClick={handleModalOk } className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700">OK</button>
+    </div>
+  </div>
+)}
   </>
 );
 }
