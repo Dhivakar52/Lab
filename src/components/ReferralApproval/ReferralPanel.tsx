@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState ,useEffect} from "react";
 import { X, FileText } from "lucide-react";
 
 interface ReferralPopup {
@@ -45,7 +45,7 @@ const statusColors: Record<ReferralPopup["status"], string> = {
   Approved: "bg-green-100 text-green-800",
   Rejected: "bg-red-100 text-red-800",
 };
-
+ 
 const ReferralPanel: React.FC<NominationSidePanelProps> = ({
   isOpen,
   onClose,
@@ -55,6 +55,12 @@ const ReferralPanel: React.FC<NominationSidePanelProps> = ({
    reason,
   setReason,
 }) => {
+   const [errorMsg, setErrorMsg] = useState("");
+    useEffect(() => {
+    setReason("");     
+    setErrorMsg("");  
+  }, [nomination]);
+  
   return (
     
     <div
@@ -195,18 +201,26 @@ const ReferralPanel: React.FC<NominationSidePanelProps> = ({
                 ))}
               </div>
             </div>
-            {/* Reason Input */}
-                <div className="space-y-2">
-                  <label className="text-sm font-medium text-gray-900">
-                    Reason <span className="text-red-600">*</span>
-                  </label>
-                    <textarea
-                      value={reason}
-                      onChange={(e) => setReason(e.target.value)}
-                      className="w-full h-24 border rounded-lg p-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-400"
-                      placeholder="Enter your reason here..."
-                    ></textarea>
-                </div>
+           {/* Reason Input */}
+            <div className="space-y-2">
+              <label className="text-sm font-medium text-gray-900">
+                Reason <span className="text-red-600">*</span>
+              </label>
+
+              <textarea
+                value={reason}
+                onChange={(e) => {
+                  setReason(e.target.value);
+                  if (e.target.value.trim()) setErrorMsg("");
+                }}
+                className={`w-full h-24 border rounded-lg p-2 text-sm focus:outline-none focus:ring-2 ${
+                  errorMsg ? "border-red-500 focus:ring-red-400" : "focus:ring-blue-400"
+                }`}
+                placeholder="Enter your reason here..."
+              ></textarea>
+
+              {errorMsg && <p className="text-red-600 text-xs">{errorMsg}</p>}
+            </div>
 
          <div className="px-6 py-4 border-t border-gray-200 bg-gray-50 fixed bottom-0 w-full max-w-md">
             <div
@@ -218,10 +232,11 @@ const ReferralPanel: React.FC<NominationSidePanelProps> = ({
               {(nomination.status === "Pending" || nomination.status === "Approved") && (
                 <button
                   onClick={() => {
-                    if (!reason.trim()) {
-                      alert("Please enter reason");
-                      return;
-                    }
+                   if (!reason.trim()) {
+                        setErrorMsg("Please Enter Reason");
+                        return;
+                      }
+                      setErrorMsg("");
                     onReject();
                     onClose();
                   }}
@@ -235,10 +250,11 @@ const ReferralPanel: React.FC<NominationSidePanelProps> = ({
               {(nomination.status === "Pending" || nomination.status === "Rejected") && (
                 <button
                   onClick={() => {
-                    if (!reason.trim()) {
-                      alert("Please enter reason");
-                      return;
-                    }
+                   if (!reason.trim()) {
+                        setErrorMsg("Please Enter Reason");
+                        return;
+                      }
+                      setErrorMsg("");
                     onApprove();
                     onClose();
                   }}

@@ -107,52 +107,70 @@ const App: React.FC = () => {
 
   return (
     <AuthProvider>
-    <Router>
-        <Routes>
- 
-          {/* ---------------- Public Routes ---------------- */}
-          <Route path="/" element={<Login setUserRole={setUserRole} />} />
-          <Route path="/forgot-password" element={<ForgotPassword />} />
+  
+  <Router>
+   <Routes>
+     {/* Public login route */}
+     <Route path="/" element={<Login setUserRole={setUserRole} />} />
+      <Route path="/forgot-password" element={<ForgotPassword />} />
           <Route path="/verify-otp" element={<VerifyOtp />} />
           <Route path="/reset-password" element={<ResetPassword />} />
- 
-          {/* ---------------- Protected Routes ---------------- */}
-          <Route element={<Layout />}>
-            {Object.entries(pageComponents).map(([label, component]) => (
-              <Route
-                key={label}
-                path={`/${label.replace(/\s+/g, '-').toLowerCase()}`}
-                element={
-                  <ProtectedRoute allowedRoles={getAllowedRoles(label)} userRole={userRole}>
-                    {component}
-                  </ProtectedRoute>
-                }
-              />
-            ))}
- 
-            {/* Admin Sub Routes */}
-            {Object.entries(adminSubPages).map(([path, component]) => (
-              <Route
-                key={path}
-                path={`/admin-setting/${path}`}
-                element={
-                  <ProtectedRoute
-                    allowedRoles={adminSubPageRoles[path]}
-                    userRole={userRole}
-                  >
-                    {component}
-                  </ProtectedRoute>
-                }
-              />
-            ))}
- 
-            {/* Extra */}
-            <Route path="/add-nomination" element={<AddNomination />} />
-          </Route>
- 
-        </Routes>
-      </Router>
- 
+
+     {/* Protected routes */}
+     <Route element={<Layout />}>
+       {/* Main pages */}
+       {Object.entries(pageComponents).map(([label, component]) => {
+         const path = '/' + label.toLowerCase().replace(/\s+/g, '-');
+         const allowedRoles = getAllowedRoles(label);
+
+         return (
+           <Route
+             key={label}
+             path={path}
+             element={
+               <ProtectedRoute userRole={userRole} allowedRoles={allowedRoles}>
+                 {component}
+               </ProtectedRoute>
+             }
+           />
+         );
+       })}
+
+       {/* Admin sub-pages */}
+       {Object.entries(adminSubPages).map(([slug, component]) => (
+         <Route
+           key={slug}
+           path={`/admin-setting/${slug}`}
+           element={
+             <ProtectedRoute
+               userRole={userRole}
+               allowedRoles={adminSubPageRoles[slug]}
+             >
+               {component}
+             </ProtectedRoute>
+           }
+         />
+       ))}
+
+       {/* Add Nomination nested route */}
+       <Route
+         path="/my-nominations/add-nomination"
+         element={
+           <ProtectedRoute
+             userRole={userRole}
+             allowedRoles={getAllowedRoles('Add Nomination')}
+           >
+             <AddNomination />
+           </ProtectedRoute>
+         }
+       />
+
+       {/* Fallback */}
+        <Route path="/forgot" element={<ForgotPassword/>} />
+       <Route path="*" element={<Navigate to="/home" replace />} />
+     </Route>
+   </Routes>
+ </Router>
     </AuthProvider>
   );
 };
