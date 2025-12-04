@@ -66,9 +66,7 @@ const NominationTable: React.FC = () => {
   "Under Review": "bg-yellow-100 text-yellow-700",
 };
 
-
-  useEffect(() => {
-    const fetchNominations = async () => {
+ const fetchNominations = async () => {
       try {
         // const res = await axios.get(`${apiUrl}/api/nominations`, {
         //   headers: { Authorization: `Bearer ${authToken}` },
@@ -87,7 +85,7 @@ const NominationTable: React.FC = () => {
         setLoading(false);
       }
     };
-
+  useEffect(() => {
     fetchNominations();
   }, [authToken, userId]);
 
@@ -248,6 +246,7 @@ const NominationTable: React.FC = () => {
       {selectedNomination && (
         <NominationDetailsModal
           isOpen={modalOpen}
+          onRefresh={fetchNominations}  
           onClose={() => setModalOpen(false)}
           // data={selectedNomination}s
             data={{

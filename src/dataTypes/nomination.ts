@@ -19,15 +19,16 @@ export interface FormState {
   managerEmail: string;
   contestType: string;
   description: string;
+  files: File[];
   file: File | null;
 }
 
 export interface AddNominationState {
- title: string;
-  nomineeName: string | null; 
-  department: string | null;
+ title: string ;
+  nomineeName: string ; 
+  department: string;
   nomineeData:string;
-  email: string | null; 
+  email: string ; 
   entityName: string;
   mobile: string;
   managerEmail: string;
