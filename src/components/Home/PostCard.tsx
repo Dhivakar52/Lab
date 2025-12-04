@@ -517,6 +517,8 @@ const nestedComments = buildCommentTree(filteredFlat);
                       e.stopPropagation();
                       setLikeList(post.LikedBy || []);
                       setShowLikePopup(true);
+                       setSelectedPost(post);
+
                     }}
                   >
                     {getLikeText(post.LikedBy, userId)}
@@ -605,7 +607,15 @@ const nestedComments = buildCommentTree(filteredFlat);
    likedPosts={likedPosts}
 />
 
-
+{/* Like Modal */}
+      {showLikePopup && (
+  <FeedLikePop
+    likedBy={likeList}
+    onClose={() => setShowLikePopup(false)}
+    post={selectedPost}
+    item
+  />
+)}
             </div>
             
           );
@@ -614,13 +624,7 @@ const nestedComments = buildCommentTree(filteredFlat);
 
 
 
-    {/* Like Modal */}
-      {showLikePopup && (
-  <FeedLikePop
-    likedBy={likeList}
-    onClose={() => setShowLikePopup(false)}
-  />
-)}
+    
  {/* View Modal */}
 <ViewerModal
         open={showViewers}

@@ -378,6 +378,7 @@ const toggleComments = (id: number) => {
                   onClick={() => {
                     setLikeList(item.LikedBy || []);
                     setShowLikePopup(true);
+                    setSelectedPost(item)
                   }}
                 >
                   <span className="text-sm font-medium">
@@ -468,19 +469,22 @@ const toggleComments = (id: number) => {
                     />
                   </div>
                 )}
+                 {/* LIKE POPUP */}
+      {showLikePopup && (
+        <FeedLikePop
+          likedBy={likeList}
+          onClose={() => setShowLikePopup(false)}
+          item= {selectedPost}
+          post
+        />
+      )}
               </div>
             </div>
           </div>
         );
       })}
 
-      {/* LIKE POPUP */}
-      {showLikePopup && (
-        <FeedLikePop
-          likedBy={likeList}
-          onClose={() => setShowLikePopup(false)}
-        />
-      )}
+     
 
       {/* VIEWERS POPUP */}
       <ViewerModal

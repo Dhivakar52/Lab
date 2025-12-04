@@ -98,6 +98,8 @@ const ReferralTable: React.FC = () => {
   const [globalFilter, setGlobalFilter] = useState("");
   const { userId, authToken } = useAuth();
   const [successMessage, setSuccessMessage] = useState("");
+  
+    const [reason, setReason] = useState("");
   const [toastType, setToastType] = useState<"success" | "error">("success");
 
   useEffect(() => {
@@ -131,7 +133,7 @@ const ReferralTable: React.FC = () => {
             referralUserID: selectedNomination.ReferralUserID,
             nominationID: nominationID,
             isReferralApproved: true,       // REJECT
-           // approvalComments: "Rejected",
+            approvalComments: reason,
             active: true,
             submittedBy: userId
         },
@@ -170,7 +172,7 @@ const ReferralTable: React.FC = () => {
           referralUserID: selectedNomination.ReferralUserID,
             nominationID: nominationID,
             isReferralApproved: false,       // REJECT
-           // approvalComments: "Rejected",
+            approvalComments: reason,
             active: true,
             submittedBy: userId
         },
@@ -387,6 +389,8 @@ const ReferralTable: React.FC = () => {
         onReject={() =>
           selectedNomination && handleReject(selectedNomination.NominationID)
         }
+         reason={reason}
+        setReason={setReason}
       />
     </div>
   );

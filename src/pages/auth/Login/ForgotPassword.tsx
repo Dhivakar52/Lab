@@ -1,75 +1,66 @@
+// src/pages/auth/Login/ForgotPassword.tsx
 import { useState } from "react";
-
-const apiUrl = import.meta.env.VITE_API_URL;
+import { useNavigate } from "react-router-dom";
 
 export default function ForgotPassword() {
   const [email, setEmail] = useState("");
+  const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
-  const [message, setMessage] = useState("");
 
-  const handleSendLink = async () => {
+  const navigate = useNavigate();
+
+  const validateEmail = (value: string) => {
+    const regex = /^[a-zA-Z0-9._%+-]+@gmail\.com$/; // Gmail only
+    return regex.test(value);
+  };
+
+  const handleNext = () => {
     if (!email) {
-      alert("Please enter your email");
+      setError("Email is required");
       return;
     }
 
-    setLoading(true);
-    setMessage("");
-
-    try {
-      const res = await fetch(`${apiUrl}/api/forgot-password`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ email }),
-      });
-
-      const data = await res.json();
-      setLoading(false);
-
-      if (res.ok) {
-        setMessage("Password reset link sent to your email");
-      } else {
-        setMessage(data.message || "Something went wrong");
-      }
-    } catch (err) {
-      setLoading(false);
-      setMessage("Server error. Try again later.");
+    if (!validateEmail(email)) {
+      setError("Please enter a valid Gmail address");
+      return;
     }
+
+    setError("");
+    setLoading(true);
+
+    setTimeout(() => {
+      setLoading(false);
+      navigate("/verify-otp", { state: { email } });
+    }, 1000);
   };
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-100 p-4">
       <div className="bg-white p-6 rounded-lg shadow max-w-sm w-full">
-        <h2 className="text-2xl font-bold mb-4 text-center">
-          Forgot Password
-        </h2>
-        <p className="text-gray-600 mb-4 text-center">
-          Enter your registered email. We’ll send a password reset link.
-        </p>
+        <h2 className="text-2xl font-bold mb-4 text-center">Forgot Password</h2>
 
         <input
           type="email"
-          className="w-full px-4 py-2 border rounded-lg mb-4"
-          placeholder="Enter your email address"
+          className={`w-full px-4 py-2 border rounded-lg mb-1 ${
+            error ? "border-red-500" : ""
+          }`}
+          placeholder="Enter your Gmail"
           value={email}
-          onChange={(e) => setEmail(e.target.value)}
+          onChange={(e) => {
+            setEmail(e.target.value);
+            setError("");
+          }}
         />
 
+        {error && <p className="text-red-500 text-sm mb-3">{error}</p>}
+
         <button
-          onClick={handleSendLink}
+          onClick={handleNext}
           disabled={loading}
           className="w-full bg-green-700 text-white py-2 rounded-lg hover:bg-green-800 transition"
         >
           {loading ? "Sending..." : "Send Reset Link"}
         </button>
-
-        {message && (
-          <p className="text-center text-sm mt-3 text-blue-600">
-            {message}
-          </p>
-        )}
       </div>
     </div>
   );
