@@ -28,7 +28,7 @@ const HomeComponent: React.FC = () => {
   
   const { authToken, userId } = useAuth();
   const [showDropdown, setShowDropdown] = useState(false);
-   // ⭐ user profile detail (FIX)
+   // user profile detail
   const [userDetail, setUserDetail] = useState<any>(null);
   const apiUrl = import.meta.env.VITE_API_URL;
 

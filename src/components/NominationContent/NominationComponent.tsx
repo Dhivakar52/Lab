@@ -8,16 +8,15 @@ import OtherNominationTable from "./OtherNominationTable"
 
 
 
+
 const NominationComponent = () => {
     // const [activeTab, setActiveTab] = React.useState<'my' | 'others'>('my');
 
     const navigate=useNavigate();
 
     const handleForm=()=>{
-     navigate("add-nomination");
+     navigate("add-nomination"); 
     }
-    
-    
   return (
     <div className='p-6 shadow-sm bg-white rounded-lg'>
        <div className=" border-b border-gray-200 mb-6 lg:mb-8 overflow-x-auto">
