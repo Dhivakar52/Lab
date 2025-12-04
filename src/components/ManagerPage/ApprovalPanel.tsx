@@ -29,6 +29,7 @@ interface Nomination {
   }[];
 
   Descriptions: string;
+  ApprovalComments?: string;
 }
 
 interface NominationSidePanelProps {
@@ -58,9 +59,14 @@ const ApprovalPanel: React.FC<NominationSidePanelProps> = ({
 }) => {
 
   const [errorMsg, setErrorMsg] = useState("");
-  useEffect(() => {
-  setReason("");      // clear old reason
-  setErrorMsg("");    // clear validation message
+ // ⭐ Disable textarea if reason already exists in DB
+  const isReasonDisabled = nomination?.ApprovalComments?.trim() ? true : false;
+  //const isReasonDisabled = false;
+useEffect(() => {
+  if (nomination) {
+    setReason(nomination.ApprovalComments || "");   // 👈 LOAD DB COMMENT
+  }
+  setErrorMsg("");
 }, [nomination]);
 
   return (
@@ -185,26 +191,32 @@ const ApprovalPanel: React.FC<NominationSidePanelProps> = ({
               </div>
             </div>
 
-            {/* Reason Input */}
-            <div className="space-y-2">
-              <label className="text-sm font-medium text-gray-900">
-                Reason <span className="text-red-600">*</span>
-              </label>
+           {/* Reason Input */}
+<div className="space-y-2">
+  <label className="text-sm font-medium text-gray-900">
+    Reason <span className="text-red-600">*</span>
+  </label>
 
-              <textarea
-                value={reason}
-                onChange={(e) => {
-                  setReason(e.target.value);
-                  if (e.target.value.trim()) setErrorMsg("");
-                }}
-                className={`w-full h-24 border rounded-lg p-2 text-sm focus:outline-none focus:ring-2 ${
-                  errorMsg ? "border-red-500 focus:ring-red-400" : "focus:ring-blue-400"
-                }`}
-                placeholder="Enter your reason here..."
-              ></textarea>
+  {isReasonDisabled ? (
+    // Just show the reason as plain text
+    <p className="text-gray-700 text-sm">{reason}</p>
+  ) : (
+    // Editable textarea if no existing reason
+    <textarea
+      value={reason}
+      onChange={(e) => {
+        setReason(e.target.value);
+        if (e.target.value.trim()) setErrorMsg("");
+      }}
+      className={`w-full h-24 border rounded-lg p-2 text-sm focus:outline-none focus:ring-2
+        ${errorMsg ? "border-red-500 focus:ring-red-400" : "focus:ring-blue-400"}
+      `}
+      placeholder="Enter your reason here..."
+    />
+  )}
 
-              {errorMsg && <p className="text-red-600 text-xs">{errorMsg}</p>}
-            </div>
+  {errorMsg && <p className="text-red-600 text-xs">{errorMsg}</p>}
+</div>
 
             {/* Bottom Button Panel */}
             <div className="px-6 py-4 border-t border-gray-200 bg-gray-50 fixed bottom-0 w-full max-w-md">
@@ -240,6 +252,7 @@ const ApprovalPanel: React.FC<NominationSidePanelProps> = ({
                         return;
                       }
                       setErrorMsg("");
+                      
                       onApprove();
                       onClose();
                     }}

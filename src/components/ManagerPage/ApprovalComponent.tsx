@@ -28,6 +28,7 @@ interface ApprovalData {
   Nominee: string | null;
   Tenant: string | null;
   ManagerEmailID: string;
+  ApprovalComments?: string;
 
   Descriptions: string;
   //"Referrals ID": { Email: string }[];
@@ -69,6 +70,7 @@ interface ApprovalView {
     FilePath: string;
   }[];
   Descriptions: string;
+  ApprovalComments?: string;
 }
 
 const apiUrl = import.meta.env.VITE_API_URL;
@@ -224,6 +226,9 @@ const ApprovalTable: React.FC = () => {
               "Referrals ID": item["Referrals ID"],
               "Supporting Documents": item["Supporting Documents"],
               Descriptions: item.Descriptions,
+               //ApprovalComments: item.ApprovalComments ?? "", 
+                 // ⭐ FIXED: Correct mapping
+              ApprovalComments: item.ApprovalComments ?? "",
             });
 
             setIsPanelOpen(true);
