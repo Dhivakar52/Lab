@@ -4,6 +4,7 @@ import { X ,FileText} from 'lucide-react';
 import { useState, useEffect } from "react";
 import { useAuth } from "../ContextAPI/AuthContext";
 import axios from "axios";
+import { ArrowRight } from "lucide-react";
 
 //import { data } from 'react-router-dom';
 
@@ -30,6 +31,7 @@ interface NominationDetailsProps {
     TenantName: string;
     DeptName: string;
     ReferralName:string;
+    ReferralStatus:string;
   }[];
 
   "Supporting Documents": {
@@ -38,27 +40,34 @@ interface NominationDetailsProps {
     FileNameGUID: string;
     FilePath: string;
   }[];
+   "ApprovalStatus": {
+   Status: string;
+  ApprovalType: string;
+  }[];
   };
   setSuccessMessage: React.Dispatch<React.SetStateAction<string>>;
 }
 const NominationDetailsModal: React.FC<NominationDetailsProps> = ({ isOpen, onClose, onRefresh, data, setSuccessMessage }) => {
   console.log("Nomination Details Modal Data : ", data);
+  const [previewOpen, setPreviewOpen] = useState(false);
+  const [previewFile, setPreviewFile] = useState<string | null>(null);
+  const [previewType, setPreviewType] = useState<string | null>(null);
   const [expandedDescription, setExpandedDescription] = useState(false);
   const [isWithdrawDialogOpen, setIsWithdrawDialogOpen] = useState(false);
   const { authToken, userId } = useAuth();
   const [expanded, setExpanded] = useState(false);
- const referrals = data["Referrals ID"] || [];
- const visibleReferrals = expanded ? referrals : referrals.slice(0, 3);
- const toggleExpanded = () => setExpanded(!expanded);
-useEffect(() => {
-  if (isOpen) {
+  const referrals = data["Referrals ID"] || [];
+  const visibleReferrals = expanded ? referrals : referrals.slice(0, 3);
+  const toggleExpanded = () => setExpanded(!expanded);
+  useEffect(() => {
+    if (isOpen) {
     setExpanded(false);
     setExpandedDescription(false);
-  }
-}, [isOpen]);
+    }
+  }, [isOpen]);
 
   const description = data.description?.trim() || "No description provided";
-  const maxLength = 170; // Approx 3 lines
+  const maxLength = 300; 
   const isTruncated = description.length > maxLength;
   const displayText = expandedDescription || !isTruncated 
     ? description 
@@ -78,7 +87,7 @@ useEffect(() => {
     isManagerApproved:  false,
     approvalComments:  "",
     statusID: 0,
-    active: false,   // ⛔ WITHDRAW means deactivate
+    active: false,   
     businessJuryID:  0,
     createdBy: 0,
     updatedBy: userId
@@ -106,27 +115,6 @@ useEffect(() => {
     createdBy: 0,
     updatedBy: 0
   })) || []
-};
-const getFileIcon = (fileName: string) => {
-  const ext = fileName.split(".").pop()?.toLowerCase();
-
-  switch (ext) {
-    case "pdf":
-      return "https://img.icons8.com/color/48/pdf.png";
-    case "xls":
-    case "xlsx":
-      return "https://img.icons8.com/color/48/ms-excel.png";
-    case "doc":
-    case "docx":
-      return "https://img.icons8.com/color/48/ms-word.png";
-    case "jpg":
-    case "jpeg":
-    case "png":
-    case "gif":
-      return "https://img.icons8.com/color/48/image.png";
-    default:
-      return "https://img.icons8.com/color/48/file.png";
-  }
 };
     const res = await axios.delete(
       `http://172.16.5.106:5195/api/nominations/${data.nominationId}`,
@@ -175,6 +163,52 @@ const getFileIcon = (fileName: string) => {
       return "https://img.icons8.com/color/48/file.png";
   }
 };
+
+const approvalFlow = data?.ApprovalStatus?.map(a => ({
+  type: a.ApprovalType,
+  status: a.Status
+})) ?? [];
+
+const statusFlowColors: Record<string, string> = {
+  "Approved": "bg-green-100 text-green-800 border-green-300",
+  "Rejected": "bg-red-100 text-red-800 border-red-300",
+  "Under Review": "bg-yellow-100 text-yellow-800 border-yellow-300",
+  "Not Started": "bg-gray-100 text-gray-700 border-gray-300",
+};
+const StatusFlow = ({ steps }: { steps: { type: string; status: string }[] }) => {
+  return (
+    <div className="flex items-start space-x-6 mt-2">
+      {steps.map((step, i) => {
+        const colorClass =
+          statusFlowColors[step.status] ||
+          "bg-gray-100 text-gray-700 border-gray-300";
+
+        return (
+          <div key={i} className="flex flex-col items-center w-28 relative">
+            {/* TYPE TEXT ON TOP */}
+            <span className="text-xs font-semibold text-gray-700 mb-1">
+              {step.type}
+            </span>
+
+            {/* STATUS BADGE */}
+            <span
+              className={`px-4 py-2 border rounded-full text-xs font-medium text-center w-full ${colorClass} relative`}
+            >
+              {step.status}
+
+              {/* ARROW TO THE RIGHT SIDE OF BADGE */}
+              {i !== steps.length - 1 && (
+                <ArrowRight
+                  className="lucide lucide-arrow-right w-4 h-4 text-gray-500 absolute top-1/2 -translate-y-1/2 right-[-20px]"/>
+              )}
+            </span>
+          </div>
+        );
+      })}
+    </div>
+  );
+};
+
   return (
       <>
     <Dialog.Root
@@ -186,8 +220,8 @@ const getFileIcon = (fileName: string) => {
         <Dialog.Overlay className="fixed inset-0 bg-black/10" />
         
         {/* Slide-over panel */}
-        {/* <Dialog.Content className="fixed top-0 right-0 h-full w-full max-w-md bg-white  border-l border-gray-200 overflow-y-auto"> */}
-         <Dialog.Content className="fixed top-0 right-0 h-full w-full max-w-md bg-white border-l border-gray-200 flex flex-col">
+         {/* <Dialog.Content className="fixed top-0 right-0 h-full w-full max-w-md bg-white border-l border-gray-200 flex flex-col"> */}
+          <Dialog.Content className="fixed top-0 right-0 h-full w-full max-w-3xl bg-white border-l border-gray-200 flex flex-col">
           {/* Header */}
           <div className="flex items-center justify-between px-6 py-4 border-b border-gray-200">
             <Dialog.Title className="text-lg font-semibold text-gray-900">
@@ -203,11 +237,7 @@ const getFileIcon = (fileName: string) => {
           <div className="px-6 py-6 flex-1 overflow-y-auto">
             <div className="space-y-4">
               {/* Row 1 */}
-              <div className="grid grid-cols-2 gap-4">
-                {/* <div className="space-y-1">
-                  <div className="text-sm font-medium text-gray-900">Nomination ID</div>
-                  <div className="text-sm text-gray-600">{data.nominationId}</div>
-                </div> */}
+              <div className="grid grid-cols-3 gap-4">
                 <div className="space-y-1">
                   <div className="text-sm font-medium text-gray-900">Nominee</div>
                   <div className="text-sm text-gray-600">{data.nominee}</div>
@@ -216,20 +246,21 @@ const getFileIcon = (fileName: string) => {
                   <div className="text-sm font-medium text-gray-900">Tenant</div>
                   <div className="text-sm text-gray-600">{data.entity}</div>
                 </div>
-              </div>
-              {/* Row 2 */}
-              <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-1">
                   <div className="text-sm font-medium text-gray-900">Category</div>
                   <div className="text-sm text-gray-600">{data.category}</div>
                 </div>
+              </div>
+              {/* Row 2 */}
+              <div className="grid grid-cols-2 gap-4">
+                
+              </div>
+              {/* Row 3 */}
+              <div className="grid grid-cols-3 gap-4">
                 <div className="space-y-1">
                   <div className="text-sm font-medium text-gray-900">Nominated By</div>
                   <div className="text-sm text-gray-600">{data.nominatedBy}</div>
                 </div>
-              </div>
-              {/* Row 3 */}
-              <div className="grid grid-cols-2 gap-8">
                 <div className="space-y-1">
                   <div className="text-sm font-medium text-gray-900">Submission Date</div>
                   <div className="text-sm text-gray-600">{data.submissionDate}</div>
@@ -248,20 +279,21 @@ const getFileIcon = (fileName: string) => {
                             : data.status === "Under Review"
                             ? "bg-yellow-100 text-yellow-700"
                             : "bg-gray-100 text-gray-700"
-                        }`}
-                      >
+                        }`}>
                         {data.status}
                       </span>
                     </div>
                   </div>
               </div>
-
-              {/* Row 4 */}
-              <div className="grid grid-cols-2 gap-8">
-                {/* <div className="space-y-1">
-                  <div className="text-sm font-medium text-gray-900">Contest Type</div>
-                  <div className="text-sm text-gray-600">{data.contestType}</div>
-                </div> */}
+               {/* Row 4 */}
+              <div className="grid grid-cols-1 gap-4">
+                <div className="space-y-1">
+                  <div className="text-sm font-medium text-gray-900">Nomination Approved Status</div>
+                  <StatusFlow steps={approvalFlow} />
+                </div>
+              </div>
+              {/* Row 5 */}
+              <div className="grid grid-cols-3 gap-8">
                 <div className="space-y-1">
                   <div className="text-sm font-medium text-gray-900">Manager</div>
                   <div className="text-sm text-gray-600">{data.managerEmail}</div>
@@ -273,9 +305,9 @@ const getFileIcon = (fileName: string) => {
               </div> 
               <div className="text-sm font-medium text-gray-900 mb-1">Referrals</div>
               <div className="text-gray-600 space-y-1">
-      {referrals.length ? (
-        <>
-          {visibleReferrals.map((ref, i) => (
+              {referrals.length ? (
+                <>
+               {visibleReferrals.map((ref, i) => (
             <div key={i}>
               <p className="text-sm">
                 <span className="font-semibold text-gray-800">{ref.ReferralName}</span>
@@ -283,15 +315,20 @@ const getFileIcon = (fileName: string) => {
                 <span className="text-gray-600">{ref.TenantName}</span>
                 <span className="px-2 text-gray-500">|</span>
                 <span className="font-semibold text-gray-600">{ref.DeptName}</span>
+                <span className="px-2 text-gray-500"> </span>
+                <span className={`px-3 py-1 text-xs border rounded-full font-medium
+                ${ref.ReferralStatus === "Approved" ? "bg-green-100 text-green-800 border-green-300" :
+                ref.ReferralStatus === "Rejected" ? "bg-red-100 text-red-800 border-red-300" :
+                ref.ReferralStatus === "Pending" ? "bg-orange-100 text-orange-800 border-red-300" :
+                ref.ReferralStatus === "Under Review" ? "bg-yellow-100 text-yellow-800 border-yellow-300" :
+               "bg-gray-100 text-gray-700 border-gray-300"} `}>
+               {ref.ReferralStatus}</span>
               </p>
             </div>
           ))}
-
           {referrals.length > 3 && (
-            <p
-              className="text-sm text-blue-500 cursor-pointer"
-              onClick={toggleExpanded}
-            >
+            <p className="text-sm text-blue-500 cursor-pointer"
+              onClick={toggleExpanded} >
               {expanded ? "less" : `+${referrals.length - 3} more`}
             </p>
           )}
@@ -300,23 +337,6 @@ const getFileIcon = (fileName: string) => {
         <p className="text-gray-500 text-sm">No referral details available</p>
       )}
     </div>
-              {/* <div className="text-gray-600 space-y-1">
-                {data["Referrals ID"]?.length ? (
-                  data["Referrals ID"].map((ref, i) => (
-                    <div key={i} >
-                      <p className="text-sm">
-                        <span className="font-semibold text-gray-800">{ref.ReferralName}</span>
-                        <span className="px-2 text-gray-500">|</span>
-                        <span className="text-gray-600">{ref.TenantName}</span>
-                        <span className="px-2 text-gray-500">|</span>
-                        <span className="font-semibold text-gray-600">{ref.DeptName}</span>
-                      </p>
-                    </div>
-                  ))
-                ) : (
-                  <p className="text-gray-500 text-sm">No referral details available</p>
-                )}
-              </div> */}
               {/* Description - Full width */}
                <div className="space-y-1">
               <div className="text-sm font-medium text-gray-900">Description</div>
@@ -341,25 +361,28 @@ const getFileIcon = (fileName: string) => {
             <div className="text-sm font-medium text-gray-900">Supporting Documents</div>
             <div className="mt-2 space-y-2">
   {data["Supporting Documents"]?.length ? (
-    data["Supporting Documents"].map((doc, i) => (
-      <a
-        key={i}
-        href={doc.FilePath}
-        target="_blank"
-        rel="noopener noreferrer"
-        className="flex items-center gap-3 text-blue-600 hover:underline"
-      >
-        {/* FILE ICON */}
-        <img 
-          src={getFileIcon(doc.OriginalFileName)} 
-          alt="file-icon" 
-          className="w-6 h-6"
-        />
-
-        {/* FILE NAME */}
-        <span>{doc.OriginalFileName}</span>
-      </a>
-    ))
+    data["Supporting Documents"].map((doc, i) => {
+      const ext = doc.OriginalFileName.split('.').pop()?.toLowerCase() || "";
+      return (
+        <div
+          key={i}
+          className="flex items-center gap-3 text-blue-600 cursor-pointer hover:underline"
+          onClick={() => {
+            if (["xls", "xlsx", "doc", "docx", "csv"].includes(ext)) {
+              window.open(doc.FilePath, "_blank");
+              return;
+            }
+            setPreviewType(ext);
+            setPreviewFile(doc.FilePath);
+            setPreviewOpen(true);
+          }} >
+          <img 
+            src={getFileIcon(doc.OriginalFileName)} 
+            className="w-6 h-6"/>
+          <span>{doc.OriginalFileName}</span>
+        </div>
+      );
+    })
   ) : (
     <p className="text-gray-500 text-sm">No documents uploaded</p>
   )}
@@ -404,21 +427,54 @@ const getFileIcon = (fileName: string) => {
       <Dialog.Title className="text-center text-lg font-semibold text-gray-900">
         Are you sure you want to withdraw this nomination?
       </Dialog.Title>
-
       <div className="mt-6 flex justify-center gap-4">
-        <button
-          onClick={() => setIsWithdrawDialogOpen(false)}
-          className="px-3 py-2 text-sm rounded-md border border-gray-300 hover:bg-gray-100"
-        >
-          No
+        <button onClick={() => setIsWithdrawDialogOpen(false)}
+          className="px-3 py-2 text-sm rounded-md border border-gray-300 hover:bg-gray-100">No
         </button>
-        <button
-          onClick={handleWithdraw}
-          className="px-3 py-2 text-sm rounded-md bg-green-600 text-white hover:bg-green-700"
-        >
-          Yes
+        <button onClick={handleWithdraw}
+          className="px-3 py-2 text-sm rounded-md bg-green-600 text-white hover:bg-green-700">Yes
         </button>
       </div>
+    </Dialog.Content>
+  </Dialog.Portal>
+)}
+{previewOpen && (
+  <Dialog.Portal>
+    <Dialog.Overlay className="fixed inset-0 bg-black/40" />
+
+    <Dialog.Content className="fixed top-1/2 left-1/2 w-[90%] h-[80%] max-w-3xl -translate-x-1/2 -translate-y-1/2 bg-white p-4 rounded-lg shadow-xl overflow-hidden">
+
+      <div className="flex justify-between items-center mb-3">
+        <h2 className="text-lg font-semibold">Document Preview</h2>
+        <button 
+          className="p-1 hover:bg-gray-200 rounded" 
+          onClick={() => setPreviewOpen(false)}
+        >
+          <X size={20} />
+        </button>
+      </div>
+
+      <div className="w-full h-full border rounded overflow-auto flex justify-center items-center bg-gray-50">
+
+        {/* PDF VIEW */}
+        {previewType === "pdf" && (
+          <iframe 
+            src={previewFile!}
+            className="w-full h-full"
+            title="PDF Viewer"
+          />
+        )}
+
+        {/* IMAGE VIEW */}
+        {["jpg", "jpeg", "png", "gif"].includes(previewType || "") && (
+          <img 
+            src={previewFile!}
+            alt="Document Preview"
+            className="max-h-full max-w-full object-contain"
+          />
+        )}
+      </div>
+
     </Dialog.Content>
   </Dialog.Portal>
 )}

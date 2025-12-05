@@ -37,6 +37,7 @@ interface Nomination {
     TenantName: string;
     DeptName: string;
     ReferralName:string;
+    ReferralStatus:string;
   }[];
 
   "Supporting Documents": {
@@ -45,6 +46,10 @@ interface Nomination {
     FileNameGUID: string;
     FilePath: string;
   }[];
+    "ApprovalStatus": {
+    Status: string;
+    ApprovalType: string;
+   }[];
   //"Referrals ID": { Email: string }[];
 }
 
@@ -56,7 +61,8 @@ const NominationTable: React.FC = () => {
   const [globalFilter, setGlobalFilter] = useState("");
   const [modalOpen, setModalOpen] = useState(false);
   const [selectedNomination, setSelectedNomination] = useState<Nomination | null>(null);
-
+  const [successMessage, setSuccessMessage] = useState("");
+  
   const { authToken, userId } = useAuth();
 
   const statusColors: Record<Nomination["Status"], string> = {
@@ -95,7 +101,7 @@ const NominationTable: React.FC = () => {
       { accessorKey: "Nominee", header: "Nominee" },
       { accessorKey: "Tenant", header: "Entity" },
       { accessorKey: "AwardCategory", header: "Category" },
-      
+      { accessorKey: "NominatedBy", header: "Nominated By" },
       {
         accessorKey: "Status",
         header: "Status",
@@ -248,6 +254,7 @@ const NominationTable: React.FC = () => {
           isOpen={modalOpen}
           onRefresh={fetchNominations}  
           onClose={() => setModalOpen(false)}
+          setSuccessMessage={setSuccessMessage} 
           // data={selectedNomination}s
             data={{
       nominationId: selectedNomination.NominationID.toString(),
@@ -264,6 +271,7 @@ const NominationTable: React.FC = () => {
       description: selectedNomination.Descriptions,
       "Referrals ID": selectedNomination["Referrals ID"],
       "Supporting Documents": selectedNomination["Supporting Documents"],
+       "ApprovalStatus": selectedNomination["ApprovalStatus"] , 
     }}
         />
       )}

@@ -17,6 +17,7 @@ import TenantBadges from "../TenantBadges";
 import { ColorBadge } from "../TenantBadges";
 
 
+
 interface ApprovalData {
   id: number;
   NominationID: number;
@@ -30,6 +31,7 @@ interface ApprovalData {
   Nominee: string | null;
   Tenant: string | null;
   ManagerEmailID: string;
+  ApprovalComments?: string;
 
   Descriptions: string;
   //"Referrals ID": { Email: string }[];
@@ -71,6 +73,7 @@ interface ApprovalView {
     FilePath: string;
   }[];
   Descriptions: string;
+  ApprovalComments?: string;
 }
 
 const apiUrl = import.meta.env.VITE_API_URL;
@@ -188,8 +191,8 @@ const ApprovalTable: React.FC = () => {
     () => [
       { accessorKey: "NominationID", header: "Nomination ID" },
       { accessorKey: "Nominee", header: "Nominee Name" },
-      // { accessorKey: "Tenant", header: "Entity Name" },
-      {
+     // { accessorKey: "Tenant", header: "Entity Name" },
+            {
   accessorKey: "Tenant",
   header: "Entity Name",
   cell: ({ getValue }) => {
@@ -197,8 +200,7 @@ const ApprovalTable: React.FC = () => {
     return <ColorBadge label={tenant} />;
   },
 },
-
-      { accessorKey: "ContestType", header: "Contest Type" },
+     // { accessorKey: "ContestType", header: "Contest Type" },
       { accessorKey: "SubmittedDate", header: "Submitted Date" },
 
       {
@@ -235,6 +237,9 @@ const ApprovalTable: React.FC = () => {
               "Referrals ID": item["Referrals ID"],
               "Supporting Documents": item["Supporting Documents"],
               Descriptions: item.Descriptions,
+               //ApprovalComments: item.ApprovalComments ?? "", 
+                 // ⭐ FIXED: Correct mapping
+              ApprovalComments: item.ApprovalComments ?? "",
             });
 
             setIsPanelOpen(true);
@@ -386,6 +391,7 @@ const ApprovalTable: React.FC = () => {
       <ApprovalPanel
         isOpen={isPanelOpen}
         onClose={() => setIsPanelOpen(false)}
+       
         nomination={selectedNomination}
         onApprove={() =>
           selectedNomination && handleApprove(selectedNomination.NominationID)

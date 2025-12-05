@@ -324,7 +324,17 @@ const handleSubmit = async (e: React.FormEvent) => {
         className="p-6 border rounded-lg bg-white shadow nominate-form">
       <div className="flex items-center justify-between mb-6">
           <h2 className="text-xl font-semibold">Self Nominate Form</h2>
-          <a
+           <a
+            href={totalSelfNominations > 0 ? "/my-nominations" : undefined}
+            onClick={(e) => {
+              if (totalSelfNominations === 0) {
+                e.preventDefault();
+              }
+            }}
+            className="text-blue-600 underline cursor-pointer">
+            You have {totalSelfNominations} nominations
+          </a>
+          {/* <a
             href={totalSelfNominations > 0 ? "/my-nominations" : undefined}
             onClick={(e) => {
               if (totalSelfNominations === 0) {
@@ -334,7 +344,7 @@ const handleSubmit = async (e: React.FormEvent) => {
             className="text-blue-600 underline cursor-pointer"
           >
             You have {totalSelfNominations} nominations
-          </a>
+          </a> */}
         </div>
         {/* Title */}
         <div className="mb-4">

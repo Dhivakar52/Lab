@@ -28,7 +28,8 @@ import { AuthProvider } from './components/ContextAPI/AuthContext.tsx';
 import Testing from './components/Testing/Testing.tsx';
 import ForgotPassword from './pages/auth/Login/ForgotPassword.tsx';
 import ReferralComponent from './components/ReferralApproval/ReferralComponent.tsx';
-
+//<Route path="/referral/:id" element={<ReferralDetailView />} />
+import ReferralDetailView from './components/ReferralApproval/ReferralDetailView.tsx';
 
 import VerifyOtp from './pages/auth/Login/VerifyOtp';
 import ResetPassword from './pages/auth/Login/ResetPassword';
@@ -164,6 +165,15 @@ const App: React.FC = () => {
            </ProtectedRoute>
          }
        />
+        {/* ✔️ Referral Detail route OUTSIDE layout */}
+        <Route
+          path="/referral-detail"
+          element={
+            <ProtectedRoute userRole={userRole} allowedRoles={getAllowedRoles('Referral Approval')}>
+              <ReferralDetailView />
+            </ProtectedRoute>
+          }
+        />
 
        {/* Fallback */}
         <Route path="/forgot" element={<ForgotPassword/>} />
