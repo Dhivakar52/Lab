@@ -20,6 +20,10 @@ import { Menu } from "lucide-react";
 
 // Correct Component Import
 import ReferralPanel from "./ReferralPanel";
+import { useNavigate } from "react-router-dom";
+import ReferralReasonPanel from "./ReferralDetailView";
+// Components
+
 
 interface ReferralData {
   id: number;
@@ -36,6 +40,7 @@ interface ReferralData {
   Nominee: string | null;
   Tenant: string | null;
   ManagerEmailID: string;
+  ManagerName: string;
   Descriptions: string;
  // "Referrals ID": { Email: string }[];
  "Referrals ID": {
@@ -78,8 +83,9 @@ interface ReferralView {
   }[];
   Descriptions: string;
   ReferralID: number;
+  ManagerName: string;
 }
-
+// interface ReferralView extends ReferralData {}
 const apiUrl = import.meta.env.VITE_API_URL;
 
 const statusColors: Record<ReferralData["Status"], string> = {
@@ -100,6 +106,7 @@ const ReferralTable: React.FC = () => {
   const [successMessage, setSuccessMessage] = useState("");
   
     const [reason, setReason] = useState("");
+    const navigate = useNavigate();
   const [toastType, setToastType] = useState<"success" | "error">("success");
 
   useEffect(() => {
@@ -155,7 +162,11 @@ const ReferralTable: React.FC = () => {
 
       setToastType("success");
       setSuccessMessage("Nomination Approved Successfully!");
-      setTimeout(() => setSuccessMessage(""), 3000);
+     // setTimeout(() => setSuccessMessage(""), 3000);
+       setTimeout(() => {
+      setSuccessMessage("");
+      navigate("/referral-approval"); // redirect after showing toast
+    }, 2000); // show toast for 1.5s
       setIsPanelOpen(false);
     } catch (error) {
       console.error("Approve Error:", error);
@@ -194,20 +205,26 @@ const ReferralTable: React.FC = () => {
 
       setToastType("error");
       setSuccessMessage("Nomination Rejected Successfully!");
-      setTimeout(() => setSuccessMessage(""), 3000);
+       setTimeout(() => {
+      setSuccessMessage("");
+      navigate("/referral-approval"); // redirect after showing toast
+    }, 1500); // show toast for 1.5s
+     // setTimeout(() => setSuccessMessage(""), 3000);
       setIsPanelOpen(false);
     } catch (error) {
       console.error("Reject Error:", error);
       alert("Reject failed");
     }
   };
-
+ const handleOpenPanel = (nomination: ReferralView) => {
+    setSelectedNomination(nomination);
+    setIsPanelOpen(true);
+  };
   const columns = useMemo<ColumnDef<ReferralData>[]>(() => {
     return [
       { accessorKey: "NominationID", header: "Nomination ID" },
       { accessorKey: "Nominee", header: "Nominee Name" },
       { accessorKey: "Tenant", header: "Entity Name" },
-      { accessorKey: "ContestType", header: "Contest Type" },
       { accessorKey: "SubmittedDate", header: "Submitted Date" },
 
       {
@@ -229,31 +246,34 @@ const ReferralTable: React.FC = () => {
         header: "Actions",
         cell: ({ row }) => {
           const item = row.original;
-
-          const handleView = () => {
-            setSelectedNomination({
-              NominationID: item.NominationID,
-              nominee: item.Nominee,
-              entity: item.Tenant,
-              contest: item.ContestType,
-              date: item.SubmittedDate,
-              status: item.Status,
-              AwardCategory: item.AwardCategory,
-              NominatedBy: item.NominatedBy,
-              ManagerEmailID: item.ManagerEmailID,
-              "Referrals ID": item["Referrals ID"],
-              "Supporting Documents": item["Supporting Documents"],
-              Descriptions: item.Descriptions,
-              ReferralUserID: item.ReferralUserID,
-              ReferralID: item.ReferralID,
-            });
-
-            setIsPanelOpen(true);
-          };
-
+        
+       const handleView = () => {
+          navigate(`/referral-detail`, {
+          state: {
+          NominationID: item.NominationID,
+          nominee: item.Nominee,
+          entity: item.Tenant,
+          contest: item.ContestType,
+          date: item.SubmittedDate,
+          status: item.Status,
+          AwardCategory: item.AwardCategory,
+          NominatedBy: item.NominatedBy,
+          ManagerEmailID: item.ManagerEmailID,
+          "Referrals ID": item["Referrals ID"],
+          "Supporting Documents": item["Supporting Documents"],
+          Descriptions: item.Descriptions,
+          ReferralUserID: item.ReferralUserID,
+          ReferralID: item.ReferralID,
+          ManagerName: item.ManagerName,
+    
+        },
+      });
+    };
+    
           return (
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
+                
                 <button className="p-2 rounded hover:bg-gray-100 transition">
                   <Menu size={18} className="text-blue-600" />
                 </button>
@@ -271,6 +291,7 @@ const ReferralTable: React.FC = () => {
           );
         },
       },
+      
     ];
   }, []);
 
@@ -392,6 +413,29 @@ const ReferralTable: React.FC = () => {
          reason={reason}
         setReason={setReason}
       />
+       {/* Final Correct Component */}
+      {/* <ReferralReasonPanel
+        isOpen={isPanelOpen}
+        onClose={() => setIsPanelOpen(false)}
+        nomination={selectedNomination}
+        onApprove={() =>
+          selectedNomination && handleApprove(selectedNomination.NominationID)
+        }
+        onReject={() =>
+          selectedNomination && handleReject(selectedNomination.NominationID)
+        }
+         reason={reason}
+        setReason={setReason}
+      /> */}
+       {/* <ReferralReasonPanel
+        isOpen={isPanelOpen}
+        onClose={() => setIsPanelOpen(false)}
+        nomination={selectedNomination}
+        reason={reason}
+        setReason={setReason}
+        onApprove={() => selectedNomination && handleApprove(selectedNomination.NominationID)}
+        onReject={() => selectedNomination && handleReject(selectedNomination.NominationID)}
+      /> */}
     </div>
   );
 };

@@ -37,6 +37,7 @@ interface Nomination {
     TenantName: string;
     DeptName: string;
     ReferralName:string;
+    ReferralStatus:string;
   }[];
 
   "Supporting Documents": {
@@ -44,6 +45,10 @@ interface Nomination {
     FileType: string;
     FileNameGUID: string;
     FilePath: string;
+  }[];
+  "ApprovalStatus": {
+  Status: string;
+  ApprovalType: string;
   }[];
   //"Referrals ID": { Email: string }[];
 }
@@ -100,6 +105,7 @@ const [refreshKey, setRefreshKey] = useState(0);
       { accessorKey: "Nominee", header: "Nominee" },
       { accessorKey: "Tenant", header: "Entity" },
       { accessorKey: "AwardCategory", header: "Category" },
+      { accessorKey: "NominatedBy", header: "Nominated By" },
       {
         accessorKey: "Status",
         header: "Status",
@@ -279,6 +285,7 @@ const [refreshKey, setRefreshKey] = useState(0);
       managerEmailID: selectedNomination.ManagerEmailID,
       "Referrals ID": selectedNomination["Referrals ID"],
       "Supporting Documents": selectedNomination["Supporting Documents"],
+      "ApprovalStatus": selectedNomination["ApprovalStatus"] , 
     }}
         />
       )}
