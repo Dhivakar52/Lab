@@ -1,6 +1,6 @@
-// src/pages/auth/Login/ForgotPassword.tsx
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import axios from "axios";
 
 export default function ForgotPassword() {
   const [email, setEmail] = useState("");
@@ -10,16 +10,15 @@ export default function ForgotPassword() {
   const navigate = useNavigate();
 
   const validateEmail = (value: string) => {
-    const regex = /^[a-zA-Z0-9._%+-]+@gmail\.com$/; // Gmail only
-    return regex.test(value);
+  const rx = /^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}$/;
+    return rx.test(value);
   };
-
-  const handleNext = () => {
+const apiUrl = import.meta.env.VITE_API_URL;
+  const handleNext = async () => {
     if (!email) {
       setError("Email is required");
       return;
     }
-
     if (!validateEmail(email)) {
       setError("Please enter a valid Gmail address");
       return;
@@ -27,7 +26,21 @@ export default function ForgotPassword() {
 
     setError("");
     setLoading(true);
-
+    try {       
+        const response = await axios.put(
+          `${apiUrl}/api/generateotp`,
+          {},
+          {
+            params: {
+              UserEmail: email,
+              IsResendOTP: false,
+            },
+          // headers: { Authorization: `Bearer ${authToken}`,},   
+          }
+        );
+  } catch (error: any) {
+  console.log("Full error object:", error);
+  }
     setTimeout(() => {
       setLoading(false);
       navigate("/verify-otp", { state: { email } });
@@ -59,7 +72,7 @@ export default function ForgotPassword() {
           disabled={loading}
           className="w-full bg-green-700 text-white py-2 rounded-lg hover:bg-green-800 transition"
         >
-          {loading ? "Sending..." : "Send Reset Link"}
+          {loading ? "Sending..." : "Generate OTP"}
         </button>
       </div>
     </div>
