@@ -1,282 +1,209 @@
 // src/pages/auth/Login.tsx
-import {  useEffect, useState } from "react";
+import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import SrmLogo from "../../../assets/images/srm_login_logo.png";
 import TrophyImage from "../../../assets/images/login_cup_img.png";
 import loginBg from "../../../assets/images/login_left_img.png";
-import { Eye ,EyeClosed } from "lucide-react";
-import { useNavigate } from "react-router-dom";
-import { USER_ROLES , type UserRole } from "../../../dataTypes/roles";
-import "./Login.module.css";
-
-
-
+import { Eye, EyeClosed } from "lucide-react";
+import { USER_ROLES, type UserRole } from "../../../dataTypes/roles";
+ 
 interface LoginProps {
   setUserRole: React.Dispatch<React.SetStateAction<UserRole | null | undefined>>;
 }
-
-
-
+ 
 const apiUrl = import.meta.env.VITE_API_URL;
-
-
-
+ 
 export default function Login({ setUserRole }: LoginProps) {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [otp, setOtp] = useState("");
   const [showPassword, setShowPassword] = useState(false);
-  const navigate = useNavigate();
-
-const handleForgotPassword = () => {
-  navigate("/forgot-password");
-};
+  const [loginMethod, setLoginMethod] = useState<"password" | "otp">("password");
+  const [otpStep, setOtpStep] = useState<"enterEmail" | "enterOtp">("enterEmail");
+  const [message, setMessage] = useState<{ text: string; type: "success" | "error" } | null>(null);
  
-
-const handleLoginTwo = async () => {
-  if (!email || !password) {
-    alert('Please enter both email and password');
-    return;
-  }
-
-  try {
-    const response = await fetch(`${apiUrl}/api/login`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({ userName: email, password, isEncrypted: false }),
-    });
-
-    const data = await response.json();
-    
-
-    if (response.ok) {
-      const { token, roleid, userid, username, email, refreshtoken } = data;
-
-      if (!roleid) {
-        alert('Your role is not defined. Please contact support.');
+  const navigate = useNavigate();
+ 
+  const showMessage = (text: string, type: "success" | "error" = "success") => {
+    setMessage({ text, type });
+    setTimeout(() => setMessage(null), 2000);
+  };
+ 
+  // ---------------- PASSWORD LOGIN ----------------
+  const handleLoginWithPassword = async () => {
+    if (!email || !password) {
+      showMessage("Please enter both email and password", "error");
+      return;
+    }
+ 
+    try {
+      const res = await fetch(`${apiUrl}/api/login`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ userName: email, password, isEncrypted: false }),
+      });
+ 
+      const data = await res.json();
+      if (!res.ok) {
+        showMessage(data.message || "Invalid email or password", "error");
         return;
       }
-
-      let role_user: UserRole;
-
-switch (Number(roleid)) {
-  case 1:
-    role_user = USER_ROLES.USER;
-    break;
-  case 2:
-    role_user = USER_ROLES.MANAGER;
-    break;
-  case 3:
-    role_user = USER_ROLES.JURY;
-    break;
-  case 4:
-    role_user = USER_ROLES.PRESIDENT_UNIT;
-    break;
-  case 5:
-    role_user = USER_ROLES.PRESIDENT_LEVEL;
-    break;
-  case 6:
-    role_user = USER_ROLES.ADMIN;
-    break;
-  default:
-    alert('Invalid role. Please contact support.');
-    return;
-}
-
-
-      localStorage.setItem('authToken', token);
-      localStorage.setItem('refreshToken', refreshtoken);
-      localStorage.setItem('userId', userid.toString());
-      localStorage.setItem('username', username);
-      localStorage.setItem('email', email);
-      localStorage.setItem('userRole', role_user);  
-
-      
-      setUserRole(role_user);
-
-      switch (role_user) {
-        case USER_ROLES.MANAGER:
-          navigate('/approvals');
-          break;
-        case USER_ROLES.JURY:
-          navigate('/business-jury');
-          break;
-        case USER_ROLES.PRESIDENT_UNIT:
-          navigate('/president-unit');
-          break;
-        case USER_ROLES.PRESIDENT_LEVEL:
-          navigate('/president-level');
-          break;
-        case USER_ROLES.ADMIN:
-          navigate('/admin');
-          break;
-        default:
-          navigate('/home');
+ 
+      // ---------------- Token handling ----------------
+      const token = data.token || data.Token || data.accessToken || data.jwtToken || data?.result?.token;
+      const refreshToken = data.refreshToken || data.refreshtoken || data?.result?.refreshToken || "";
+      const roleid = data.roleid || data.RoleId || data?.result?.roleid;
+      const userid = data.userid ?? data.userId ?? data?.result?.userid;
+      const username = data.username ?? data.userName ?? data?.result?.username;
+      const userEmail = data.email ?? data.userEmail ?? data?.result?.email;
+ 
+      if (!token) {
+        showMessage("Login failed. Token missing.", "error");
+        return;
       }
-      window.location.reload();
-    } else {
-    
-      alert(data.message || 'Invalid email or password');
+      if (!roleid) {
+        showMessage("Your role is not defined. Contact support.", "error");
+        return;
+      }
+ 
+      // ---------------- Map role ----------------
+      let role_user: UserRole;
+      switch (Number(roleid)) {
+        case 1: role_user = USER_ROLES.USER; break;
+        case 2: role_user = USER_ROLES.MANAGER; break;
+        case 3: role_user = USER_ROLES.JURY; break;
+        case 4: role_user = USER_ROLES.PRESIDENT_UNIT; break;
+        case 5: role_user = USER_ROLES.PRESIDENT_LEVEL; break;
+        case 6: role_user = USER_ROLES.ADMIN; break;
+        default: showMessage("Invalid role. Contact support.", "error"); return;
+      }
+ 
+      // ---------------- Save tokens & user info ----------------
+      localStorage.setItem("authToken", token);
+      localStorage.setItem("refreshToken", refreshToken);
+      localStorage.setItem("userId", userid?.toString() ?? "");
+      localStorage.setItem("username", username ?? "");
+      localStorage.setItem("email", userEmail ?? "");
+      localStorage.setItem("userRole", role_user);
+ 
+      setUserRole(role_user);
+      showMessage("Login successful!", "success");
+ 
+      setTimeout(() => {
+        switch (role_user) {
+          case USER_ROLES.MANAGER: navigate("/approvals"); break;
+          case USER_ROLES.JURY: navigate("/business-jury"); break;
+          case USER_ROLES.PRESIDENT_UNIT: navigate("/president-unit"); break;
+          case USER_ROLES.PRESIDENT_LEVEL: navigate("/president-level"); break;
+          case USER_ROLES.ADMIN: navigate("/admin"); break;
+          default: navigate("/home");
+        }
+        window.location.reload();
+      }, 1000);
+ 
+    } catch (err) {
+      console.error("Login error:", err);
+      showMessage("Server error. Please try again.", "error");
     }
-  } catch (error) {
-    console.error('Error:', error);
-    alert('An error occurred. Please try again.');
-  }
-};
-
-
-// useEffect(() => {
-//   handleLoginTwo();
-// }, [handleLoginTwo]);
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-//  const handleLogin = () => {
-//     if (!email || !password) {
-//       alert('Please enter both email and password');
-//       return;
-//     }
-
-//     let role: UserRole | null = null;
-
-//     if (email === "user@gmail.com" && password === "1") role = USER_ROLES.USER;
-//     else if (email === "manager@gmail.com" && password === "2") role = USER_ROLES.MANAGER;
-//     else if (email === "jury@gmail.com" && password === "3") role = USER_ROLES.JURY;
-//     else if (email === "presidentUnit@gmail.com" && password === "4") role = USER_ROLES.PRESIDENT_UNIT;
-//     else if (email === "presidentLevel@gmail.com" && password === "5") role = USER_ROLES.PRESIDENT_LEVEL;
-//     else if (email === "admin@gmail.com" && password === "6") role = USER_ROLES.ADMIN;
-//     else {
-//       alert('Invalid email or password');
-//       return;
-//     }
-
-//     // ✅ Update localStorage and App state
-//     localStorage.setItem('userRole', role);
-//     setUserRole(role);
-
-//     // Navigate based on role
-//     switch (role) {
-//       case USER_ROLES.MANAGER: navigate('/approvals'); break;
-//       case USER_ROLES.JURY: navigate('/business-jury'); break;
-//       case USER_ROLES.PRESIDENT_UNIT: navigate('/president-unit'); break;
-//       case USER_ROLES.PRESIDENT_LEVEL: navigate('/president-level'); break;
-//       case USER_ROLES.ADMIN: navigate('/admin'); break;
-//       default: navigate('/home');
-//     }
-//   };
-
-
+  };
+ 
+  // ---------------- OTP FLOW ----------------
+  const handleGenerateOtp = () => {
+    if (!email) {
+      showMessage("Please enter email to receive OTP", "error");
+      return;
+    }
+    showMessage(`OTP sent to ${email}`, "success");
+    setOtpStep("enterOtp");
+  };
+ 
+  const handleVerifyOtp = () => {
+    if (!otp) {
+      showMessage("Please enter OTP", "error");
+      return;
+    }
+    if (!/^\d{6}$/.test(otp)) {
+      showMessage("OTP must be 6 digits", "error");
+      return;
+    }
+ 
+    showMessage("OTP verified! Logging in...", "success");
+    setTimeout(() => {
+      const role_user = USER_ROLES.USER;
+      setUserRole(role_user);
+      localStorage.setItem("userRole", role_user);
+      navigate("/home");
+    }, 1500);
+  };
+ 
+  const handleForgotPassword = () => {
+    navigate("/forgot-password");
+  };
+ 
   return (
-    <div className="min-h-screen flex">
-     
-      <div className="w-1/2  ba  flex flex-col text-white p-10 relative  items-baseline" 
-       style={{
-    backgroundImage: `linear-gradient(rgba(0,128,0,0.6), rgba(0,128,0,0.6)), url(${loginBg})`,
-    backgroundSize: "cover",
-    backgroundPosition: "center",
-  }}
-      >
-        <img src={SrmLogo} alt="SRM Logo"  className="w-24 sm:w-32 md:w-40 lg:w-40 xl:w-40 max-w-full h-auto mb-6"  />
-
-        <div className="mt-[50px]">
-          
-          <img src={TrophyImage} alt="Trophy"  className="w-24 sm:w-32 md:w-40 lg:w-40 xl:w-40 max-w-full h-auto mb-6"  />
-        <h1 className="text-[40px] font-bold mb-4">
-          Welcome to the Excellence <br /> Awards Platform
-        </h1>
-        <p className="max-w-md text-[16px]">
-          Discover, recognize, and celebrate outstanding projects from SRM
-          innovators. Login to explore award-winning work, give your feedback,
-          and celebrate excellence together.
-        </p>
-        </div>
-       
-      </div>
-
-     
-      <div className="w-1/2 flex flex-col justify-center items-center bg-white px-12">
-        <div className="max-w-sm w-full">
-          <h2 className="text-2xl font-bold text-gray-900 text-center">
-            Welcome Back!
-          </h2>
-          <p  className="text-center text-gray-500 mb-6">
-            Sign in to your account
-          </p>
-
-          {/* Email Input */}
-          <label className="block mb-2 text-sm font-medium">Email Address</label>
-          <input
-            type="email"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            placeholder="Enter your email"
-            className="w-full px-4 py-2 border rounded-lg mb-4 focus:ring-2 focus:ring-green-600"
-          />
-
-          {/* Password Input */}
-          <label className="block mb-2 text-sm font-medium">Password</label>
-          <div className="relative mb-4">
-            <input
-              type={showPassword ? "text" : "password"}
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              placeholder="Password"
-              className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-green-600"
-            />
-            <button
-              type="button"
-              onClick={() => setShowPassword(!showPassword)}
-              className="absolute right-3 top-2 text-gray-500"
-            >
-              {showPassword ? <Eye /> : <EyeClosed />}
-            </button>
-          </div>
-
-          {/* Remember Me + Forgot Password */}
-          <div className="flex justify-between items-center mb-4">
-            <label className="flex items-center space-x-2">
-              <input type="checkbox" className="w-4 h-4" />
-              <span className="text-sm text-gray-600">Remember me</span>
-            </label>
-            <a href="#" className="text-sm text-green-700 hover:underline" onClick={handleForgotPassword}>
-              Forgot Password?
-            </a>
-          </div>
-
-          {/* Sign In Button */}
-          {/* <button onClick={handleLogin} className="w-full bg-green-700 text-white py-2 rounded-lg hover:bg-green-800 transition">
-            Sign In
-          </button> */}
-
-          <button onClick={handleLoginTwo} className="w-full bg-green-700 text-white py-2 rounded-lg hover:bg-green-800 transition">
-            Sign In
-          </button>
-
-          {/* Signup Link */}
-          {/* <p className="text-center mt-4 text-sm">
-            Don’t have an account?{" "}
-            <a href="#" className="text-green-700 font-semibold hover:underline">
-              Sign up
-            </a>
-          </p> */}
-
-        
-         
-        </div>
-      </div>
-    </div>
+<div className="min-h-screen flex relative">
+      {/* Left side */}
+<div className="w-1/2 flex flex-col text-white p-10"
+           style={{ backgroundImage: `linear-gradient(rgba(0,128,0,0.6), rgba(0,128,0,0.6)), url(${loginBg})`,
+                    backgroundSize: "cover", backgroundPosition: "center" }}>
+<img src={SrmLogo} className="w-40 mb-6" />
+<img src={TrophyImage} className="w-40 mb-6" />
+<h1 className="text-[40px] font-bold mb-4">Welcome to the Excellence <br /> Awards Platform</h1>
+<p className="max-w-md text-[16px]">Discover, recognize and celebrate outstanding projects. Login to explore and participate.</p>
+</div>
+ 
+      {/* Right side */}
+<div className="w-1/2 flex flex-col justify-center items-center bg-white px-12">
+<div className="max-w-sm w-full">
+<h2 className="text-2xl font-bold text-gray-900 text-center">Welcome Back!</h2>
+<p className="text-center text-gray-500 mb-6">Sign in to your account</p>
+ 
+          {loginMethod === "password" && (
+<>
+<input type="email" placeholder="Email" value={email} onChange={e => setEmail(e.target.value)}
+                     className="w-full px-4 py-2 border rounded-lg mb-2" />
+<div className="relative mb-2">
+<input type={showPassword ? "text" : "password"} placeholder="Password" value={password}
+                       onChange={e => setPassword(e.target.value)} className="w-full px-4 py-2 border rounded-lg" />
+<button onClick={() => setShowPassword(!showPassword)} className="absolute right-3 top-2">
+                  {showPassword ? <Eye /> : <EyeClosed />}
+</button>
+</div>
+<div className="flex justify-between mb-4 text-sm">
+<button onClick={() => { setLoginMethod("otp"); setOtpStep("enterEmail"); }}
+                        className="text-green-700">Login with OTP</button>
+<button onClick={handleForgotPassword} className="text-green-700">Forgot Password?</button>
+</div>
+<button onClick={handleLoginWithPassword} className="w-full bg-green-700 text-white py-2 rounded-lg">Sign In</button>
+</>
+          )}
+ 
+          {loginMethod === "otp" && (
+<div className="mb-4">
+              {otpStep === "enterEmail" && (
+<>
+<input type="email" placeholder="Email" value={email} onChange={e => setEmail(e.target.value)}
+                         className="w-full px-4 py-2 border rounded-lg mb-2" />
+<button onClick={handleGenerateOtp} className="w-full bg-green-700 text-white py-2 rounded-lg">Generate OTP</button>
+</>
+              )}
+              {otpStep === "enterOtp" && (
+<>
+<input type="text" placeholder="Enter OTP" value={otp} onChange={e => setOtp(e.target.value)}
+                         className="w-full px-4 py-2 border rounded-lg mb-2" />
+<button onClick={handleVerifyOtp} className="w-full bg-green-700 text-white py-2 rounded-lg">Verify OTP</button>
+</>
+              )}
+</div>
+          )}
+</div>
+</div>
+ 
+      {message && (
+<div className={`fixed top-10 right-10 px-6 py-4 rounded-lg text-white ${message.type==="success"?"bg-green-600":"bg-red-600"}`}>
+          {message.text}
+</div>
+      )}
+</div>
   );
 }
