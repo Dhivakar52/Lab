@@ -41,7 +41,13 @@ export default function Login({ setUserRole }: LoginProps) {
       const res = await fetch(`${apiUrl}/api/login`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ userName: email, password, isEncrypted: false }),
+        body: JSON.stringify({ 
+          //userName: email, password, isEncrypted: false 
+          userName: email,
+          password: password ?? "",
+          isEncrypted: false,
+          otp: otp ??""
+        }),
       });
  
       const data = await res.json();
@@ -109,12 +115,14 @@ export default function Login({ setUserRole }: LoginProps) {
   };
  
   // ---------------- OTP FLOW ----------------
-  const handleGenerateOtp = async() => {    
+  const handleGenerateOtp = async() => {
+    
     if (!email) {
       showMessage("Please enter email to receive OTP", "error");
       return;
     }
      try {
+      alert(email);
       const response = await axios.put(
       `${apiUrl}/api/generateotp`,
       {},
