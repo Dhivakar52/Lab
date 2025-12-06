@@ -1,34 +1,70 @@
 // src/pages/auth/Login/VerifyOtp.tsx
 import { useState } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
+import axios from "axios";
 
 export default function VerifyOtp() {
   const [otp, setOtp] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+  const [success, setSuccess] = useState("");
 
   const navigate = useNavigate();
   const { state } = useLocation();
   const email = state?.email;
+  const apiUrl = import.meta.env.VITE_API_URL;
+  const handleVerify = async () => {
+  if (!otp) {
+    setError("OTP is required");
+    return;
+  }
 
-  const handleVerify = () => {
-    if (!otp) {
-      setError("OTP is required");
-      return;
+  if (!/^\d{4,6}$/.test(otp)) {
+    setError("OTP must be 4–6 digits");
+    return;
+  }
+  
+  setError("");
+  setLoading(true);
+  try {
+    const response = await axios.get(`${apiUrl}/api/verifyotp`, {
+      params: {
+        UserEmail: email,
+        otp: otp,
+      }
+    });
+    
+    if (response.data === "OTP successFully validated") {      
+      setSuccess("OTP verified successfully!");
+
+      setTimeout(() => {
+        navigate("/reset-password", { state: { email } });
+      }, 1000);
+
+    } else if(response.data ==="The OTP has expired") {
+      setError("The OTP has expired.");
     }
-    if (!/^\d{4,6}$/.test(otp)) {
-      setError("OTP must be 4–6 digits");
-      return;
+    else{
+      setError("Invalid OTP. Please try again.");
     }
 
-    setError("");
-    setLoading(true);
+  } catch (error: any) {
+    console.log("Full error object:", error);
 
-    setTimeout(() => {
-      setLoading(false);
-      navigate("/reset-password", { state: { email } });
-    }, 1000);
-  };
+    if (error.response) {
+      setError(
+        error.response.data?.message ||
+        error.response.data ||
+        "OTP Verification Failed"
+      );
+    } else if (error.request) {
+      setError("No response from server.");
+    } else {
+      setError(error.message);
+    }
+  }
+  setLoading(false);
+};
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-100 p-4">

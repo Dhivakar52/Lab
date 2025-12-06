@@ -6,6 +6,7 @@ import TrophyImage from "../../../assets/images/login_cup_img.png";
 import loginBg from "../../../assets/images/login_left_img.png";
 import { Eye, EyeClosed } from "lucide-react";
 import { USER_ROLES, type UserRole } from "../../../dataTypes/roles";
+import axios from "axios";
  
 interface LoginProps {
   setUserRole: React.Dispatch<React.SetStateAction<UserRole | null | undefined>>;
@@ -40,7 +41,13 @@ export default function Login({ setUserRole }: LoginProps) {
       const res = await fetch(`${apiUrl}/api/login`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ userName: email, password, isEncrypted: false }),
+        body: JSON.stringify({ 
+          //userName: email, password, isEncrypted: false 
+          userName: email,
+          password: password ?? "",
+          isEncrypted: false,
+          otp: otp ??""
+        }),
       });
  
       const data = await res.json();
@@ -108,33 +115,108 @@ export default function Login({ setUserRole }: LoginProps) {
   };
  
   // ---------------- OTP FLOW ----------------
-  const handleGenerateOtp = () => {
+  const handleGenerateOtp = async() => {
+    
     if (!email) {
       showMessage("Please enter email to receive OTP", "error");
       return;
+    }
+     try {
+      alert(email);
+      const response = await axios.put(
+      `${apiUrl}/api/generateotp`,
+      {},
+      {
+        params: {
+          UserEmail: email,
+          IsResendOTP: false,
+        },
+       // headers: { Authorization: `Bearer ${authToken}`,},   
+      }
+    );
+      
+    } catch (err) {
+      console.error("Login error:", err);
+      showMessage("Server error. Please try again.", "error");
     }
     showMessage(`OTP sent to ${email}`, "success");
     setOtpStep("enterOtp");
   };
  
-  const handleVerifyOtp = () => {
-    if (!otp) {
-      showMessage("Please enter OTP", "error");
-      return;
-    }
-    if (!/^\d{6}$/.test(otp)) {
-      showMessage("OTP must be 6 digits", "error");
-      return;
-    }
+ const handleVerifyOtp = async () => {
+  if (!otp) {
+    showMessage("Please enter OTP", "error");
+    return;
+  }
+
+  if (!/^\d{6}$/.test(otp)) {
+    showMessage("OTP must be 6 digits", "error");
+    return;
+  }
  
-    showMessage("OTP verified! Logging in...", "success");
+  try {
+          const res = await fetch(`${apiUrl}/api/loginbyotp`, {   //"https://localhost:7218/api/loginbyotp"
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          userName: email,
+          password: password ?? "",
+          isEncrypted: false,
+          otp: otp
+        }),
+      });
+
+    const data = await res.json();  // ← SAFE NOW because backend returns JSON always
+console.log(data);
+    if (!res.ok) {
+      showMessage(data.message || "Invalid OTP", "error");
+      return;
+    }
+
+    // Login successful
+    showMessage("OTP verified successfully!", "success");
+
+    // Save user info (you can reuse your password login logic)
+    const token = data.token;
+    const roleid = data.roleid;
+    const userid = data.userid;
+    const username = data.username;
+    const userEmail = data.email;
+    const refreshToken = data.refreshtoken;
+
+    let role_user: UserRole;
+      switch (Number(roleid)) {
+        case 1: role_user = USER_ROLES.USER; break;
+        case 2: role_user = USER_ROLES.MANAGER; break;
+        case 3: role_user = USER_ROLES.JURY; break;
+        case 4: role_user = USER_ROLES.PRESIDENT_UNIT; break;
+        case 5: role_user = USER_ROLES.PRESIDENT_LEVEL; break;
+        case 6: role_user = USER_ROLES.ADMIN; break;
+        default: showMessage("Invalid role. Contact support.", "error"); return;
+      }
+
+    localStorage.setItem("authToken", token);
+    localStorage.setItem("refreshToken", refreshToken);
+    localStorage.setItem("userId", userid?.toString() ?? "");
+    localStorage.setItem("username", username ?? "");
+    localStorage.setItem("email", userEmail ?? "");
+    localStorage.setItem("userRole", role_user);
+
+    setUserRole(role_user);
+
     setTimeout(() => {
-      const role_user = USER_ROLES.USER;
-      setUserRole(role_user);
-      localStorage.setItem("userRole", role_user);
       navigate("/home");
-    }, 1500);
-  };
+      window.location.reload();
+    }, 1000);
+
+  } catch (error) {
+    console.error(error);
+    showMessage("Server error. Please try again.", "error");
+  }
+};
+
  
   const handleForgotPassword = () => {
     navigate("/forgot-password");
