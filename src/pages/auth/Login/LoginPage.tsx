@@ -122,7 +122,7 @@ export default function Login({ setUserRole }: LoginProps) {
       return;
     }
      try {
-      alert(email);
+      
       const response = await axios.put(
       `${apiUrl}/api/generateotp`,
       {},
