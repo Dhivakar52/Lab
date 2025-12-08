@@ -15,18 +15,19 @@ import React from "react";
 // };
 
 const colorMap: Record<string, string> = {
-  "SRM Group": "bg-[#3499b8] text-white border-[#3499b8]",
-  "SRM Global Hospital": "bg-[#6b4a98] text-white border-[#6b4a98]",
-  "Puthiya Thalaimurai": "bg-[#520e11] text-white border-[#520e11]",
-  "SRM AP": "bg-[#f1f2e5] text-black border-[#d9dbc8]",
-  "President Office": "bg-[#133b5c] text-white border-[#133b5c]", 
-  "SRM GH": "bg-[#147fc3] text-white border-[#147fc3]",
-  "SRM Dental Hospital": "bg-[#0c4da2] text-white border-[#0c4da2]",
-  "The Federal": "bg-[#d7b763] text-black border-[#d7b763]",
-  "SRM Sikkim": "bg-[#f4be19] text-black border-[#f4be19]",
-  "SRMIST": "bg-[#c8e0ff] text-black border-[#c8e0ff]",
-  "SRM Tech": "bg-[#e68a15] text-white border-[#e68a15]",
+  "SRM Group": "bg-[#e0f4f8] text-[#3499b8] border-[#3499b8]",
+  "SRM Global Hospital": "bg-[#ede6f5] text-[#6b4a98] border-[#6b4a98]",
+  "Puthiya Thalaimurai": "bg-[#f3e6e7] text-[#520e11] border-[#520e11]",
+  "SRM AP": "bg-[#f7f8f2] text-[#4d4e42] border-[#d9dbc8]",
+  "President Office": "bg-[#e3ebf2] text-[#133b5c] border-[#133b5c]",
+  "SRM GH": "bg-[#e0f2fb] text-[#147fc3] border-[#147fc3]",
+  "SRM Dental Hospital": "bg-[#e0e9f7] text-[#0c4da2] border-[#0c4da2]",
+  "The Federal": "bg-[#d7b763] text-[#520f0f] border-[#d7b763]",
+  "SRM Sikkim": "bg-[#fff2cc] text-[#f4be19] border-[#f4be19]",
+  "SRMIST": "bg-[#eef6ff] text-[#6b8cc7] border-[#6b8cc7]",
+  "SRM Tech": "bg-[#fff1d9] text-[#e68a15] border-[#e68a15]",
 };
+
 
 
 const tenantNames = [
@@ -46,7 +47,7 @@ const tenantNames = [
 export const ColorBadge = ({ label }: { label: string }) => {
   return (
     <span
-      className={`px-3 py-1 rounded-full text-xs font-semibold border 
+      className={`px-3 py-1 rounded-md text-xs font-semibold border 
         ${colorMap[label] || "bg-gray-100 text-gray-700 border-gray-300"}`}
     >
       {label}
