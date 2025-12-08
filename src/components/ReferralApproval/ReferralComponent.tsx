@@ -42,6 +42,7 @@ interface ReferralData {
   ManagerEmailID: string;
   ManagerName: string;
   Descriptions: string;
+   Comments: string | null;
  // "Referrals ID": { Email: string }[];
  "Referrals ID": {
   Email: string;
@@ -68,6 +69,8 @@ interface ReferralView {
   AwardCategory: string;
   NominatedBy: string;
   ManagerEmailID: string;
+  
+   Comments: string | null;
   //"Referrals ID": { Email: string }[];
   "Referrals ID": {
   Email: string;
@@ -100,6 +103,7 @@ const ReferralTable: React.FC = () => {
     useState<ReferralView | null>(null);
 
   const [data, setData] = useState<ReferralData[]>([]);
+  const [resvalue, setApproveData] = useState<ReferralData[]>([]);
   const [loading, setLoading] = useState(true);
   const [globalFilter, setGlobalFilter] = useState("");
   const { userId, authToken } = useAuth();
@@ -120,6 +124,7 @@ const ReferralTable: React.FC = () => {
         setData(res.data);
         console.log("approval:", res.data);
 
+       
       } catch (err) {
         console.error("❌ Error fetching approvals:", err);
       } finally {
@@ -265,6 +270,8 @@ const ReferralTable: React.FC = () => {
           ReferralUserID: item.ReferralUserID,
           ReferralID: item.ReferralID,
           ManagerName: item.ManagerName,
+           Comments: item.Comments,
+
     
         },
       });

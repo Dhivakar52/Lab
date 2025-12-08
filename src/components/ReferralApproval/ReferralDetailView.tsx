@@ -23,6 +23,7 @@ interface ReferralDetail {
   ManagerName: string;
   ManagerEmailID: string;
   Descriptions: string;
+  Comments: string | null;
   "Referrals ID": {
     ReferralName: string;
     TenantName: string;
@@ -101,7 +102,7 @@ const ReferralDetailView: React.FC = () => {
           <span className="me-2"><ArrowLeft size={14}/></span> Back
         </button>
 
-      <div className="bg-white rounded-lg shadow-lm border border-gray-200 p-6 max-w-6xl mx-auto">
+      <div className="bg-white rounded-lg shadow-lm border border-gray-200 p-6 mt-3">
         <h1 className="text-2xl font-semibold mb-4">Referral Details</h1>
 
         <div className="space-y-5">
@@ -132,8 +133,8 @@ const ReferralDetailView: React.FC = () => {
               <div className="text-lm text-gray-600">{data.date}</div>
             </div>
              <div>
-              <div className="text-lm font-medium text-gray-900">Status</div>
-              <div className={`px-3 py-1 rounded-full text-sm font-semibold ${statusColors[data.status]}`}>
+              <div className="text-lm font-medium text-gray-900 ">Status</div>
+              <div className={`px-3 py-1 rounded-full text-sm font-semibold inline-block ${statusColors[data.status]}`}>
                 {data.status}
               </div>
             </div>
@@ -142,16 +143,7 @@ const ReferralDetailView: React.FC = () => {
 
           {/* Row 3 */}
           <div className="grid grid-cols-3 gap-4">
-           
             <div>
-              <div className="text-lm font-medium text-gray-900">Manager</div>
-              <div className="text-lm text-gray-600">{data.ManagerName}</div>
-            </div>
-           
-          </div>
-
-          {/* Referrals */}
-          <div>
             <div className="text-lm font-medium text-gray-900 mb-1">Referrals</div>
             <div className="text-gray-600 space-y-1">
               {data["Referrals ID"]?.length ? (
@@ -171,6 +163,34 @@ const ReferralDetailView: React.FC = () => {
               )}
             </div>
           </div>
+            <div>
+              <div className="text-lm font-medium text-gray-900">Manager</div>
+              <div className="text-lm text-gray-600">{data.ManagerName}</div>
+            </div>
+           
+          </div>
+
+          {/* Referrals */}
+          {/* <div>
+            <div className="text-lm font-medium text-gray-900 mb-1">Referrals</div>
+            <div className="text-gray-600 space-y-1">
+              {data["Referrals ID"]?.length ? (
+                data["Referrals ID"].map((ref, i) => (
+                  <div key={i}>
+                    <p className="text-lm">
+                      <span className="font-semibold text-gray-800">{ref.ReferralName}</span>
+                      <span className="px-2 text-gray-500">|</span>
+                      <span className="text-gray-600">{ref.TenantName}</span>
+                      <span className="px-2 text-gray-500">|</span>
+                      <span className="font-semibold text-gray-600">{ref.DeptName}</span>
+                    </p>
+                  </div>
+                ))
+              ) : (
+                <p className="text-gray-500 text-lm">No referral details available</p>
+              )}
+            </div>
+          </div> */}
 
           {/* Description */}
           <div>
@@ -200,6 +220,13 @@ const ReferralDetailView: React.FC = () => {
               )}
             </div>
           </div>
+          {/* Reviewer Comments */}
+            <div>
+              <div className="text-lm font-medium text-gray-900">Approver Reason</div>
+              <div className="text-lm text-gray-600">
+                {data.Comments?.trim() || "No comments available"}
+              </div>
+            </div>
         </div>
 
         {/* Approve / Reject Buttons */}
