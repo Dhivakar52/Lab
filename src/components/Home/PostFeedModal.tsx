@@ -71,7 +71,7 @@ const [activeTab, setActiveTab] = useState("like");
       onClick={onClose}
     >
       <div
-        className="bg-white rounded-xl shadow-sm w-11/12 sm:w-3/4 lg:w-1/2 p-6 relative overflow-y-auto h-[450px] overflow-hidden  max-h-[90vh]"
+        className="bg-white rounded-xl shadow-sm w-11/12 sm:w-3/4 lg:w-1/2 p-6 relative  h-[450px] overflow-hidden  max-h-[90vh]"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Close Button */}
