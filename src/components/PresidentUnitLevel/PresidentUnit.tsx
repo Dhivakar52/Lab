@@ -2,6 +2,7 @@
 import React, { useState, useEffect, useMemo } from "react";
 import axios from "axios";
 import * as DropdownMenu from "@radix-ui/react-dropdown-menu";
+import { ColorBadge } from "../TenantBadges";
 import {
   useReactTable,
   getCoreRowModel,
@@ -22,20 +23,32 @@ interface SupportingDocument {
   FilePath: string;
 }
 
-export interface Nominee {
+ export interface GeneralJury {
   TotalRowCount: number;
+  JuryApprovalsID:number;
+  GeneralJuryID:number;
   NominationID: number;
+  IsGeneralJuryApproved:boolean;
+  GeneralJuryComments:string;
   Nominee: string;
   Tenant: string;
   CategoryName: string;
-  SubmittedOn: string;              // "Submitted On"
-  BusinessJuryRemarks: string;      // "BusinessJury Remarks"
+  SubmittedOn: string;              
+  BusinessJuryRemarks: string;      
   Score: number;
-  GeneralJuryRemarks: string;       // "GeneralJury Remarks"
+  GeneralJuryRemarks: string;  
+  Active:boolean;
+  SubmittedBy:number
   Status: "Approved" | "Rejected" | "Pending" | string;
   ConsolidatedAvgScore?: number;
   FinalStatus?: "Winner" | "Runner-up" | string;
-  SupportingDocuments: SupportingDocument[] | null; // "Supporting Documents"
+  "Supporting Documents": {
+    OriginalFileName: string;
+    FileType: string;
+    FileNameGUID: string;
+    FilePath: string;
+  }[];
+
 }
 
 const apiUrl = import.meta.env.VITE_API_URL;
@@ -47,8 +60,8 @@ const statusBadgeColors: Record<string, string> = {
 };
 
 const PresidentUnit: React.FC = () => {
-  const [selectedNominee, setSelectedNominee] = useState<Nominee | null>(null);
-  const [data, setData] = useState<Nominee[]>([]);
+  const [selectedNominee, setSelectedNominee] = useState<GeneralJury | null>(null);
+  const [data, setData] = useState<GeneralJury[]>([]);
   const [loading, setLoading] = useState(true);
   const [globalFilter, setGlobalFilter] = useState("");
   const { authToken, userId } = useAuth();
@@ -56,134 +69,43 @@ const PresidentUnit: React.FC = () => {
   const [successMessage, setSuccessMessage] = useState("");
   const [toastType, setToastType] = useState<"success" | "error">("success");
 
-  // ------------------------------------------------------------
-  // 📌 FETCH API
-  // ------------------------------------------------------------
+
   useEffect(() => {
-    const fetchNominee = async () => {
+    const fetchGeneralJury = async () => {
       try {
         if (!authToken) throw new Error("No auth token found");
 
-        const res = await axios.get(`${apiUrl}/api/generaljuryevaluation`, {
+        const res = await axios.get(`${apiUrl}/api/generaljuryevaluation/${userId}`, {
           headers: { Authorization: `Bearer ${authToken}` },
         });
 
-        // 🔥 IMPORTANT: map API fields with spaces → TS-friendly keys
-        const formatted: Nominee[] = res.data.map((item: any) => ({
-          TotalRowCount: item.TotalRowCount,
-          NominationID: item.NominationID,
-          Nominee: item.Nominee,
-          Tenant: item.Tenant,
-          CategoryName: item.CategoryName,
-          SubmittedOn: item["Submitted On"] ?? "",
-          BusinessJuryRemarks: item["BusinessJury Remarks"] ?? "",
-          Score: item.Score,
-          GeneralJuryRemarks: item["GeneralJury Remarks"] ?? "",
-          Status: item.Status,
-          ConsolidatedAvgScore: item.ConsolidatedAvgScore ?? 0,
-          FinalStatus: item.FinalStatus ?? item.Status,
-          SupportingDocuments: item["Supporting Documents"] ?? null,
-        }));
-
-        setData(formatted);
+        setData(res.data);
       } catch (err) {
-        console.error("❌ Error fetching President Evaluation:", err);
+        console.error("❌ Error fetching nominees:", err);
       } finally {
         setLoading(false);
       }
     };
 
-    fetchNominee();
-  }, [authToken]);
+    fetchGeneralJury();
+  }, [authToken, userId]);
 
-  // ------------------------------------------------------------
-  // 📌 Approve / Reject Handlers
-  // ------------------------------------------------------------
-  const handleApprove = async (nominationID: number) => {
-    try {
-      await axios.put(
-        `${apiUrl}/api/generaljuryevaluation/${nominationID}`,
-        {
-          nominationID,
-          isManagerApproved: true,
-          approvalComments: "Approved",
-          submittedBy: userId,
-          active: true,
-        },
-        {
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${authToken}`,
-          },
-        }
-      );
 
-      setData((prev) =>
-        prev.map((item) =>
-          item.NominationID === nominationID
-            ? { ...item, Status: "Approved" }
-            : item
-        )
-      );
-
-      setToastType("success");
-      setSuccessMessage("Nominee approved successfully!");
-      setTimeout(() => setSuccessMessage(""), 3000);
-      setIsPanelOpen(false);
-    } catch (error) {
-      console.error("Approve Error:", error);
-      alert("Approval failed");
-    }
-  };
-
-  const handleReject = async (nominationID: number) => {
-    try {
-      await axios.put(
-        `${apiUrl}/api/generaljuryevaluation/${nominationID}`,
-        {
-          nominationID,
-          isManagerApproved: false,
-          approvalComments: "Rejected",
-          submittedBy: userId,
-          active: true,
-        },
-        {
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${authToken}`,
-          },
-        }
-      );
-
-      setData((prev) =>
-        prev.map((item) =>
-          item.NominationID === nominationID
-            ? { ...item, Status: "Rejected" }
-            : item
-        )
-      );
-
-      setToastType("error");
-      setSuccessMessage("Nominee rejected successfully!");
-      setTimeout(() => setSuccessMessage(""), 3000);
-      setIsPanelOpen(false);
-    } catch (error) {
-      console.error("Reject Error:", error);
-      alert("Reject failed");
-    }
-  };
-
-  // ------------------------------------------------------------
-  // 📌 Table Columns
-  // ------------------------------------------------------------
-  const columns = useMemo<ColumnDef<Nominee>[]>(
+  const columns = useMemo<ColumnDef<GeneralJury>[]>(
     () => [
       { accessorKey: "Nominee", header: "Nominee" },
-      { accessorKey: "Tenant", header: "Entity" },
+      {
+        accessorKey: "Tenant",
+        header: "Entity Name",
+        cell: ({ getValue }) => {
+          const tenant = getValue() as string;
+          return <ColorBadge label={tenant} />;
+        },
+      },
+      // { accessorKey: "Tenant", header: "Entity" },
       { accessorKey: "CategoryName", header: "Category" },
       { accessorKey: "ConsolidatedAvgScore", header: "Consolidated Avg Score" },
       { accessorKey: "Score", header: "President Score" },
-
       {
         accessorKey: "Status",
         header: "Flag",
@@ -196,7 +118,6 @@ const PresidentUnit: React.FC = () => {
           return <Clock className="text-yellow-500 w-5 h-5" />;
         },
       },
-
       {
         accessorKey: "Status",
         header: "Status",
@@ -204,15 +125,12 @@ const PresidentUnit: React.FC = () => {
           const status = getValue<string>();
           const cls = statusBadgeColors[status] ?? "bg-gray-100 text-gray-800";
           return (
-            <span
-              className={`px-3 py-1 rounded-full text-sm font-semibold ${cls}`}
-            >
+            <span className={`px-3 py-1 rounded-full text-sm font-semibold ${cls}`}>
               {status}
             </span>
           );
         },
       },
-
       {
         id: "actions",
         header: "Actions",
@@ -234,9 +152,6 @@ const PresidentUnit: React.FC = () => {
                 >
                   View
                 </DropdownMenu.Item>
-
-             
-
               </DropdownMenu.Content>
             </DropdownMenu.Root>
           );
@@ -257,27 +172,22 @@ const PresidentUnit: React.FC = () => {
     getPaginationRowModel: getPaginationRowModel(),
   });
 
-  if (loading) {
-    return (
-      <div className="text-center py-6 text-gray-600">
-        Loading President Level Evaluation...
-      </div>
-    );
-  }
+  if (loading)
+    return <div className="text-center py-6 text-gray-600">Loading President Level Evaluation...</div>;
 
   return (
     <div className="p-6 bg-white rounded-xl shadow-md relative">
-      {/* Toast */}
+
       {successMessage && (
         <div
-          className={`fixed right-5 px-4 py-2 rounded-lg shadow-lg animate-slide-in z-[9999]
-            ${toastType === "success" ? "bg-green-600" : "bg-red-600"} text-white`}
+          className={`fixed right-5 px-4 py-2 rounded-lg shadow-lg animate-slide-in z-[9999] ${
+            toastType === "success" ? "bg-green-600" : "bg-red-600"
+          } text-white`}
         >
           {successMessage}
         </div>
       )}
 
-      {/* Search */}
       <div className="mb-4 flex justify-between items-center">
         <input
           value={globalFilter ?? ""}
@@ -287,7 +197,7 @@ const PresidentUnit: React.FC = () => {
         />
       </div>
 
-      {/* Table */}
+     
       <div className="overflow-x-auto">
         <table className="min-w-full border-collapse table-auto">
           <thead className="bg-gray-100 text-sm">
@@ -299,10 +209,7 @@ const PresidentUnit: React.FC = () => {
                     onClick={header.column.getToggleSortingHandler()}
                     className="px-4 py-3 text-left cursor-pointer"
                   >
-                    {flexRender(
-                      header.column.columnDef.header,
-                      header.getContext()
-                    )}
+                    {flexRender(header.column.columnDef.header, header.getContext())}
                     {{
                       asc: " 🔼",
                       desc: " 🔽",
@@ -326,10 +233,7 @@ const PresidentUnit: React.FC = () => {
               ))
             ) : (
               <tr>
-                <td
-                  colSpan={columns.length}
-                  className="text-center py-6 text-gray-500"
-                >
+                <td colSpan={columns.length} className="text-center py-6 text-gray-500">
                   No President Unit Evaluation found
                 </td>
               </tr>
@@ -338,12 +242,9 @@ const PresidentUnit: React.FC = () => {
         </table>
       </div>
 
-      {/* Pagination */}
+      
       <div className="flex justify-between mt-4">
-        <div className="text-sm">
-          Page {table.getState().pagination.pageIndex + 1}
-        </div>
-
+        <div className="text-sm">Page {table.getState().pagination.pageIndex + 1}</div>
         <div className="space-x-2">
           <button
             onClick={() => table.previousPage()}
@@ -362,17 +263,11 @@ const PresidentUnit: React.FC = () => {
         </div>
       </div>
 
-      {/* Panel */}
+     
       <PresidentSidePanel
-        nomineeData={selectedNominee}
+        nominee={selectedNominee}
         isOpen={isPanelOpen}
         onClose={() => setIsPanelOpen(false)}
-        onApprove={() =>
-          selectedNominee && handleApprove(selectedNominee.NominationID)
-        }
-        onReject={() =>
-          selectedNominee && handleReject(selectedNominee.NominationID)
-        }
       />
     </div>
   );

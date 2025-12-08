@@ -24,6 +24,8 @@ import { useNavigate } from "react-router-dom";
 import ReferralReasonPanel from "./ReferralDetailView";
 // Components
 
+import { ColorBadge } from "../TenantBadges";
+
 
 interface ReferralData {
   id: number;
@@ -56,6 +58,7 @@ interface ReferralData {
     FileNameGUID: string;
     FilePath: string;
   }[];
+  BusinessJuryStatus: string;
 }
 
 interface ReferralView {
@@ -87,6 +90,7 @@ interface ReferralView {
   Descriptions: string;
   ReferralID: number;
   ManagerName: string;
+  BusinessJuryStatus: string;
 }
 // interface ReferralView extends ReferralData {}
 const apiUrl = import.meta.env.VITE_API_URL;
@@ -229,7 +233,15 @@ const ReferralTable: React.FC = () => {
     return [
       { accessorKey: "NominationID", header: "Nomination ID" },
       { accessorKey: "Nominee", header: "Nominee Name" },
-      { accessorKey: "Tenant", header: "Entity Name" },
+      {
+        accessorKey: "Tenant",
+        header: "Entity Name",
+        cell: ({ getValue }) => {
+          const tenant = getValue() as string;
+          return <ColorBadge label={tenant} />;
+        },
+      },
+     // { accessorKey: "Tenant", header: "Entity Name" },
       { accessorKey: "SubmittedDate", header: "Submitted Date" },
 
       {
@@ -271,6 +283,7 @@ const ReferralTable: React.FC = () => {
           ReferralID: item.ReferralID,
           ManagerName: item.ManagerName,
            Comments: item.Comments,
+            BusinessJuryStatus: item.BusinessJuryStatus,
 
     
         },

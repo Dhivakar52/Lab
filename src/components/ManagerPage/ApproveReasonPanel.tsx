@@ -1,10 +1,10 @@
-// ReferralReasonPanel.tsx
+// ApprovalReasonPanel.tsx
 import React, { useState, useEffect } from "react";
 
-interface ReferralReasonPanelProps {
+interface ApprovalReasonPanelProps {
   isOpen: boolean;
   onClose: () => void;
-  nomination: any | null;
+  approvalData: any | null;
   reason: string;
   setReason: (value: string) => void;
   actionType: "approve" | "reject" | null;
@@ -12,10 +12,10 @@ interface ReferralReasonPanelProps {
   onReject: () => void;
 }
 
-const ReferralReasonPanel: React.FC<ReferralReasonPanelProps> = ({
+const ApprovalReasonPanel: React.FC<ApprovalReasonPanelProps> = ({
   isOpen,
   onClose,
-  nomination,
+  approvalData,
   reason,
   setReason,
   actionType,
@@ -31,29 +31,29 @@ const ReferralReasonPanel: React.FC<ReferralReasonPanelProps> = ({
     }
   }, [isOpen]);
 
-  if (!isOpen || !nomination) return null;
+  if (!isOpen || !approvalData) return null;
 
-  // Dynamic message based on approve / reject
   const message =
     actionType === "approve"
-      ? "Are you sure you want to approve this nomination?"
-      : "Are you sure you want to reject this nomination?";
+      ? "Are you sure you want to approve?"
+      : "Are you sure you want to reject?";
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/20 backdrop-blur-sm">
       <div className="bg-white p-6 rounded-xl shadow-lg w-[400px] relative">
 
+        {/* Close Button */}
         <button
-            onClick={onClose}
-            className="absolute top-2 right-2 text-gray-600 hover:text-black text-xl"
+          onClick={onClose}
+          className="absolute top-2 right-2 text-gray-600 hover:text-black text-xl"
         >
-            ✖
+          ✖
         </button>
+
         {/* Header */}
         <h2 className="text-lg font-semibold mb-3">{message}</h2>
-         
 
-        {/* Reason Input */}
+        {/* Reason Field */}
         <div className="mb-4">
           <label className="block text-sm font-medium mb-1">
             Reason <span className="text-red-600">*</span>
@@ -71,6 +71,7 @@ const ReferralReasonPanel: React.FC<ReferralReasonPanelProps> = ({
               errorMsg ? "border-red-500" : "border-gray-300"
             }`}
           />
+          
 
           {errorMsg && <p className="text-red-600 text-xs mt-1">{errorMsg}</p>} */}
             <textarea
@@ -88,7 +89,7 @@ const ReferralReasonPanel: React.FC<ReferralReasonPanelProps> = ({
               errorMsg ? "border-red-500" : "border-gray-300"
             }`}
           />
-          
+
           {/* Character Count */}
           <p className="text-gray-500 text-sm mt-1">
             {reason.length}/500 characters
@@ -112,11 +113,8 @@ const ReferralReasonPanel: React.FC<ReferralReasonPanelProps> = ({
                 return;
               }
 
-              if (actionType === "approve") {
-                onApprove();
-              } else if (actionType === "reject") {
-                onReject();
-              }
+              if (actionType === "approve") onApprove();
+              if (actionType === "reject") onReject();
 
               onClose();
             }}
@@ -130,4 +128,4 @@ const ReferralReasonPanel: React.FC<ReferralReasonPanelProps> = ({
   );
 };
 
-export default ReferralReasonPanel;
+export default ApprovalReasonPanel;

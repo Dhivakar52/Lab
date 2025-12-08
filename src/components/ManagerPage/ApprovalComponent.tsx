@@ -13,10 +13,8 @@ import type { ColumnDef } from "@tanstack/react-table";
 import { useAuth } from "../ContextAPI/AuthContext";
 import { Menu } from "lucide-react";
 import ApprovalPanel from "./ApprovalPanel";
-import TenantBadges from "../TenantBadges";
 import { ColorBadge } from "../TenantBadges";
-
-
+import { useNavigate } from "react-router-dom";
 
 interface ApprovalData {
   id: number;
@@ -34,12 +32,11 @@ interface ApprovalData {
   ApprovalComments?: string;
 
   Descriptions: string;
-  //"Referrals ID": { Email: string }[];
   "Referrals ID": {
     Email: string;
     TenantName: string;
     DeptName: string;
-    ReferralName:string;
+    ReferralName: string;
   }[];
   "Supporting Documents": {
     OriginalFileName: string;
@@ -47,6 +44,7 @@ interface ApprovalData {
     FileNameGUID: string;
     FilePath: string;
   }[];
+  BusinessJuryStatus: string;
 }
 
 interface ApprovalView {
@@ -59,12 +57,11 @@ interface ApprovalView {
   AwardCategory: string;
   NominatedBy: string;
   ManagerEmailID: string;
-  //"Referrals ID": { Email: string }[];
   "Referrals ID": {
     Email: string;
     TenantName: string;
     DeptName: string;
-    ReferralName:string;
+    ReferralName: string;
   }[];
   "Supporting Documents": {
     OriginalFileName: string;
@@ -73,7 +70,8 @@ interface ApprovalView {
     FilePath: string;
   }[];
   Descriptions: string;
-  ApprovalComments?: string;
+  ApprovalComments: string;
+  BusinessJuryStatus: string;
 }
 
 const apiUrl = import.meta.env.VITE_API_URL;
@@ -94,9 +92,8 @@ const ApprovalTable: React.FC = () => {
   const [successMessage, setSuccessMessage] = useState("");
   const [reason, setReason] = useState("");
   const [toastType, setToastType] = useState<"success" | "error">("success");
+  const navigate = useNavigate();
 
-
-  
   useEffect(() => {
     const fetchApprovals = async () => {
       try {
@@ -136,16 +133,16 @@ const ApprovalTable: React.FC = () => {
         }
       );
 
-      // Update UI instantly
       setData((prev) =>
         prev.map((item) =>
           item.NominationID === nominationID ? { ...item, Status: "Approved" } : item
         )
       );
-       setToastType("success");
-        setSuccessMessage("Nomination Approved Successfully!");
-        setTimeout(() => setSuccessMessage(""), 3000);
-        setIsPanelOpen(false);
+
+      setToastType("success");
+      setSuccessMessage("Nomination Approved Successfully!");
+      setTimeout(() => setSuccessMessage(""), 3000);
+      setIsPanelOpen(false);
     } catch (error) {
       console.error("Approve Error:", error);
       alert("Approval failed");
@@ -171,60 +168,59 @@ const ApprovalTable: React.FC = () => {
         }
       );
 
-      // Update UI instantly
       setData((prev) =>
         prev.map((item) =>
           item.NominationID === nominationID ? { ...item, Status: "Rejected" } : item
         )
       );
+
       setToastType("error");
       setSuccessMessage("Nomination Rejected Successfully!");
-        setTimeout(() => setSuccessMessage(""), 3000);
-        setIsPanelOpen(false); 
+      setTimeout(() => setSuccessMessage(""), 3000);
+      setIsPanelOpen(false);
     } catch (error) {
       console.error("Reject Error:", error);
       alert("Reject failed");
     }
   };
 
-  const columns = useMemo<ColumnDef<ApprovalData>[]>(
-    () => [
-      { accessorKey: "NominationID", header: "Nomination ID" },
-      { accessorKey: "Nominee", header: "Nominee Name" },
-     // { accessorKey: "Tenant", header: "Entity Name" },
-            {
-  accessorKey: "Tenant",
-  header: "Entity Name",
-  cell: ({ getValue }) => {
-    const tenant = getValue() as string;
-    return <ColorBadge label={tenant} />;
-  },
-},
-     // { accessorKey: "ContestType", header: "Contest Type" },
-      { accessorKey: "SubmittedDate", header: "Submitted Date" },
+  const columns = useMemo<ColumnDef<ApprovalData>[]>(() => [
+    { accessorKey: "NominationID", header: "Nomination ID" },
+    { accessorKey: "Nominee", header: "Nominee Name" },
 
-      {
-        accessorKey: "Status",
-        header: "Status",
-        cell: ({ getValue }) => {
-          const status = getValue() as ApprovalData["Status"];
-          const colorClass = statusColors[status];
-          return (
-            <span className={`px-3 py-1 rounded-full text-sm font-medium ${colorClass}`}>
-              {status}
-            </span>
-          );
-        },
+    {
+      accessorKey: "Tenant",
+      header: "Entity Name",
+      cell: ({ getValue }) => {
+        const tenant = getValue() as string;
+        return <ColorBadge label={tenant} />;
       },
+    },
 
-      {
-        id: "actions",
-        header: "Actions",
-        cell: ({ row }) => {
-          const item = row.original;
+    { accessorKey: "SubmittedDate", header: "Submitted Date" },
 
-          const handleView = () => {
-            setSelectedNomination({
+    {
+      accessorKey: "Status",
+      header: "Status",
+      cell: ({ getValue }) => {
+        const status = getValue() as ApprovalData["Status"];
+        return (
+          <span className={`px-3 py-1 rounded-full text-sm font-medium ${statusColors[status]}`}>
+            {status}
+          </span>
+        );
+      },
+    },
+
+    {
+      id: "actions",
+      header: "Actions",
+      cell: ({ row }) => {
+        const item = row.original;
+
+        const handleView = () => {
+          navigate("/approve-detail", {
+            state: {
               NominationID: item.NominationID,
               nominee: item.Nominee,
               entity: item.Tenant,
@@ -237,52 +233,30 @@ const ApprovalTable: React.FC = () => {
               "Referrals ID": item["Referrals ID"],
               "Supporting Documents": item["Supporting Documents"],
               Descriptions: item.Descriptions,
-               //ApprovalComments: item.ApprovalComments ?? "", 
-                 // ⭐ FIXED: Correct mapping
-              ApprovalComments: item.ApprovalComments ?? "",
-            });
+              ApprovalComments: item.ApprovalComments,
+              BusinessJuryStatus: item.BusinessJuryStatus,
+            },
+          });
+        };
 
-            setIsPanelOpen(true);
-          };
-          
+        return (
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <button className="p-2 rounded hover:bg-gray-100 transition">
+                <Menu size={18} className="text-blue-600" />
+              </button>
+            </DropdownMenuTrigger>
 
-          return (
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <button className="p-2 rounded hover:bg-gray-100 transition">
-                  <Menu size={18} className="text-blue-600" />
-                </button>
-              </DropdownMenuTrigger>
-
-              <DropdownMenuContent align="end" className="w-30 bg-white shadow-xl rounded-sm">
-                <DropdownMenuItem
-                  onClick={handleView}
-                  className="hover:bg-blue-50 hover:text-blue-700 p-3"
-                >
-                  View
-                </DropdownMenuItem>
-
-                {/* <DropdownMenuItem
-                  onClick={() => handleApprove(item.NominationID)}
-                  className="hover:bg-green-50 hover:text-green-700 p-3"
-                >
-                  Approve
-                </DropdownMenuItem> */}
-
-                {/* <DropdownMenuItem
-                  onClick={() => handleReject(item.NominationID)}
-                  className="hover:bg-red-50 hover:text-red-700 p-3"
-                >
-                  Reject
-                </DropdownMenuItem> */}
-              </DropdownMenuContent>
-            </DropdownMenu>
-          );
-        },
+            <DropdownMenuContent align="end" className="bg-white shadow-xl rounded-sm">
+              <DropdownMenuItem onClick={handleView} className="hover:bg-blue-50 p-3">
+                View
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+        );
       },
-    ],
-    []
-  );
+    },
+  ], []);
 
   const table = useReactTable({
     data,
@@ -301,106 +275,105 @@ const ApprovalTable: React.FC = () => {
 
   return (
     <div className="p-6">
-
-      
       {successMessage && (
         <div
-          className={`fixed  right-5 px-4 py-2 rounded-lg shadow-lg animate-slide-in z-[9999]
+          className={`fixed right-5 px-4 py-2 rounded-lg shadow-lg animate-slide-in z-[9999]
             ${toastType === "success" ? "bg-green-600" : "bg-red-600"} text-white`}
         >
           {successMessage}
         </div>
       )}
-      
-    <div className="p-6">
-      <div className="overflow-x-auto bg-white shadow-md rounded-lg p-6">
-        <div className="mb-4 flex justify-between items-center">
-          <input
-            value={globalFilter ?? ""}
-            onChange={(e) => setGlobalFilter(e.target.value)}
-            placeholder="Search..."
-            className="border border-gray-300 rounded-md px-4 py-2 w-1/3 text-sm"
-          />
-        </div>
 
-        <table className="min-w-full border border-gray-200">
-          <thead className="bg-gray-50">
-            {table.getHeaderGroups().map((headerGroup) => (
-              <tr key={headerGroup.id}>
-                {headerGroup.headers.map((header) => (
-                  <th
-                    key={header.id}
-                    onClick={header.column.getToggleSortingHandler()}
-                    className="px-4 py-3 text-left text-xs font-semibold uppercase cursor-pointer"
-                  >
-                    {flexRender(header.column.columnDef.header, header.getContext())}
-                    {header.column.getIsSorted() === "asc" ? " 🔼" : ""}
-                    {header.column.getIsSorted() === "desc" ? " 🔽" : ""}
-                  </th>
-                ))}
-              </tr>
-            ))}
-          </thead>
-
-          <tbody className="divide-y divide-gray-100">
-            {table.getRowModel().rows.length ? (
-              table.getRowModel().rows.map((row) => (
-                <tr key={row.id} className="hover:bg-gray-50">
-                  {row.getVisibleCells().map((cell) => (
-                    <td key={cell.id} className="px-4 py-2 text-sm text-gray-800">
-                      {flexRender(cell.column.columnDef.cell, cell.getContext())}
-                    </td>
-                  ))}
-                </tr>
-              ))
-            ) : (
-              <tr>
-                <td colSpan={columns.length} className="text-center py-6 text-gray-500">
-                  No approvals found
-                </td>
-              </tr>
-            )}
-          </tbody>
-        </table>
-
-        <div className="flex items-center justify-between mt-4">
-          <div className="text-sm text-gray-600">
-            Page {table.getState().pagination.pageIndex + 1} of {table.getPageCount()}
+      <div className="p-6">
+        <div className="overflow-x-auto bg-white shadow-md rounded-lg p-6">
+          <div className="mb-4 flex justify-between items-center">
+            <input
+              value={globalFilter ?? ""}
+              onChange={(e) => setGlobalFilter(e.target.value)}
+              placeholder="Search..."
+              className="border border-gray-300 rounded-md px-4 py-2 w-1/3 text-sm"
+            />
           </div>
 
-          <div className="space-x-2">
-            <button
-              onClick={() => table.previousPage()}
-              disabled={!table.getCanPreviousPage()}
-              className="px-3 py-1 bg-gray-200 rounded disabled:opacity-50"
-            >
-              Prev
-            </button>
-            <button
-              onClick={() => table.nextPage()}
-              disabled={!table.getCanNextPage()}
-              className="px-3 py-1 bg-gray-200 rounded disabled:opacity-50"
-            >
-              Next
-            </button>
+          <table className="min-w-full border border-gray-200">
+            <thead className="bg-gray-50">
+              {table.getHeaderGroups().map((headerGroup) => (
+                <tr key={headerGroup.id}>
+                  {headerGroup.headers.map((header) => (
+                    <th
+                      key={header.id}
+                      onClick={header.column.getToggleSortingHandler()}
+                      className="px-4 py-3 text-left text-xs font-semibold uppercase cursor-pointer"
+                    >
+                      {flexRender(header.column.columnDef.header, header.getContext())}
+                      {header.column.getIsSorted() === "asc" ? " 🔼" : ""}
+                      {header.column.getIsSorted() === "desc" ? " 🔽" : ""}
+                    </th>
+                  ))}
+                </tr>
+              ))}
+            </thead>
+
+            <tbody className="divide-y divide-gray-100">
+              {table.getRowModel().rows.length ? (
+                table.getRowModel().rows.map((row) => (
+                  <tr key={row.id} className="hover:bg-gray-50">
+                    {row.getVisibleCells().map((cell) => (
+                      <td key={cell.id} className="px-4 py-2 text-sm text-gray-800">
+                        {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                      </td>
+                    ))}
+                  </tr>
+                ))
+              ) : (
+                <tr>
+                  <td colSpan={columns.length} className="text-center py-6 text-gray-500">
+                    No approvals found
+                  </td>
+                </tr>
+              )}
+            </tbody>
+          </table>
+
+          <div className="flex items-center justify-between mt-4">
+            <div className="text-sm text-gray-600">
+              Page {table.getState().pagination.pageIndex + 1} of {table.getPageCount()}
+            </div>
+
+            <div className="space-x-2">
+              <button
+                onClick={() => table.previousPage()}
+                disabled={!table.getCanPreviousPage()}
+                className="px-3 py-1 bg-gray-200 rounded disabled:opacity-50"
+              >
+                Prev
+              </button>
+
+              <button
+                onClick={() => table.nextPage()}
+                disabled={!table.getCanNextPage()}
+                className="px-3 py-1 bg-gray-200 rounded disabled:opacity-50"
+              >
+                Next
+              </button>
+            </div>
           </div>
         </div>
       </div>
-  </div>
-      {/* SIDE PANEL */}
+
+      {/* APPROVAL POPUP PANEL */}
       <ApprovalPanel
         isOpen={isPanelOpen}
         onClose={() => setIsPanelOpen(false)}
-       
         nomination={selectedNomination}
+        reason={reason}
+        setReason={setReason}
         onApprove={() =>
           selectedNomination && handleApprove(selectedNomination.NominationID)
         }
         onReject={() =>
           selectedNomination && handleReject(selectedNomination.NominationID)
         }
-         reason={reason}
-        setReason={setReason}
       />
     </div>
   );
