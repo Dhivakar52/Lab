@@ -79,7 +79,7 @@ const ReferralReasonPanel: React.FC<ReferralReasonPanelProps> = ({
         <div className="flex justify-end gap-3">
           <button
             onClick={onClose}
-            className="px-4 py-2 bg-gray-300 rounded hover:bg-gray-400"
+            className="px-4 py-2 bg-red-700 text-white rounded hover:bg-red-400"
           >
             NO
           </button>
@@ -99,7 +99,7 @@ const ReferralReasonPanel: React.FC<ReferralReasonPanelProps> = ({
 
               onClose();
             }}
-            className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
+            className="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-400"
           >
             YES
           </button>
