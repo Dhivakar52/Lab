@@ -164,7 +164,7 @@ export default function Login({ setUserRole }: LoginProps) {
           userName: email,
           password: password ?? "",
           isEncrypted: false,
-          otp: otp
+          otp: otp ?? ""
         }),
       });
 

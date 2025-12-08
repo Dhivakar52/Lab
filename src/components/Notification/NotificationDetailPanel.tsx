@@ -1,6 +1,7 @@
  
 import { Building, FileText, MoveRight, User } from "lucide-react";
 import React from "react";
+import { Link, useNavigate } from "react-router-dom";
  
  
 type Notification= {
@@ -50,6 +51,28 @@ const NotificationDetailPanel: React.FC<NotificationDetailPanelProps> = ({ isOpe
     minute: '2-digit',
     hour12: true, 
   });
+   const linkStyle = {
+    textDecoration: 'underline',  // Adds underline
+    color: '#3498db',  // Highlighted color
+    fontWeight: 'bold', // Optional: bold text
+    transition: 'color 0.3s ease',  // Smooth transition effect
+  };
+// Handling hover effect with mouse enter and leave
+  const handleMouseEnter = (e: React.MouseEvent<HTMLAnchorElement>) => {
+    const target = e.target as HTMLAnchorElement;  // Type assertion to HTMLAnchorElement
+    target.style.color = '#e74c3c';  // Change color on hover
+  };
+
+  const handleMouseLeave = (e: React.MouseEvent<HTMLAnchorElement>) => {
+    const target = e.target as HTMLAnchorElement;  // Type assertion to HTMLAnchorElement
+    target.style.color = '#3498db';  // Revert color after hover
+  };
+  const navigate = useNavigate(); // Hook to navigate programmatically
+
+  const closeSidebarAndNavigate = (route: string) => {
+    navigate(route); // Navigate to the route
+    window.location.reload();  
+  };
 
   return (
     <div className="fixed inset-0 flex justify-start z-50">
@@ -69,8 +92,16 @@ const NotificationDetailPanel: React.FC<NotificationDetailPanelProps> = ({ isOpe
           <span>{notification.Title}</span>
         </div> 
         <p>Received {formattedDate}</p>
-
-        <br></br>
+<Link 
+        to="#"
+         style={linkStyle}
+        onMouseEnter={handleMouseEnter}  // Add onMouseEnter event
+        onMouseLeave={handleMouseLeave}  // Add onMouseLeave event
+        onClick={() => closeSidebarAndNavigate(`/nomination-details/${notification.Nomination[0].NominationID}`)}
+        >
+        View Nomination Details
+        </Link>
+        <br/><br/>
          {notification.Nomination && notification.Nomination.length > 0 ? (
           <>
            <p><strong>REQUESTER INFORMATION</strong> </p>

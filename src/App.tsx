@@ -33,6 +33,7 @@ import ReferralDetailView from './components/ReferralApproval/ReferralDetailView
 
 import VerifyOtp from './pages/auth/Login/VerifyOtp';
 import ResetPassword from './pages/auth/Login/ResetPassword';
+import NominationFullDetails from './components/NominationFullDetails.tsx';
 
 // -------------------------
 // Main page components
@@ -174,6 +175,16 @@ const App: React.FC = () => {
             </ProtectedRoute>
           }
         />
+        <Route
+          path="/nomination-details/:nominationID"
+          element={
+            <ProtectedRoute 
+                userRole={userRole}
+                allowedRoles={getAllowedRoles('View Nomination Details')}            >
+              <NominationFullDetails/>
+            </ProtectedRoute>
+          }
+          />
 
        {/* Fallback */}
         <Route path="/forgot" element={<ForgotPassword/>} />
