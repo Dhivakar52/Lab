@@ -1,10 +1,6 @@
 import React, { useState,useEffect,useMemo } from 'react';
 import axios from "axios";
 import * as DropdownMenu from '@radix-ui/react-dropdown-menu';
-import FilterComponent from '../FilterComponent';
-import SearchComponent from "../SearchComponent";
-import { EyeClosed } from 'lucide-react';
-
 import type {
   ColumnDef,
 } from "@tanstack/react-table";
@@ -14,16 +10,20 @@ import {
   getPaginationRowModel,
   getSortedRowModel,
   getFilteredRowModel,
-  flexRender,
-  createColumnHelper 
+  flexRender
 } from "@tanstack/react-table";
 import { CheckCircle, XCircle, Clock, Menu } from 'lucide-react'; // Import necessary icons
 import PresidentSidePanel from './PresidentSidePanel';
 import { useAuth } from "../ContextAPI/AuthContext";
+import { ColorBadge } from '../TenantBadges';
 
-interface Nominee {
+
+
+export interface PresidentLevelNominee {
   id: number;
+  JuryApprovalsID:number;
   NominationID: number;
+  PresidentID:number;
  Nominee: string;
   Tenant: string;
   CategoryName: string;
@@ -31,96 +31,23 @@ interface Nominee {
   Score: number;
   Status: 'Approved' | 'Rejected' | 'Pending' | string;
   FinalStatus:'Winner' | 'Runner-Up' | string;
-  Comments: string;
+  PresidentComments: string;
 }
 
 const apiUrl = import.meta.env.VITE_API_URL;
-const statusColors: Record<Nominee['FinalStatus'], string> = {
+const statusColors: Record<PresidentLevelNominee['FinalStatus'], string> = {
   'Winner': 'bg-blue-100 text-blue-800',
   'Runner-Up': 'bg-gray-100 text-gray-800',
 };
 
 const PresidentLevel: React.FC = () => {
-  const [search, setSearch] = useState<string>("");
-  const [selectedNominee, setSelectedNominee] = useState<Nominee | null>(null);
-  const [data, setData] = useState<Nominee[]>([]);
+  const [selectedNominee, setSelectedNominee] = useState<PresidentLevelNominee | null>(null);
+  const [data, setData] = useState<PresidentLevelNominee[]>([]);
   const [loading, setLoading] = useState(true);
   const [globalFilter, setGlobalFilter] = useState("");
-  const { authToken, userId } = useAuth();
+  const { authToken } = useAuth();
   const [isPanelOpen, setIsPanelOpen] = useState(false);
-  const [successMessage, setSuccessMessage] = useState("");
-  const [toastType, setToastType] = useState<"success" | "error">("success");
-  const [modalOpen, setModalOpen] = useState(false);
-
-  const handleApprove = async (nominationID: number) => {
-      try {
-        await axios.put(
-          `${apiUrl}/api/presidentevaluation/${nominationID}`,
-          {
-            nominationID,
-            isManagerApproved: true,
-            approvalComments: "yes",
-            submittedBy: userId,
-            active: true,
-          },
-          {
-            headers: {
-              "Content-Type": "application/json",
-              Authorization: `Bearer ${authToken}`,
-            },
-          }
-        );
   
-        // Update UI instantly
-        setData((prev) =>
-          prev.map((item) =>
-            item.NominationID === nominationID ? { ...item, Status: "Approved" } : item
-          )
-        );
-         setToastType("success");
-          setSuccessMessage("Nomination Approved Successfully!");
-          setTimeout(() => setSuccessMessage(""), 3000);
-          setIsPanelOpen(false);
-      } catch (error) {
-        console.error("Approve Error:", error);
-      }
-    };
-  
-    const handleReject = async (nominationID: number) => {
-      try {
-        await axios.put(
-          `${apiUrl}/api/presidentevaluation/${nominationID}`,
-          {
-            nominationID,
-            isManagerApproved: false,
-            approvalComments: "Rejected",
-            submittedBy: userId,
-            active: true,
-          },
-          {
-            headers: {
-              "Content-Type": "application/json",
-              Authorization: `Bearer ${authToken}`,
-            },
-          }
-        );
-  
-        // Update UI instantly
-        setData((prev) =>
-          prev.map((item) =>
-            item.NominationID === nominationID ? { ...item, Status: "Rejected" } : item
-          )
-          
-        );
-        setToastType("error");        
-        setSuccessMessage("Nomination Rejected Successfully!");
-          setTimeout(() => setSuccessMessage(""), 3000);
-          setIsPanelOpen(false); 
-      } catch (error) {
-        console.error("Reject Error:", error);
-      }
-    };
-
      useEffect(() => {
     const fetchNominee = async () => {
       try {
@@ -143,16 +70,23 @@ const PresidentLevel: React.FC = () => {
  
 
 
-   const columns = useMemo<ColumnDef<Nominee>[]>(
+   const columns = useMemo<ColumnDef<PresidentLevelNominee>[]>(
        () => [
         { accessorKey: "Nominee", header: "Nominee" },
-        { accessorKey: "Tenant", header: "Entity" },
+          {
+                accessorKey: "Tenant",
+                header: "Entity Name",
+                cell: ({ getValue }) => {
+                  const tenant = getValue() as string;
+                  return <ColorBadge label={tenant} />;
+                },
+              },
         { accessorKey: "CategoryName", header: "Category" },
         { accessorKey: "ConsolidatedAvgScore", header: "Consolidated Avg Score" },
         { accessorKey: "Score", header: "President Score" },
          { accessorKey: "Status", header: "Flag" ,
           cell: ({ getValue }) => { // Use 'getValue' to access the cell's raw value
-          const flagValue = getValue<Nominee['Status']>();
+          const flagValue = getValue<PresidentLevelNominee['Status']>();
           // Use a switch statement or if/else for conditional rendering
           switch (flagValue) {
             case 'Approved':
@@ -168,7 +102,7 @@ const PresidentLevel: React.FC = () => {
          },
          { accessorKey: "FinalStatus", header: "Final Status" ,
           cell: ({ getValue }) => { // Use 'getValue' to access the cell's raw value
-          const statusValue = getValue<Nominee['FinalStatus']>();
+          const statusValue = getValue<PresidentLevelNominee['FinalStatus']>();
           
           // Use a switch statement or if/else for conditional rendering
           switch (statusValue) {
@@ -221,15 +155,7 @@ const PresidentLevel: React.FC = () => {
 
   return (
    <div className="p-6 m-5 bg-white rounded-xl shadow-md relative">
-      
-{successMessage && (
-        <div
-          className={`fixed  right-5 px-4 py-2 rounded-lg shadow-lg animate-slide-in z-[9999]
-            ${toastType === "success" ? "bg-green-600" : "bg-red-600"} text-white`}
-        >
-          {successMessage}
-        </div>
-      )}
+ 
       {/* Table */}
 <div className="overflow-x-auto">
       <div className="mb-4 flex justify-between items-center">
@@ -312,12 +238,7 @@ const PresidentLevel: React.FC = () => {
   nominee={selectedNominee}
   isOpen={isPanelOpen}
   onClose={() => setIsPanelOpen(false)}
-  onApprove={() =>    
-    selectedNominee && handleApprove(selectedNominee.NominationID)
-  }
-  onReject={() =>
-    selectedNominee && handleReject(selectedNominee.NominationID)
-  }
+  
 />
     </div>
   );

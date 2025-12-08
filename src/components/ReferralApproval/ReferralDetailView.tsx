@@ -36,6 +36,7 @@ interface ReferralDetail {
     FileNameGUID: string;
     FilePath: string;
   }[];
+  BusinessJuryStatus: string;
 }
 
 const statusColors: Record<ReferralDetail["status"], string> = {
@@ -248,7 +249,7 @@ const ReferralDetailView: React.FC = () => {
         {/* Approve / Reject Buttons */}
           <div className="px-6 py-4 border-t border-gray-200 bg-gray-50 flex justify-end space-x-3 mt-6">
             
-            {data.status !== "Rejected" && (
+            {data.status !== "Rejected" && data.BusinessJuryStatus !== "Approved"&& (
               <button
                 onClick={() => openPanel("reject")}
                 className="px-4 py-2 bg-red-600 text-white rounded-md shadow hover:bg-red-700 transition flex items-center"
@@ -256,7 +257,7 @@ const ReferralDetailView: React.FC = () => {
                 ✖ Reject Nomination
               </button>
             )}
-            {data.status !== "Approved" && (
+            {data.status !== "Approved" && data.BusinessJuryStatus !== "Rejected"&& (
               <button
                 onClick={() => openPanel("approve")}
                 className="px-4 py-2 bg-green-600 text-white rounded-md shadow hover:bg-green-700 transition flex items-center"

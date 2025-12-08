@@ -28,12 +28,12 @@ import { AuthProvider } from './components/ContextAPI/AuthContext.tsx';
 import Testing from './components/Testing/Testing.tsx';
 import ForgotPassword from './pages/auth/Login/ForgotPassword.tsx';
 import ReferralComponent from './components/ReferralApproval/ReferralComponent.tsx';
-//<Route path="/referral/:id" element={<ReferralDetailView />} />
 import ReferralDetailView from './components/ReferralApproval/ReferralDetailView.tsx';
 
 import VerifyOtp from './pages/auth/Login/VerifyOtp';
 import ResetPassword from './pages/auth/Login/ResetPassword';
 import NominationFullDetails from './components/NominationFullDetails.tsx';
+import ApprovalDetailView from './components/ManagerPage/ApprovalDetailView.tsx';
 
 // -------------------------
 // Main page components
@@ -172,6 +172,14 @@ const App: React.FC = () => {
           element={
             <ProtectedRoute userRole={userRole} allowedRoles={getAllowedRoles('Referral Approval')}>
               <ReferralDetailView />
+            </ProtectedRoute>
+          }
+        />
+         <Route
+          path="/approve-detail"
+          element={
+            <ProtectedRoute userRole={userRole} allowedRoles={getAllowedRoles('Manager Page')}>
+              <ApprovalDetailView />
             </ProtectedRoute>
           }
         />

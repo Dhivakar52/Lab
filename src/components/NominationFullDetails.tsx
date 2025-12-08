@@ -3,8 +3,7 @@ import { useAuth } from "./ContextAPI/AuthContext";
 import { useEffect, useState } from "react";
 import axios from "axios";
 import { useParams } from "react-router-dom";
-import { FileText } from "lucide-react";
-import BackToSetting from "./BackToSetting";
+import { ArrowBigLeftDashIcon, ArrowBigLeftIcon, FileText, MoveLeft, MoveRight } from "lucide-react";
 
 const apiUrl = import.meta.env.VITE_API_URL;
 
@@ -12,7 +11,7 @@ const NominationFullDetails:React.FC = () => {
     const { nominationID } = useParams();  
     const [data, setData] = useState<any>([]);
     const [loading, setLoading] = useState(true);
-    const { authToken, userId } = useAuth();
+    const { authToken } = useAuth();
 
 
     useEffect(() => {
@@ -39,13 +38,24 @@ const NominationFullDetails:React.FC = () => {
   }, []);
 
 
-return (
-<div className=" p-5">
-   <BackToSetting/>
-   <div className="bg-white rounded-lg shadow-lm border-gray-200 p-6">
-         <h1 className="text-2xl font-semibold"> Nomination Details </h1>
-         <br/>
+  const handleBackward = () => {
+    window.history.back();
+  }
 
+return (
+
+  
+   <div className="bg-white rounded-lg shadow-lm border-gray-200 p-6">
+           
+
+ <button
+         onClick={handleBackward}
+          className="text-white-800 border text-sm font-medium rounded-md transition-colors"
+        >
+<span  ><MoveLeft size={13}/></span>
+        </button>
+          <h1 className="text-2xl font-semibold"> Nomination Details </h1>
+         <br/>
             <div className="space-y-5">
               {/* Row 1 */}
               <div className="grid grid-cols-3">
@@ -74,14 +84,6 @@ return (
                   <div className="text-lm text-gray-600">{data.SubmittedDate}</div>
                 </div>
                 <div className="space-y-1">
-                  <div className="text-lm font-medium text-gray-900">Contest Type</div>
-                  <div className="text-lm text-gray-600">{data.ContestType}</div>
-                </div>
-              </div>
-              {/* Row 3 */}
-              <div className="grid grid-cols-3">
-
-                <div className="space-y-1">
                     <div className="text-lm font-medium text-gray-900">Status</div>
                     <div className="flex">
                       <span
@@ -101,17 +103,18 @@ return (
                       </span>
                     </div>
                 </div>
+                
+              </div>
+              {/* Row 3 */}
+              <div className="grid grid-cols-2">                
                 <div className="space-y-1">
                   <div className="text-lm font-medium text-gray-900">Manager</div>
                   <div className="text-lm text-gray-600">{data.ManagerName}</div>
                 </div>
-                <div className="space-y-1">
-                  <div className="text-lm font-medium text-gray-900">Manager Email ID</div>
-                  <div className="text-lm text-gray-600">{data.ManagerEmailID}</div>
-                </div>
+
               </div>
 
-              <div className="text-lm font-medium text-gray-900 mb-1">Referrals</div>
+              <div className="text-lm font-medium text-gray-900 mb-2">Referrals</div>
               <div className="text-gray-600 space-y-1">
                 {data["Referrals ID"]?.length ? (
                   data["Referrals ID"].map((ref: any, i:number) => (
@@ -163,7 +166,6 @@ return (
 
    </div>
 
-  </div>    
 
 
   )

@@ -1,29 +1,13 @@
-import React from "react";
-import { X, Flag,FileText } from "lucide-react";
-
-interface BusinessJury  {
-  NominationID: number;
-  Nominee: string;
-  Tenant: number;
-  CategoryName: string;
-  SubmittedOn: string;
-  Score: number;
-  Comments: string;
-  Status: string;
-  "Supporting Documents": {
-    OriginalFileName: string;
-    FileType: string;
-    FileNameGUID: string;
-    FilePath: string;
-  }[];
-};
+import React, { useEffect, useState } from "react";
+import { X, FileText } from "lucide-react";
+import { useAuth } from "../ContextAPI/AuthContext";
+import axios from "axios";
+import type { BusinessJury } from "./BusinessJury";
 
 interface NomineeSidePanelProps {
   isOpen: boolean;
   onClose: () => void;
   nominee: BusinessJury | null;
-onApprove: (id: number) => void;
-onReject: (id: number) => void;
 }
 
 const statusColors: Record<BusinessJury["Status"], string> = {
@@ -32,17 +16,141 @@ const statusColors: Record<BusinessJury["Status"], string> = {
   Rejected: "bg-red-100 text-red-800",
 };
 
+const apiUrl = import.meta.env.VITE_API_URL;
+
 const BusinessPanel: React.FC<NomineeSidePanelProps> = ({
   isOpen,
   onClose,
   nominee,
-  onApprove,
-  onReject
 }) => {
+   const [businessJuryComments, setBusinessJuryComments] = useState('');
+    const { authToken, userId } = useAuth();
+    const [data, setData] = useState<BusinessJury[]>([]);
+  const [message, setMessage] = useState('');
+ const [messageType, setMessageType] = useState<'success' | 'reject'>('success'); // Message type
+  const [loading, setLoading] = useState<boolean>(false);
+  const [sidebarOpen, setSidebarOpen] = useState<boolean>(true); // Sidebar state
+    const [commentError, setCommentError] = useState("");
+
+  
+  
   const baseClasses = "px-2 py-2 text-white rounded-md shadow transition flex items-center";
   const rejectClasses = `${baseClasses} bg-red-600 hover:bg-red-700`;
   const approveClasses = `${baseClasses} bg-green-600 hover:bg-green-700`;
   const containerClasses = "flex justify-around items-center gap-4 mt-4";
+
+  
+  
+    // ⭐ LOAD COMMENTS
+    useEffect(() => {
+      if (nominee?.BusinessJuryComments) {
+        setBusinessJuryComments(nominee.BusinessJuryComments);
+      } else {
+        setBusinessJuryComments("");
+      }
+    }, [nominee]);
+  const validateComments = () => {
+    if (!businessJuryComments.trim()) {
+      setCommentError("Comments are required!");
+      return false;
+    }
+    setCommentError("");
+    return true;
+  };
+  
+  
+  const onApprove = async (JuryApprovalsID: number) => {
+    setLoading(true);
+      try {
+
+        await axios.put(
+          `${apiUrl}/api/businessjuryevaluation/${JuryApprovalsID}`,
+          {
+            JuryApprovalsID:JuryApprovalsID,
+            NominationID:nominee?.NominationID,
+            IsBusinessJuryApproved: true,
+            BusinessJuryComments: businessJuryComments,
+            BusinessJuryID: userId,
+            submittedBy: userId,
+            active: true,
+          },
+          {
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${authToken}`,
+            },
+          }
+        );
+
+        // Update UI instantly
+        setData((prev) =>
+          prev.map((item) =>
+            item.JuryApprovalsID === JuryApprovalsID ? { ...item, Status: "Approved" } : item
+          )
+        );
+      // setMessage("Business Jury Approved Successfully!");
+      // setMessageType('success');
+
+      } catch (error) {
+        console.error("Approve Error:", error);
+        alert("Approval failed");
+      } finally{
+       setLoading(false);
+       setSidebarOpen(false);
+       window.location.reload();  
+
+      //  setTimeout(() => {
+      //   setMessage('');
+      // }, 3000);
+
+      }
+    };
+
+    const onReject = async (JuryApprovalsID: number) => {
+    setLoading(true);
+      try {
+
+        await axios.put(
+          `${apiUrl}/api/businessjuryevaluation/${JuryApprovalsID}`,
+          {
+            JuryApprovalsID:nominee?.JuryApprovalsID,
+            NominationID:nominee?.NominationID,
+            IsBusinessJuryApproved: false,
+            BusinessJuryComments: businessJuryComments,
+            BusinessJuryID: userId,
+            submittedBy: userId,
+            active: true,
+          },
+          {
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${authToken}`,
+            },
+          }
+        );
+
+        // Update UI instantly
+        setData((prev) =>
+          prev.map((item) =>
+            item.JuryApprovalsID === JuryApprovalsID ? { ...item, Status: "Rejected" } : item
+          )
+        );
+
+      // setMessage("Business Jury Rejected Successfully!");
+      // setMessageType('reject');
+      } catch (error) {
+        console.error("Reject Error:", error);
+        alert("Reject failed");
+      } finally{
+       setLoading(false);
+       setSidebarOpen(false);
+       window.location.reload();  
+
+      //  setTimeout(() => {
+      //   setMessage('');
+      // }, 3000);
+      }
+    };
 
   const ActionButtons = () => {
     if (!nominee) return null; // Safety check
@@ -50,7 +158,7 @@ const BusinessPanel: React.FC<NomineeSidePanelProps> = ({
     const RejectButton = () => (
       <button
         onClick={() => {
-          onReject(nominee.NominationID);
+          onReject(nominee.JuryApprovalsID);
           onClose();
         }}
         className={rejectClasses}
@@ -62,7 +170,7 @@ const BusinessPanel: React.FC<NomineeSidePanelProps> = ({
     const ApproveButton = () => (
       <button
         onClick={() => {
-          onApprove(nominee.NominationID);
+          onApprove(nominee.JuryApprovalsID);
           onClose();
         }}
         className={approveClasses}
@@ -182,11 +290,63 @@ const BusinessPanel: React.FC<NomineeSidePanelProps> = ({
               ))}
               </div>
             </div>
+         <div className="space-y-2">
+            <label className="text-sm font-medium text-gray-900">
+              Reason <span className="text-red-600">*</span>
+            </label>
+
+            <textarea
+              className={`w-full h-24 border rounded-lg p-2 text-sm focus:outline-none focus:ring-2 ${
+                commentError ? "border-red-500 focus:ring-red-400" : "focus:ring-blue-400"
+              }`}
+              placeholder="Enter your reason here..."
+              value={businessJuryComments}
+              onChange={(e) => {
+                setBusinessJuryComments(e.target.value);
+                if (commentError) setCommentError("");
+              }}
+            ></textarea>
+
+            {commentError && (
+              <p className="text-red-600 text-sm">{commentError}</p>
+            )}
+         </div>
             <ActionButtons />
 
           </div>
         ) : null}
       </div>
+      {/* Popup Message */}
+      {/* {message && (
+        <div
+          style={{
+            position: 'fixed',
+            top: '20px',
+            left: '50%',
+            transform: 'translateX(-50%)',
+            color: 'white',
+            padding: '10px 20px',
+            borderRadius: '5px',
+            fontWeight: 'bold',
+            textAlign: 'center',
+            boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)',
+            zIndex: 9999,
+            animation: 'fadeOut 3s forwards',
+            backgroundColor: messageType === 'success' ? 'green' : 'red', // Change color based on message type
+          }}
+        >
+          <span>{message}</span>
+        </div>
+      )} */}
+
+      {/* {message && (
+        <div
+          className={`fixed  right-5 px-4 py-2 rounded-lg shadow-lg animate-slide-in z-[9999]
+            ${messageType === "success" ? "bg-green-600" : "bg-red-600"} text-white`}
+        >
+          {message}
+        </div>
+      )} */}
     </div>
   );
 };

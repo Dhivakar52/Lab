@@ -1,8 +1,6 @@
 import React, { useState,useEffect,useMemo } from "react";
 import * as DropdownMenu from "@radix-ui/react-dropdown-menu";
-import { Menu, Flag } from "lucide-react";
-import SearchComponent from "../SearchComponent";
-import FilterComponent from "../FilterComponent";
+import { Menu,  } from "lucide-react";
 import BusinessPanel from "./BusinessPanel"; 
 import axios from "axios";
 import { useAuth } from "../ContextAPI/AuthContext";
@@ -17,10 +15,13 @@ import {
 import type {
   ColumnDef,
 } from "@tanstack/react-table";
+import { ColorBadge } from "../TenantBadges";
 
 
-interface BusinessJury {
+export interface BusinessJury {
   id: number;
+  JuryApprovalsID:number;
+  BusinessJuryID:number;
   NominationID: number;
   TotalRowCount: number;
   //UserID: number;
@@ -29,7 +30,7 @@ interface BusinessJury {
   CategoryName: string;
   SubmittedOn: string;
   Score: number;
-  Comments: string;
+  BusinessJuryComments: string;
   Status: string; 
   "Supporting Documents": {
     OriginalFileName: string;
@@ -50,89 +51,11 @@ const apiUrl = import.meta.env.VITE_API_URL;
 
 const BusinessJury: React.FC = () => {
   const { authToken, userId } = useAuth();
-  const [search, setSearch] = useState<string>("");
   const [data, setData] = useState<BusinessJury[]>([]);
   const [loading, setLoading] = useState(true);
   const [globalFilter, setGlobalFilter] = useState("");
-  const [modalOpen, setModalOpen] = useState(false);
   const [selectedNomination, setSelectedNomination] = useState<BusinessJury | null>(null);
   const [isPanelOpen, setIsPanelOpen] = useState(false);
-  const [successMessage, setSuccessMessage] = useState("");
-  const [toastType, setToastType] = useState<"success" | "error">("success");
-
- 
-const handleApprove = async (nominationID: number) => {
-    try {
-      await axios.put(
-        `${apiUrl}/api/businessjuryevaluation/${nominationID}`,
-        {
-          nominationID,
-          isGeneralJuryApproved: true,
-          approvalComments: "yes",
-          submittedBy: userId,
-          active: true,
-        },
-        {
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${authToken}`,
-          },
-        }
-      );
-
-      // Update UI instantly
-      setData((prev) =>
-        prev.map((item) =>
-          item.NominationID === nominationID ? { ...item, Status: "Approved" } : item
-        )
-      );
-       setToastType("success");
-        setSuccessMessage("Nomination Approved Successfully!");
-        setTimeout(() => setSuccessMessage(""), 3000);
-        setIsPanelOpen(false);
-        
-    } catch (error) {
-      console.error("Approve Error:", error);
-      alert("Approval failed");
-    }
-  };
-
-  const handleReject = async (nominationID: number) => {
-    try {
-      await axios.put(
-        `${apiUrl}/api/businessjuryevaluation/${nominationID}`,
-        {
-          nominationID,
-          isManagerApproved: false,
-          approvalComments: "Rejected",
-          submittedBy: userId,
-          active: true,
-        },
-        {
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${authToken}`,
-          },
-        }
-      );
-
-      // Update UI instantly
-      setData((prev) =>
-        prev.map((item) =>
-          item.NominationID === nominationID ? { ...item, Status: "Rejected" } : item
-        )
-      );
-      setToastType("error");
-      
-      setSuccessMessage("Business Jury Rejected Successfully!");
-        setTimeout(() => setSuccessMessage(""), 3000);
-        setIsPanelOpen(false); 
-        
-    } catch (error) {
-      console.error("Reject Error:", error);
-      alert("Reject failed");
-    }
-  };
 
 useEffect(() => {
       const fetchBusinessJury = async () => {
@@ -160,7 +83,14 @@ useEffect(() => {
       () => [
         //{ accessorKey: "Nomination", header: "Nomination" },
         { accessorKey: "Nominee", header: "Nomination" },
-        { accessorKey: "Tenant", header: "Tenant" },
+         {
+               accessorKey: "Tenant",
+               header: "Entity Name",
+               cell: ({ getValue }) => {
+                 const tenant = getValue() as string;
+                 return <ColorBadge label={tenant} />;
+               },
+             },
         { accessorKey: "CategoryName", header: "Category Name" },
         { accessorKey: "Score", header: "Score" },
         {
@@ -217,15 +147,6 @@ useEffect(() => {
   return (
     <div className="p-6 m-5 bg-white rounded-xl shadow-md relative">
       
-{successMessage && (
-        <div
-          className={`fixed  right-5 px-4 py-2 rounded-lg shadow-lg animate-slide-in z-[9999]
-            ${toastType === "success" ? "bg-green-600" : "bg-red-600"} text-white`}
-        >
-          {successMessage}
-        </div>
-      )}
-
       {/* Table */}
       <div className="overflow-x-auto">
         <div className="mb-4 flex justify-between items-center">
@@ -278,12 +199,6 @@ useEffect(() => {
   isOpen={isPanelOpen}
   onClose={() => setIsPanelOpen(false)}
   nominee={selectedNomination}
-  onApprove={() =>
-          selectedNomination && handleApprove(selectedNomination.NominationID)
-        }
-  onReject={() =>    
-          selectedNomination && handleReject(selectedNomination.NominationID)
-        }
 />    
     </div>
   );
