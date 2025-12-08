@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { Heart, MessageCircle, Share, MoreHorizontal, Eye, Send } from "lucide-react";
+import { Heart, MessageCircle, Share, MoreHorizontal, Eye, Send ,Trophy ,UsersRound} from "lucide-react";  
 import axios from "axios";
 import type { Feed } from "../../dataTypes/nomination";
 import { useAuth } from "../ContextAPI/AuthContext";
@@ -469,12 +469,13 @@ const nestedComments = buildCommentTree(filteredFlat);
                         <h3 className="font-semibold text-gray-900 text-sm sm:text-base truncate">
                           {post.Nominee}
                         </h3>
-                          <span className="px-2 py-1 rounded-full text-xs bg-purple-100 text-purple-800">
-                          🏆 {post.AwardCategory}
+                          <span className="px-2 py-1 rounded-full text-xs bg-purple-100 text-purple-800 flex items-center">
+                           <Trophy size={16}/>  <span className="ms-1"> {post.AwardCategory}</span>
                         </span>
-                        <span className="px-2 py-1 rounded-full text-xs bg-blue-100 text-blue-800">
-                          👥 {post.NominatedCount} Nominated
+                         <span className="px-2 py-1 rounded-full text-xs bg-blue-100 text-blue-800 flex items-center">
+                           <UsersRound size={16}/>  <span className="ms-1"> {post.NominatedCount}</span>
                         </span>
+                       
 
                        
                       </div>
@@ -560,7 +561,7 @@ const nestedComments = buildCommentTree(filteredFlat);
                       }
 
                       await fetchViews(post.NominationID);
-                      setShowViewers(true);
+                      setShowViewers(true) ;
 
                       setSelectedPost(post);
                     }}
