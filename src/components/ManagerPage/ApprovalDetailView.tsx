@@ -5,6 +5,7 @@ import { ArrowLeft, FileText } from "lucide-react";
 import ApprovalReasonPanel from "./ApproveReasonPanel";
 import axios from "axios";
 import { useAuth } from "../ContextAPI/AuthContext";
+import StatusFlow from "../StatusFlow";
 
 const apiUrl = import.meta.env.VITE_API_URL;
 
@@ -32,6 +33,10 @@ interface ApprovalView {
     FileNameGUID: string;
     FilePath: string;
   }[];
+   "ApprovalStatus": {
+   Status: string;
+  ApprovalType: string;
+  }[];
 
   Descriptions: string;
   ApprovalComments: string;
@@ -57,6 +62,10 @@ const ApprovalDetailView: React.FC = () => {
   // --------------------------
   // APPROVE FUNCTION
   // --------------------------
+  const approvalFlow = approval?.ApprovalStatus?.map(a => ({
+  type: a.ApprovalType,
+  status: a.Status
+})) ?? [];
   const handleApprove = async () => {
     try {
       await axios.put(
@@ -165,7 +174,13 @@ const ApprovalDetailView: React.FC = () => {
               </div>
             </div>
           </div>
-
+            {/* Row 4 */}
+              <div className="grid grid-cols-1 gap-4">
+                <div className="space-y-1">
+                  <div className="text-sm font-medium text-gray-900"></div>
+                  <StatusFlow steps={approvalFlow} />
+                </div>
+              </div>
           {/* Referrals */}
           <div className="grid grid-cols-3 gap-4">
             <div>
@@ -220,19 +235,25 @@ const ApprovalDetailView: React.FC = () => {
               )}
             </div>
           </div>
-
-          {/* Approver Comments */}
-          <div>
-            <div className="font-medium text-gray-900">Manager Comments</div>
-            <div className="text-gray-700">
-              {approval.ApprovalComments?.trim() || "No comments available"}
+            {/* Approver Comments — Show only when value exists */}
+          {approval.ApprovalComments?.trim() && (
+            <div>
+              <div className="font-medium text-gray-900">Approver Reason</div>
+              <div className="text-gray-700">{approval.ApprovalComments}</div>
             </div>
-          </div>
-          
+          )}
+          {/* Approver Comments
+          // <div>
+          //   <div className="font-medium text-gray-900">Approver Reason</div>
+          //   <div className="text-gray-700">
+          //     {approval.ApprovalComments?.trim() || "No comments available"}
+          //   </div>
+          // </div>
+           */}
         </div>
 
         {/* Buttons */}
-        <div className="px-6 py-4 border-t border-gray-200 bg-gray-50 flex justify-end space-x-3 mt-6">
+        <div className="px-6 py-4 flex justify-end space-x-3 mt-6">
           {approval.status !== "Rejected"&& approval.BusinessJuryStatus !== "Approved" && (
             <button
               onClick={() => {
