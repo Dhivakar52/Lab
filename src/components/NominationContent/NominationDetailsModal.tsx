@@ -1,10 +1,10 @@
 import React from 'react';
 import * as Dialog from '@radix-ui/react-dialog';
-import { X ,FileText} from 'lucide-react';
+import { X } from 'lucide-react';
 import { useState, useEffect } from "react";
 import { useAuth } from "../ContextAPI/AuthContext";
 import axios from "axios";
-import { ArrowRight } from "lucide-react";
+import StatusFlow from "../StatusFlow";
 
 //import { data } from 'react-router-dom';
 
@@ -47,6 +47,8 @@ interface NominationDetailsProps {
   };
   setSuccessMessage: React.Dispatch<React.SetStateAction<string>>;
 }
+const apiUrl = import.meta.env.VITE_API_URL;
+
 const NominationDetailsModal: React.FC<NominationDetailsProps> = ({ isOpen, onClose, onRefresh, data, setSuccessMessage }) => {
   console.log("Nomination Details Modal Data : ", data);
   const [previewOpen, setPreviewOpen] = useState(false);
@@ -117,7 +119,8 @@ const NominationDetailsModal: React.FC<NominationDetailsProps> = ({ isOpen, onCl
   })) || []
 };
     const res = await axios.delete(
-      `http://172.16.5.106:5195/api/nominations/${data.nominationId}`,
+      `${apiUrl}/api/nominations/${data.nominationId}`,
+      // `http://172.16.5.106:5195/api/nominations/${data.nominationId}`,
       {
         headers: {
           "Content-Type": "application/json",
@@ -163,51 +166,16 @@ const getFileIcon = (fileName: string) => {
       return "https://img.icons8.com/color/48/file.png";
   }
 };
+    const fallbackUrl = "File not found"; 
 
 const approvalFlow = data?.ApprovalStatus?.map(a => ({
   type: a.ApprovalType,
   status: a.Status
 })) ?? [];
 
-const statusFlowColors: Record<string, string> = {
-  "Approved": "bg-green-100 text-green-800 border-green-300",
-  "Rejected": "bg-red-100 text-red-800 border-red-300",
-  "Under Review": "bg-yellow-100 text-yellow-800 border-yellow-300",
-  "Not Started": "bg-gray-100 text-gray-700 border-gray-300",
-};
-const StatusFlow = ({ steps }: { steps: { type: string; status: string }[] }) => {
-  return (
-    <div className="flex items-start space-x-6 mt-2">
-      {steps.map((step, i) => {
-        const colorClass =
-          statusFlowColors[step.status] ||
-          "bg-gray-100 text-gray-700 border-gray-300";
-
-        return (
-          <div key={i} className="flex flex-col items-center w-28 relative">
-            {/* TYPE TEXT ON TOP */}
-            <span className="text-xs font-semibold text-gray-700 mb-1">
-              {step.type}
-            </span>
-
-            {/* STATUS BADGE */}
-            <span
-              className={`px-4 py-2 border rounded-full text-xs font-medium text-center w-full ${colorClass} relative`}
-            >
-              {step.status}
-
-              {/* ARROW TO THE RIGHT SIDE OF BADGE */}
-              {i !== steps.length - 1 && (
-                <ArrowRight
-                  className="lucide lucide-arrow-right w-4 h-4 text-gray-500 absolute top-1/2 -translate-y-1/2 right-[-20px]"/>
-              )}
-            </span>
-          </div>
-        );
-      })}
-    </div>
-  );
-};
+const hasFinalStatus = approvalFlow.some(s =>
+  s.status === "Approved" || s.status === "Rejected"
+);
 
   return (
       <>
@@ -220,7 +188,6 @@ const StatusFlow = ({ steps }: { steps: { type: string; status: string }[] }) =>
         <Dialog.Overlay className="fixed inset-0 bg-black/10" />
         
         {/* Slide-over panel */}
-         {/* <Dialog.Content className="fixed top-0 right-0 h-full w-full max-w-md bg-white border-l border-gray-200 flex flex-col"> */}
           <Dialog.Content className="fixed top-0 right-0 h-full w-full max-w-3xl bg-white border-l border-gray-200 flex flex-col">
           {/* Header */}
           <div className="flex items-center justify-between px-6 py-4 border-b border-gray-200">
@@ -288,20 +255,20 @@ const StatusFlow = ({ steps }: { steps: { type: string; status: string }[] }) =>
                {/* Row 4 */}
               <div className="grid grid-cols-1 gap-4">
                 <div className="space-y-1">
-                  <div className="text-sm font-medium text-gray-900">Nomination Approved Status</div>
+                  {/* <div className="text-sm font-medium text-gray-900">Nomination Status Flow</div> */}
                   <StatusFlow steps={approvalFlow} />
                 </div>
               </div>
               {/* Row 5 */}
               <div className="grid grid-cols-3 gap-8">
                 <div className="space-y-1">
-                  <div className="text-sm font-medium text-gray-900">Manager</div>
+                  <div className="text-sm font-medium text-gray-900">Reporting To</div>
                   <div className="text-sm text-gray-600">{data.managerEmail}</div>
                 </div>
-                <div className="space-y-1">
+                {/* <div className="space-y-1">
                   <div className="text-sm font-medium text-gray-900">Manager Email ID</div>
                   <div className="text-sm text-gray-600">{data.managerEmailID}</div>
-                </div>
+                </div> */}
               </div> 
               <div className="text-sm font-medium text-gray-900 mb-1">Referrals</div>
               <div className="text-gray-600 space-y-1">
@@ -362,62 +329,91 @@ const StatusFlow = ({ steps }: { steps: { type: string; status: string }[] }) =>
             <div className="mt-2 space-y-2">
   {data["Supporting Documents"]?.length ? (
     data["Supporting Documents"].map((doc, i) => {
-      const ext = doc.OriginalFileName.split('.').pop()?.toLowerCase() || "";
       return (
         <div
-          key={i}
-          className="flex items-center gap-3 text-blue-600 cursor-pointer hover:underline"
-          onClick={() => {
-            if (["xls", "xlsx", "doc", "docx", "csv"].includes(ext)) {
-              window.open(doc.FilePath, "_blank");
-              return;
-            }
-            setPreviewType(ext);
-            setPreviewFile(doc.FilePath);
-            setPreviewOpen(true);
-          }} >
-          <img 
-            src={getFileIcon(doc.OriginalFileName)} 
-            className="w-6 h-6"/>
-          <span>{doc.OriginalFileName}</span>
-        </div>
+  key={i}
+  className="flex items-center gap-3 text-blue-600 cursor-pointer hover:underline"
+  onClick={async () => {
+  const ext = doc.OriginalFileName.split('.').pop()?.toLowerCase() || "";
+  const downloadApiUrl = `${apiUrl}/api/download?fileName=${doc.FileNameGUID}`;
+
+  try {
+    const response = await axios.get(downloadApiUrl, {
+      responseType: "blob",
+      headers: {
+        Authorization: `Bearer ${authToken}`,
+      },
+    });
+
+    const blob = response.data;
+    const blobUrl = window.URL.createObjectURL(blob);
+
+    if (ext === "pdf") {
+      window.open(blobUrl, "_blank");
+      return;
+    }
+    if (["xls", "xlsx"].includes(ext)) {
+      const link = document.createElement("a");
+      link.href = blobUrl;
+      link.download = doc.OriginalFileName; 
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      return;
+    }
+    if (["doc", "docx", "csv"].includes(ext)) {
+      const link = document.createElement("a");
+      link.href = blobUrl;
+      link.download = doc.OriginalFileName;
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      return;
+    }
+    if (["jpg", "jpeg", "png", "gif"].includes(ext)) {
+      setPreviewType(ext);
+      setPreviewFile(blobUrl);
+      setPreviewOpen(true);
+      return;
+    }
+
+  } catch (err) {
+    console.error("Download failed:", err);
+    alert("File Not Found");
+    // setPreviewType("error");
+    // setPreviewFile(fallbackUrl);
+    // setPreviewOpen(true);
+  }
+}}
+>
+  <img src={getFileIcon(doc.OriginalFileName)} className="w-6 h-6"/>
+  <span>{doc.OriginalFileName}</span>
+</div>
       );
     })
   ) : (
     <p className="text-gray-500 text-sm">No documents uploaded</p>
   )}
 </div>
-
-             {/* <div className="mt-2 space-y-2">
-               {data["Supporting Documents"]?.length ? (
-                data["Supporting Documents"].map((doc, i) => (
-               <a
-               key={i}
-               href={doc.FilePath}
-               target="_blank"
-               rel="noopener noreferrer"
-              className="flex my-2 items-center gap-2 text-blue-600 hover:underline"
-               >
-              <FileText className="w-5 h-5 text-blue-600" />
-              {doc.OriginalFileName}
-             </a>
-              ))
-             ) : (
-             <p className="text-gray-500 text-sm">No documents uploaded</p>
-             )}
-              </div> */}
              </div>
             </div>
           </div>
 
           {/* Footer */}
-         <div className="px-6 py-4 border-t border-gray-200 flex justify-end bg-white">
+          <div className="px-6 py-4 border-t border-gray-200 flex justify-end bg-white">
+          {!hasFinalStatus && (
+             <button onClick={() => setIsWithdrawDialogOpen(true)}
+             className="px-2 py-2 bg-red-600 text-white rounded-md shadow hover:bg-red-700 transition flex items-center">
+             Withdraw </button>
+             )}
+          </div>
+         {/* <div className="px-6 py-4 border-t border-gray-200 flex justify-end bg-white">
             {data.status !== "Approved" && (
             <button 
              onClick={() => setIsWithdrawDialogOpen(true)}
             className="px-2 py-2 bg-red-600 text-white rounded-md shadow hover:bg-red-700 transition flex items-center"> Withdraw </button>
             )}
-            </div> 
+            </div>  */}
         </Dialog.Content>
          {/* Withdraw Confirmation Dialog */}
        {isWithdrawDialogOpen && (
@@ -453,28 +449,15 @@ const StatusFlow = ({ steps }: { steps: { type: string; status: string }[] }) =>
           <X size={20} />
         </button>
       </div>
-
       <div className="w-full h-full border rounded overflow-auto flex justify-center items-center bg-gray-50">
-
-        {/* PDF VIEW */}
-        {previewType === "pdf" && (
-          <iframe 
-            src={previewFile!}
-            className="w-full h-full"
-            title="PDF Viewer"
-          />
-        )}
-
-        {/* IMAGE VIEW */}
         {["jpg", "jpeg", "png", "gif"].includes(previewType || "") && (
           <img 
             src={previewFile!}
-            alt="Document Preview"
+            alt="Preview"
             className="max-h-full max-w-full object-contain"
           />
         )}
       </div>
-
     </Dialog.Content>
   </Dialog.Portal>
 )}

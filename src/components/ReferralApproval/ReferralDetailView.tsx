@@ -254,7 +254,7 @@ const ReferralDetailView: React.FC = () => {
           </button>
         </div> */}
         {/* Approve / Reject Buttons */}
-          <div className="px-6 py-4 border-t border-gray-200 bg-gray-50 flex justify-end space-x-3 mt-6">
+          <div className="px-6 py-4  flex justify-end space-x-3 mt-6">
             
             {data.status !== "Rejected" && data.BusinessJuryStatus !== "Approved"&& (
               <button
