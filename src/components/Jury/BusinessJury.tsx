@@ -1,6 +1,6 @@
 import React, { useState,useEffect,useMemo } from "react";
 import * as DropdownMenu from "@radix-ui/react-dropdown-menu";
-import { Menu,  } from "lucide-react";
+import { ArrowRight, Menu,  } from "lucide-react";
 import BusinessPanel from "./BusinessPanel"; 
 import axios from "axios";
 import { useAuth } from "../ContextAPI/AuthContext";
@@ -28,10 +28,19 @@ export interface BusinessJury {
   Nominee: string;
   Tenant: number;
   CategoryName: string;
-  SubmittedOn: string;
-  Score: number;
+  "Submitted On": string;
+  BusinessJuryScore: number;
   BusinessJuryComments: string;
+  Descriptions:string;
+  NominatedBy:string;
+  Designation:string;
+  Department:string;
+  ManagerUserName:string;
   Status: string; 
+   "ApprovalStatus": {
+   Status: string;
+  ApprovalType: string;
+  }[];
   "Supporting Documents": {
     OriginalFileName: string;
     FileType: string;
@@ -57,7 +66,7 @@ const BusinessJury: React.FC = () => {
   const [selectedNomination, setSelectedNomination] = useState<BusinessJury | null>(null);
   const [isPanelOpen, setIsPanelOpen] = useState(false);
 
-useEffect(() => {
+  useEffect(() => {
       const fetchBusinessJury = async () => {
       try {
         //const token = localStorage.getItem("authToken");
@@ -92,6 +101,7 @@ useEffect(() => {
                },
              },
         { accessorKey: "CategoryName", header: "Category Name" },
+        { accessorKey: "NominatedBy", header: "Nominated By" },
         { accessorKey: "Score", header: "Score" },
         {
         accessorKey: "Status",
@@ -161,7 +171,7 @@ useEffect(() => {
         <table className="min-w-full border border-gray-200">
           <thead className="bg-gray-50">
             <tr>
-              {["Nominee", "Entity", "Category", "Score", "Status", "Actions"].map((header) => (
+              {["Nominee", "Entity", "Category","Nominated By", "Score", "Status", "Actions"].map((header) => (
                 <th
                   key={header}
                   className="px-6 py-3 text-left text-sm font-semibold text-gray-600"

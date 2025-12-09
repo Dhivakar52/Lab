@@ -3,6 +3,7 @@ import { X, FileText } from "lucide-react";
 import { useAuth } from "../ContextAPI/AuthContext";
 import axios from "axios";
 import type { BusinessJury } from "./BusinessJury";
+import StatusFlow from "../StatusFlow";
 
 interface NomineeSidePanelProps {
   isOpen: boolean;
@@ -26,8 +27,8 @@ const BusinessPanel: React.FC<NomineeSidePanelProps> = ({
    const [businessJuryComments, setBusinessJuryComments] = useState('');
     const { authToken, userId } = useAuth();
     const [data, setData] = useState<BusinessJury[]>([]);
-  const [message, setMessage] = useState('');
- const [messageType, setMessageType] = useState<'success' | 'reject'>('success'); // Message type
+//   const [message, setMessage] = useState('');
+//  const [messageType, setMessageType] = useState<'success' | 'reject'>('success'); // Message type
   const [loading, setLoading] = useState<boolean>(false);
   const [sidebarOpen, setSidebarOpen] = useState<boolean>(true); // Sidebar state
     const [commentError, setCommentError] = useState("");
@@ -70,6 +71,7 @@ const BusinessPanel: React.FC<NomineeSidePanelProps> = ({
             NominationID:nominee?.NominationID,
             IsBusinessJuryApproved: true,
             BusinessJuryComments: businessJuryComments,
+            BusinessJuryScore:nominee?.BusinessJuryScore,
             BusinessJuryID: userId,
             submittedBy: userId,
             active: true,
@@ -117,6 +119,7 @@ const BusinessPanel: React.FC<NomineeSidePanelProps> = ({
             NominationID:nominee?.NominationID,
             IsBusinessJuryApproved: false,
             BusinessJuryComments: businessJuryComments,
+            BusinessJuryScore:nominee?.BusinessJuryScore,
             BusinessJuryID: userId,
             submittedBy: userId,
             active: true,
@@ -151,6 +154,18 @@ const BusinessPanel: React.FC<NomineeSidePanelProps> = ({
       // }, 3000);
       }
     };
+
+ 
+const isPresidentUnitApproved = () => {
+  const stage4Entry = nominee?.ApprovalStatus.find(
+    (stage) => stage.ApprovalType === 'General Jury'
+  );
+  console.log(stage4Entry);
+
+  // Return true if the entry exists AND its status is exactly 'Approved'
+  return stage4Entry && stage4Entry.Status === 'Approved';
+};  
+
 
   const ActionButtons = () => {
     if (!nominee) return null; // Safety check
@@ -206,10 +221,14 @@ const BusinessPanel: React.FC<NomineeSidePanelProps> = ({
         return null;
     }
   };
+  const approvalFlow = nominee?.ApprovalStatus?.map((a : any) => ({
+  type: a.ApprovalType,
+  status: a.Status
+})) ?? [];
 
   return (
     <div
-      className={`fixed top-0 right-0 h-full w-[400px] bg-white shadow-2xl transform transition-transform duration-300 ease-in-out z-50 ${
+      className={`fixed top-0 right-0 h-full w-[600px] bg-white shadow-2xl transform transition-transform duration-300 ease-in-out z-50 ${
         isOpen ? "translate-x-0" : "translate-x-full"
       }`}
     >
@@ -227,51 +246,85 @@ const BusinessPanel: React.FC<NomineeSidePanelProps> = ({
       {/* Content */}
       <div className="p-5 overflow-y-auto h-[calc(100%-64px)]">
       
-{nominee ? (
+     {nominee ? (
           <div className="space-y-5 text-sm">
 
             {/* Row 1 */}
-            <div className="grid grid-cols-2 gap-8">              
+            <div className="grid grid-cols-3 gap-8">              
               <div className="space-y-1">
                 <div className="text-sm font-medium text-gray-900">Nominee</div>
-                <div className="text-sm text-gray-600">{nominee.Tenant}</div>
+                <div className="text-sm text-gray-600">{nominee.Nominee}</div>
               </div>
                <div className="space-y-1">
                 <div className="text-sm font-medium text-gray-900">Award Category</div>
                 <div className="text-sm text-gray-600">{nominee.CategoryName}</div>
               </div>
+              <div className="space-y-1">
+                <div className="text-sm font-medium text-gray-900">Nominated By</div>
+                <div className="text-sm text-gray-600">{nominee.NominatedBy}</div>
+              </div>
             </div>
 
             {/* Row 2 */}
-            <div className="grid grid-cols-2 gap-8">
-              <div className="space-y-1">
-                <div className="text-sm font-medium text-gray-900">Entity</div>
-                <div className="text-sm text-gray-600">{nominee.Tenant}</div>
+             <div>              
+               <div className="space-y-1">
+                <div className="text-sm font-medium text-gray-900">Descriptions</div>
+                <div className="text-sm text-gray-600">{nominee.Descriptions}</div>
               </div>
-            <div className="space-y-1">
-                <div className="text-sm font-medium text-gray-900">Score (Out of 100)</div>
-                <div className="text-sm text-gray-600">{nominee.Score}</div>
-              </div>
-             
             </div>
 
-            {/* Row 3 */}
-            <div className="grid grid-cols-2 gap-8">
+             {/* Row 3 */}
+            <div className="grid grid-cols-3 gap-8">              
               <div className="space-y-1">
-                <div className="text-sm font-medium text-gray-900">Submitted On</div>
-                <div className="text-sm text-gray-600">{nominee.SubmittedOn}</div>
+                <div className="text-sm font-medium text-gray-900">Submitted Date</div>
+                <div className="text-sm text-gray-600">{nominee["Submitted On"]}</div>
               </div>
-
+              <div className="space-y-1">
+                <div className="text-sm font-medium text-gray-900">Designation</div>
+                <div className="text-sm text-gray-600">{nominee.Designation}</div>
+              </div>
                <div className="space-y-1">
-                <div className="text-sm font-medium text-gray-900">Flag</div>
+                <div className="text-sm font-medium text-gray-900">Department</div>
+                <div className="text-sm text-gray-600">{nominee.Department}</div>
+              </div>
+            </div>
+
+            {/* Row 4*/}
+            <div className="grid grid-cols-3 gap-8">              
+              <div className="space-y-1">
+                <div className="text-sm font-medium text-gray-900">Tenant</div>
+                <div className="text-sm text-gray-600">{nominee.Tenant}</div>
+              </div>
+                <div className="space-y-1">
+                <div className="text-sm font-medium text-gray-900">Reporting to</div>
+                <div className="text-sm text-gray-600">{nominee.ManagerUserName}</div>
+              </div>
+              <div className="space-y-1">
+                <div className="text-sm font-medium text-gray-900">Score (Out of 100)</div>
+                <div className="text-sm text-gray-600">{nominee.BusinessJuryScore}</div>
+              </div>
+            </div>
+
+            {/* Row 6 */}
+            <div className="grid grid-cols-2 gap-8">
+              
+             
+               <div className="space-y-1">
+                <div className="text-sm font-medium text-gray-900">Nomination Status</div>
                 <span className={`px-3 py-1 rounded-full text-sm font-semibold ${statusColors[nominee.Status]}`}>
                   {nominee.Status}
                 </span>
                </div>
             </div>
 
-           
-             {/* Row 7 – Supporting Documents */}
+           {/* Row-7 Approval Status */}
+        <div className="grid grid-cols-1 gap-4">
+                <div className="space-y-1">
+                  {/* <div className="text-sm font-medium text-gray-900">Nomination Status Flow</div> */}
+                  <StatusFlow steps={approvalFlow} />
+                </div>
+              </div>
+             {/* Row 8 – Supporting Documents */}
             <div>
               <div className="font-medium">Supporting Documents</div>
               <div className="text-gray-600 space-y-1">
@@ -290,7 +343,15 @@ const BusinessPanel: React.FC<NomineeSidePanelProps> = ({
               ))}
               </div>
             </div>
-         <div className="space-y-2">
+        {nominee?.BusinessJuryComments?.length > 0 ? (
+            <div>
+                 <div className="space-y-1">
+                <div className="text-sm font-medium text-gray-900">Approver's Comments</div>
+                <div className="text-sm text-gray-600">{nominee.BusinessJuryComments}</div>
+               </div>
+            </div>
+       ) : (
+       <div className="space-y-2">
             <label className="text-sm font-medium text-gray-900">
               Reason <span className="text-red-600">*</span>
             </label>
@@ -311,8 +372,12 @@ const BusinessPanel: React.FC<NomineeSidePanelProps> = ({
               <p className="text-red-600 text-sm">{commentError}</p>
             )}
          </div>
-            <ActionButtons />
-
+      )}
+         
+ {/* The condition to show the button: Stage 4 is NOT approved */}
+    {!isPresidentUnitApproved() && (
+      <ActionButtons/>
+    )}
           </div>
         ) : null}
       </div>

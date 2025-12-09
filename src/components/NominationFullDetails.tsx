@@ -3,7 +3,8 @@ import { useAuth } from "./ContextAPI/AuthContext";
 import { useEffect, useState } from "react";
 import axios from "axios";
 import { useParams } from "react-router-dom";
-import { ArrowBigLeftDashIcon, ArrowBigLeftIcon, FileText, MoveLeft, MoveRight } from "lucide-react";
+import {  FileText, MoveLeft } from "lucide-react";
+import StatusFlow from "./StatusFlow";
 
 const apiUrl = import.meta.env.VITE_API_URL;
 
@@ -12,7 +13,6 @@ const NominationFullDetails:React.FC = () => {
     const [data, setData] = useState<any>([]);
     const [loading, setLoading] = useState(true);
     const { authToken } = useAuth();
-
 
     useEffect(() => {
     const fetchNominations = async () => {
@@ -41,6 +41,11 @@ const NominationFullDetails:React.FC = () => {
   const handleBackward = () => {
     window.history.back();
   }
+          
+ const approvalFlow = data?.ApprovalStatus?.map((a : any) => ({
+  type: a.ApprovalType,
+  status: a.Status
+})) ?? [];
 
 return (
 
@@ -103,8 +108,15 @@ return (
                       </span>
                     </div>
                 </div>
-                
+                </div>
+               {/* Row 4 */}
+              <div className="grid grid-cols-1 gap-4">
+                <div className="space-y-1">
+                  {/* <div className="text-sm font-medium text-gray-900">Nomination Status Flow</div> */}
+                  <StatusFlow steps={approvalFlow} />
+                </div>
               </div>
+                
               {/* Row 3 */}
               <div className="grid grid-cols-2">                
                 <div className="space-y-1">
@@ -159,12 +171,13 @@ return (
              <p className="text-gray-500 text-lm">No documents uploaded</p>
              )}
               </div>
+
+              </div>
              </div>
             </div>
 
 
 
-   </div>
 
 
 

@@ -3,6 +3,7 @@ import { Trophy,X} from 'lucide-react';
 import { useAuth } from "../ContextAPI/AuthContext";
 import axios from "axios";
 import type {PresidentLevelNominee} from "./PresidentLevel"
+import StatusFlow from "../StatusFlow";
 
 interface PresidentSidePanelProps {
     nominee: PresidentLevelNominee | null;
@@ -37,24 +38,24 @@ const PresidentSidePanel: React.FC<PresidentSidePanelProps> = ({
   const rejectClasses = `${baseClasses} bg-red-600 hover:bg-red-700`;
   const approveClasses = `${baseClasses} bg-green-600 hover:bg-green-700`;
   const containerClasses = "flex justify-around items-center gap-4 mt-4";
+     
+      useEffect(() => {
+         if (nominee?.PresidentComments) {
+           setPresidentLevelJuryComments(nominee.PresidentComments);
+         } else {
+           setPresidentLevelJuryComments("");
+         }
+       }, [nominee]);
 
-    // ⭐ LOAD COMMENTS
-    useEffect(() => {
-      if (nominee?.PresidentComments) {
-        setPresidentLevelJuryComments(nominee.PresidentComments);
-      } else {
-        setPresidentLevelJuryComments("");
-      }
-    }, [nominee]);
-
-    const validateComments = () => {
-  if (!presidentLevelJuryComments.trim()) {
-    setCommentError("Comments are required!");
-    return false;
-  }
-  setCommentError("");
-  return true;
-};
+     const validateComments = () => {
+       if (!presidentLevelJuryComments.trim()) {
+         setCommentError("Comments are required!");
+         return false;
+       }
+       setCommentError("");
+       return true;
+     };
+     
 
   const onApprove = async (JuryApprovalsID: number) => {
     setLoading(true);
@@ -66,7 +67,8 @@ const PresidentSidePanel: React.FC<PresidentSidePanelProps> = ({
             JuryApprovalsID:JuryApprovalsID,
             NominationID:nominee?.NominationID,
             IsPresidentApproved: true,
-            Comments: presidentLevelJuryComments,
+            PresidentComments: presidentLevelJuryComments,
+            PresidentScore:nominee?.PresidentScore,
             PresidentID: userId,
             submittedBy: userId,
             active: true,
@@ -114,6 +116,7 @@ const PresidentSidePanel: React.FC<PresidentSidePanelProps> = ({
             NominationID:nominee?.NominationID,
             IsPresidentApproved: false,
             PresidentComments: presidentLevelJuryComments,
+            PresidentScore:nominee?.PresidentScore,
             PresidentID: userId,
             submittedBy: userId,
             active: true,
@@ -205,9 +208,13 @@ const PresidentSidePanel: React.FC<PresidentSidePanelProps> = ({
         return null;
     }
   };
+   const approvalFlow = nominee?.ApprovalStatus?.map((a : any) => ({
+  type: a.ApprovalType,
+  status: a.Status
+})) ?? [];
    return (
    <div
-      className={`fixed top-0 right-0 h-full w-[400px] bg-white shadow-2xl transform transition-transform duration-300 ease-in-out z-50 ${
+      className={`fixed top-0 right-0 h-full w-[600px] bg-white shadow-2xl transform transition-transform duration-300 ease-in-out z-50 ${
         isOpen ? "translate-x-0" : "translate-x-full"
       }`}
     >
@@ -229,9 +236,9 @@ const PresidentSidePanel: React.FC<PresidentSidePanelProps> = ({
           <div className="space-y-5 text-sm">
 
             {/* Row 1 */}
-            <div className="grid grid-cols-2 gap-8">
+            <div className="grid grid-cols-3 gap-8">
               <div className="space-y-1">
-                <div className="text-sm font-medium text-gray-900">Nominee Name</div>
+                <div className="text-sm font-medium text-gray-900">Nominee</div>
                 <div className="text-sm text-gray-600">{nominee.Nominee}</div>
               </div>
 
@@ -240,39 +247,62 @@ const PresidentSidePanel: React.FC<PresidentSidePanelProps> = ({
                 <div className="text-sm text-gray-600">{nominee.CategoryName}</div>
 
               </div>
-            </div>
-            {/* Row 2 */}
-            <div className="grid grid-cols-2 gap-8">
               <div className="space-y-1">
-                <div className="text-sm font-medium text-gray-900">Entity</div>
-                <div className="text-sm text-gray-600">{nominee.Tenant}</div>
+                <div className="text-sm font-medium text-gray-900">Nominated By</div>
+                <div className="text-sm text-gray-600">{nominee.NominatedBy}</div>
               </div>
+            </div>
 
+              {/* Row 2 */}
+            <div>
               <div className="space-y-1">
-                <div className="text-sm font-medium text-gray-900">Consolidated Avg Score</div>
-                <div className="text-sm text-gray-600">{nominee.ConsolidatedAvgScore}</div>
+                <div className="text-sm font-medium text-gray-900">Descriptions</div>
+                <div className="text-sm text-gray-600">{nominee.Descriptions}</div>
               </div>
             </div>
 
             {/* Row 3 */}
-            <div className="grid grid-cols-2 gap-8">
+            <div className="grid grid-cols-3 gap-8">
               <div className="space-y-1">
-                <div className="text-sm font-medium text-gray-900">President Score</div>
-                <div className="text-sm text-gray-600">{nominee.Score}</div>
+                <div className="text-sm font-medium text-gray-900">Submitted Date</div>
+                <div className="text-sm text-gray-600"></div>
+              </div>
+              <div className="space-y-1">
+                <div className="text-sm font-medium text-gray-900">Designation</div>
+                <div className="text-sm text-gray-600">{nominee.Designation}</div>
+              </div>
+              <div className="space-y-1">
+                <div className="text-sm font-medium text-gray-900">Department</div>
+                <div className="text-sm text-gray-600">{nominee.Department}</div>
+              </div>
+            </div>
+
+            {/* Row 4 */}
+            <div className="grid grid-cols-3 gap-8">
+              <div className="space-y-1">
+                <div className="text-sm font-medium text-gray-900">Tenant</div>
+                <div className="text-sm text-gray-600">{nominee.Tenant}</div>
               </div>
 
+              <div className="space-y-1">
+                <div className="text-sm font-medium text-gray-900">Reporting To</div>
+                <div className="text-sm text-gray-600">{nominee.ManagerUserName}</div>
+              </div>
                <div className="space-y-1">
-                <div className="text-sm font-medium text-gray-900">Flag</div>
+                <div className="text-sm font-medium text-gray-900">President Score</div>
+                <div className="text-sm text-gray-600">{nominee.PresidentScore}</div>
+              </div>
+            </div>
+
+            {/* Row 5 */}
+            <div className="grid grid-cols-2 gap-8">
+              <div className="space-y-1">
+                <div className="text-sm font-medium text-gray-900">Nomination Status</div>
                   <span className={`px-3 py-1 rounded-full text-sm font-semibold ${statusColors[nominee.Status]}`} >
                     {nominee.Status}
                   </span>              
                 </div>
-            </div>
-
-             {/* Row 4 */}
-                       
-           <div className="grid grid-cols-2 gap-8">
-              <div className="space-y-1">
+             <div className="space-y-1">
 
                 <div className="text-sm font-medium text-gray-900">Final Status</div>
               <div className="text-sm text-gray-600">
@@ -288,7 +318,25 @@ const PresidentSidePanel: React.FC<PresidentSidePanelProps> = ({
              
             </div>
 
-         <div className="space-y-2">
+            {/* Row 6 */}
+             <div className="grid grid-cols-1 gap-4">
+                <div className="space-y-1">
+                  {/* <div className="text-sm font-medium text-gray-900">Nomination Status Flow</div> */}
+                  <StatusFlow steps={approvalFlow} />
+                </div>
+              </div>
+
+
+         {nominee?.PresidentComments?.length > 0 ? (
+            <div>
+                 <div className="space-y-1">
+                <div className="text-sm font-medium text-gray-900">Approver's Comments</div>
+                <div className="text-sm text-gray-600">{nominee.PresidentComments}</div>
+               </div>
+            </div>
+       ) : (
+       
+     <div className="space-y-2">
             <label className="text-sm font-medium text-gray-900">
               Reason <span className="text-red-600">*</span>
             </label>
@@ -308,7 +356,8 @@ const PresidentSidePanel: React.FC<PresidentSidePanelProps> = ({
             {commentError && (
               <p className="text-red-600 text-sm">{commentError}</p>
             )}
-        </div>
+         </div>
+      )}
             <ActionButtons/>
           </div>
         ) : null}

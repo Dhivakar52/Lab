@@ -24,14 +24,23 @@ export interface PresidentLevelNominee {
   JuryApprovalsID:number;
   NominationID: number;
   PresidentID:number;
- Nominee: string;
+  Nominee: string;
   Tenant: string;
   CategoryName: string;
   ConsolidatedAvgScore: number;
-  Score: number;
+  PresidentScore: number;
+  Descriptions:string;
+  NominatedBy:string;
+  Designation:string;
+  Department:string;
+  ManagerUserName:string;
   Status: 'Approved' | 'Rejected' | 'Pending' | string;
   FinalStatus:'Winner' | 'Runner-Up' | string;
   PresidentComments: string;
+  "ApprovalStatus": {
+   Status: string;
+  ApprovalType: string;
+  }[];
 }
 
 const apiUrl = import.meta.env.VITE_API_URL;
@@ -82,8 +91,9 @@ const PresidentLevel: React.FC = () => {
                 },
               },
         { accessorKey: "CategoryName", header: "Category" },
+        { accessorKey: "NominatedBy", header: "Nominated By" },
         { accessorKey: "ConsolidatedAvgScore", header: "Consolidated Avg Score" },
-        { accessorKey: "Score", header: "President Score" },
+        { accessorKey: "PresidentScore", header: "President Score" },
          { accessorKey: "Status", header: "Flag" ,
           cell: ({ getValue }) => { // Use 'getValue' to access the cell's raw value
           const flagValue = getValue<PresidentLevelNominee['Status']>();
