@@ -221,13 +221,20 @@ const ReferralDetailView: React.FC = () => {
               )}
             </div>
           </div>
-          {/* Reviewer Comments */}
+           {/* Approver Comments — Show only when value exists */}
+          {data.Comments?.trim() && (
             <div>
+              <div className="font-medium text-gray-900">Approver Reason</div>
+              <div className="text-gray-700">{data.Comments}</div>
+            </div>
+          )}
+          {/* Reviewer Comments */}
+            {/* <div>
               <div className="text-lm font-medium text-gray-900">Approver Reason</div>
               <div className="text-lm text-gray-600">
                 {data.Comments?.trim() || "No comments available"}
               </div>
-            </div>
+            </div> */}
         </div>
 
         {/* Approve / Reject Buttons */}

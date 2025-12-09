@@ -45,6 +45,10 @@ interface ApprovalData {
     FilePath: string;
   }[];
   BusinessJuryStatus: string;
+   "ApprovalStatus": {
+  Status: string;
+  ApprovalType: string;
+  }[];
 }
 
 interface ApprovalView {
@@ -72,6 +76,10 @@ interface ApprovalView {
   Descriptions: string;
   ApprovalComments: string;
   BusinessJuryStatus: string;
+   "ApprovalStatus": {
+  Status: string;
+  ApprovalType: string;
+  }[];
 }
 
 const apiUrl = import.meta.env.VITE_API_URL;
@@ -196,6 +204,8 @@ const ApprovalTable: React.FC = () => {
         return <ColorBadge label={tenant} />;
       },
     },
+      { accessorKey: "NominatedBy", header: "Nominated By" },
+      { accessorKey: "AwardCategory", header: "AwardCategory" },
 
     { accessorKey: "SubmittedDate", header: "Submitted Date" },
 
@@ -235,6 +245,7 @@ const ApprovalTable: React.FC = () => {
               Descriptions: item.Descriptions,
               ApprovalComments: item.ApprovalComments,
               BusinessJuryStatus: item.BusinessJuryStatus,
+               "ApprovalStatus": item["ApprovalStatus"],
             },
           });
         };

@@ -241,6 +241,8 @@ const ReferralTable: React.FC = () => {
           return <ColorBadge label={tenant} />;
         },
       },
+       { accessorKey: "NominatedBy", header: "Nominated By" },
+      { accessorKey: "AwardCategory", header: "AwardCategory" },
      // { accessorKey: "Tenant", header: "Entity Name" },
       { accessorKey: "SubmittedDate", header: "Submitted Date" },
 
