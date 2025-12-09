@@ -15,6 +15,7 @@ import { Menu } from "lucide-react";
 import { Outlet } from "react-router-dom";
 import { useAuth } from "../ContextAPI/AuthContext";
 import NominationDetailsModal from "./NominationDetailsModal";
+import { ColorBadge } from "../TenantBadges";
 
 interface Nomination {
   TotalRowCount: number;
@@ -103,7 +104,15 @@ const [refreshKey, setRefreshKey] = useState(0);
     () => [
       { accessorKey: "NominationID", header: "Nomination ID" },
       { accessorKey: "Nominee", header: "Nominee" },
-      { accessorKey: "Tenant", header: "Entity" },
+      // { accessorKey: "Tenant", header: "Entity" },
+      {
+        accessorKey: "Tenant",
+        header: "Entity Name",
+        cell: ({ getValue }) => {
+          const tenant = getValue() as string;
+          return <ColorBadge label={tenant} />;
+        },
+      },
       { accessorKey: "AwardCategory", header: "Category" },
       { accessorKey: "NominatedBy", header: "Nominated By" },
       {

@@ -426,7 +426,7 @@ useEffect(() => {
       
           {/* Title */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-4">
-          <div className="mb-6">
+          <div className="">
             <Label.Root htmlFor="title" className="block text-sm font-medium">
               Title of Submission<span className="text-red-500"> *</span>
             </Label.Root>
@@ -443,7 +443,7 @@ useEffect(() => {
             />
              {errors.title && <p className="text-red-500 text-sm mt-1">{errors.title}</p>}
              </div>
-            <div className="mb-6">
+            <div className="">
               <label className="block text-sm font-medium text-gray-700 mb-2">
                 Contest Type<span className="text-red-500"> *</span>
               </label>
@@ -557,9 +557,9 @@ useEffect(() => {
               />
             </div> */}
 
-            <div className="mb-6">
+            <div className="">
               <label className="block text-sm font-medium mb-2">
-                Referrals Email ID <span className="text-red-500">(mandatory 3*)</span>
+                Referrals Email ID 
               </label>
               <Select
                 options={users.map((u) => ({
@@ -595,18 +595,22 @@ useEffect(() => {
           </div>
 
           {/* Description */}
-          <div className="mb-6">
-            <Label.Root className="block text-sm font-medium">
-              Description (Max 1000 chars)
-            </Label.Root>
-            <textarea
-              placeholder="Describe the nomination..."
-              value={form.description}
-              onChange={(e) =>
-                setForm({ ...form, description: e.target.value })
-              }
-              className="w-full mt-1 border rounded px-3 py-2 h-28 resize-none"
-            />
+          <div className="">
+            <Label.Root className="block text-sm font-medium">Description  (Max 1000 chars)</Label.Root>
+                      <textarea
+                        placeholder="Describe the nomination..."
+                        value={form.description}
+                        onChange={(e) => { const value = e.target.value;
+                        if (value.length <= 1000) {
+                        setForm({ ...form, description: value });
+                        }
+                       }}
+                        // onChange={(e) => setForm({ ...form, description: e.target.value })}
+                        className="w-full mt-1 border rounded px-3 py-2 h-28 resize-none"
+                      />
+                       <p className="text-gray-500 text-sm mt-1">
+                {form.description.length}/1000 characters
+              </p>
           </div>
 
           {/* Buttons */}

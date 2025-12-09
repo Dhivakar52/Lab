@@ -5,12 +5,18 @@ import axios from "axios";
 import type { FormState } from "../../dataTypes/nomination";
 import { useAuth } from "../ContextAPI/AuthContext";
 import Select from "react-select";
-import type { SingleValue } from "react-select";
 import { useNavigate } from "react-router-dom";
 
-interface OptionType {
-  value: number;
-  label: string;
+// interface OptionType {
+//   value: number;
+//   label: string;
+// }
+interface UploadedDocument {
+  originalFileName: string;
+  fileType: string;
+  fileSize: number;
+  fileNameGUID: string;
+  fileUrl: string;
 }
 const apiUrl = import.meta.env.VITE_API_URL;
 
@@ -58,7 +64,7 @@ export default function AddNomination() {
 
   if (!form.title.trim()) newErrors.title = "Title is required.";
   if (!form.contestType) newErrors.contestType = "Contest type is required.";
-  //if (referrals.length < 3) newErrors.referrals = "Please select 3 referrals.";
+  //if (referrals.length < 3) newErrors.referrals = "Please select atleast 3 referrals.";
 
   setErrors(newErrors);
   return Object.keys(newErrors).length === 0;
@@ -81,7 +87,7 @@ useEffect(() => {
   fetchSelfNominationsCount();
 }, [authToken, userId]);
 
-const handleSingleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
   const selectedFiles = Array.from(e.target.files || []);
   setFileError("");
 
@@ -89,7 +95,6 @@ const handleSingleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
   if (fileInputRef.current) {
     fileInputRef.current.value = "";
   }
-
   // Check duplicates and size
   for (const file of selectedFiles) {
 
@@ -115,12 +120,28 @@ const handleSingleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     setFileError("Maximum 5 files allowed.");
     return;
   }
-
   // Add the files
   setForm((prev) => ({
     ...prev,
     files: [...prev.files, ...selectedFiles],
   }));
+};
+
+const uploadFilesToServer = async (files: File[]) => {
+  const formData = new FormData();
+
+  files.forEach((file) => {
+    formData.append("files", file);
+  });
+
+  const res = await axios.post(`${apiUrl}/api/upload`, formData, {
+    headers: {
+      "Content-Type": "multipart/form-data",
+      Authorization: `Bearer ${authToken}`,
+    },
+  });
+
+  return res.data; // backend returns uploaded file info
 };
 
 const handleRemoveFile = (index: number) => {
@@ -183,22 +204,7 @@ console.log("Contest Type", res4.data);
 
   fetchUser();
 }, [authToken, userId]);
- 
-  // const handleSelectReferral = (selectedOption: SingleValue<OptionType>) => {
-  //   if (!selectedOption) return;
 
-  //   const exists = referrals.some((r) => r.UserID === selectedOption.value);
-  //   // if (referrals.length >= 3) {
-  //   //   //alert("⚠️ You can select only up to 3 referrals");
-  //   //   return;
-  //   // }
-  //   if (!exists) {
-  //     setReferrals([
-  //       ...referrals,
-  //       { UserID: selectedOption.value, UserInfo: selectedOption.label },
-  //     ]);
-  //   }
-  // };
 const handleSelectReferral = (selected: { value: string; label: string } | null) => {
   if (!selected) return;
   if (!referrals.some((r) => r.UserID === selected.value)) {
@@ -241,6 +247,12 @@ const handleSubmit = async (e: React.FormEvent) => {
     alert("⚠️ You are not authorized. Please log in again.");
     return;
   }
+let uploadedDocs = [];
+if (form.files && form.files.length > 0) {
+  uploadedDocs = await uploadFilesToServer(form.files);
+} else {
+  uploadedDocs = [];
+}
 
   const payload = {
     nomination: {
@@ -271,24 +283,37 @@ const handleSubmit = async (e: React.FormEvent) => {
       updatedBy: Number(userId),
        referralEmail: ref.UserInfo
     })),
-    documents: form.files.map((file) => ({
-    nominationFileID: Number(userId),
-    nominationID: Number(userId),
-    originalFileName: file.name,
-    fileType: file.type,
-    fileSize: `${(file.size / 1024).toFixed(2)} KB`,
-    fileNameGUID: crypto.randomUUID(),
-    filePath: `/uploads/${file.name}`,
-    active: true,
-    createdBy: Number(userId),
-    updatedBy: Number(userId),
-  })),
+    documents: uploadedDocs.map((doc:any) => ({
+        nominationFileID: Number(userId),
+        nominationID: Number(userId),
+        originalFileName: doc.originalFileName,
+        fileType: doc.fileType,
+        fileSize: `${(doc.fileSize / 1024).toFixed(2)} KB`,
+        fileNameGUID: doc.fileNameGUID,
+        filePath: doc.fileUrl, // <<< correct path
+        active: true,
+        createdBy: Number(userId),
+        updatedBy: Number(userId),
+      })),
+  //   documents: form.files.map((file) => ({
+  //   nominationFileID: Number(userId),
+  //   nominationID: Number(userId),
+  //   originalFileName: file.name,
+  //   fileType: file.type,
+  //   fileSize: `${(file.size / 1024).toFixed(2)} KB`,
+  //   fileNameGUID: crypto.randomUUID(),
+  //   filePath: `/uploads/${file.name}`,
+  //   active: true,
+  //   createdBy: Number(userId),
+  //   updatedBy: Number(userId),
+  // })),
   };
 
   console.log("📦 Sending payload:", payload);
   try {
     const res = await axios.post(
-      "http://172.16.5.106:5195/api/nomination",
+      // "http://172.16.5.106:5195/api/nomination",
+      `${apiUrl}/api/nomination`,
       payload,
       {
         headers: {
@@ -331,20 +356,11 @@ const handleSubmit = async (e: React.FormEvent) => {
                 e.preventDefault();
               }
             }}
-            className="text-blue-600 underline cursor-pointer">
+            className={totalSelfNominations > 0
+      ? "text-blue-600 underline cursor-pointer"
+      : "text-gray-500 cursor-default no-underline" }>
             You have {totalSelfNominations} nominations
           </a>
-          {/* <a
-            href={totalSelfNominations > 0 ? "/my-nominations" : undefined}
-            onClick={(e) => {
-              if (totalSelfNominations === 0) {
-                e.preventDefault();
-              }
-            }}
-            className="text-blue-600 underline cursor-pointer"
-          >
-            You have {totalSelfNominations} nominations
-          </a> */}
         </div>
         {/* Title */}
         <div className="mb-4">
@@ -459,11 +475,10 @@ const handleSubmit = async (e: React.FormEvent) => {
               {errors.contestType && <p className="text-red-500 text-sm mt-1">{errors.contestType}</p>}
             </div>
           </div>
-
           {/* Referrals */}
-          <div className="mb-6">
+          <div className="">
             <label className="block text-sm font-medium mb-2">
-              Referrals Email ID <span className="text-red-500">(Mandatory 3*)</span>
+              Referrals Email ID 
             </label>
             <Select
               options={users.map((u) => ({
@@ -477,7 +492,6 @@ const handleSubmit = async (e: React.FormEvent) => {
               isSearchable
               className="text-sm"
             />
-
             {/* Selected Referrals */}
             <div className="mt-3 space-y-2">
               {referrals.map((ref) => (
@@ -496,7 +510,7 @@ const handleSubmit = async (e: React.FormEvent) => {
                 </div>
               ))}
             </div>
-         <div className="mb-6">
+         <div className="">
           <Label.Root className="block text-sm font-medium">
             Supporting Documents <span className="text-red-500">(Maximum 5 files allowed & File must be below 2 MB)</span>
           </Label.Root>
@@ -510,7 +524,7 @@ const handleSubmit = async (e: React.FormEvent) => {
             ref={fileInputRef}
             type="file"
             multiple
-            onChange={handleSingleFileUpload}
+            onChange={handleFileUpload}
             className="hidden"
             //className="mt-1 border p-2 rounded w-full"
           />
@@ -536,7 +550,7 @@ const handleSubmit = async (e: React.FormEvent) => {
         </div>
 
         {/* Description */}
-        <div className="mb-6">
+        <div className="">
           <Label.Root className="block text-sm font-medium">Description  (Max 1000 chars)</Label.Root>
           <textarea
             placeholder="Describe the nomination..."
