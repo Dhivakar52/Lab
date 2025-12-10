@@ -23,33 +23,39 @@ interface SupportingDocument {
   FilePath: string;
 }
 
- export interface GeneralJury {
+export interface GeneralJury {
   TotalRowCount: number;
-  JuryApprovalsID:number;
-  GeneralJuryID:number;
+  JuryApprovalsID: number;
+  GeneralJuryID: number;
   NominationID: number;
-  IsGeneralJuryApproved:boolean;
-  GeneralJuryComments:string;
+  IsGeneralJuryApproved: boolean;
+  GeneralJuryComments: string;
   Nominee: string;
   Tenant: string;
   CategoryName: string;
-  SubmittedOn: string;              
-  BusinessJuryRemarks: string;      
+  SubmittedOn: string;
+  BusinessJuryRemarks: string;
   Score: number;
-  GeneralJuryRemarks: string;  
-  Active:boolean;
-  SubmittedBy:number
+  GeneralJuryRemarks: string;
+  Active: boolean;
+  SubmittedBy: number;
   Status: "Approved" | "Rejected" | "Pending" | string;
   ConsolidatedAvgScore?: number;
   FinalStatus?: "Winner" | "Runner-up" | string;
+
+  ApprovalStatus: {
+    ApprovalType: string;
+    Status: string;
+  }[];
+
   "Supporting Documents": {
     OriginalFileName: string;
     FileType: string;
     FileNameGUID: string;
     FilePath: string;
   }[];
-
 }
+
 
 const apiUrl = import.meta.env.VITE_API_URL;
 

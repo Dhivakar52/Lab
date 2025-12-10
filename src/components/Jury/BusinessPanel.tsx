@@ -27,8 +27,6 @@ const BusinessPanel: React.FC<NomineeSidePanelProps> = ({
    const [businessJuryComments, setBusinessJuryComments] = useState('');
     const { authToken, userId } = useAuth();
     const [data, setData] = useState<BusinessJury[]>([]);
-//   const [message, setMessage] = useState('');
-//  const [messageType, setMessageType] = useState<'success' | 'reject'>('success'); // Message type
   const [loading, setLoading] = useState<boolean>(false);
   const [sidebarOpen, setSidebarOpen] = useState<boolean>(true); // Sidebar state
     const [commentError, setCommentError] = useState("");
@@ -50,14 +48,7 @@ const BusinessPanel: React.FC<NomineeSidePanelProps> = ({
         setBusinessJuryComments("");
       }
     }, [nominee]);
-  const validateComments = () => {
-    if (!businessJuryComments.trim()) {
-      setCommentError("Comments are required!");
-      return false;
-    }
-    setCommentError("");
-    return true;
-  };
+
   
   
   const onApprove = async (JuryApprovalsID: number) => {
@@ -67,7 +58,6 @@ const BusinessPanel: React.FC<NomineeSidePanelProps> = ({
         await axios.put(
           `${apiUrl}/api/businessjuryevaluation/${JuryApprovalsID}`,
           {
-            JuryApprovalsID:JuryApprovalsID,
             NominationID:nominee?.NominationID,
             IsBusinessJuryApproved: true,
             BusinessJuryComments: businessJuryComments,
@@ -115,7 +105,6 @@ const BusinessPanel: React.FC<NomineeSidePanelProps> = ({
         await axios.put(
           `${apiUrl}/api/businessjuryevaluation/${JuryApprovalsID}`,
           {
-            JuryApprovalsID:nominee?.JuryApprovalsID,
             NominationID:nominee?.NominationID,
             IsBusinessJuryApproved: false,
             BusinessJuryComments: businessJuryComments,
@@ -154,18 +143,6 @@ const BusinessPanel: React.FC<NomineeSidePanelProps> = ({
       // }, 3000);
       }
     };
-
- 
-const isPresidentUnitApproved = () => {
-  const stage4Entry = nominee?.ApprovalStatus.find(
-    (stage) => stage.ApprovalType === 'General Jury'
-  );
-  console.log(stage4Entry);
-
-  // Return true if the entry exists AND its status is exactly 'Approved'
-  return stage4Entry && stage4Entry.Status === 'Approved';
-};  
-
 
   const ActionButtons = () => {
     if (!nominee) return null; // Safety check
@@ -221,10 +198,19 @@ const isPresidentUnitApproved = () => {
         return null;
     }
   };
-  const approvalFlow = nominee?.ApprovalStatus?.map((a : any) => ({
+    const approvalFlow = nominee?.ApprovalStatus?.map((a : any) => ({
   type: a.ApprovalType,
   status: a.Status
 })) ?? [];
+
+   const isGeneralJuryApproved = (): boolean => {
+     // Use .some() for efficiency. Return true if ANY entry matches the criteria.
+     return nominee?.ApprovalStatus?.some(
+       (statusEntry) => 
+         statusEntry.ApprovalType === 'General Jury' && statusEntry.Status === 'Approved' // Ensure lowercase 'approved' if your backend uses it
+     ) ?? false; // Default to false if nominee or ApprovalStatus is null/undefined
+   };
+   console.log("jury appoval",isGeneralJuryApproved());
 
   return (
     <div
@@ -246,7 +232,7 @@ const isPresidentUnitApproved = () => {
       {/* Content */}
       <div className="p-5 overflow-y-auto h-[calc(100%-64px)]">
       
-     {nominee ? (
+{nominee ? (
           <div className="space-y-5 text-sm">
 
             {/* Row 1 */}
@@ -346,7 +332,7 @@ const isPresidentUnitApproved = () => {
         {nominee?.BusinessJuryComments?.length > 0 ? (
             <div>
                  <div className="space-y-1">
-                <div className="text-sm font-medium text-gray-900">Approver's Comments</div>
+                <div className="text-sm font-medium text-gray-900">Approver Comments</div>
                 <div className="text-sm text-gray-600">{nominee.BusinessJuryComments}</div>
                </div>
             </div>
@@ -373,15 +359,23 @@ const isPresidentUnitApproved = () => {
             )}
          </div>
       )}
-         
- {/* The condition to show the button: Stage 4 is NOT approved */}
-    {!isPresidentUnitApproved() && (
-      <ActionButtons/>
-    )}
+           {isGeneralJuryApproved() ? (
+                    // ⭐ Condition Met: Hide buttons and show a message
+                    <div>
+                    </div>
+                ) : (
+                    // ⭐ Condition Not Met: Show the action buttons
+                    <>
+
+                      <ActionButtons />
+                    </>
+                )}
+
           </div>
         ) : null}
       </div>
       {/* Popup Message */}
+
       {/* {message && (
         <div
           style={{
