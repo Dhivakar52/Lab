@@ -3,7 +3,7 @@ import { useAuth } from "./ContextAPI/AuthContext";
 import { useEffect, useState } from "react";
 import axios from "axios";
 import { useParams } from "react-router-dom";
-import {  FileText, MoveLeft } from "lucide-react";
+import {  FileText, MoveLeft, MoveRight } from "lucide-react";
 import StatusFlow from "./StatusFlow";
 
 const apiUrl = import.meta.env.VITE_API_URL;
@@ -47,19 +47,38 @@ const NominationFullDetails:React.FC = () => {
   status: a.Status
 })) ?? [];
 
-return (
+ const HeaderBlock = () => (
+      <header style={{ background: '#fff', borderBottom: '1px solid #000', padding: '15px' }}>
+          <h1 style={{fontSize: '30px', fontWeight: 'bold' }}>Nomination Details</h1>
+          {/* Include navigation back if needed */}
+      </header>      
+  );
 
   
-   <div className="bg-white rounded-lg shadow-lm border-gray-200 p-6">
-           
+const FooterBlock = () => (
+      <footer style={{ background: '#fff', padding: '15px' }}>
+        
+        {/* This creates the horizontal line */}
+        <hr style={{ borderTop: '1px solid #000', marginBottom: '15px' }} />
 
- <button
-         onClick={handleBackward}
-          className="text-white-800 border text-sm font-medium rounded-md transition-colors"
+        {/* The button is now below the line */}
+        <button
+          onClick={handleBackward}
+          className=" top-5  right-3 px-6 py-1  text-sm font-medium text-white-800 border hover:text-white-700 rounded-md transition-colors"
+          style={{ display: 'flex', alignItems: 'center', cursor: 'pointer' }}
         >
-<span  ><MoveLeft size={13}/></span>
+           <MoveLeft size={13}/><span style={{ marginLeft: '5px' }}>Back </span>
         </button>
-          <h1 className="text-2xl font-semibold"> Nomination Details </h1>
+      </footer>      
+  );
+
+return (
+
+ <div className="bg-white rounded-lg shadow-lm border-gray-200 p-6">        
+  <HeaderBlock/>
+
+ 
+
          <br/>
             <div className="space-y-5">
               {/* Row 1 */}
@@ -69,24 +88,40 @@ return (
                   <div className="text-lm text-gray-600">{data.Nominee}</div>
                 </div>
                 <div className="space-y-1">
-                  <div className="text-lm font-medium text-gray-900">Tenant</div>
-                  <div className="text-lm text-gray-600">{data.Tenant}</div>
-                </div>
-                <div className="space-y-1">
-                  <div className="text-lm font-medium text-gray-900">Category</div>
+                  <div className="text-lm font-medium text-gray-900">Award Category</div>
                   <div className="text-lm text-gray-600">{data.AwardCategory}</div>
                 </div>
-              </div>
-              {/* Row 2 */}
-              <div className="grid grid-cols-3">
-
                 <div className="space-y-1">
                   <div className="text-lm font-medium text-gray-900">Nominated By</div>
                   <div className="text-lm text-gray-600">{data.NominatedBy}</div>
                 </div>
+              </div>
+              {/* Row 2 */}
+              <div className="grid grid-cols-3">
                 <div className="space-y-1">
                   <div className="text-lm font-medium text-gray-900">Submission Date</div>
                   <div className="text-lm text-gray-600">{data.SubmittedDate}</div>
+                </div>
+                <div className="space-y-1">
+                  <div className="text-lm font-medium text-gray-900">Tenant</div>
+                  <div className="text-lm text-gray-600">{data.Tenant}</div>
+                </div>
+                <div className="space-y-1">
+                  <div className="text-lm font-medium text-gray-900">Reporting to</div>
+                  <div className="text-lm text-gray-600">{data.ManagerName}</div>
+                </div>
+                
+                </div>
+
+              {/* Row 3 */}
+              <div className="grid grid-cols-3">
+                <div className="space-y-1">
+                  <div className="text-lm font-medium text-gray-900">Designation</div>
+                  <div className="text-lm text-gray-600">{data.NomineeDesignation}</div>
+                </div>
+                <div className="space-y-1">
+                  <div className="text-lm font-medium text-gray-900">Department</div>
+                  <div className="text-lm text-gray-600">{data.NomineeDepartment}</div>
                 </div>
                 <div className="space-y-1">
                     <div className="text-lm font-medium text-gray-900">Status</div>
@@ -108,6 +143,7 @@ return (
                       </span>
                     </div>
                 </div>
+                
                 </div>
                {/* Row 4 */}
               <div className="grid grid-cols-1 gap-4">
@@ -117,14 +153,6 @@ return (
                 </div>
               </div>
                 
-              {/* Row 3 */}
-              <div className="grid grid-cols-2">                
-                <div className="space-y-1">
-                  <div className="text-lm font-medium text-gray-900">Manager</div>
-                  <div className="text-lm text-gray-600">{data.ManagerName}</div>
-                </div>
-
-              </div>
 
               <div className="text-lm font-medium text-gray-900 mb-2">Referrals</div>
               <div className="text-gray-600 space-y-1">
@@ -137,6 +165,23 @@ return (
                         <span className="text-gray-600">{ref.TenantName}</span>
                         <span className="px-2 text-gray-500">|</span>
                         <span className="font-semibold text-gray-600">{ref.DeptName}</span>
+                        <span className="px-2 text-gray-500">|</span>
+                      <span
+                        className={`inline-flex px-3 py-1 rounded-full text-xs font-medium ${
+                          data.Status === "Pending"
+                            ? "bg-orange-100 text-orange-800"
+                            : data.Status === "Approved"
+                            ? "bg-green-100 text-green-800"
+                            : data.Status === "Rejected"
+                            ? "bg-red-100 text-red-800"
+                            : data.Status === "Under Review"
+                            ? "bg-yellow-100 text-yellow-700"
+                            : "bg-gray-100 text-gray-700"
+                        }`}
+                      >
+                        {data.Status}
+                      </span>
+                   
                       </p>
                     </div>
                   ))
@@ -174,12 +219,9 @@ return (
 
               </div>
              </div>
+
+             <FooterBlock/>
             </div>
-
-
-
-
-
 
   )
 }
