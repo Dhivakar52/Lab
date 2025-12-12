@@ -237,24 +237,10 @@ const ReferralDetailView: React.FC = () => {
             </div> */}
         </div>
 
+       
         {/* Approve / Reject Buttons */}
-        {/* <div className="px-6 py-4 border-t border-gray-200 bg-gray-50 flex justify-end space-x-3 mt-6">
-          
-          <button
-            onClick={() => openPanel("reject")}
-            className="px-4 py-2 bg-red-600 text-white rounded-md shadow hover:bg-red-700 transition flex items-center"
-          >
-            ✖ Reject Nomination
-          </button>
-          <button
-            onClick={() => openPanel("approve")}
-            className="px-4 py-2 bg-green-600 text-white rounded-md shadow hover:bg-green-700 transition flex items-center"
-          >
-            ✔ Approve Nomination
-          </button>
-        </div> */}
-        {/* Approve / Reject Buttons */}
-          <div className="px-6 py-4  flex justify-end space-x-3 mt-6">
+         <div className="px-6 py-4 flex justify-end space-x-3 mt-6 sticky bottom-0 bg-white  z-50">
+          {/* <div className="px-6 py-4  flex justify-end space-x-3 mt-6"> */}
             
             {data.status !== "Rejected" && data.BusinessJuryStatus !== "Approved"&& (
               <button

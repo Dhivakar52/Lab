@@ -135,9 +135,9 @@ const ApprovalDetailView: React.FC = () => {
       </button> */}
 
       {/* Main Details Box */}
-      <div className="bg-white rounded-lg shadow-md border border-gray-200 p-6 mt-3">
+      <div className="bg-white rounded-lg shadow-md border border-gray-200 p-6 mt-3 relative pb-32">
+      {/* <div className="bg-white rounded-lg shadow-md border border-gray-200 p-6 mt-3"> */}
         <h1 className="text-2xl font-semibold mb-4">Approval Details</h1>
-
         <div className="space-y-5">
           {/* Row 1 */}
           <div className="grid grid-cols-3 gap-4">
@@ -201,10 +201,10 @@ const ApprovalDetailView: React.FC = () => {
               )}
             </div>
 
-            <div>
+            {/* <div>
               <div className="font-medium text-gray-900">Manager Email</div>
               <div className="text-gray-700">{approval.ManagerEmailID}</div>
-            </div>
+            </div> */}
           </div>
 
           {/* Description */}
@@ -252,11 +252,10 @@ const ApprovalDetailView: React.FC = () => {
            */}
         </div>
         
-     
+        <div className="absolute bottom-0 left-0 right-0 bg-white  px-6 py-3 flex justify-end space-x-3 rounded-b-lg">
+       {/* <div className=" absolute bottom-0 left-0 right-0 bg-white px-6 py-4 flex justify-end space-x-3 border-t border-gray-200 rounded-b-lg"> */}
+       {/* <div className="absolute bottom-0 left-0 right-0 bg-white px-6 py-4 flex justify-end space-x-3 border-t border-gray-200 rounded-b-lg"> */}
 
-        {/* Buttons */}
-        <div className="px-6 py-4 flex justify-end space-x-3 mt-6">
-          
            {/* Back Button */}
           <button
         onClick={() => navigate("/approvals")}

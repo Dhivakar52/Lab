@@ -333,21 +333,11 @@ const ReferralTable: React.FC = () => {
   }
 
   return (
-    <div className="p-6">
-      {successMessage && (
-        <div
-          className={`fixed right-5 px-4 py-2 rounded-lg shadow-lg animate-slide-in z-[9999]
-            ${
-              toastType === "success" ? "bg-green-600" : "bg-red-600"
-            } text-white`}
-        >
-          {successMessage}
-        </div>
-      )}
-
+    <div>
       <div className="p-6">
         <div className="overflow-x-auto bg-white shadow-md rounded-lg p-6">
-          <div className="mb-4 flex justify-between items-center">
+        <div className="mb-4 flex justify-between items-center">
+          <h2 className="text-xl font-semibold ">Your Team's Nominations</h2>
             <input
               value={globalFilter ?? ""}
               onChange={(e) => setGlobalFilter(e.target.value)}

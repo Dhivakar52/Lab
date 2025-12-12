@@ -31,11 +31,12 @@ export interface GeneralJury {
   IsGeneralJuryApproved: boolean;
   GeneralJuryComments: string;
   Nominee: string;
+  NominatedBy: string;
   Tenant: string;
   CategoryName: string;
   SubmittedOn: string;
   BusinessJuryRemarks: string;
-  Score: number;
+  GeneralJuryScore: number;
   GeneralJuryRemarks: string;
   Active: boolean;
   SubmittedBy: number;
@@ -96,10 +97,11 @@ const PresidentUnit: React.FC = () => {
     fetchGeneralJury();
   }, [authToken, userId]);
 
-
+debugger
   const columns = useMemo<ColumnDef<GeneralJury>[]>(
     () => [
       { accessorKey: "Nominee", header: "Nominee" },
+      
       {
         accessorKey: "Tenant",
         header: "Entity Name",
@@ -108,10 +110,10 @@ const PresidentUnit: React.FC = () => {
           return <ColorBadge label={tenant} />;
         },
       },
-      // { accessorKey: "Tenant", header: "Entity" },
+     
       { accessorKey: "CategoryName", header: "Category" },
-      { accessorKey: "ConsolidatedAvgScore", header: "Consolidated Avg Score" },
-      { accessorKey: "Score", header: "President Score" },
+      { accessorKey: "NominatedBy", header: "Nominated By" },         
+      { accessorKey: "GeneralJuryScore", header: "Score" },
       {
         accessorKey: "Status",
         header: "Flag",
@@ -137,32 +139,26 @@ const PresidentUnit: React.FC = () => {
           );
         },
       },
-      {
-        id: "actions",
-        header: "Actions",
-        cell: ({ row }) => {
-          const item = row.original;
-          return (
-            <DropdownMenu.Root>
-              <DropdownMenu.Trigger className="p-2 rounded hover:bg-gray-100">
-                <Menu className="w-5 h-5 text-blue-500" />
-              </DropdownMenu.Trigger>
+     {
+  id: "actions",
+  header: "Actions",
+  cell: ({ row }) => {
+    const item = row.original;
 
-              <DropdownMenu.Content className="bg-white shadow-md rounded-md p-2">
-                <DropdownMenu.Item
-                  onClick={() => {
-                    setSelectedNominee(item);
-                    setIsPanelOpen(true);
-                  }}
-                  className="px-2 py-2 hover:bg-gray-100 cursor-pointer"
-                >
-                  View
-                </DropdownMenu.Item>
-              </DropdownMenu.Content>
-            </DropdownMenu.Root>
-          );
-        },
-      },
+    return (
+      <button
+        onClick={() => {
+          setSelectedNominee(item);
+          setIsPanelOpen(true);
+        }}
+        className="p-2 rounded hover:bg-gray-100"
+      >
+        <Menu className="w-5 h-5 text-blue-500" />
+      </button>
+    );
+  },
+}
+
     ],
     []
   );
