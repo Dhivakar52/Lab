@@ -29,6 +29,7 @@ interface ReferralDetail {
     TenantName: string;
     DeptName: string;
     Email: string;
+     ReferralStatus:string;
   }[];
   "Supporting Documents": {
     OriginalFileName: string;
@@ -39,10 +40,16 @@ interface ReferralDetail {
   BusinessJuryStatus: string;
 }
 
-const statusColors: Record<ReferralDetail["status"], string> = {
+const statusColors1: Record<ReferralDetail["status"], string> = {
   Pending: "bg-orange-100 text-orange-800",
   Approved: "bg-green-100 text-green-800",
   Rejected: "bg-red-100 text-red-800",
+};
+const statusColors: Record<string, string> = {
+  Pending: "bg-orange-100 text-orange-800 border-orange-300",
+  Approved: "bg-green-100 text-green-800 border-green-300",
+  Rejected: "bg-red-100 text-red-800 border-red-300",
+  "Under Review": "bg-yellow-100 text-yellow-800 border-yellow-300",
 };
 
 const apiUrl = import.meta.env.VITE_API_URL;
@@ -143,7 +150,7 @@ const ReferralDetailView: React.FC = () => {
           </div>
 
           {/* Row 3 */}
-          <div className="grid grid-cols-3 gap-4">
+          <div className="grid">
             <div>
             <div className="text-lm font-medium text-gray-900 mb-1">Referrals</div>
             <div className="text-gray-600 space-y-1">
@@ -156,6 +163,16 @@ const ReferralDetailView: React.FC = () => {
                       <span className="text-gray-600">{ref.TenantName}</span>
                       <span className="px-2 text-gray-500">|</span>
                       <span className="font-semibold text-gray-600">{ref.DeptName}</span>
+                       <span className="px-2 text-gray-500">|</span>
+                  {/* Reusing same color mapping */}
+                  <span
+                    className={`px-3 py-1 text-xs border rounded-full font-semibold ${
+                      statusColors[ref.ReferralStatus] ??
+                      statusColors.Default
+                    }`}
+                  >
+                    {ref.ReferralStatus}
+                  </span>
                     </p>
                   </div>
                 ))
