@@ -32,6 +32,8 @@ const PresidentUnitPanel: React.FC<PresidentUnitPanelProps> = ({
   const [comments, setComments] = useState("");
   const [commentError, setCommentError] = useState("");
   const [loading, setLoading] = useState(false);
+const [Score, setScore] = useState("");
+const [scoreError, setScoreError] = useState("");
 
   // Button styles (same style as PresidentSidePanel)
   const baseClasses =
@@ -41,22 +43,47 @@ const PresidentUnitPanel: React.FC<PresidentUnitPanelProps> = ({
   const containerClasses =
     "flex justify-around items-center gap-4 mt-6 mb-2";
 
-  useEffect(() => {
-    if (nominee?.GeneralJuryComments) {
+ useEffect(() => {
+  if (nominee) {
+    // Load SCORE
+    if (nominee.GeneralJuryScore) {
+      setScore(nominee.GeneralJuryScore.toString());
+    } else {
+      setScore("");
+    }
+
+    // Load COMMENTS
+    if (nominee.GeneralJuryComments) {
       setComments(nominee.GeneralJuryComments);
     } else {
       setComments("");
     }
-  }, [nominee]);
+  }
+}, [nominee]);
 
-  const validateComments = () => {
-    if (!comments.trim()) {
-      setCommentError("Comments are required!");
-      return false;
-    }
+
+const validateComments = () => {
+  let isValid = true;
+
+  // Validate Comments
+  if (!comments.trim()) {
+    setCommentError("Comments are required!");
+    isValid = false;
+  } else {
     setCommentError("");
-    return true;
-  };
+  }
+
+  // Validate Score
+  if (!Score.trim()) {
+    setScoreError("Score is required!");
+    isValid = false;
+  } else {
+    setScoreError("");
+  }
+
+  return isValid;
+};
+
 
   const onApprove = async (JuryApprovalsID: number) => {
     if (!validateComments()) return;
@@ -70,6 +97,7 @@ const PresidentUnitPanel: React.FC<PresidentUnitPanelProps> = ({
           NominationID: nominee.NominationID,
           IsGeneralJuryApproved: true,
           GeneralJuryComments: comments,
+          GeneralJuryScore:Score,
           GeneralJuryID: userId,
           SubmittedBy: userId,
           Active: true,
@@ -103,6 +131,7 @@ const PresidentUnitPanel: React.FC<PresidentUnitPanelProps> = ({
           NominationID: nominee.NominationID,
           IsGeneralJuryApproved: false,
           GeneralJuryComments: comments,
+           GeneralJuryScore:Score,
           GeneralJuryID: userId,
           SubmittedBy: userId,
           Active: true,
@@ -130,7 +159,7 @@ const PresidentUnitPanel: React.FC<PresidentUnitPanelProps> = ({
         disabled={loading}
         onClick={() => {
           onReject(nominee.JuryApprovalsID);
-          onClose();
+          
         }}
         className={rejectClasses}
       >
@@ -143,7 +172,7 @@ const PresidentUnitPanel: React.FC<PresidentUnitPanelProps> = ({
         disabled={loading}
         onClick={() => {
           onApprove(nominee.JuryApprovalsID);
-          onClose();
+         
         }}
         className={approveClasses}
       >
@@ -203,39 +232,50 @@ const PresidentUnitPanel: React.FC<PresidentUnitPanelProps> = ({
 
       {/* Content */}
       <div className="p-5 overflow-y-auto h-[calc(100%-64px)] text-sm space-y-6">
-        {/* Descriptions */}
-        <div>
-          <div className="text-sm font-medium text-gray-900">Descriptions</div>
-          <div className="text-sm text-gray-600 mt-1">
-            {(nominee as any).Descriptions || (nominee as any).Description || ""}
-          </div>
-        </div>
+        <div className="grid grid-cols-3 gap-4">
+                <div className="space-y-1">
+                  <div className="text-sm font-medium text-gray-900">Nominee</div>
+                  <div className="text-sm text-gray-600">{nominee.Nominee}</div>
+                </div>
+                <div className="space-y-1">
+                  <div className="text-sm font-medium text-gray-900">Award Cateory</div>
+                  <div className="text-sm text-gray-600">{nominee.CategoryName}</div>
+                </div>
+                <div className="space-y-1">
+                  <div className="text-sm font-medium text-gray-900">Nominated By</div>
+                  <div className="text-sm text-gray-600">{nominee.NominatedBy}</div>
+                </div>
+              </div>
+        
 
         {/* Row: Submitted Date / Designation / Department */}
         <div className="grid grid-cols-3 gap-8">
-          <div className="space-y-1">
-            <div className="text-sm font-medium text-gray-900">
-              Submitted Date
-            </div>
-            <div className="text-sm text-gray-600">
-              {(nominee as any).SubmittedOn}
-            </div>
-          </div>
-          <div className="space-y-1">
-            <div className="text-sm font-medium text-gray-900">
-              Designation
-            </div>
-            <div className="text-sm text-gray-600">
-              {(nominee as any).Designation}
-            </div>
-          </div>
-          <div className="space-y-1">
-            <div className="text-sm font-medium text-gray-900">Department</div>
-            <div className="text-sm text-gray-600">
-              {(nominee as any).Department}
-            </div>
-          </div>
-        </div>
+  <div className="space-y-1">
+    <div className="text-sm font-medium text-gray-900">
+      Submitted Date
+    </div>
+    <div className="text-sm text-gray-600">
+      {(nominee as any)["Submitted On"]}
+    </div>
+  </div>
+
+  <div className="space-y-1">
+    <div className="text-sm font-medium text-gray-900">
+      Designation
+    </div>
+    <div className="text-sm text-gray-600">
+      {(nominee as any).Designation}
+    </div>
+  </div>
+
+  <div className="space-y-1">
+    <div className="text-sm font-medium text-gray-900">Department</div>
+    <div className="text-sm text-gray-600">
+      {(nominee as any).Department}
+    </div>
+  </div>
+</div>
+
 
         {/* Row: Tenant / Reporting to / Score */}
         <div className="grid grid-cols-3 gap-8">
@@ -252,42 +292,94 @@ const PresidentUnitPanel: React.FC<PresidentUnitPanelProps> = ({
             </div>
           </div>
           <div className="space-y-1">
-            <div className="text-sm font-medium text-gray-900">
-              Score (Out of 100)
-            </div>
-            <div className="text-sm text-gray-600">
-              {(nominee as any).Score ??
-                (nominee as any).GeneralJuryScore ??
-                ""}
-            </div>
+               <div className="space-y-1">
+                    <div className="text-sm font-medium text-gray-900">
+                      Nomination Status
+                    </div>
+                    <span
+                      className={`px-3 py-1 rounded-full text-sm font-semibold ${statusColors[nominee.Status]}`}
+                    >
+                      {nominee.Status}
+                    </span>
+                  </div>
           </div>
         </div>
+          <div className="grid grid-cols-3 gap-8">
+                  {/* Nomination Status */}
+              
 
-        {/* Nomination Status */}
-        <div className="space-y-1">
-          <div className="text-sm font-medium text-gray-900">
-            Nomination Status
-          </div>
-          <span
-            className={`px-3 py-1 rounded-full text-sm font-semibold ${statusColors[nominee.Status]}`}
-          >
-            {nominee.Status}
-          </span>
+<div className="space-y-2">
+  <label className="text-sm font-medium text-gray-900">
+    Score <span className="text-red-600">*</span>
+  </label>
+
+  {nominee.GeneralJuryScore ? (
+    // READ-ONLY label after save
+    <div className="text-sm text-gray-700">
+      {nominee.GeneralJuryScore}
+    </div>
+  ) : (
+    // INPUT when no score saved yet
+    <>
+      <div className="relative">
+        <input
+          type="text"
+          maxLength={3}
+          className={`w-full border rounded-lg p-2 text-sm focus:outline-none focus:ring-2 ${
+            scoreError
+              ? "border-red-500 focus:ring-red-400"
+              : "focus:ring-blue-400"
+          }`}
+          value={Score}
+          onChange={(e) => {
+            const val = e.target.value;
+
+            if (!/^[0-9]*$/.test(val)) return;
+            if (val === "0") return;
+            if (val === "") return setScore("");
+
+            const num = Number(val);
+            if (num < 1 || num > 100) return;
+
+            setScore(val);
+            if (scoreError) setScoreError("");
+          }}
+        />
+
+        <div className="absolute bottom-2 right-2 text-xs text-gray-500">
+          {Score ? Score : 0}/100
         </div>
+      </div>
 
+      {scoreError && <p className="text-red-600 text-sm">{scoreError}</p>}
+    </>
+  )}
+</div>
+
+
+
+
+          </div>
    
         <div className="space-y-1">
         
           <StatusFlow steps={approvalFlow} />
         </div>
+        {/* Descriptions */}
+        <div>
+          <div className="text-sm font-medium text-gray-900">Descriptions</div>
+          <div className="text-sm text-gray-600 mt-1">
+            {(nominee as any).Descriptions || (nominee as any).Description || ""}
+          </div>
+        </div>
 
         {/* Supporting Documents */}
-        <div className="space-y-1">
+            <div className="space-y-2">
           <div className="text-sm font-medium text-gray-900">
             Supporting Documents
           </div>
           <div className="mt-1 space-y-1">
-            {Array.isArray(supportingDocs) &&
+            {Array.isArray(supportingDocs) && supportingDocs.length > 0 ? (
               supportingDocs.map((doc: any, idx: number) => (
                 <a
                   key={idx}
@@ -297,43 +389,56 @@ const PresidentUnitPanel: React.FC<PresidentUnitPanelProps> = ({
                   className="flex items-center gap-2 text-blue-600 hover:underline"
                 >
                   <FileText size={18} />
-                  {doc.OriginalFileName}
+                  {doc.OriginalFileName || "Unnamed file"}
                 </a>
-              ))}
+              ))
+            ) : (
+              <div className="text-sm text-gray-500">(No files uploaded)</div>
+            )}
           </div>
         </div>
+      
+
 
         {/* Reason / Comments */}
-        <div className="space-y-2">
-          <label className="text-sm font-medium text-gray-900">
-            Reason <span className="text-red-600">*</span>
-          </label>
+<div className="space-y-2">
+  <label className="text-sm font-medium text-gray-900">
+    Approver's Comment <span className="text-red-600">*</span>
+  </label>
 
-          {nominee.GeneralJuryComments ? (
-            <div className="text-sm text-gray-700">
-              {nominee.GeneralJuryComments}
-            </div>
-          ) : (
-            <>
-              <textarea
-                className={`w-full h-24 border rounded-lg p-2 text-sm focus:outline-none focus:ring-2 ${
-                  commentError
-                    ? "border-red-500 focus:ring-red-400"
-                    : "focus:ring-blue-400"
-                }`}
-                placeholder="Enter your reason here..."
-                value={comments}
-                onChange={(e) => {
-                  setComments(e.target.value);
-                  if (commentError) setCommentError("");
-                }}
-              />
-              {commentError && (
-                <p className="text-red-600 text-sm">{commentError}</p>
-              )}
-            </>
-          )}
+  {nominee.GeneralJuryComments ? (
+    // READ-ONLY LABEL after save
+    <div className="text-sm text-gray-700">
+      {nominee.GeneralJuryComments}
+    </div>
+  ) : (
+    // INPUT when no comments saved
+    <>
+      <div className="relative">
+        <textarea
+          className={`w-full h-24 border rounded-lg p-2 text-sm focus:outline-none focus:ring-2 ${
+            commentError
+              ? "border-red-500 focus:ring-red-400"
+              : "focus:ring-blue-400"
+          }`}
+          placeholder="Enter your reason here..."
+          value={comments}
+          maxLength={500}
+          onChange={(e) => {
+            setComments(e.target.value);
+            if (commentError) setCommentError("");
+          }}
+        />
+        <div className="absolute bottom-2 right-2 text-xs text-gray-500">
+          {comments.length}/500
         </div>
+      </div>
+      {commentError && <p className="text-red-600 text-sm">{commentError}</p>}
+    </>
+  )}
+</div>
+
+
 
         {/* Action buttons (bottom) */}
         <ActionButtons />
