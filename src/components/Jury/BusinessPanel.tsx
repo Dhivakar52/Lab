@@ -24,15 +24,29 @@ const BusinessPanel: React.FC<NomineeSidePanelProps> = ({
   onClose,
   nominee,
 }) => {
-   const [businessJuryComments, setBusinessJuryComments] = useState('');
-    const { authToken, userId } = useAuth();
-    const [data, setData] = useState<BusinessJury[]>([]);
+  const [businessJuryComments, setBusinessJuryComments] = useState('');
+  const { authToken, userId } = useAuth();
+  const [data, setData] = useState<BusinessJury[]>([]);
   const [loading, setLoading] = useState<boolean>(false);
   const [sidebarOpen, setSidebarOpen] = useState<boolean>(true); // Sidebar state
-    const [commentError, setCommentError] = useState("");
+  const [commentError, setCommentError] = useState("");
+  const [score, setScore] = useState(90);
+  const [error, setError] = useState('');
 
+
+  const handleChange = (e:any) => {
+    const value = e.target.value;
+    setScore(value);
+    
+    // Clear the error message as the user types
+    if (error) {
+      setError('');
+    }
+  };
   
-  
+  const numScore = Number(score);
+
+ 
   const baseClasses = "px-2 py-2 text-white rounded-md shadow transition flex items-center";
   const rejectClasses = `${baseClasses} bg-red-600 hover:bg-red-700`;
   const approveClasses = `${baseClasses} bg-green-600 hover:bg-green-700`;
@@ -61,7 +75,7 @@ const BusinessPanel: React.FC<NomineeSidePanelProps> = ({
             NominationID:nominee?.NominationID,
             IsBusinessJuryApproved: true,
             BusinessJuryComments: businessJuryComments,
-            BusinessJuryScore:nominee?.BusinessJuryScore,
+            BusinessJuryScore:numScore,
             BusinessJuryID: userId,
             submittedBy: userId,
             active: true,
@@ -108,7 +122,7 @@ const BusinessPanel: React.FC<NomineeSidePanelProps> = ({
             NominationID:nominee?.NominationID,
             IsBusinessJuryApproved: false,
             BusinessJuryComments: businessJuryComments,
-            BusinessJuryScore:nominee?.BusinessJuryScore,
+            BusinessJuryScore:numScore,
             BusinessJuryID: userId,
             submittedBy: userId,
             active: true,
@@ -198,10 +212,10 @@ const BusinessPanel: React.FC<NomineeSidePanelProps> = ({
         return null;
     }
   };
-    const approvalFlow = nominee?.ApprovalStatus?.map((a : any) => ({
-  type: a.ApprovalType,
-  status: a.Status
-})) ?? [];
+        const approvalFlow = nominee?.ApprovalStatus?.map((a : any) => ({
+      type: a.ApprovalType,
+      status: a.Status
+    })) ?? [];
 
    const isGeneralJuryApproved = (): boolean => {
      // Use .some() for efficiency. Return true if ANY entry matches the criteria.
@@ -210,7 +224,19 @@ const BusinessPanel: React.FC<NomineeSidePanelProps> = ({
          statusEntry.ApprovalType === 'General Jury' && statusEntry.Status === 'Approved' // Ensure lowercase 'approved' if your backend uses it
      ) ?? false; // Default to false if nominee or ApprovalStatus is null/undefined
    };
-   console.log("jury appoval",isGeneralJuryApproved());
+   
+   
+   useEffect(() => {
+    if (score === null) {
+      setError('Error: Score cannot be empty.');
+    } else if (numScore < 1 || numScore > 100) {
+      setError('Error: The score must be between 1 and 100.');
+    } else {
+      setError('');
+    }
+  }, [numScore, score]);
+
+
 
   return (
     <div
@@ -232,7 +258,7 @@ const BusinessPanel: React.FC<NomineeSidePanelProps> = ({
       {/* Content */}
       <div className="p-5 overflow-y-auto h-[calc(100%-64px)]">
       
-{nominee ? (
+    {nominee ? (
           <div className="space-y-5 text-sm">
 
             {/* Row 1 */}
@@ -285,10 +311,39 @@ const BusinessPanel: React.FC<NomineeSidePanelProps> = ({
                 <div className="text-sm font-medium text-gray-900">Reporting to</div>
                 <div className="text-sm text-gray-600">{nominee.ManagerUserName}</div>
               </div>
-              <div className="space-y-1">
+              {(nominee.BusinessJuryScore ===null) ? 
+              <div></div>:
+              <>
+              {(nominee.Status=="Approved") ? (
+             <div className="space-y-1">
                 <div className="text-sm font-medium text-gray-900">Score (Out of 100)</div>
                 <div className="text-sm text-gray-600">{nominee.BusinessJuryScore}</div>
-              </div>
+             </div>
+              ) : (
+              <div className="space-y-1">
+                    <div className="text-sm font-medium text-gray-900">Score (Out of 100)</div>
+                        <input
+                          type="number"
+                          value={score}
+                          onChange={handleChange}
+                          min="1"
+                          max="100"
+                          style={{border: '3px solid black'} }
+                          // Optional: Add basic HTML validation attributes for accessibility/browser hints
+                          required 
+                        />
+                        {/* Conditionally render the error message if the error state is set */}
+                        {error && (
+                          <p style={{ color: 'red', marginTop: '5px' }}>
+                            {error}
+                          </p>
+                        )}
+                </div>
+              )}
+              </>
+              }
+       
+               
             </div>
 
             {/* Row 6 */}

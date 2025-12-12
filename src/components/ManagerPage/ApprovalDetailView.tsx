@@ -55,7 +55,7 @@ const ApprovalDetailView: React.FC = () => {
   const approval = state as ApprovalView; // 🔥 FIXED — No null type
 
   const [isPanelOpen, setIsPanelOpen] = useState(false);
-  const [actionType, setActionType] = useState<"approve" | "reject" | null>(null);
+  const [actionType, setActionType] = useState<"Approved" | "Rejected" | null>(null);
   const [reason, setReason] = useState("");
   const { userId, authToken } = useAuth();
 
@@ -126,13 +126,13 @@ const ApprovalDetailView: React.FC = () => {
   return (
     <div className="p-6 bg-gray-50 min-h-screen">
       {/* Back Button */}
-      <button
+      {/* <button
         onClick={() => navigate("/approvals")}
         className="flex items-center text-blue-600 bg-white border-gray-200 rounded-sm px-3 py-1 font-medium"
       >
         <ArrowLeft size={16} className="mr-2" />
         Back
-      </button>
+      </button> */}
 
       {/* Main Details Box */}
       <div className="bg-white rounded-lg shadow-md border border-gray-200 p-6 mt-3">
@@ -174,7 +174,7 @@ const ApprovalDetailView: React.FC = () => {
               </div>
             </div>
           </div>
-            {/* Row 4 */}
+            {/* Row 3 */}
               <div className="grid grid-cols-1 gap-4">
                 <div className="space-y-1">
                   <div className="text-sm font-medium text-gray-900"></div>
@@ -251,13 +251,24 @@ const ApprovalDetailView: React.FC = () => {
           // </div>
            */}
         </div>
+        
+     
 
         {/* Buttons */}
         <div className="px-6 py-4 flex justify-end space-x-3 mt-6">
-          {approval.status !== "Rejected"&& approval.BusinessJuryStatus !== "Approved" && (
+          
+           {/* Back Button */}
+          <button
+        onClick={() => navigate("/approvals")}
+        className="flex items-center text-blue-600 bg-white border-gray-200 rounded-sm px-3 py-1 font-medium"
+      >
+        <ArrowLeft size={16} className="mr-2" />
+        Back
+      </button>
+          {approval.status !== "Rejected" && approval.BusinessJuryStatus !== "Approved" && (
             <button
               onClick={() => {
-                setActionType("reject");
+                setActionType("Rejected");
                 setIsPanelOpen(true);
               }}
               className="px-4 py-2 bg-red-600 text-white rounded-md shadow hover:bg-red-700 transition flex items-center"
@@ -269,7 +280,7 @@ const ApprovalDetailView: React.FC = () => {
           {approval.status !== "Approved" && approval.BusinessJuryStatus !== "Rejected" && (
             <button
               onClick={() => {
-                setActionType("approve");
+                setActionType("Approved");
                 setIsPanelOpen(true);
               }}
               className="px-4 py-2 bg-green-600 text-white rounded-md shadow hover:bg-green-700 transition flex items-center"

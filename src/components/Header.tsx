@@ -87,8 +87,10 @@ const Header: React.FC<HeaderProps> = ({ onMobileMenuToggle }) => {
         return "My Nominations";
       case "/referral-approval":
         return "Referral Approval";
-      case "/approvals":
-        return "Approvals";
+       case "/approve-detail":
+         return "Manager Approval";
+         case "/approvals":
+      return "Manager Approval"; 
       case "/business-jury":
         return "Business Jury";
       case "/president-unit":

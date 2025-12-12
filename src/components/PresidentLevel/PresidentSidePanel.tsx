@@ -33,7 +33,22 @@ const PresidentSidePanel: React.FC<PresidentSidePanelProps> = ({
     const [loading, setLoading] = useState<boolean>(false);
     const [sidebarOpen, setSidebarOpen] = useState<boolean>(true); // Sidebar state
       const [commentError, setCommentError] = useState("");
+    const [score, setScore] = useState(90);
+      const [error, setError] = useState('');
     
+    
+      const handleChange = (e:any) => {
+        const value = e.target.value;
+        setScore(value);
+        
+        // Clear the error message as the user types
+        if (error) {
+          setError('');
+        }
+      };
+      
+      const numScore = Number(score);
+
   const baseClasses = "px-2 py-2 text-white rounded-md shadow transition flex items-center";
   const rejectClasses = `${baseClasses} bg-red-600 hover:bg-red-700`;
   const approveClasses = `${baseClasses} bg-green-600 hover:bg-green-700`;
@@ -68,7 +83,7 @@ const PresidentSidePanel: React.FC<PresidentSidePanelProps> = ({
             NominationID:nominee?.NominationID,
             IsPresidentApproved: true,
             PresidentComments: presidentLevelJuryComments,
-            PresidentScore:nominee?.PresidentScore,
+            PresidentScore:numScore,
             PresidentID: userId,
             submittedBy: userId,
             active: true,
@@ -116,7 +131,7 @@ const PresidentSidePanel: React.FC<PresidentSidePanelProps> = ({
             NominationID:nominee?.NominationID,
             IsPresidentApproved: false,
             PresidentComments: presidentLevelJuryComments,
-            PresidentScore:nominee?.PresidentScore,
+            PresidentScore:numScore,
             PresidentID: userId,
             submittedBy: userId,
             active: true,
@@ -212,6 +227,17 @@ const PresidentSidePanel: React.FC<PresidentSidePanelProps> = ({
   type: a.ApprovalType,
   status: a.Status
 })) ?? [];
+
+useEffect(() => {
+    if (score === null) {
+      setError('Error: Score cannot be empty.');
+    } else if (numScore < 1 || numScore > 100) {
+      setError('Error: The score must be between 1 and 100.');
+    } else {
+      setError('');
+    }
+  }, [numScore, score]);
+
    return (
    <div
       className={`fixed top-0 right-0 h-full w-[600px] bg-white shadow-2xl transform transition-transform duration-300 ease-in-out z-50 ${
@@ -288,10 +314,37 @@ const PresidentSidePanel: React.FC<PresidentSidePanelProps> = ({
                 <div className="text-sm font-medium text-gray-900">Reporting To</div>
                 <div className="text-sm text-gray-600">{nominee.ManagerUserName}</div>
               </div>
-               <div className="space-y-1">
-                <div className="text-sm font-medium text-gray-900">President Score</div>
+                {(nominee.PresidentScore ===null)? 
+              <div></div>:
+              <>
+              {(nominee.Status!="Approved") ? (
+             <div className="space-y-1">
+                <div className="text-sm font-medium text-gray-900">PresidentScore</div>
                 <div className="text-sm text-gray-600">{nominee.PresidentScore}</div>
-              </div>
+             </div>
+              ) : (
+              <div className="space-y-1">
+                    <div className="text-sm font-medium text-gray-900">PresidentScore</div>
+                        <input
+                          type="number"
+                          value={score}
+                          onChange={handleChange}
+                          min="1"
+                          max="100"
+                          style={{border: '3px solid black'} }
+                          // Optional: Add basic HTML validation attributes for accessibility/browser hints
+                          required 
+                        />
+                        {/* Conditionally render the error message if the error state is set */}
+                        {error && (
+                          <p style={{ color: 'red', marginTop: '5px' }}>
+                            {error}
+                          </p>
+                        )}
+                </div>
+              )}
+              </>
+              }
             </div>
 
             {/* Row 5 */}

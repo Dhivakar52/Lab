@@ -72,6 +72,7 @@ export default tseslint.config([
 3. npm i axios
 4. npm install @tanstack/react-table
 5. npm install react-select
+6. npm install sweetalert2
 
 
 # ExcellenceUI

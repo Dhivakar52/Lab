@@ -1,5 +1,6 @@
 // ApprovalReasonPanel.tsx
 import React, { useState, useEffect } from "react";
+import Swal from "sweetalert2";
 
 interface ApprovalReasonPanelProps {
   isOpen: boolean;
@@ -7,7 +8,7 @@ interface ApprovalReasonPanelProps {
   approvalData: any | null;
   reason: string;
   setReason: (value: string) => void;
-  actionType: "approve" | "reject" | null;
+  actionType: "Approved" | "Rejected" | null;
   onApprove: () => void;
   onReject: () => void;
 }
@@ -34,7 +35,7 @@ const ApprovalReasonPanel: React.FC<ApprovalReasonPanelProps> = ({
   if (!isOpen || !approvalData) return null;
 
   const message =
-    actionType === "approve"
+    actionType === "Approved"
       ? "Are you sure you want to approve?"
       : "Are you sure you want to reject?";
 
@@ -106,7 +107,7 @@ const ApprovalReasonPanel: React.FC<ApprovalReasonPanelProps> = ({
             NO
           </button>
 
-          <button
+          {/* <button
             onClick={() => {
               if (!reason.trim()) {
                 setErrorMsg("Please enter a reason");
@@ -121,7 +122,43 @@ const ApprovalReasonPanel: React.FC<ApprovalReasonPanelProps> = ({
             className="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-400"
           >
             YES
-          </button>
+          </button> */}
+          <button
+              onClick={() => {
+                if (!reason.trim()) {
+                  setErrorMsg("Please enter a reason");
+                  return;
+                }
+                  const categoryName = approvalData?.AwardCategory ;
+
+                if (actionType === "Approved") {
+                  onApprove();
+                  Swal.fire({
+                    icon: "success",
+                    title: "Approved Successfully!",
+                    text: "The nomination has been approved.",
+                     //text: `${categoryName} has been approved.`,
+                  });
+                }
+
+                if (actionType === "Rejected") {
+                  onReject();
+                  Swal.fire({
+                    icon: "success",
+                    title: "Rejected Successfully!",
+                   // text: "The rejection has been processed.",
+                    text: "The nomination has been rejected.",
+                    //text: `${categoryName} has been rejected.`,
+                  });
+                }
+
+                onClose();
+                }}
+              className="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-400"
+            >
+              YES
+            </button>
+
         </div>
       </div>
     </div>
