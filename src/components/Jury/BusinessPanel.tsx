@@ -311,10 +311,9 @@ const BusinessPanel: React.FC<NomineeSidePanelProps> = ({
                 <div className="text-sm font-medium text-gray-900">Reporting to</div>
                 <div className="text-sm text-gray-600">{nominee.ManagerUserName}</div>
               </div>
-              {(nominee.BusinessJuryScore ===null) ? 
-              <div></div>:
-              <>
-              {(nominee.Status=="Approved") ? (
+          
+    
+              {(nominee.Status==="Approved") ? (
              <div className="space-y-1">
                 <div className="text-sm font-medium text-gray-900">Score (Out of 100)</div>
                 <div className="text-sm text-gray-600">{nominee.BusinessJuryScore}</div>
@@ -329,7 +328,6 @@ const BusinessPanel: React.FC<NomineeSidePanelProps> = ({
                           min="1"
                           max="100"
                           style={{border: '3px solid black'} }
-                          // Optional: Add basic HTML validation attributes for accessibility/browser hints
                           required 
                         />
                         {/* Conditionally render the error message if the error state is set */}
@@ -340,9 +338,6 @@ const BusinessPanel: React.FC<NomineeSidePanelProps> = ({
                         )}
                 </div>
               )}
-              </>
-              }
-       
                
             </div>
 

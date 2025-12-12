@@ -314,10 +314,8 @@ useEffect(() => {
                 <div className="text-sm font-medium text-gray-900">Reporting To</div>
                 <div className="text-sm text-gray-600">{nominee.ManagerUserName}</div>
               </div>
-                {(nominee.PresidentScore ===null)? 
-              <div></div>:
-              <>
-              {(nominee.Status!="Approved") ? (
+     
+              {(nominee.Status==="Approved") ? (
              <div className="space-y-1">
                 <div className="text-sm font-medium text-gray-900">PresidentScore</div>
                 <div className="text-sm text-gray-600">{nominee.PresidentScore}</div>
@@ -343,8 +341,7 @@ useEffect(() => {
                         )}
                 </div>
               )}
-              </>
-              }
+
             </div>
 
             {/* Row 5 */}
