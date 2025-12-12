@@ -25,6 +25,7 @@ interface ApprovalView {
     TenantName: string;
     DeptName: string;
     ReferralName: string;
+    ReferralStatus:string;
   }[];
 
   "Supporting Documents": {
@@ -42,11 +43,17 @@ interface ApprovalView {
   ApprovalComments: string;
   BusinessJuryStatus: string;
 }
-
-const statusColors: Record<ApprovalView["status"], string> = {
+const statusColors: Record<string, string> = {
+  Pending: "bg-orange-100 text-orange-800 border-orange-300",
+  Approved: "bg-green-100 text-green-800 border-green-300",
+  Rejected: "bg-red-100 text-red-800 border-red-300",
+  "Under Review": "bg-yellow-100 text-yellow-800 border-yellow-300",
+};
+const statusColors1: Record<ApprovalView["status"], string> = {
   Pending: "bg-orange-100 text-orange-800",
   Approved: "bg-green-100 text-green-800",
   Rejected: "bg-red-100 text-red-800",
+   //"Under Review": "bg-yellow-100 text-yellow-800",
 };
 
 const ApprovalDetailView: React.FC = () => {
@@ -182,7 +189,7 @@ const ApprovalDetailView: React.FC = () => {
                 </div>
               </div>
           {/* Referrals */}
-          <div className="grid grid-cols-3 gap-4">
+          <div className="">
             <div>
               <div className="font-medium text-gray-900 mb-1">Referrals</div>
 
@@ -194,6 +201,16 @@ const ApprovalDetailView: React.FC = () => {
                     {ref.TenantName}
                     <span className="px-2 text-gray-500">|</span>
                     {ref.DeptName}
+                     <span className="px-2 text-gray-500">|</span>
+                  {/* Reusing same color mapping */}
+                  <span
+                    className={`px-3 py-1 text-xs border rounded-full font-semibold ${
+                      statusColors[ref.ReferralStatus] ??
+                      statusColors.Default
+                    }`}
+                  >
+                    {ref.ReferralStatus}
+                  </span>
                   </p>
                 ))
               ) : (
