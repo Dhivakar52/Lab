@@ -1,6 +1,8 @@
 // ReferralReasonPanel.tsx
 import React, { useState, useEffect } from "react";
 
+import Swal from "sweetalert2";
+
 interface ReferralReasonPanelProps {
   isOpen: boolean;
   onClose: () => void;
@@ -105,7 +107,7 @@ const ReferralReasonPanel: React.FC<ReferralReasonPanelProps> = ({
             NO
           </button>
 
-          <button
+          {/* <button
             onClick={() => {
               if (!reason.trim()) {
                 setErrorMsg("Please enter a reason");
@@ -123,7 +125,41 @@ const ReferralReasonPanel: React.FC<ReferralReasonPanelProps> = ({
             className="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-400"
           >
             YES
-          </button>
+          </button> */}
+           <button
+                        onClick={() => {
+                          if (!reason.trim()) {
+                            setErrorMsg("Please enter a reason");
+                            return;
+                          }
+                         const categoryName = nomination?.AwardCategory ;
+                          if (actionType === "approve") {
+                            onApprove();
+                            Swal.fire({
+                              icon: "success",
+                              title: "Approved Successfully!",
+                              //text: "The approval has been processed.",
+                               text: `${categoryName} has been approved.`,
+                            });
+                          }
+          
+                          if (actionType === "reject") {
+                            onReject();
+                            Swal.fire({
+                              icon: "success",
+                              title: "Rejected Successfully!",
+                             // text: "The rejection has been processed.",
+                               text: `${categoryName} has been rejected.`,
+                            });
+                          }
+          
+                          onClose();
+                          }}
+                        className="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-400"
+                      >
+                        YES
+                      </button>
+          
         </div>
       </div>
     </div>
