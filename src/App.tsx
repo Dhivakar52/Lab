@@ -29,11 +29,14 @@ import Testing from './components/Testing/Testing.tsx';
 import ForgotPassword from './pages/auth/Login/ForgotPassword.tsx';
 import ReferralComponent from './components/ReferralApproval/ReferralComponent.tsx';
 import ReferralDetailView from './components/ReferralApproval/ReferralDetailView.tsx';
+import NominationDetailView from './components/NominationContent/NominationDetailsView.tsx';
 
 import VerifyOtp from './pages/auth/Login/VerifyOtp';
 import ResetPassword from './pages/auth/Login/ResetPassword';
 import NominationFullDetails from './components/NominationFullDetails.tsx';
 import ApprovalDetailView from './components/ManagerPage/ApprovalDetailView.tsx';
+import OtherNomination from './components/NominationContent/OtherNomination.tsx';
+
 
 // -------------------------
 // Main page components
@@ -49,9 +52,10 @@ const pageComponents: Record<string, React.ReactNode> = {
   'President Level': <PresidentLevel />,
   'Award Management': <AwardManagement />,
   'Admin Setting': <AdminInner />,
-   'Forgot Password': <ForgotPassword/>,
+  'Forgot Password': <ForgotPassword/>,
   'Testing': <Testing />,
   'Referral Approval': <ReferralComponent />,
+  'Other Nomination':<OtherNomination/>,
 };
 
 // -------------------------
@@ -193,7 +197,14 @@ const App: React.FC = () => {
             </ProtectedRoute>
           }
           />
-
+        <Route
+          path="/nomination-detail/:nominationId"
+          element={
+            <ProtectedRoute userRole={userRole} allowedRoles={getAllowedRoles('Nomination Details')}>
+              <NominationDetailView />
+            </ProtectedRoute>
+          }
+        />
        {/* Fallback */}
         <Route path="/forgot" element={<ForgotPassword/>} />
        <Route path="*" element={<Navigate to="/home" replace />} />

@@ -40,9 +40,10 @@ interface NominationDetailsProps {
     FileNameGUID: string;
     FilePath: string;
   }[];
-   "ApprovalStatus": {
+  "ApprovalStatus": {
    Status: string;
   ApprovalType: string;
+  ApprovalFlow: string;
   }[];
   };
   setSuccessMessage: React.Dispatch<React.SetStateAction<string>>;
@@ -170,7 +171,8 @@ const getFileIcon = (fileName: string) => {
 
 const approvalFlow = data?.ApprovalStatus?.map(a => ({
   type: a.ApprovalType,
-  status: a.Status
+  status: a.Status,
+  level: a.ApprovalFlow
 })) ?? [];
 
 const hasFinalStatus = approvalFlow.some(s =>

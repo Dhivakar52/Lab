@@ -93,7 +93,6 @@ const PresidentLevel: React.FC = () => {
         { accessorKey: "CategoryName", header: "Category" },
         { accessorKey: "NominatedBy", header: "Nominated By" },
         { accessorKey: "ConsolidatedAvgScore", header: "Consolidated Avg Score" },
-        { accessorKey: "PresidentScore", header: "President Score" },
          { accessorKey: "Status", header: "Flag" ,
           cell: ({ getValue }) => { // Use 'getValue' to access the cell's raw value
           const flagValue = getValue<PresidentLevelNominee['Status']>();

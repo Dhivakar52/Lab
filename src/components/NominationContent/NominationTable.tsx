@@ -16,7 +16,13 @@ import { Outlet } from "react-router-dom";
 import { useAuth } from "../ContextAPI/AuthContext";
 import NominationDetailsModal from "./NominationDetailsModal";
 import { ColorBadge } from "../TenantBadges";
-
+import { useNavigate } from "react-router-dom";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@radix-ui/react-dropdown-menu";
 interface Nomination {
   TotalRowCount: number;
   NominationID: number;
@@ -50,6 +56,7 @@ interface Nomination {
   "ApprovalStatus": {
   Status: string;
   ApprovalType: string;
+  ApprovalFlow:string;
   }[];
   //"Referrals ID": { Email: string }[];
 }
@@ -63,7 +70,7 @@ const apiUrl = import.meta.env.VITE_API_URL;
   const [modalOpen, setModalOpen] = useState(false);
   const [selectedNomination, setSelectedNomination] = useState<Nomination | null>(null);
   const [successMessage, setSuccessMessage] = useState("");
-
+  const navigate = useNavigate();
   const { authToken, userId } = useAuth();
   const refreshNominations = async () => {
   setLoading(true);
@@ -131,37 +138,63 @@ const [refreshKey, setRefreshKey] = useState(0);
         },
      
      },
-      // {
-      //   accessorKey: "NominationFile",
-      //   header: "Nomination File",
-      //   cell: (info) =>
-      //     info.getValue() ? (
-      //       <a
-      //         href={info.getValue() as string}
-      //         target="_blank"
-      //         rel="noopener noreferrer"
-      //         className="text-blue-600 underline"
-      //       >
-      //         View File
-      //       </a>
-      //     ) : (
-      //       <span className="text-gray-400">No File</span>
-      //     ),
-      // },
-      {
-        header: "Actions",
-        cell: ({ row }) => (
-          <button
-            onClick={() => {
-              setSelectedNomination(row.original);
-              setModalOpen(true);
-            }}
-            className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
-          >
-            <Menu size={16} className="text-gray-600" />
+     {
+  header: "Actions",
+  cell: ({ row }) => {
+    const item = row.original;
+
+    const handleView = () => {
+      setSelectedNomination(item);
+      setModalOpen(true);
+    };
+    // const handleDetailsView = (item: Nomination) => {
+    //  navigate(`/nomination-detail/${item.NominationID}`);
+    //  };
+     const handleDetailsView = (item: Nomination) => {
+      navigate(`/nomination-detail/${item.NominationID}`, {
+        state: { from: "my-nominations" }
+      });
+    };
+    return (
+      <DropdownMenu>
+        <DropdownMenuTrigger asChild>
+          <button className="p-2 rounded hover:bg-gray-100 transition">
+            <Menu size={18} className="text-blue-600" />
           </button>
-        ),
-      },
+        </DropdownMenuTrigger>
+
+        <DropdownMenuContent align="end" className="w-30 bg-white shadow-xl rounded-sm">
+          {/* <DropdownMenuItem
+            onClick={handleView}
+            className="cursor-pointer hover:bg-blue-50"
+          >
+            side View
+          </DropdownMenuItem> */}
+          <DropdownMenuItem
+            onClick={() => handleDetailsView(row.original)}
+            className="hover:bg-blue-50 hover:text-blue-700 p-3" >
+             View
+          </DropdownMenuItem>
+        </DropdownMenuContent>
+      </DropdownMenu>
+    );
+  },
+},
+
+      // {
+      //   header: "Actionss",
+      //   cell: ({ row }) => (
+      //     <button
+      //       onClick={() => {
+      //         setSelectedNomination(row.original);
+      //         //setModalOpen(true);
+      //       }}
+      //       className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+      //     >
+      //       <Menu size={16} className="text-gray-600" />
+      //     </button>
+      //   ),
+      // },
     ],
     []
   );

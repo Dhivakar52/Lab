@@ -2,86 +2,110 @@ import React from "react";
 import { ArrowRight } from "lucide-react";
 
 type Step = {
-  type: string;
-  status: string;
+  type: string;    
+  status: string;  
+  level: string;   
 };
 
-// type StatusFlowProps = {
-//   steps: Step[];
-// };
-
-const statusFlowColors: Record<string, string> = {
-  Approved: "bg-green-100 text-green-800 border-green-300",
-  Rejected: "bg-red-100 text-red-800 border-red-300",
-  "Under Review": "bg-yellow-100 text-yellow-800 border-yellow-300",
-  "Not Started": "bg-gray-100 text-gray-700 border-gray-300",
-};
 interface StatusFlowProps {
-  steps: { type: string; status: string }[];
+  steps: Step[];
 }
 
+const levelColors: Record<string, string> = {
+  Approved: "bg-green-50 border-green-300",
+  Pending: "bg-yellow-50 border-yellow-300",
+  Rejected: "bg-red-50 border-red-300",
+  "Under Review": "bg-yellow-50 border-yellow-300",
+  "Not Started": "bg-gray-50 border-gray-300",
+};
+const levelTextColors: Record<string, string> = {
+  Approved: "text-green-700",
+  Pending: "text-yellow-700",
+  Rejected: "text-red-700",
+  "Under Review": "text-yellow-700",
+  "Not Started": "text-gray-700",
+};
+const groupByLevel = (steps: Step[]) => {
+  const map: Record<string, Step[]> = {};
+  steps.forEach(s => {
+    if (!map[s.level]) map[s.level] = [];
+    map[s.level].push(s);
+  });
+  return map;
+};
+
+const getOverallStatus = (items: Step[]) => {
+  if (items.some(i => i.status === "Approved")) return "Approved";
+  if (items.some(i => i.status === "Rejected")) return "Rejected";
+  if (items.some(i => i.status === "Under Review")) return "Under Review";
+  return "Not Started";
+};
+
 const StatusFlow: React.FC<StatusFlowProps> = ({ steps }) => {
+  const grouped = groupByLevel(steps);
+  const levels = Object.keys(grouped).sort();
+
   return (
     <div>
       <div className="text-sm font-medium text-gray-900">Nomination Status Flow</div>
-      <div className="flex items-start space-x-6 mt-2">
-        {steps.map((step, i) => {
-          const colorClass =
-            statusFlowColors[step.status] ||
-            "bg-gray-100 text-gray-700 border-gray-300";
+      <div className="flex items-center">
+        {levels.map((level, i) => {
+          const items = grouped[level];
+          const overall = getOverallStatus(items);
+          const boxColor = levelColors[overall];
           return (
-            <div key={i} className="flex flex-col items-center w-28 relative">
-              <span className="text-xs font-semibold text-gray-700 mb-1">
-                {step.type}
-              </span>
-              <span
-                className={`px-4 py-2 border rounded-full text-xs font-medium text-center w-full ${colorClass} relative`}
-              >
-                {step.status}
+            <div key={level} className="flex items-center">
+             <div className="flex flex-col justify-center">
+              <div className={`w-55 border rounded-xl p-3 ${boxColor}`}>
+                <div className={`text-sm font-semibold text-center mb-1 ${levelTextColors[overall]}`}>
+                {/* <div className="text-sm font-semibold text-center mb-1"> */}
+                  {level}
+                </div>
 
-                {i !== steps.length - 1 && (
-                  <ArrowRight
-                    className="w-4 h-4 text-gray-500 absolute top-1/2 -translate-y-1/2 right-[-20px]"
-                  />
+                {level === "Level-1" && (
+                  <div className="text-xs text-center text-gray-600 mb-2">
+                    Manager / Referral <br />
+                    <div className="space-y-1">
+                  {items.map((s, idx) => (
+                    <div
+                      key={idx}
+                      className="bg-white border rounded text-xs px-2 py-1 text-center">
+                      {s.type} – {s.status}
+                      {s.status === "Approved" && " ✅"}
+                      {s.status === "Not Started" && " ⏳"}
+                      {s.status === "Rejected" && " ❌"}
+                    </div>
+                  ))}
+                   <span className="italic">
+                      Any one approval is sufficient
+                    </span>
+                </div>
+                  </div>
                 )}
-              </span>
+               {level != "Level-1" && (
+                <div className="space-y-1">
+                  {items.map((s, idx) => (
+                    <div
+                      key={idx}
+                      className="text-xs px-2 py-1 text-center">
+                      {s.type} – {s.status}
+                      {s.status === "Approved" && " ✅"}
+                      {s.status === "Not Started" && " ⏳"}
+                      {s.status === "Rejected" && " ❌"}
+                    </div>
+                  ))}
+                </div>
+                )}
+              </div>
+            </div>
+              {i !== levels.length - 1 && (
+                <ArrowRight className="text-gray-400 w-5 h-5 mx-2" />
+                // <ArrowRight className="mx-4 mt-8 text-gray-400 w-4 h-4" />
+              )}
             </div>
           );
         })}
       </div>
-    </div>
-  );
-};
-
-const StatusFlow1: React.FC<StatusFlowProps> = ({ steps }) => {
-  return (
-    
-    <div className="flex items-start space-x-6 mt-2">
-      {steps.map((step, i) => {
-        const colorClass =
-          statusFlowColors[step.status] ||
-          "bg-gray-100 text-gray-700 border-gray-300";
-
-        return (
-          <div key={i} className="flex flex-col items-center w-28 relative">
-            <span className="text-xs font-semibold text-gray-700 mb-1">
-              {step.type}
-            </span>
-
-            <span
-              className={`px-4 py-2 border rounded-full text-xs font-medium text-center w-full ${colorClass} relative`}
-            >
-              {step.status}
-
-              {i !== steps.length - 1 && (
-                <ArrowRight
-                  className="lucide lucide-arrow-right w-4 h-4 text-gray-500 absolute top-1/2 -translate-y-1/2 right-[-20px]"
-                />
-              )}
-            </span>
-          </div>
-        );
-      })}
     </div>
   );
 };
