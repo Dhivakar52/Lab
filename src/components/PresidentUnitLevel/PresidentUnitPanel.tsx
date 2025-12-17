@@ -7,8 +7,6 @@ import type { GeneralJury } from "./PresidentUnit";
 import StatusFlow from "../StatusFlow";
 import { useNavigate } from "react-router-dom";
 
-
-
 interface PresidentUnitPanelProps {
   isOpen: boolean;
   onClose: () => void;
@@ -38,10 +36,9 @@ const PresidentUnitPanel: React.FC<PresidentUnitPanelProps> = ({
   const [popupErrors, setPopupErrors] = useState({ score: "", comments: "" });
   const navigate = useNavigate();
 
-const handleBackward = () => {
-  onClose(); 
-};
-
+  const handleBackward = () => {
+    onClose(); 
+  };
 
   useEffect(() => {
     if (nominee) {
@@ -67,6 +64,13 @@ const handleBackward = () => {
     }
     return [];
   };
+
+  // ✅ FIXED: Properly placed and working
+  const isPresidentApproved = nominee?.ApprovalStatus?.some(
+    (statusEntry: any) => 
+      statusEntry.ApprovalType === 'President Jury' && 
+      statusEntry.Status === 'Approved'
+  ) ?? false;
 
   const openPopup = (type: "approve" | "reject") => {
     setActionType(type);
@@ -167,140 +171,144 @@ const handleBackward = () => {
 
   return (
     <>
-     
-<div className="fixed inset-0 bg-black/30 z-50 flex justify-center items-start overflow-auto">
+      <div className="fixed inset-0 bg-black/30 z-50 flex justify-center items-start overflow-auto">
+        <div className="bg-white w-full max-w-6xl my-6 rounded-lg shadow-xl flex flex-col">
+          <div className="relative flex items-center p-4 border-b">
+            <button
+              onClick={onClose}
+              className="flex items-center text-blue-600 bg-white border border-gray-200 rounded-sm px-2 py-1 font-medium hover:bg-gray-50"
+            >
+              <ArrowLeft size={14} className="mr-2" />
+              Back
+            </button>
+            <h2 className="absolute left-1/2 -translate-x-1/2 text-lg font-semibold">
+              General Jury Review
+            </h2>
+          </div>
 
-  
-  <div className="bg-white w-full max-w-6xl my-6 rounded-lg shadow-xl flex flex-col">
+          <div className="p-6 overflow-y-auto text-sm space-y-6">
+            {/* Basic Info */}
+            <div className="grid grid-cols-3 gap-4">
+              <div>
+                <div className="font-medium text-gray-900">Nominee</div>
+                <div className="text-gray-600">{nominee.Nominee}</div>
+              </div>
+              <div>
+                <div className="font-medium text-gray-900">Category</div>
+                <div className="text-gray-600">{nominee.CategoryName}</div>
+              </div>
+              <div>
+                <div className="font-medium text-gray-900">Tenant</div>
+                <div className="text-gray-600">{nominee.Tenant}</div>
+              </div>
+            </div>
 
-    
-   <div className="relative flex items-center p-4 border-b">
+            <div className="grid grid-cols-3 gap-8">
+              <div>
+                <div className="font-medium text-gray-900">Nominated By</div>
+                <div className="text-gray-600">{nominee.NominatedBy}</div>
+              </div>
+              <div>
+                <div className="font-medium text-gray-900">Reporting To</div>
+                <div className="text-gray-600">{(nominee as any).ManagerUserName}</div>
+              </div>
+              <div>
+                <div className="font-medium text-gray-900">Submitted Date</div>
+                <div className="text-gray-600">{(nominee as any)["Submitted On"]}</div>
+              </div>
+            </div>
 
-  
-  <button
-    onClick={onClose}
-    className="flex items-center text-blue-600 bg-white border border-gray-200 rounded-sm px-2 py-1 font-medium hover:bg-gray-50"
-  >
-    <ArrowLeft size={14} className="mr-2" />
-    Back
-  </button>
+            {/* ✅ ENHANCED Status section with President indicator */}
+            <div>
+              <div className="font-medium text-gray-900">Status</div>
+              <div className="flex items-center gap-2 mt-1">
+                <span
+                  className={`px-3 py-1 rounded-full text-sm font-semibold ${
+                    statusColors[nominee.Status] ?? "bg-gray-100 text-gray-800"
+                  }`}
+                >
+                  {nominee.Status}
+                </span>
+                {isPresidentApproved && (
+                  <span className="px-2 py-1 bg-green-100 text-green-800 text-xs rounded-full">
+                    President Approved
+                  </span>
+                )}
+              </div>
+            </div>
 
-  
-  <h2 className="absolute left-1/2 -translate-x-1/2 text-lg font-semibold">
-    General Jury Review
-  </h2>
+            {/* Description */}
+            <div>
+              <div className="font-medium text-gray-900">Description</div>
+              <div className="text-gray-600 mt-1">
+                {(nominee as any).Descriptions ||
+                  (nominee as any).Description ||
+                  ""}
+              </div>
+            </div>
 
-</div>
+            {/* Supporting Documents */}
+            <div>
+              <div className="font-medium text-gray-900">Supporting Documents</div>
+              <div className="mt-2 space-y-1">
+                {supportingDocs.length > 0 ? (
+                  supportingDocs.map((doc: any, idx: number) => (
+                    <a
+                      key={idx}
+                      href={doc.FilePath}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="flex items-center gap-2 text-blue-600 hover:underline"
+                    >
+                      <FileText size={18} />
+                      {doc.OriginalFileName}
+                    </a>
+                  ))
+                ) : (
+                  <div className="text-gray-500">(No files uploaded)</div>
+                )}
+              </div>
+            </div>
 
-    <div className="p-6 overflow-y-auto text-sm space-y-6">
+            {/* Status Flow */}
+            <StatusFlow steps={approvalFlow} />
 
-      {/* Basic Info */}
-      <div className="grid grid-cols-3 gap-4">
-        <div>
-          <div className="font-medium text-gray-900">Nominee</div>
-          <div className="text-gray-600">{nominee.Nominee}</div>
-        </div>
-        <div>
-          <div className="font-medium text-gray-900">Category</div>
-          <div className="text-gray-600">{nominee.CategoryName}</div>
-        </div>
-        <div>
-          <div className="font-medium text-gray-900">Tenant</div>
-          <div className="text-gray-600">{nominee.Tenant}</div>
+            {/* ✅ FIXED Action Buttons - Now properly controlled by isPresidentApproved */}
+            <div className="flex justify-center gap-4 pt-4">
+              {/* Only show Reject if not Rejected AND President hasn't approved */}
+              {nominee.Status !== "Rejected" && !isPresidentApproved && (
+                <button
+                  className="px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700"
+                  onClick={() => openPopup("reject")}
+                  disabled={loading}
+                >
+                  ✖ Reject Nomination
+                </button>
+              )}
+
+              {/* Only show Approve if not Approved AND President hasn't approved */}
+              {nominee.Status !== "Approved" && !isPresidentApproved && (
+                <button
+                  className="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700"
+                  onClick={() => openPopup("approve")}
+                  disabled={loading}
+                >
+                  ✔ Approve Nomination
+                </button>
+              )}
+
+              {/* Show status if President already approved */}
+              {isPresidentApproved && (
+                <div className="px-4 py-2 bg-blue-100 text-blue-800 rounded-md text-sm font-medium">
+                  ✅ Already approved by President Jury
+                </div>
+              )}
+            </div>
+          </div>
         </div>
       </div>
 
-      <div className="grid grid-cols-3 gap-8">
-        <div>
-          <div className="font-medium text-gray-900">Nominated By</div>
-          <div className="text-gray-600">{nominee.NominatedBy}</div>
-        </div>
-        <div>
-          <div className="font-medium text-gray-900">Reporting To</div>
-          <div className="text-gray-600">{(nominee as any).ManagerUserName}</div>
-        </div>
-        <div>
-          <div className="font-medium text-gray-900">Submitted Date</div>
-          <div className="text-gray-600">{(nominee as any)["Submitted On"]}</div>
-        </div>
-      </div>
-
-      <div>
-        <div className="font-medium text-gray-900">Status</div>
-        <span
-          className={`px-3 py-1 rounded-full text-sm font-semibold ${
-            statusColors[nominee.Status] ?? "bg-gray-100 text-gray-800"
-          }`}
-        >
-          {nominee.Status}
-        </span>
-      </div>
-
-      {/* Description */}
-      <div>
-        <div className="font-medium text-gray-900">Description</div>
-        <div className="text-gray-600 mt-1">
-          {(nominee as any).Descriptions ||
-            (nominee as any).Description ||
-            ""}
-        </div>
-      </div>
-
-      {/* Supporting Documents */}
-      <div>
-        <div className="font-medium text-gray-900">Supporting Documents</div>
-        <div className="mt-2 space-y-1">
-          {supportingDocs.length > 0 ? (
-            supportingDocs.map((doc: any, idx: number) => (
-              <a
-                key={idx}
-                href={doc.FilePath}
-                target="_blank"
-                rel="noreferrer"
-                className="flex items-center gap-2 text-blue-600 hover:underline"
-              >
-                <FileText size={18} />
-                {doc.OriginalFileName}
-              </a>
-            ))
-          ) : (
-            <div className="text-gray-500">(No files uploaded)</div>
-          )}
-        </div>
-      </div>
-
-      {/* Status Flow */}
-      <StatusFlow steps={approvalFlow} />
-
-      {/* Action Buttons */}
-      <div className="flex justify-center gap-4 pt-4">
-        {nominee.Status !== "Rejected" && (
-          <button
-            className="px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700"
-            onClick={() => openPopup("reject")}
-            disabled={loading}
-          >
-            ✖ Reject Nomination
-          </button>
-        )}
-
-        {nominee.Status !== "Approved" && (
-          <button
-            className="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700"
-            onClick={() => openPopup("approve")}
-            disabled={loading}
-          >
-            ✔ Approve Nomination
-          </button>
-        )}
-      </div>
-
-    </div>
-  </div>
-</div>
-
-
-     
+      {/* Popup Modal */}
       {popupOpen && (
         <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/40 px-4">
           <div className="bg-white w-full max-w-xl p-6 rounded-lg shadow-lg">
@@ -380,8 +388,9 @@ const handleBackward = () => {
               <button
                 className={`px-4 py-2 text-white rounded ${actionType === "approve" ? "bg-green-600" : "bg-red-600"}`}
                 onClick={() => submitFromPopup(actionType === "approve")}
+                disabled={loading}
               >
-                Confirm
+                {loading ? "Processing..." : "Confirm"}
               </button>
             </div>
           </div>
