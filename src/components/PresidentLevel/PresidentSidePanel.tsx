@@ -33,21 +33,38 @@ const PresidentSidePanel: React.FC<PresidentSidePanelProps> = ({
     const [loading, setLoading] = useState<boolean>(false);
     const [sidebarOpen, setSidebarOpen] = useState<boolean>(true); // Sidebar state
       const [commentError, setCommentError] = useState("");
-    const [score, setScore] = useState(90);
+    const [score, setScore] = useState();
       const [error, setError] = useState('');
     
     
+      const numScore = Number(score);
+
+      const validateScore = (showError = false) => {
+        if (score === '') {
+          if (showError) setError('Score cannot be empty.');
+          return false;
+        }
+        if (isNaN(numScore) || numScore < 1 || numScore > 100) {
+          if (showError) setError('The score must be between 1 and 100.');
+          return false;
+        }
+        if (error) setError('');
+        return true;
+      };
+
       const handleChange = (e:any) => {
         const value = e.target.value;
         setScore(value);
-        
-        // Clear the error message as the user types
-        if (error) {
-          setError('');
+
+        // Immediate validation for out-of-range numeric values while typing
+        const valNum = Number(value);
+        if (value !== '' && (isNaN(valNum) || valNum < 1 || valNum > 100)) {
+          setError('The score must be between 1 and 100.');
+        } else {
+          // Clear only the range-related error while typing; empty errors are shown on Approve/Reject
+          if (error === 'The score must be between 1 and 100.') setError('');
         }
       };
-      
-      const numScore = Number(score);
 
   const baseClasses = "px-2 py-2 text-white rounded-md shadow transition flex items-center";
   const rejectClasses = `${baseClasses} bg-red-600 hover:bg-red-700`;
@@ -175,6 +192,9 @@ const PresidentSidePanel: React.FC<PresidentSidePanelProps> = ({
     const RejectButton = () => (
       <button
         onClick={() => {
+          const validComment = validateComments();
+          const validScore = validateScore(true);
+          if (!validComment || !validScore) return;
           onReject(nominee.JuryApprovalsID);
           onClose();
         }}
@@ -187,6 +207,9 @@ const PresidentSidePanel: React.FC<PresidentSidePanelProps> = ({
     const ApproveButton = () => (
       <button
         onClick={() => {
+          const validComment = validateComments();
+          const validScore = validateScore(true);
+          if (!validComment || !validScore) return;
           onApprove(nominee.JuryApprovalsID);
           onClose();
         }}
@@ -229,10 +252,10 @@ const PresidentSidePanel: React.FC<PresidentSidePanelProps> = ({
 })) ?? [];
 
 useEffect(() => {
-    if (score === null) {
-      setError('Error: Score cannot be empty.');
+    if (score === '') {
+      setError('Score cannot be empty.');
     } else if (numScore < 1 || numScore > 100) {
-      setError('Error: The score must be between 1 and 100.');
+      setError('The score must be between 1 and 100.');
     } else {
       setError('');
     }

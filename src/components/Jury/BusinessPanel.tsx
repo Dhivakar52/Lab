@@ -30,21 +30,38 @@ const BusinessPanel: React.FC<NomineeSidePanelProps> = ({
   const [loading, setLoading] = useState<boolean>(false);
   const [sidebarOpen, setSidebarOpen] = useState<boolean>(true); // Sidebar state
   const [commentError, setCommentError] = useState("");
-  const [score, setScore] = useState(90);
+  const [score, setScore] = useState();
   const [error, setError] = useState('');
 
+      const numScore = Number(score);
+
+      const validateScore = (showError = false) => {
+        if (score === '') {
+          if (showError) setError('Score cannot be empty.');
+          return false;
+        }
+        if (isNaN(numScore) || numScore < 1 || numScore > 100) {
+          if (showError) setError('The score must be between 1 and 100.');
+          return false;
+        }
+        if (error) setError('');
+        return true;
+      };
 
   const handleChange = (e:any) => {
     const value = e.target.value;
     setScore(value);
+
+    const valNum = Number(value);
+        if (value !== '' && (isNaN(valNum) || valNum < 1 || valNum > 100)) {
+          setError('The score must be between 1 and 100.');
+        } else {
+          // Clear only the range-related error while typing; empty errors are shown on Approve/Reject
+          if (error === 'The score must be between 1 and 100.') setError('');
+        }
     
-    // Clear the error message as the user types
-    if (error) {
-      setError('');
-    }
   };
   
-  const numScore = Number(score);
 
  
   const baseClasses = "px-2 py-2 text-white rounded-md shadow transition flex items-center";
@@ -63,7 +80,14 @@ const BusinessPanel: React.FC<NomineeSidePanelProps> = ({
       }
     }, [nominee]);
 
-  
+  const validateComments = () => {
+       if (!businessJuryComments.trim()) {
+         setCommentError("Comments are required!");
+         return false;
+       }
+       setCommentError("");
+       return true;
+     };
   
   const onApprove = async (JuryApprovalsID: number) => {
     setLoading(true);
@@ -164,6 +188,9 @@ const BusinessPanel: React.FC<NomineeSidePanelProps> = ({
     const RejectButton = () => (
       <button
         onClick={() => {
+          const validComment = validateComments();
+          const validScore = validateScore(true);
+          if (!validComment || !validScore) return;
           onReject(nominee.JuryApprovalsID);
           onClose();
         }}
@@ -176,6 +203,9 @@ const BusinessPanel: React.FC<NomineeSidePanelProps> = ({
     const ApproveButton = () => (
       <button
         onClick={() => {
+          const validComment = validateComments();
+          const validScore = validateScore(true);
+          if (!validComment || !validScore) return;
           onApprove(nominee.JuryApprovalsID);
           onClose();
         }}
