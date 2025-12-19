@@ -4,7 +4,7 @@ import { ArrowRight } from "lucide-react";
 type Step = {
   type: string;    
   status: string;  
-  level: string;   
+  level?: any;   
 };
 
 interface StatusFlowProps {
