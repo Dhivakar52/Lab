@@ -30,7 +30,7 @@ const AwardCategories: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [globalFilter, setGlobalFilter] = useState("");
 
-  // 🔹 PANEL STATE
+  // PANEL STATE
   const [isPanelOpen, setIsPanelOpen] = useState(false);
   const [categoryName, setCategoryName] = useState("");
   const [description, setDescription] = useState("");
@@ -79,7 +79,7 @@ const AwardCategories: React.FC = () => {
       cell: ({ row }) => {
         const item = row.original;
         return (
-          <div className="justify-center gap-4">
+          <div className="flex  gap-3">
              <button
               className="text-blue-600 hover:text-blue-800"
               onClick={() => handleEdit(item.AwardCategoryID)}
@@ -107,7 +107,7 @@ const AwardCategories: React.FC = () => {
     getFilteredRowModel: getFilteredRowModel(),
     getPaginationRowModel: getPaginationRowModel(),
   });
-   // 🔹 ADD CLICK (IMPORTANT FIX)
+   
   const handleAddClick = () => {
     setEditCategoryId(null);
     setCategoryName("");
@@ -138,12 +138,12 @@ const AwardCategories: React.FC = () => {
 
 
 const handleSave = async () => {
-  if (!categoryName.trim()) {
-    alert("Category name is required");
-    return;
-  }
+  // if (!categoryName.trim()) {
+  //   //alert("Category name is required");
+  //   return;
+  // }
 
-  const categoryData = {
+  const categoryData = { 
     categoryCode: categoryCode.trim(),                 
     categoryName: categoryName.trim(),
     description: description?.trim() || "",
@@ -182,7 +182,7 @@ const handleSave = async () => {
       );
        Swal.fire({
         icon: "success",
-        title: "Category added successfully!",
+        title: "Category updated  successfully!",
         confirmButtonText: "Okay",
       });
     }
@@ -278,8 +278,10 @@ const handleDelete = async (category: Category) => {
               <input
                 value={globalFilter}
                 onChange={(e) => setGlobalFilter(e.target.value)}
-                placeholder="Search..."
-                className="pl-10 pr-4 py-2 border rounded-md text-sm w-64"
+                placeholder="Search by category..."
+                className="pl-10 pr-4 py-2 w-64 text-sm rounded-md border border-gray-300
+                            focus:border-gray-300 focus:ring-0 focus:outline-none"
+  
               />
             </div>
 
@@ -289,14 +291,15 @@ const handleDelete = async (category: Category) => {
               className="flex items-center gap-2 bg-blue-600 text-white px-4 py-2 rounded-md text-sm"
             >
               <Plus size={16} />
-              Add Category
+              Add New Category
             </button>
           </div>
         </div>
 
         {/* TABLE */}
+
         <div className="overflow-x-auto">
-          <table className="min-w-full">
+          <table className="min-w-full border border-gray-200">
             <thead className="bg-gray-50">
               {table.getHeaderGroups().map((hg) => (
                 <tr key={hg.id}>
