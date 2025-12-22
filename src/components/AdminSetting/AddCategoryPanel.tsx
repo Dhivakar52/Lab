@@ -1,7 +1,5 @@
-import React, { useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import { X } from "lucide-react";
-
-
 
 interface Props {
   isOpen: boolean;
@@ -13,6 +11,7 @@ interface Props {
   categoryCode: string;
   setCategoryCode: (v: string) => void;
   onSave: () => void;
+   editCategoryId: number | null;
 }
 
 const AddCategoryPanel: React.FC<Props> = ({
@@ -25,15 +24,30 @@ const AddCategoryPanel: React.FC<Props> = ({
   setDescription,
   setCategoryCode,
   onSave,
+   editCategoryId,
 }) => {
+  // 🔹 Local validation state (safe)
+  const [showError, setShowError] = useState(false);
+
   useEffect(() => {
     if (isOpen) {
-      // When the panel is opened, focus the first input field
       document.getElementById("categoryName")?.focus();
+      setShowError(false); // reset error when open
     }
   }, [isOpen]);
 
   if (!isOpen) return null;
+
+  // 🔹 Wrapper – onSave unchanged
+  const handleSave = () => {
+    if (!categoryName.trim() || !categoryCode.trim()) {
+      setShowError(true);
+      return;
+    }
+
+    setShowError(false);
+    onSave(); // original save flow
+  };
 
   return (
     <>
@@ -49,8 +63,7 @@ const AddCategoryPanel: React.FC<Props> = ({
       <div className="fixed top-0 right-0 h-full w-[400px] bg-white shadow-xl z-50 flex flex-col">
         {/* Header */}
         <div className="flex items-center justify-between px-6 py-4 border-b">
-          <h2 className="text-lg font-semibold">Add Category</h2>
-          
+          <h2 className="text-lg font-semibold"> {editCategoryId ? "Edit Category" : "Add Category"}</h2>
           <button
             onClick={onClose}
             aria-label="Close"
@@ -62,35 +75,61 @@ const AddCategoryPanel: React.FC<Props> = ({
 
         {/* Body */}
         <div className="p-6 space-y-4 flex-1">
+          {/* Category Name */}
           <div>
-            <label htmlFor="categoryName" className="block text-sm font-medium mb-1">
+            <label className="block text-sm font-medium mb-1">
               Category Name<span className="text-red-600">*</span>
             </label>
             <input
               id="categoryName"
               value={categoryName}
-              onChange={(e) => setCategoryName(e.target.value)}
-              className="w-full  border rounded-md px-3 py-2 text-sm"
+              onChange={(e) => {
+                setCategoryName(e.target.value);
+                if (showError) setShowError(false);
+              }}
+              className={`w-full border rounded-md px-3 py-2 text-sm ${
+                showError && !categoryName.trim()
+                  ? "border-red-500"
+                  : ""
+              }`}
               placeholder="Enter category name"
-              required
             />
+            {showError && !categoryName.trim() && (
+              <p className="text-red-500 text-xs mt-1">
+                Category Name is required
+              </p>
+            )}
           </div>
-           <div>
-            <label htmlFor="categorycode" className="block text-sm font-medium mb-1">
-              Category Code<span className="text-red-600"></span>
+
+          {/* Category Code */}
+          <div>
+            <label className="block text-sm font-medium mb-1">
+              Category Code<span className="text-red-600">*</span>
             </label>
             <input
               id="categoryCode"
               value={categoryCode}
-              onChange={(e) => setCategoryCode(e.target.value)}
-              className="w-full border rounded-md px-3 py-2 text-sm"
+              onChange={(e) => {
+                setCategoryCode(e.target.value);
+                if (showError) setShowError(false);
+              }}
+              className={`w-full border rounded-md px-3 py-2 text-sm ${
+                showError && !categoryCode.trim()
+                  ? "border-red-500"
+                  : ""
+              }`}
               placeholder="Enter category code"
-              required
             />
+            {showError && !categoryCode.trim() && (
+              <p className="text-red-500 text-xs mt-1">
+                Category Code is required
+              </p>
+            )}
           </div>
 
+          {/* Description */}
           <div>
-            <label htmlFor="description" className="block text-sm font-medium mb-1">
+            <label className="block text-sm font-medium mb-1">
               Description
             </label>
             <textarea
@@ -100,7 +139,6 @@ const AddCategoryPanel: React.FC<Props> = ({
               rows={4}
               className="w-full border rounded-md px-3 py-2 text-sm"
               placeholder="Enter description"
-              required
             />
           </div>
         </div>
@@ -110,14 +148,12 @@ const AddCategoryPanel: React.FC<Props> = ({
           <button
             onClick={onClose}
             className="px-4 py-2 text-sm border border-gray-300 rounded-md"
-            aria-label="Cancel"
           >
             Cancel
           </button>
           <button
-            onClick={onSave}
+            onClick={handleSave}
             className="px-4 py-2 text-sm bg-blue-600 text-white rounded-md"
-            aria-label="Save category"
           >
             Save
           </button>
