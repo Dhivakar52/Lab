@@ -20,7 +20,7 @@ interface Category {
   AwardCategoryID: number;
   CategoryName: string;
   Description: string;
-  CategoryCode: string;
+  CategoryCode?: string;
 }
 
 const AwardCategories: React.FC = () => {
@@ -79,7 +79,7 @@ const AwardCategories: React.FC = () => {
       cell: ({ row }) => {
         const item = row.original;
         return (
-          <div className="flex justify-center gap-3">
+          <div className="justify-center gap-4">
              <button
               className="text-blue-600 hover:text-blue-800"
               onClick={() => handleEdit(item.AwardCategoryID)}
@@ -107,11 +107,18 @@ const AwardCategories: React.FC = () => {
     getFilteredRowModel: getFilteredRowModel(),
     getPaginationRowModel: getPaginationRowModel(),
   });
+   // 🔹 ADD CLICK (IMPORTANT FIX)
+  const handleAddClick = () => {
+    setEditCategoryId(null);
+    setCategoryName("");
+    setDescription("");
+    setcategoryCode("");
+    setIsPanelOpen(true);
+  };
 
   
   const handleEdit = async (categoryId: number) => {
   try {
-    // Send categoryId directly, not categoryId.AwardCategoryID
     const res = await axios.get(`${apiUrl}/api/awardCategory`, {
       params: { AwardCategoryID: categoryId },
       headers: { Authorization: `Bearer ${authToken}` },
@@ -208,7 +215,6 @@ const handleDelete = async (category: Category) => {
   });
 
   if (result.isConfirmed) {
-    // Proceed with deletion if the user confirmed
     try {
       const payload = {
         categoryCode: "AUTO",
@@ -235,7 +241,7 @@ const handleDelete = async (category: Category) => {
         confirmButtonText: "Okay",
       });
 
-      // Delay the reload to allow SweetAlert to close
+     
       setTimeout(() => {
         window.location.reload(); 
       }, 1500);
@@ -277,9 +283,9 @@ const handleDelete = async (category: Category) => {
               />
             </div>
 
-            {/* 🔹 ADD BUTTON */}
             <button
-              onClick={() => setIsPanelOpen(true)}
+             // onClick={() => setIsPanelOpen(true)}
+                 onClick={handleAddClick}
               className="flex items-center gap-2 bg-blue-600 text-white px-4 py-2 rounded-md text-sm"
             >
               <Plus size={16} />
@@ -353,7 +359,7 @@ const handleDelete = async (category: Category) => {
         </div>
       </div>
 
-      {/* 🔹 ADD/EDIT CATEGORY SIDE PANEL */}
+      {/*ADD/EDIT CATEGORY SIDE PANEL */}
       <AddCategoryPanel
         isOpen={isPanelOpen}
         onClose={() => setIsPanelOpen(false)}
@@ -364,6 +370,7 @@ const handleDelete = async (category: Category) => {
         description={description}
         setDescription={setDescription}
         onSave={handleSave}
+       editCategoryId={editCategoryId}   
       />
     </div>
   );

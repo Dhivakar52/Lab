@@ -106,6 +106,8 @@ const Header: React.FC<HeaderProps> = ({ onMobileMenuToggle }) => {
         return "Award Management";
       case "/admin-setting":
         return "Admin Settings";
+       case "/admin-setting/award-categories":
+      return "Admin Settings";
       default:
         return "Nomination Management";
     }
