@@ -18,7 +18,8 @@ interface ApprovalView {
   status: "Pending" | "Approved" | "Rejected";
   AwardCategory: string;
   NominatedBy: string;
-  ManagerEmailID: string;
+  ManagerName: string;
+  Department: string;
 
   "Referrals ID": {
     Email: string;
@@ -43,6 +44,12 @@ interface ApprovalView {
   ApprovalComments: string;
   BusinessJuryStatus: string;
 }
+type ApprovalFlowItem = {
+  type: string;
+  status: string;
+  level: string;
+  comments?: string;
+};
 const statusColors: Record<string, string> = {
   Pending: "bg-orange-100 text-orange-800 border-orange-300",
   Approved: "bg-green-100 text-green-800 border-green-300",
@@ -69,10 +76,14 @@ const ApprovalDetailView: React.FC = () => {
   // --------------------------
   // APPROVE FUNCTION
   // --------------------------
-  const approvalFlow = approval?.ApprovalStatus?.map(a => ({
-  type: a.ApprovalType,
-  status: a.Status
-})) ?? [];
+ const approvalFlow: ApprovalFlowItem[] = (approval?.ApprovalStatus || []).map(
+  (a: any) => ({
+    type: a.ApprovalType,
+    status: a.Status,
+    level: a.ApprovalFlow,
+    comments: a.ApprovalComments,
+  })
+);
   const handleApprove = async () => {
     try {
       await axios.put(
@@ -131,23 +142,13 @@ const ApprovalDetailView: React.FC = () => {
   };
 
   return (
-    <div className="p-6 bg-gray-50 min-h-screen">
-      {/* Back Button */}
-      {/* <button
-        onClick={() => navigate("/approvals")}
-        className="flex items-center text-blue-600 bg-white border-gray-200 rounded-sm px-3 py-1 font-medium"
-      >
-        <ArrowLeft size={16} className="mr-2" />
-        Back
-      </button> */}
-
-      {/* Main Details Box */}
-      <div className="bg-white rounded-lg shadow-md border border-gray-200 p-6 mt-3 relative pb-32">
-      {/* <div className="bg-white rounded-lg shadow-md border border-gray-200 p-6 mt-3"> */}
-        <h1 className="text-2xl font-semibold mb-4">Approval Details</h1>
-        <div className="space-y-5">
+    <div className="bg-gray-50">
+     
+      <div className="bg-white rounded-lg shadow-lm border border-gray-200  mt-3">
+        <h1 className="text-2xl font-semibold mb-4 px-6 pt-2">Approval Details</h1>
+        <div className="space-y-5 px-6">
           {/* Row 1 */}
-          <div className="grid grid-cols-3 gap-4">
+          <div className="grid grid-cols-4 gap-4">
             <div>
               <div className="font-medium text-gray-900">Nominee</div>
               <div className="text-gray-700">{approval.nominee}</div>
@@ -160,10 +161,14 @@ const ApprovalDetailView: React.FC = () => {
               <div className="font-medium text-gray-900">Category</div>
               <div className="text-gray-700">{approval.AwardCategory}</div>
             </div>
+             <div>
+              <div className="font-medium text-gray-900">Department</div>
+              <div className="text-gray-700">{approval.Department}</div>
+            </div>
           </div>
 
           {/* Row 2 */}
-          <div className="grid grid-cols-3 gap-4">
+          <div className="grid grid-cols-4 gap-4">
             <div>
               <div className="font-medium text-gray-900">Nominated By</div>
               <div className="text-gray-700">{approval.NominatedBy}</div>
@@ -179,6 +184,10 @@ const ApprovalDetailView: React.FC = () => {
               >
                 {approval.status}
               </div>
+            </div>
+             <div>
+              <div className="font-medium text-gray-900">Reporting To</div>
+              <div className="text-gray-700">{approval.ManagerName}</div>
             </div>
           </div>
             {/* Row 3 */}
@@ -218,10 +227,6 @@ const ApprovalDetailView: React.FC = () => {
               )}
             </div>
 
-            {/* <div>
-              <div className="font-medium text-gray-900">Manager Email</div>
-              <div className="text-gray-700">{approval.ManagerEmailID}</div>
-            </div> */}
           </div>
 
           {/* Description */}
@@ -269,14 +274,11 @@ const ApprovalDetailView: React.FC = () => {
            */}
         </div>
         
-        <div className="absolute bottom-0 left-0 right-0 bg-white  px-6 py-3 flex justify-end space-x-3 rounded-b-lg">
-       {/* <div className=" absolute bottom-0 left-0 right-0 bg-white px-6 py-4 flex justify-end space-x-3 border-t border-gray-200 rounded-b-lg"> */}
-       {/* <div className="absolute bottom-0 left-0 right-0 bg-white px-6 py-4 flex justify-end space-x-3 border-t border-gray-200 rounded-b-lg"> */}
-
+         <div className="bg-white border-t border-gray-200 px-6 py-4 shrink-0 sticky bottom-0 flex justify-end z-20 shadow-sm">
            {/* Back Button */}
           <button
         onClick={() => navigate("/approvals")}
-        className="flex items-center text-blue-600 bg-white border-gray-200 rounded-sm px-3 py-1 font-medium"
+        className="flex items-center me-3 text-blue-600 bg-white border-gray-200 rounded-sm px-3 py-1 font-medium"
       >
         <ArrowLeft size={16} className="mr-2" />
         Back
@@ -287,7 +289,7 @@ const ApprovalDetailView: React.FC = () => {
                 setActionType("Rejected");
                 setIsPanelOpen(true);
               }}
-              className="px-4 py-2 bg-red-600 text-white rounded-md shadow hover:bg-red-700 transition flex items-center"
+              className="px-4 py-2 mx-3 bg-red-600 text-white rounded-md shadow hover:bg-red-700 transition flex items-center"
             >
               ✖ Reject Nomination
             </button>
