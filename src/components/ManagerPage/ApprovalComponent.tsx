@@ -26,11 +26,12 @@ interface ApprovalData {
   AwardCategory: string;
   TotalRowCount: number;
   ContestType: string;
+  Department: string;
   Nominee: string | null;
   Tenant: string | null;
   ManagerEmailID: string;
   ApprovalComments?: string;
-
+  ManagerName: string;
   Descriptions: string;
   "Referrals ID": {
     Email: string;
@@ -61,6 +62,7 @@ interface ApprovalView {
   AwardCategory: string;
   NominatedBy: string;
   ManagerEmailID: string;
+  ManagerName: string;
   "Referrals ID": {
     Email: string;
     TenantName: string;
@@ -75,6 +77,7 @@ interface ApprovalView {
   }[];
   Descriptions: string;
   ApprovalComments: string;
+  Department: string;
   BusinessJuryStatus: string;
    "ApprovalStatus": {
   Status: string;
@@ -246,6 +249,8 @@ const ApprovalTable: React.FC = () => {
               ApprovalComments: item.ApprovalComments,
               BusinessJuryStatus: item.BusinessJuryStatus,
                "ApprovalStatus": item["ApprovalStatus"],
+              Department: item.Department,
+               ManagerName: item.ManagerName,
             },
           });
         };

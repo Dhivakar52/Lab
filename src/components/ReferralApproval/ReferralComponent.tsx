@@ -58,8 +58,13 @@ interface ReferralData {
     FileNameGUID: string;
     FilePath: string;
   }[];
+   "ApprovalStatus": {
+  Status: string;
+  ApprovalType: string;
+  }[];
   BusinessJuryStatus: string;
 }
+
 
 interface ReferralView {
   NominationID: number;
@@ -86,6 +91,10 @@ interface ReferralView {
     FileType: string;
     FileNameGUID: string;
     FilePath: string;
+  }[];
+   "ApprovalStatus": {
+  Status: string;
+  ApprovalType: string;
   }[];
   Descriptions: string;
   ReferralID: number;
@@ -286,6 +295,7 @@ const ReferralTable: React.FC = () => {
           ManagerName: item.ManagerName,
            Comments: item.Comments,
             BusinessJuryStatus: item.BusinessJuryStatus,
+              "ApprovalStatus": item["ApprovalStatus"],
 
     
         },

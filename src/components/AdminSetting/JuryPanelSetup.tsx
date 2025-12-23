@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import {  Search, Plus, Menu } from "lucide-react";
 import BackToSetting from "../BackToSetting";
+import AddJuryMemberPanel from "./AddJuryMemberPanel";
 
 interface JuryMember {
   id: string;
@@ -10,6 +11,7 @@ interface JuryMember {
 }
 
 const JuryPanelSetup: React.FC = () => {
+   const [isPanelOpen, setIsPanelOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
   const [juryMembers] = useState<JuryMember[]>([
     {
@@ -51,8 +53,8 @@ const JuryPanelSetup: React.FC = () => {
   ]);
 
   const handleAddMember = () => {
-    console.log("Add new jury member");
-  };
+  setIsPanelOpen(true);
+   };
 
   const handleViewDetails = (id: string) => {
     console.log("View details for:", id);
@@ -65,7 +67,7 @@ const JuryPanelSetup: React.FC = () => {
   );
 
   return (
-    <div className=" p-6">
+    <div className="">
       <div className="">
         {/* Back Button */}
         <BackToSetting/>
@@ -100,8 +102,8 @@ const JuryPanelSetup: React.FC = () => {
           </div>
 
           {/* Table */}
-          <div className="overflow-x-auto">
-            <table className="w-full">
+            <div className="overflow-x-auto">
+          <table className="min-w-full border border-gray-200">
               <thead className="border-b border-gray-200">
                 <tr>
                   <th className="px-4 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">
@@ -113,7 +115,7 @@ const JuryPanelSetup: React.FC = () => {
                   <th className="px-4 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">
                     Role
                   </th>
-                  <th className="px-4 py-3 text-right text-xs font-semibold text-gray-700 uppercase tracking-wider">
+                  <th className="px-4 py-3 text-center text-xs font-semibold text-gray-700 uppercase tracking-wider">
                     Actions
                   </th>
                 </tr>
@@ -138,7 +140,7 @@ const JuryPanelSetup: React.FC = () => {
                         </span>
                       )}
                     </td>
-                    <td className="px-4 py-4 text-sm text-right">
+                    <td className="px-4 py-4 text-sm text-center">
                       <button
                         onClick={() => handleViewDetails(member.id)}
                         className="text-blue-600 hover:text-blue-700"
@@ -153,6 +155,10 @@ const JuryPanelSetup: React.FC = () => {
           </div>
         </div>
       </div>
+      <AddJuryMemberPanel
+      isOpen={isPanelOpen}
+      onClose={() => setIsPanelOpen(false)}
+    />
     </div>
   );
 };
