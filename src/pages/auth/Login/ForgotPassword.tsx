@@ -20,7 +20,7 @@ const apiUrl = import.meta.env.VITE_API_URL;
       return;
     }
     if (!validateEmail(email)) {
-      setError("Please enter a valid Gmail address");
+      setError("Please enter a valid email address");
       return;
     }
 
@@ -57,7 +57,7 @@ const apiUrl = import.meta.env.VITE_API_URL;
           className={`w-full px-4 py-2 border rounded-lg mb-1 ${
             error ? "border-red-500" : ""
           }`}
-          placeholder="Enter your Gmail"
+          placeholder="Enter your email address"
           value={email}
           onChange={(e) => {
             setEmail(e.target.value);
