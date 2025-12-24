@@ -16,6 +16,7 @@ import { CheckCircle, XCircle, Clock, Menu } from 'lucide-react'; // Import nece
 import PresidentSidePanel from './PresidentSidePanel';
 import { useAuth } from "../ContextAPI/AuthContext";
 import { ColorBadge } from '../TenantBadges';
+import { useNavigate } from 'react-router-dom';
 
 
 
@@ -77,6 +78,12 @@ const PresidentLevel: React.FC = () => {
     fetchNominee();
   }, []);
  
+  const navigate = useNavigate(); // Hook to navigate programmatically
+
+  const navigateDetailView = (route: string) => {
+    navigate(route); // Navigate to the route
+    window.location.reload();  
+  };
 
 
    const columns = useMemo<ColumnDef<PresidentLevelNominee>[]>(
@@ -133,7 +140,7 @@ const PresidentLevel: React.FC = () => {
           return (
          <DropdownMenu.Root>
                          <DropdownMenu.Trigger className="p-2 rounded hover:bg-gray-100"  onClick={() => {setSelectedNominee(item);
-                                   setIsPanelOpen(true);
+                                   navigateDetailView(`/presidentlevel-detail/${item.NominationID}`)
                                  }}>
                              <Menu className="w-5 h-5 text-blue-500" />
                          </DropdownMenu.Trigger>

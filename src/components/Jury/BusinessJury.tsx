@@ -1,6 +1,6 @@
 import React, { useState,useEffect,useMemo } from "react";
 import * as DropdownMenu from "@radix-ui/react-dropdown-menu";
-import { ArrowRight, Menu,  } from "lucide-react";
+import {  Menu,  } from "lucide-react";
 import BusinessPanel from "./BusinessPanel"; 
 import axios from "axios";
 import { useAuth } from "../ContextAPI/AuthContext";
@@ -16,6 +16,7 @@ import type {
   ColumnDef,
 } from "@tanstack/react-table";
 import { ColorBadge } from "../TenantBadges";
+import { useNavigate } from "react-router-dom";
 
 
 export interface BusinessJury {
@@ -66,6 +67,13 @@ const BusinessJury: React.FC = () => {
   const [selectedNomination, setSelectedNomination] = useState<BusinessJury | null>(null);
   const [isPanelOpen, setIsPanelOpen] = useState(false);
 
+  const navigate = useNavigate(); // Hook to navigate programmatically
+  
+    const navigateDetailView = (route: string) => {
+      navigate(route); // Navigate to the route
+      window.location.reload();  
+    };
+    
   useEffect(() => {
       const fetchBusinessJury = async () => {
       try {
@@ -102,7 +110,7 @@ const BusinessJury: React.FC = () => {
              },
         { accessorKey: "CategoryName", header: "Category Name" },
         { accessorKey: "NominatedBy", header: "Nominated By" },
-        { accessorKey: "Score", header: "Score" },
+        { accessorKey: "BusinessJuryScore", header: "Score" },
         {
         accessorKey: "Status",
         header: "Status",
@@ -127,7 +135,7 @@ const BusinessJury: React.FC = () => {
           return (
             <DropdownMenu.Root>
                 <DropdownMenu.Trigger className="p-2 rounded hover:bg-gray-100"  onClick={() => {setSelectedNomination(item);
-                          setIsPanelOpen(true);
+                          navigateDetailView(`/businessjury-detail/${item.NominationID}`);
                         }}>
                     <Menu className="w-5 h-5 text-blue-500" />
                 </DropdownMenu.Trigger>
