@@ -16,6 +16,18 @@
   border-color: #00000033 !important;
 }
 
+.btn-theme-reject {
+    background: linear-gradient(
+        90deg,
+        rgb(180, 58, 58) 16%,
+        rgb(220, 38, 38) 100%
+    );
+    border-left: 4px solid white;
+    color: white;
+    border-radius: 9px;
+}
+
+
 .btn-theme{
     background: linear-gradient(90deg, rgb(8, 128, 94) 16%, rgb(24, 97, 174) 100%);
     border-left: 4px solid white;

@@ -71,29 +71,45 @@ const Header: React.FC<HeaderProps> = ({ onMobileMenuToggle }) => {
     }
   }, [userId]);
 
-
+const headerTitleMap: Record<string, string> = {
+  "my-nominations": "My Nomination Details",
+  "other-nominations": "Other Nomination Details",
+  "referral-approval": "Referral Approval Details",
+  "approvals": "Manager Approval Details",
+  "business-jury": "Business Jury Review",
+  "president-level": "President Jury Review",
+  "president-unit": "President Unit Review",
+};
   // ----------------------------
   // HEADER TITLE HANDLER
   // ----------------------------
   const getHeaderTitle = () => {
+  const from = location.state?.from;
+
+    if (from && headerTitleMap[from]) {
+      return headerTitleMap[from];
+    }
+
     switch (location.pathname) {
       case "/home":
         return "Dashboard";
       case "/notifications":
         return "Notifications";
       case "/self-nominations":
-        return "Self Nominations";
+        return "Self Nominate Form";
+      case "/self-nominations/:nominationId":
+        return "Self Nominate Form";  
       case "/my-nominations":
         return "My Nominations";
       case "/referral-approval":
-         case "/referral-detail":
+      case "/referral-detail":
         return "Referral Approval";
-         case "/nomination-detail":
-            return "Nomination Details";
-       case "/approve-detail":
-         return "Manager Approval";
-         case "/approvals":
-      return "Manager Approval";
+     case "/nomination-detail":
+        return "Nomination Details";
+     case "/approve-detail":
+        return "Manager Approval";
+     case "/approvals":
+        return "Manager Approval";
       case "/other-nomination":
         return "Other Nomination"; 
       case "/business-jury":
@@ -106,8 +122,10 @@ const Header: React.FC<HeaderProps> = ({ onMobileMenuToggle }) => {
         return "Award Management";
       case "/admin-setting":
         return "Admin Settings";
-       case "/admin-setting/award-categories":
-      return "Admin Settings";
+      case "/my-nominations/add-nomination":
+        return "Others Nominate Form";
+      case "/my-nominations/:nominationId":
+        return "Others Nominate Form";  
       default:
         return "Nomination Management";
     }
@@ -134,13 +152,14 @@ const Header: React.FC<HeaderProps> = ({ onMobileMenuToggle }) => {
           className="relative cursor-pointer"
           onClick={() => setIsNotificationOpen(true)}
         >
-          <Bell size={20} className="text-gray-600" />
-          {notificationCount?.UnReadCount &&
-            notificationCount.UnReadCount > 0 && (
-              <span className="absolute -top-2 -right-2 w-5 h-5 bg-red-500 text-white text-xs rounded-full flex items-center justify-center">
-                {notificationCount.UnReadCount}
+         
+            <Bell size={20} className="text-gray-600" />
+            {notificationCount?.UnReadCount && notificationCount.UnReadCount > 0 && (
+              <span className="absolute -top-2 -right-3 w-6 h-5 bg-red-500 text-white text-xs rounded-full flex items-center justify-center">
+                {notificationCount.UnReadCount > 99 ? "99+" : notificationCount.UnReadCount}
               </span>
             )}
+
         </div>
 
         {/* Profile Section */}

@@ -586,18 +586,18 @@ const openPopup = (type: "approve" | "reject") => {
             <div className="text-sm font-medium text-gray-900">Status</div>
             <span
               className={`inline-flex px-3 py-1 rounded-full text-xs font-medium mt-1 ${
-                data.Status === "Pending"
+                busiStatusD === "Pending"
                   ? "bg-orange-100 text-orange-800"
-                  : data.Status === "Approved"
+                  : busiStatusD === "Approved"
                   ? "bg-green-100 text-green-800"
-                  : data.Status === "Rejected"
+                  : busiStatusD  === "Rejected"
                   ? "bg-red-100 text-red-800"
-                  : data.Status === "Under Review"
+                  : busiStatusD === "Under Review"
                   ? "bg-yellow-100 text-yellow-700"
                   : "bg-gray-100 text-gray-700"
               }`}
             >
-              {data.Status}
+              {busiStatusD}
             </span>
           </div>
           <div>
@@ -712,7 +712,7 @@ const openPopup = (type: "approve" | "reject") => {
 
         <br/>
         {(busiScoreD !== null || busiCommentsD !== "") ?(
-        <div className="grid grid-cols-2 gap-6 mb-6">
+        <div className="grid grid-cols-4 gap-4 mb-4">
           <div>
             <div className="text-sm font-medium text-gray-900">Business Jury Score</div>
             <div className="text-sm text-gray-600">{busiScoreD}</div>
@@ -725,7 +725,7 @@ const openPopup = (type: "approve" | "reject") => {
         ):("")}
 
         {(generalScoreD !== null || generalCommentsD !== "") ?(
-         <div className="grid grid-cols-2 gap-6 mb-6">
+         <div className="grid grid-cols-4 gap-4 mb-4">
           <div>
             <div className="text-sm font-medium text-gray-900">General Jury Score</div>
             <div className="text-sm text-gray-600">{generalScoreD}</div>
@@ -738,7 +738,7 @@ const openPopup = (type: "approve" | "reject") => {
         ):("")}
 
         {(presScoreD !== null || presCommentsD !== "") ?(
-         <div className="grid grid-cols-2 gap-6 mb-6">
+         <div className="grid grid-cols-4 gap-4 mb-4">
           <div>
             <div className="text-sm font-medium text-gray-900">President Jury Score</div>
             <div className="text-sm text-gray-600">{presScoreD}</div>

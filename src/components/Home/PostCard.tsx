@@ -493,10 +493,15 @@ const nestedComments = buildCommentTree(filteredFlat);
   }}
 />
                   </div>
-
-                  <p className="text-gray-800 mt-2 text-sm leading-relaxed">
+                 <p
+  className="text-gray-800 mt-2 text-sm leading-relaxed line-clamp-2"
+  title={post.Description}
+>
+  {post.Description}
+</p>
+                  {/* <p className="text-gray-800 mt-2 text-sm leading-relaxed">
                     {post.Description}
-                  </p>
+                  </p> */}
 
                   {/* <div
        className="flex justify-between border-b-1 border-gray-200 mt-3 py-3 cursor-pointer"

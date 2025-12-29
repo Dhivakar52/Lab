@@ -1,6 +1,6 @@
 import React, { useState,useEffect,useMemo } from "react";
-import * as DropdownMenu from "@radix-ui/react-dropdown-menu";
-import {  Menu,  } from "lucide-react";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@radix-ui/react-dropdown-menu";
+import { ArrowRight, Menu,  } from "lucide-react";
 import BusinessPanel from "./BusinessPanel"; 
 import axios from "axios";
 import { useAuth } from "../ContextAPI/AuthContext";
@@ -66,14 +66,8 @@ const BusinessJury: React.FC = () => {
   const [globalFilter, setGlobalFilter] = useState("");
   const [selectedNomination, setSelectedNomination] = useState<BusinessJury | null>(null);
   const [isPanelOpen, setIsPanelOpen] = useState(false);
-
-  const navigate = useNavigate(); // Hook to navigate programmatically
+  const navigate = useNavigate();
   
-    const navigateDetailView = (route: string) => {
-      navigate(route); // Navigate to the route
-      window.location.reload();  
-    };
-    
   useEffect(() => {
       const fetchBusinessJury = async () => {
       try {
@@ -110,40 +104,84 @@ const BusinessJury: React.FC = () => {
              },
         { accessorKey: "CategoryName", header: "Category Name" },
         { accessorKey: "NominatedBy", header: "Nominated By" },
-        { accessorKey: "BusinessJuryScore", header: "Score" },
-        {
-        accessorKey: "Status",
-        header: "Status",
-        cell: ({ getValue }) => {
-          const status = getValue() as BusinessJury["Status"];
-          const colorClass = statusColors[status] || "bg-gray-100 text-gray-700";
-          return (
-            <span
-              className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium ${colorClass}`}
-            >
-              {status}
-            </span>
-          );
-        },     
-     },             
-        {
-        id: 'actions', // Use a unique ID for columns not tied to an accessorKey
-        header: 'Actions',
-        cell: ({ row }) => { // Access the entire row data using 'row' prop
-          const item = row.original; // This is the full Nominee object for the current row
- 
-          return (
-            <DropdownMenu.Root>
-                <DropdownMenu.Trigger className="p-2 rounded hover:bg-gray-100"  onClick={() => {setSelectedNomination(item);
-                          navigateDetailView(`/businessjury-detail/${item.NominationID}`);
-                        }}>
-                    <Menu className="w-5 h-5 text-blue-500" />
-                </DropdownMenu.Trigger>
-               
-            </DropdownMenu.Root>
-          );
+       // { accessorKey: "BusinessJuryScore", header: "Score"},
+         {
+          accessorKey: "BusinessJuryScore",
+          header: () => <div className="text-center">Score</div>,
+          cell: ({ getValue }) => (
+            <div className="text-center">
+              {getValue() as number}
+            </div>
+          ),
         },
-      },
+       
+    //     {
+    //     accessorKey: "Status",
+    //     header: "Status",
+    //     cell: ({ getValue }) => {
+    //       const status = getValue() as BusinessJury["Status"];
+    //       const colorClass = statusColors[status] || "bg-gray-100 text-gray-700";
+    //       return (
+    //         <span
+    //           className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium ${colorClass}`}
+    //         >
+    //           {status}
+    //         </span>
+    //       );
+    //     },     
+    //  },             
+    //            {
+    //   header: "Actions",
+    //   cell: ({ row }) => {
+    //     const item = row.original;
+  
+    //      const handleDetailsView = (item: BusinessJury) => {
+    //       navigate(`/nomination-detail/${item.NominationID}`, {
+    //         state: { from: "business-jury" }
+    //       });
+          
+    //     };
+    //     return (
+    //       <DropdownMenu>
+    //         <DropdownMenuTrigger asChild>
+    //           <button className="p-2 rounded hover:bg-gray-100 transition">
+    //             <Menu size={18} className="text-blue-600" />
+    //           </button>
+    //         </DropdownMenuTrigger>
+    
+    //         <DropdownMenuContent align="end" className="w-30 bg-white shadow-xl rounded-sm">
+    //           <DropdownMenuItem
+    //             onClick={() => handleDetailsView(row.original)}
+    //             className="hover:bg-blue-50 hover:text-blue-700 p-3" >
+    //              View
+    //           </DropdownMenuItem>
+    //         </DropdownMenuContent>
+    //       </DropdownMenu>
+    //     );
+    //   },
+    // },
+    {
+            header: "Actions",
+            cell: ({ row }) => {
+              const item = row.original;
+              const handleDetailsView = (item: BusinessJury) => {
+            navigate(`/nomination-detail/${item.NominationID}`, {
+              state: { from: "business-jury" }
+            });
+          };
+
+              return (
+                <button
+                  onClick={() => handleDetailsView(row.original)}
+                  className="p-2 rounded hover:bg-gray-100 transition"
+                   title="View Details"
+                >
+                  <Menu size={18} className="text-blue-600" />
+                </button>
+              );
+            },
+          },
+
       ],
       []
     );
@@ -167,36 +205,48 @@ const BusinessJury: React.FC = () => {
       
       {/* Table */}
       <div className="overflow-x-auto">
-        <div className="mb-4 flex justify-between items-center">
-          <input
-            value={globalFilter ?? ""}
-            onChange={(e) => setGlobalFilter(e.target.value)}
-            placeholder="Search..."
-            className="border border-gray-300 rounded-md px-4 py-2 w-1/3 text-sm"
-          />
-        </div>
+           <div className="mb-4 flex justify-between items-center">
+          <h2 className="text-xl font-semibold ">Business Jury Evaluations</h2>
+            <input
+              value={globalFilter ?? ""}
+              onChange={(e) => setGlobalFilter(e.target.value)}
+              placeholder="Search..."
+              className="border border-gray-300 rounded-md px-4 py-2 w-1/3 text-sm"
+            />
+          </div>
 
         <table className="min-w-full border border-gray-200">
+         
           <thead className="bg-gray-50">
-            <tr>
-              {["Nominee", "Entity", "Category","Nominated By", "Score", "Status", "Actions"].map((header) => (
-                <th
-                  key={header}
-                  className="px-6 py-3 text-left text-sm font-semibold text-gray-600"
-                >
-                  {header}
-                </th>
-              ))}
-            </tr>
+            {table.getHeaderGroups().map(headerGroup => (
+              <tr key={headerGroup.id}>
+                {headerGroup.headers.map(header => (
+                  <th
+                    key={header.id}
+                    className={`px-4 py-3 text-sm text-left text-gray-600 ${
+                      (header.column.columnDef.meta as any)?.className ?? ""
+                    }`}
+                  >
+                    {flexRender(
+                      header.column.columnDef.header,
+                      header.getContext()
+                    )}
+                  </th>
+                ))}
+              </tr>
+            ))}
           </thead>
+
           <tbody className="divide-y divide-gray-100">
                         {table.getRowModel().rows.length ? (
                           table.getRowModel().rows.map((row) => (
                             <tr key={row.id} className="hover:bg-gray-50">
                               {row.getVisibleCells().map((cell) => (
-                                <td key={cell.id} className="px-4 py-2 text-sm text-gray-800">
+                                <td key={cell.id}
+                                 className="px-4 py-2 text-sm text-gray-800">
                                   {flexRender(cell.column.columnDef.cell, cell.getContext())}
-                                </td>                               
+                                </td>    
+                                                           
                                 
                               ))}
                             </tr>
@@ -204,13 +254,42 @@ const BusinessJury: React.FC = () => {
                           ))
                         ) : (
                           <tr>
-                            <td colSpan={columns.length} className="text-center py-6 text-gray-500">
+                            <td colSpan={columns.length} 
+                            className="text-center py-6 text-gray-500">
                               No nominations found
                             </td>
                           </tr>
                         )}
             </tbody>          
         </table>
+        {/* Pagination */}
+              <div className="flex items-center justify-between mt-4">
+                <div className="text-sm text-gray-600">
+                  Page {table.getState().pagination.pageIndex + 1} of{" "}
+                  {table.getPageCount()}
+                </div>
+
+                <div className="space-x-2">
+                  <button
+                    onClick={() => table.previousPage()}
+                    disabled={!table.getCanPreviousPage()}
+                    className="px-3 py-1 bg-gray-200 rounded disabled:opacity-50"
+                  >
+                    Prev
+                  </button>
+
+                  <button
+                    onClick={() => table.nextPage()}
+                    disabled={!table.getCanNextPage()}
+                    className="px-3 py-1 bg-gray-200 rounded disabled:opacity-50"
+                  >
+                    Next
+                  </button>
+                </div>
+              </div>
+
+              
+
       </div>
 
     <BusinessPanel

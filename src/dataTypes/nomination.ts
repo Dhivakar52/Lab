@@ -26,10 +26,13 @@ export interface FormState {
 export interface AddNominationState {
  title: string ;
   nomineeName: string ; 
-  department: string;
-  nomineeData:string;
+  // department: string;
+  // nomineeData:string;
+  // entityName: string;
+  entityName: number[];
+  department: string[];
+  nomineeData:string[];
   email: string ; 
-  entityName: string;
   mobile: string;
   managerEmail: string;
   contestType: string;

@@ -202,7 +202,7 @@ const App: React.FC = () => {
         <Route
           path="/nomination-detail/:nominationId"
           element={
-            <ProtectedRoute userRole={userRole} allowedRoles={getAllowedRoles('Nomination Details')}>
+            <ProtectedRoute userRole={userRole} allowedRoles={getAllowedRoles('')}>
               <NominationDetailView />
             </ProtectedRoute>
           }

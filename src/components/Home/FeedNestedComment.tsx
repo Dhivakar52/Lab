@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import { Send } from "lucide-react";
 
 interface CommentType {
   NominationCommentsID: number;
@@ -65,27 +66,42 @@ const FeedNestedComment: React.FC<FeedNestedCommentProps> = ({
           </div>
 
           {/* Reply input UI */}
-          {showReply && (
-            <div className="mt-2">
-              <textarea
-                value={replyText}
-                onChange={(e) => setReplyText(e.target.value)}
-                className="border rounded-md w-full p-2 text-sm"
-                placeholder="Write a reply..."
-              />
-              <button
-                className="mt-1 bg-blue-600 text-white px-2 py-1 rounded text-xs"
-                onClick={async () => {
-  await handleReply(postId, replyText, comment.NominationCommentsID);
-  setReplyText("");
-  setShowReply(false);
-}}
+         {showReply && (
+        <div className="mt-2 relative">
+          {/* Textarea for reply */}
+          <textarea
+            placeholder="Add a comment..."
+            rows={1}
+            value={replyText || ""}
+            onChange={(e) => setReplyText(e.target.value)}
+            className="
+              w-full px-4 py-2 pr-12 border border-gray-300 rounded-md
+              text-sm resize-none focus:outline-none focus:border-blue-500
+              focus:ring-1 focus:ring-blue-500 overflow-hidden
+            "
+            style={{ minHeight: "38px" }}
+            onInput={(e) => {
+              const t = e.target as HTMLTextAreaElement;
+              t.style.height = "38px"; // Reset height
+              t.style.height = `${t.scrollHeight}px`; // Adjust based on content
+            }}
+          />
 
+            {/* Send button inside textarea */}
+            <div className="absolute right-3 top-[10px]">
+              <button
+                onClick={async () => {
+                  await handleReply(postId, replyText, comment.NominationCommentsID);
+                  setReplyText("");
+                  setShowReply(false);
+                }}
+                className="text-gray-400 hover:text-gray-600"
               >
-                Send
+                <Send className="w-5 h-5" />
               </button>
             </div>
-          )}
+          </div>
+        )}  
         </div>
       </div>
 

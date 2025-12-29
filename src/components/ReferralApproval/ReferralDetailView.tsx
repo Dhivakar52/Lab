@@ -124,7 +124,7 @@ const ReferralDetailView: React.FC = () => {
 
   return (
     
-    <div className=" bg-gray-50 min-h-screen">
+    <div className="bg-gray-50 min-h-screen">
      
       <div className="bg-white rounded-lg shadow-lm border border-gray-200  mt-3">
         <h1 className="text-2xl font-semibold mb-4 px-6 pt-2">Referral Details</h1>

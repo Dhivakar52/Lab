@@ -57,6 +57,10 @@ interface Nomination {
   Status: string;
   ApprovalType: string;
   ApprovalFlow:string;
+  ApprovalComments:string;
+  ApprovalName:string;
+  ApprovalScore:string;
+  ApprovedAt:string;
   }[];
   //"Referrals ID": { Email: string }[];
 }
@@ -155,6 +159,9 @@ const [refreshKey, setRefreshKey] = useState(0);
         state: { from: "my-nominations" }
       });
     };
+    const handleEditNomiation = (item: Nomination) => {
+      navigate(`/self-nominations/${item.NominationID}`);
+    };
     return (
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
@@ -165,10 +172,9 @@ const [refreshKey, setRefreshKey] = useState(0);
 
         <DropdownMenuContent align="end" className="w-30 bg-white shadow-xl rounded-sm">
           {/* <DropdownMenuItem
-            onClick={handleView}
-            className="cursor-pointer hover:bg-blue-50"
-          >
-            side View
+            onClick={() => handleEditNomiation(row.original)}
+            className="hover:bg-blue-50 hover:text-blue-700 p-3" >
+             Edit
           </DropdownMenuItem> */}
           <DropdownMenuItem
             onClick={() => handleDetailsView(row.original)}
