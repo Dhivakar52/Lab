@@ -269,61 +269,60 @@ const ReferralTable: React.FC = () => {
         },
       },
 
-      {
-        id: "actions",
+  
+    // {
+    //   header: "Actions",
+    //   cell: ({ row }) => {
+    //     const item = row.original;
+  
+    //      const handleDetailsView = (item: ReferralData) => {
+    //       navigate(`/nomination-detail/${item.NominationID}`, {
+    //         state: { from: "referral-approval" }
+    //       });
+          
+    //     };
+    //     return (
+    //       <DropdownMenu>
+    //         <DropdownMenuTrigger asChild>
+    //           <button className="p-2 rounded hover:bg-gray-100 transition">
+    //             <Menu size={18} className="text-blue-600" />
+    //           </button>
+    //         </DropdownMenuTrigger>
+    
+    //         <DropdownMenuContent align="end" className="w-30 bg-white shadow-xl rounded-sm">
+    //           <DropdownMenuItem
+    //             onClick={() => handleDetailsView(row.original)}
+    //             className="hover:bg-blue-50 hover:text-blue-700 p-3" >
+    //              View
+    //           </DropdownMenuItem>
+    //         </DropdownMenuContent>
+    //       </DropdownMenu>
+    //     );
+    //   },
+    // },
+    {
         header: "Actions",
         cell: ({ row }) => {
           const item = row.original;
-        
-       const handleView = () => {
-          navigate(`/referral-detail`, {
-          state: {
-          NominationID: item.NominationID,
-          nominee: item.Nominee,
-          entity: item.Tenant,
-          contest: item.ContestType,
-          date: item.SubmittedDate,
-          status: item.Status,
-          AwardCategory: item.AwardCategory,
-          NominatedBy: item.NominatedBy,
-          ManagerEmailID: item.ManagerEmailID,
-          "Referrals ID": item["Referrals ID"],
-          "Supporting Documents": item["Supporting Documents"],
-          Descriptions: item.Descriptions,
-          ReferralUserID: item.ReferralUserID,
-          ReferralID: item.ReferralID,
-          ManagerName: item.ManagerName,
-           Comments: item.Comments,
-            BusinessJuryStatus: item.BusinessJuryStatus,
-              "ApprovalStatus": item["ApprovalStatus"],
 
-    
-        },
-      });
-    };
-    
+          const handleDetailsView = () => {
+            navigate(`/nomination-detail/${item.NominationID}`, {
+              state: { from: "referral-approval" },
+            });
+          };
+
           return (
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                
-                <button className="p-2 rounded hover:bg-gray-100 transition">
-                  <Menu size={18} className="text-blue-600" />
-                </button>
-              </DropdownMenuTrigger>
-
-              <DropdownMenuContent align="end" className="w-30 bg-white shadow-xl rounded-sm">
-                <DropdownMenuItem
-                  onClick={handleView}
-                  className="hover:bg-blue-50 hover:text-blue-700 p-3"
-                >
-                  View
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
+            <button
+              onClick={handleDetailsView}
+              className="p-2 rounded hover:bg-gray-100 transition"
+              title="View Details"
+            >
+              <Menu size={18} className="text-blue-600" />
+            </button>
           );
         },
       },
-      
+
     ];
   }, []);
 

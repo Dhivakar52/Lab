@@ -58,6 +58,10 @@ interface Nomination {
     Status: string;
     ApprovalType: string;
     ApprovalFlow: string;
+    ApprovalComments:string;
+    ApprovalName:string;
+    ApprovalScore:string;
+    ApprovedAt:string;
    }[];
   //"Referrals ID": { Email: string }[];
 }
@@ -154,21 +158,14 @@ const NominationTable: React.FC = () => {
       // },
           {
         header: "Actions",
-        cell: ({ row }) => {
-          const item = row.original;
-      
-          const handleView = () => {
-            setSelectedNomination(item);
-            setModalOpen(true);
-          };
-          const handleDetailsView = (item: Nomination) => {
-           navigate(`/nomination-detail/${item.NominationID}`);
-           };
-          // const handleDetailsView = () => {
-          //   navigate("/nomination-detail", {
-          //   });
-          // };
-      
+        cell: ({ row }) => {  
+         const item = row.original;    
+         const handleDetailsView = (item: Nomination) => {
+          navigate(`/nomination-detail/${item.NominationID}`, {
+            state: { from: "other-nominations", tab: "form" }
+          });
+        };
+
           return (
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
@@ -176,14 +173,7 @@ const NominationTable: React.FC = () => {
                   <Menu size={18} className="text-blue-600" />
                 </button>
               </DropdownMenuTrigger>
-      
               <DropdownMenuContent align="end" className="w-30 bg-white shadow-xl rounded-sm">
-                {/* <DropdownMenuItem
-                  onClick={handleView}
-                  className="cursor-pointer hover:bg-blue-50"
-                >
-                  side View
-                </DropdownMenuItem> */}
                 <DropdownMenuItem
                   onClick={() => handleDetailsView(row.original)}
                   className="hover:bg-blue-50 hover:text-blue-700 p-3" >

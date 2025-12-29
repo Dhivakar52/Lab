@@ -6,6 +6,9 @@ import type { FormState } from "../../dataTypes/nomination";
 import { useAuth } from "../ContextAPI/AuthContext";
 import Select from "react-select";
 import { useNavigate } from "react-router-dom";
+import { useParams } from "react-router-dom";
+import * as Dialog from "@radix-ui/react-dialog";
+import { X } from "lucide-react"; 
 
 // interface OptionType {
 //   value: number;
@@ -18,6 +21,24 @@ interface UploadedDocument {
   fileNameGUID: string;
   fileUrl: string;
 }
+type ExistingDoc = {
+  fileNameGUID: string;
+  originalFileName: string;
+  fileType: string;
+  fileSize: string;
+  filePath: string;
+  source: "api";
+  isDeleted: boolean;   
+};
+type NewDoc = {
+  file: File;
+  source: "local";
+};
+type Referral = {
+  userId: number;
+  isRemoved: boolean;
+};
+
 const apiUrl = import.meta.env.VITE_API_URL;
 
 export default function AddNomination() {
@@ -28,13 +49,17 @@ export default function AddNomination() {
   // ]);
   
   const [contest, setContest]= useState([]);
-   const [users, setUsers] = useState<any[]>([]);
+  const [users, setUsers] = useState<any[]>([]);
   const [referrals, setReferrals] = useState<any[]>([]);
-   const [successMsg, setSuccessMsg] = useState("");
+  const [successMsg, setSuccessMsg] = useState("");
   const {  authToken, userId } = useAuth();
   const [showSuccessModal, setShowSuccessModal] = useState(false);
-
- const navigate = useNavigate();
+  const [errorMessage, setErrorMessage] = useState("");
+  const { nominationId } = useParams<{ nominationId: string }>();
+  const isEditMode = Boolean(nominationId);
+  const [existingDocs, setExistingDocs] = useState<any[]>([]);
+  const navigate = useNavigate();
+  const isReadOnly = isEditMode;
 
 
   const [form, setForm] = useState<FormState>({
@@ -58,7 +83,9 @@ export default function AddNomination() {
   const [fileError, setFileError] = useState("");
   const [totalSelfNominations, setTotalSelfNominations] = useState(0);
   const fileInputRef = useRef<HTMLInputElement | null>(null);
-
+  const [previewOpen, setPreviewOpen] = useState(false);
+  const [previewFile, setPreviewFile] = useState<string | null>(null);
+  const [previewType, setPreviewType] = useState<string | null>(null);
   const validateForm = () => {
   const newErrors: { [key: string]: string } = {};
 
@@ -69,6 +96,91 @@ export default function AddNomination() {
   setErrors(newErrors);
   return Object.keys(newErrors).length === 0;
 };
+useEffect(() => {
+  if (!isEditMode || !authToken) return;
+
+  const fetchNominationById = async () => {
+    try {
+      const res = await axios.get(
+        `${apiUrl}/api/nominations/${nominationId}`,
+        {
+          headers: {
+            Authorization: `Bearer ${authToken}`,
+          },
+        }
+      );
+      const data = res.data[0];
+      console.log("sucess",res.data)
+
+      setForm(prev => ({
+        ...prev,
+        title: data.NominationTitle ?? "",
+        nomineeName: data.Nominee ?? "",
+        department: data.NomineeDepartment ?? "",
+        description: data.Descriptions ?? "",
+        email: prev.email ?? "",
+        mobile: prev.mobile ?? "",
+        managerEmail: data.ManagerName ?? "",
+        contestType: data.AwardCategoryID
+          ? String(data.AwardCategoryID)
+          : "",
+      }));
+      setReferrals(
+      data["Referrals ID"]?.map((r: any) => ({
+        UserID: r.UserID,
+        UserInfo: r.Email,     
+      })) || []
+    );
+     if (data?.["Supporting Documents"]) {
+      const apiDocsAsFiles = data["Supporting Documents"].map((doc: any) => ({
+        source: "api",           
+        originalFileName: doc.OriginalFileName,
+        fileNameGUID: doc.FileNameGUID,
+        filePath: doc.FilePath,
+        nominationFileID: doc.NominationFileID,
+        fileType: doc.FileType,
+        fileSize: doc.FileSize,
+        isDeleted: false,
+      }));
+
+      setExistingDocs(apiDocsAsFiles);
+    }
+
+    } catch (err) {
+      console.error("❌ Error fetching nomination:", err);
+    }
+  };
+
+  fetchNominationById();
+}, [nominationId, isEditMode, authToken]);
+
+// const allDocuments = [
+//   ...existingDocs.filter(d => !d.isDeleted),
+//   ...form.files.map(file => ({
+//     source: "new",
+//     file,
+//     originalFileName: file.name,
+//   })),
+// ];
+// const allDocuments = [
+//   ...existingDocs.filter(doc => !doc.isDeleted).map(doc => ({ ...doc, source: "api" })),
+//   ...form.files 
+// ];
+const allDocuments = [
+  ...existingDocs
+    .filter(doc => !doc.isDeleted)
+    .map(doc => ({
+      source: "api",
+      originalFileName: doc.originalFileName,
+      fileNameGUID: doc.fileNameGUID,
+    })),
+
+  ...form.files.map(file => ({
+    source: "local",
+    originalFileName: file.name,
+    file,
+  })),
+];
 
 useEffect(() => {
   const fetchSelfNominationsCount = async () => {
@@ -90,6 +202,7 @@ useEffect(() => {
 const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
   const selectedFiles = Array.from(e.target.files || []);
   setFileError("");
+  if (!selectedFiles.length) return;
 
   // Clear the input immediately
   if (fileInputRef.current) {
@@ -120,6 +233,14 @@ const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     setFileError("Maximum 5 files allowed.");
     return;
   }
+  const wrappedFiles = selectedFiles.map((file) => ({
+    source: "local",
+    originalFileName: file.name,
+    file,
+    fileType: file.type,
+    fileSize: file.size,
+  }));
+
   // Add the files
   setForm((prev) => ({
     ...prev,
@@ -143,6 +264,13 @@ const uploadFilesToServer = async (files: File[]) => {
 
   return res.data; // backend returns uploaded file info
 };
+const newFiles = form.files; // only local files
+
+// let uploadedDocs: UploadedDocument[] = [];
+
+// if (newFiles.length > 0) {
+//   uploadedDocs = await uploadFilesToServer(newFiles);
+// }
 
 const handleRemoveFile = (index: number) => {
   const updatedFiles = [...form.files];
@@ -238,6 +366,30 @@ const handleClear = () => {
   setReferrals([]);
   setErrors({});
 };
+const contestSelectStyles = {
+  control: (base: any) => ({
+    ...base,
+    backgroundColor: isReadOnly ? "#f3f4f6" : "#fff", 
+    borderColor: isReadOnly ? "#d1d5db" : base.borderColor, 
+    cursor: isReadOnly ? "not-allowed" : "default",
+    pointerEvents: isReadOnly ? "none" : "auto", 
+  }),
+  singleValue: (base: any) => ({
+    ...base,
+    color: isReadOnly ? "#4b5563" : base.color, 
+  }),
+  placeholder: (base: any) => ({
+    ...base,
+    color: isReadOnly ? "#6b7280" : base.color, 
+  }),
+  dropdownIndicator: (base: any) => ({
+    ...base,
+    display: isReadOnly ? "none" : "flex", 
+  }),
+  indicatorSeparator: () => ({
+    display: "none",
+  }),
+};
 
 const handleSubmit = async (e: React.FormEvent) => {
   e.preventDefault();
@@ -253,10 +405,55 @@ if (form.files && form.files.length > 0) {
 } else {
   uploadedDocs = [];
 }
+const documentsPayload = [
+  ...existingDocs.map(doc => ({
+    nominationFileID: Number(nominationId),
+    nominationID: Number(nominationId),
+    originalFileName: doc.originalFileName,
+    fileType: doc.fileType,
+    fileSize: `${(doc.fileSize / 1024).toFixed(2)} KB`,
+    fileNameGUID: doc.fileNameGUID,
+    filePath: doc.filePath,
+    active: !doc.isDeleted,   
+    createdBy:  Number(userId),
+    updatedBy:  Number(userId),
+  })),
+
+  ...uploadedDocs.map((doc: UploadedDocument) => ({
+    nominationFileID: Number(userId),
+    nominationID: Number(nominationId || 0),
+    originalFileName: doc.originalFileName,
+    fileType: doc.fileType,
+    fileSize: `${(doc.fileSize / 1024).toFixed(2)} KB`,
+    fileNameGUID: doc.fileNameGUID,
+    filePath: doc.fileUrl,
+    active: true,
+    createdBy: Number(userId),
+    updatedBy: Number(userId),
+  }))
+];
+const referralPayload = referrals.map(ref => ({
+  // nominationID: nominationId ? Number(nominationId) : 0,
+  // referralID: ref.UserID,
+  // referralUserID: ref.userId,
+  // active: !ref.isRemoved,   
+  // createdBy: userId,
+  // updatedBy: userId
+  referralID: ref.UserID,
+  nominationID: Number(nominationId || 0),
+  referralUserID: ref.UserID,
+  isReferralApproved: true,
+  approvalComments: "",
+  active: true,
+  createdBy: Number(userId),
+  updatedBy: Number(userId),
+  referralEmail: ref.UserInfo  
+}));
 
   const payload = {
     nomination: {
       cycleID: 1,
+      //nominationID: Number(nominationId || 0),
       awardCategoryID: Number(form.contestType),
       userID: Number(userId),
       nominationTitle: form.title,
@@ -272,56 +469,67 @@ if (form.files && form.files.length > 0) {
       createdBy: Number(userId),
       updatedBy: Number(userId),
     },
-    referralIDs: referrals.map((ref) => ({
-      referralID: ref.UserID,
-      nominationID: 0,
-      referralUserID: ref.UserID,
-      isReferralApproved: true,
-      approvalComments: "",
-      active: true,
-      createdBy: Number(userId),
-      updatedBy: Number(userId),
-       referralEmail: ref.UserInfo
-    })),
-    documents: uploadedDocs.map((doc:any) => ({
-        nominationFileID: Number(userId),
-        nominationID: Number(userId),
-        originalFileName: doc.originalFileName,
-        fileType: doc.fileType,
-        fileSize: `${(doc.fileSize / 1024).toFixed(2)} KB`,
-        fileNameGUID: doc.fileNameGUID,
-        filePath: doc.fileUrl, // <<< correct path
-        active: true,
-        createdBy: Number(userId),
-        updatedBy: Number(userId),
-      })),
-  //   documents: form.files.map((file) => ({
-  //   nominationFileID: Number(userId),
-  //   nominationID: Number(userId),
-  //   originalFileName: file.name,
-  //   fileType: file.type,
-  //   fileSize: `${(file.size / 1024).toFixed(2)} KB`,
-  //   fileNameGUID: crypto.randomUUID(),
-  //   filePath: `/uploads/${file.name}`,
-  //   active: true,
-  //   createdBy: Number(userId),
-  //   updatedBy: Number(userId),
-  // })),
+    referralIDs: referralPayload,
+    documents: documentsPayload,
+    // referralIDs: referrals.map((ref) => ({
+    //   referralID: ref.UserID,
+    //   nominationID: Number(nominationId || 0),
+    //   referralUserID: ref.UserID,
+    //   isReferralApproved: true,
+    //   approvalComments: "",
+    //   active: true,
+    //   createdBy: Number(userId),
+    //   updatedBy: Number(userId),
+    //    referralEmail: ref.UserInfo
+    // })),
+    // documents: uploadedDocs.map((doc:any) => ({
+    //     nominationFileID: Number(userId),
+    //     nominationID: Number(nominationId || 0),
+    //     originalFileName: doc.originalFileName,
+    //     fileType: doc.fileType,
+    //     fileSize: `${(doc.fileSize / 1024).toFixed(2)} KB`,
+    //     fileNameGUID: doc.fileNameGUID,
+    //     filePath: doc.fileUrl, // <<< correct path
+    //     active: true,
+    //     createdBy: Number(userId),
+    //     updatedBy: Number(userId),
+    //   })),
   };
 
   console.log("📦 Sending payload:", payload);
   try {
-    const res = await axios.post(
-      // "http://172.16.5.106:5195/api/nomination",
-      `${apiUrl}/api/nomination`,
-      payload,
-      {
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${authToken}`, 
-        },
-      }
-    );
+    // const res = await axios.post(
+    //   // "http://172.16.5.106:5195/api/nomination",
+    //   `${apiUrl}/api/nomination`,
+    //   payload,
+    //   {
+    //     headers: {
+    //       "Content-Type": "application/json",
+    //       Authorization: `Bearer ${authToken}`, 
+    //     },
+    //   }
+    // );
+     const url = isEditMode
+      ? `${apiUrl}/api/nominations/${nominationId}`
+      : `${apiUrl}/api/nomination`;
+
+    const method = isEditMode ? "put" : "post";
+
+    const res = await axios({
+      method,
+      url,
+      data: payload,
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${authToken}`,
+      },
+    });
+    const returnVal = res.data?.nominationID ?? res.data;
+    if (returnVal === -100) {
+      setErrorMessage("Duplicate nomination. Please try diffrent contest type.");
+      setTimeout(() => setErrorMessage(""), 3000);
+      return;
+    }
        setShowSuccessModal(true);
 
     console.log("✅ Success:", res.data);
@@ -333,7 +541,7 @@ if (form.files && form.files.length > 0) {
 
  return (
   <>
-    {/* Success message on top */}
+    {/* Success message on top
     {successMsg && (
       <div
         className="fixed top-4 left-1/2 transform -translate-x-1/2 
@@ -341,14 +549,16 @@ if (form.files && form.files.length > 0) {
                    z-50 text-sm font-medium">
         {successMsg}
       </div>
-    )}
+    )} */}
 
-    <div className="p-5">
+    <div className="min-h-screen bg-gray-100 flex flex-col">
       <form
         onSubmit={handleSubmit}
-        className="p-6 border rounded-lg bg-white shadow nominate-form">
-      <div className="flex items-center justify-between mb-6">
-          <h2 className="text-xl font-semibold">Self Nominate Form</h2>
+        className="px-2 py-4 rounded-lg bg-white shadow nominate-form">
+    <div className="flex-1 bg-white">
+      <div className="w-full h-full px-6 py-4">    
+      <div className="flex justify-end">
+          {/* <h2 className="text-xl font-semibold">Self Nominate Form</h2> */}
            <a
             href={totalSelfNominations > 0 ? "/my-nominations" : undefined}
             onClick={(e) => {
@@ -357,8 +567,8 @@ if (form.files && form.files.length > 0) {
               }
             }}
             className={totalSelfNominations > 0
-      ? "text-blue-600 underline cursor-pointer"
-      : "text-gray-500 cursor-default no-underline" }>
+              ? "text-blue-600  cursor-pointer px-4 py-2 btn-theme"
+              : "text-gray-500 cursor-default no-underline px-4 py-2 btn-theme" }>
             You have {totalSelfNominations} nominations
           </a>
         </div>
@@ -372,10 +582,12 @@ if (form.files && form.files.length > 0) {
             type="text"
             placeholder="Best Innovation"
             value={form.title}
+            disabled={isReadOnly}
             onChange={(e: React.ChangeEvent<HTMLInputElement>) => {const value = e.target.value;
             setForm(prevForm => ({...prevForm,title: value }));
             if (value) {setErrors(prevErrors => ({...prevErrors, title: ""}));}}}         
-            className="w-full mt-1 border rounded px-3 py-2"
+             className={`w-full mt-1 border rounded px-3 py-2
+              ${isReadOnly ? "bg-gray-100 text-gray-700 cursor-not-allowed" : "bg-white text-black"}`}
           />
           {errors.title && <p className="text-red-500 text-sm mt-1">{errors.title}</p>}
         </div>
@@ -387,18 +599,19 @@ if (form.files && form.files.length > 0) {
             <input
               type="text"
               value={form.nomineeName || ""}
-              disabled
-              className="w-full mt-1 border rounded px-3 py-2"
+              disabled={isReadOnly}
+               className={`w-full mt-1 border rounded px-3 py-2
+               ${isReadOnly ? "bg-gray-100 text-gray-700 cursor-not-allowed" : "bg-white text-black"}`}
             />
           </div>
-
           <div>
             <Label.Root className="block text-sm font-medium">Department</Label.Root>
             <input
               type="text"
               value={form.department}
               disabled
-              className="w-full mt-1 border rounded px-3 py-2"
+               className={`w-full mt-1 border rounded px-3 py-2
+               ${isReadOnly ? "bg-gray-100 text-gray-700 cursor-not-allowed" : "bg-white text-black"}`}
             />
           </div>
         </div>
@@ -411,7 +624,8 @@ if (form.files && form.files.length > 0) {
               type="email"
               value={form.email || ""}
               disabled
-              className="w-full mt-1 border rounded px-3 py-2"
+               className={`w-full mt-1 border rounded px-3 py-2
+               ${isReadOnly ? "bg-gray-100 text-gray-700 cursor-not-allowed" : "bg-white text-black"}`}
             />
           </div>
           <div>
@@ -420,7 +634,8 @@ if (form.files && form.files.length > 0) {
               type="tel"
               value={form.mobile}
               disabled
-              className="w-full mt-1 border rounded px-3 py-2"
+               className={`w-full mt-1 border rounded px-3 py-2
+              ${isReadOnly ? "bg-gray-100 text-gray-700 cursor-not-allowed" : "bg-white text-black"}`}
             />
           </div>
         </div>
@@ -435,7 +650,8 @@ if (form.files && form.files.length > 0) {
               type="email"
               value={form.managerEmail}
               disabled
-              className="w-full mt-1 border rounded px-3 py-2 mb-3"
+               className={`w-full mt-1 border rounded px-3 py-2
+              ${isReadOnly ? "bg-gray-100 text-gray-700 cursor-not-allowed" : "bg-white text-black"}`}
             />
 
             {/* Contest Dropdown */}
@@ -453,10 +669,6 @@ if (form.files && form.files.length > 0) {
                       label: c.CategoryName,
                     }))[0] || null
                 }
-                // onChange={(selectedOption: any) =>
-                //   setForm({ ...form, contestType: selectedOption?.value || "" })
-                  
-                // }
                 onChange={(selectedOption: { value: string } | null) => {setForm(prevForm => ({
                   ...prevForm,
                   contestType: selectedOption?.value ?? ""
@@ -471,6 +683,7 @@ if (form.files && form.files.length > 0) {
                   }))}
                 placeholder="Select Contest Type"
                 className="text-sm"
+                styles={contestSelectStyles}
               />
               {errors.contestType && <p className="text-red-500 text-sm mt-1">{errors.contestType}</p>}
             </div>
@@ -510,42 +723,111 @@ if (form.files && form.files.length > 0) {
                 </div>
               ))}
             </div>
-         <div className="">
-          <Label.Root className="block text-sm font-medium">
-            Supporting Documents <span className="text-red-500">(Maximum 5 files allowed & File must be below 2 MB)</span>
-          </Label.Root>
-           <label
-            htmlFor="fileUpload"
-            className="inline-block bg-gray-100 text-gray-700 border border-gray-300 px-6 py-2 rounded cursor-pointer mt-2 hover:bg-gray-200">
-            Choose File
-           </label>
-          <input
-            id="fileUpload"
-            ref={fileInputRef}
-            type="file"
-            multiple
-            onChange={handleFileUpload}
-            className="hidden"
-            //className="mt-1 border p-2 rounded w-full"
-          />
-          {fileError && (
-            <p className="text-red-500 text-sm mt-1">{fileError}</p>
-          )}
-          <div className="mt-3 flex flex-wrap gap-2">
-            {form.files?.map((file, index) => (
-            <div
-             key={index}
-             className="flex items-center gap-2 bg-gray-100 px-3 py-1 rounded-lg shadow-sm border relative">
-             <span className="text-sm truncate max-w-[180px]"> {file.name}</span>
-            <button
-             type="button" 
-             onClick={() => handleRemoveFile(index)}
-             className="text-red-500 hover:text-red-700 font-bold text-lg leading-none"> ×
-            </button>
-           </div>
-            ))}
-         </div>
-        </div>
+            {errorMessage && (
+              <div className="fixed top-5 right-5 z-[9999] bg-red-600 text-white px-5 py-3 
+              rounded-lg shadow-xl text-sm font-medium animate-slide-in">
+                {errorMessage}
+              </div>
+            )}
+            
+     <div className="">
+  <Label.Root className="block text-sm font-medium">
+    Supporting Documents 
+    <span className="text-red-500">(Maximum 5 files allowed & File must be below 2 MB)</span>
+  </Label.Root>
+
+  <label
+    htmlFor="fileUpload"
+    className="inline-block bg-gray-100 text-gray-700 border border-gray-300 px-6 py-2 rounded cursor-pointer mt-2 hover:bg-gray-200"
+  >
+    Choose File
+  </label>
+  <input
+    id="fileUpload"
+    ref={fileInputRef}
+    type="file"
+    multiple
+    onChange={handleFileUpload}
+    className="hidden"
+  />
+
+  {fileError && <p className="text-red-500 text-sm mt-1">{fileError}</p>}
+
+  {/* Render both existing API files and newly uploaded files */}
+  <div className="mt-3 flex flex-wrap gap-2">
+    {allDocuments.map((doc: any, index: number) => (
+      <div
+        key={doc.source === "api" ? doc.fileNameGUID : index}
+        className="flex items-center gap-2 bg-gray-100 px-3 py-1 rounded-lg shadow-sm border relative"
+      >
+        {/* File Name */}
+        <span
+          className="text-sm truncate max-w-[180px] cursor-pointer text-blue-600 hover:underline"
+          onClick={async () => {
+            const ext = (doc.originalFileName || doc.name).split(".").pop()?.toLowerCase();
+
+            if (doc.source === "api") {
+              try {
+                const downloadUrl = `${apiUrl}/api/download?fileName=${doc.fileNameGUID}`;
+                const response = await axios.get(downloadUrl, {
+                  responseType: "blob",
+                  headers: { Authorization: `Bearer ${authToken}` },
+                });
+                const blobUrl = URL.createObjectURL(response.data);
+
+                if (["jpg","jpeg","png","gif"].includes(ext || "")) {
+                  setPreviewType(ext);
+                  setPreviewFile(blobUrl);
+                  setPreviewOpen(true);
+                } else if (ext === "pdf") window.open(blobUrl, "_blank");
+                else {
+                  const link = document.createElement("a");
+                  link.href = blobUrl;
+                  link.download = doc.originalFileName;
+                  document.body.appendChild(link);
+                  link.click();
+                  link.remove();
+                }
+              } catch (err) {
+                console.error("Download failed:", err);
+                alert("File not found");
+              }
+            } else {
+              const blobUrl = URL.createObjectURL(doc);
+              if (["jpg","jpeg","png","gif"].includes(ext || "")) {
+                setPreviewType(ext);
+                setPreviewFile(blobUrl);
+                setPreviewOpen(true);
+              } else {
+                const link = document.createElement("a");
+                link.href = blobUrl;
+                link.download = doc.name;
+                document.body.appendChild(link);
+                link.click();
+                link.remove();
+              }
+            }
+          }}
+        >
+          {doc.originalFileName || doc.name}
+        </span>
+        <button
+          type="button"
+          onClick={() => {
+            if (doc.source === "api") {
+              setExistingDocs(prev => prev.map(d => d.fileNameGUID === doc.fileNameGUID ? { ...d, isDeleted: true } : d));
+            } else {
+              setForm(prev => ({ ...prev, files: prev.files.filter((_, i) => i !== index) }));
+            }
+          }}
+          className="text-red-500 hover:text-red-700 font-bold text-lg leading-none"
+        >
+          ×
+        </button>
+      </div>
+    ))}
+  </div>
+</div>
           </div>
         </div>
 
@@ -553,6 +835,7 @@ if (form.files && form.files.length > 0) {
         <div className="">
           <Label.Root className="block text-sm font-medium">Description  (Max 1000 chars)</Label.Root>
           <textarea
+            rows={2}
             placeholder="Describe the nomination..."
             value={form.description}
             onChange={(e) => { const value = e.target.value;
@@ -560,26 +843,38 @@ if (form.files && form.files.length > 0) {
             setForm({ ...form, description: value });
             }
            }}
-            // onChange={(e) => setForm({ ...form, description: e.target.value })}
-            className="w-full mt-1 border rounded px-3 py-2 h-28 resize-none"
+             className="w-full mt-1 border rounded px-3 py-2 resize-none"
+            // className="w-full mt-1 border rounded px-3 py-2 h-28 resize-none"
           />
            <p className="text-gray-500 text-sm mt-1">
     {form.description.length}/1000 characters
   </p>
         </div>
-
+       </div>  
+        </div> 
         {/* Buttons */}
         <div className="flex justify-end space-x-4">
-          <button onClick={handleClear}
+          <button
+          type="button"
+          onClick={() => {
+            if (isEditMode) {
+              navigate(-1);
+            } else {
+              handleClear(); 
+            }
+          }}
+          className="px-4 py-2 border rounded text-gray-600 hover:bg-gray-100">
+          {isEditMode ? "Cancel" : "Clear"}
+        </button>
+          {/* <button onClick={handleClear}
           type="button" className="px-4 py-2 border rounded text-gray-600 hover:bg-gray-100">
             Clear
-          </button>
+          </button> */}
           <button onClick={handleSubmit} type="submit" className="px-4 py-2 btn-theme">
-            Submit Nomination
+            {isEditMode ? "Update Nomination" : "Save Nomination"}
           </button>
-        </div>
+        </div> 
       </form>
-
       <Outlet />
     </div>
     {showErrorModal && (
@@ -603,6 +898,24 @@ if (form.files && form.files.length > 0) {
     </div>
   </div>
 )}
+<Dialog.Root open={previewOpen} onOpenChange={setPreviewOpen}>
+  <Dialog.Portal>
+    <Dialog.Overlay className="fixed inset-0 bg-black/40 z-50" />
+    <Dialog.Content className="fixed top-1/2 left-1/2 z-50 w-[90%] h-[80%] max-w-3xl -translate-x-1/2 -translate-y-1/2 bg-white p-4 rounded-lg shadow-xl overflow-hidden">
+      <div className="flex justify-between items-center mb-3">
+        <h2 className="text-lg font-semibold">Document Preview</h2>
+        <button className="p-1 hover:bg-gray-200 rounded" onClick={() => setPreviewOpen(false)}>
+          <X size={20} />
+        </button>
+      </div>
+      <div className="w-full h-full border rounded overflow-auto flex justify-center items-center bg-gray-50">
+        {["jpg","jpeg","png","gif"].includes(previewType || "") && (
+          <img src={previewFile!} alt="Preview" className="max-h-full max-w-full object-contain" />
+        )}
+      </div>
+    </Dialog.Content>
+  </Dialog.Portal>
+</Dialog.Root>
   </>
 );
 }

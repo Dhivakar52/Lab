@@ -258,7 +258,7 @@ const hasFinalStatus = approvalFlow.some(s =>
               <div className="grid grid-cols-1 gap-4">
                 <div className="space-y-1">
                   {/* <div className="text-sm font-medium text-gray-900">Nomination Status Flow</div> */}
-                  <StatusFlow steps={approvalFlow} />
+                  {/* <StatusFlow steps={approvalFlow} /> */}
                 </div>
               </div>
               {/* Row 5 */}

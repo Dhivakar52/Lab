@@ -1,7 +1,20 @@
 import React from 'react';
-import { 
-  Home, Bell, User, FileText, LogOut, ChevronLeft , X, Gavel, CircleCheckBig ,Users ,Settings
-} from 'lucide-react';
+
+import {
+  Home,
+  Bell,
+  User,
+  FileText,
+  Settings,
+  CircleCheckBig,
+  Gavel,
+  Users,
+  Award,
+  Shield,
+  ClipboardList,
+  UserPlus, ChevronLeft,
+  LogOut,X
+} from "lucide-react";
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import logo from '../assets/images/layout_logo.png';
 import tree from '../assets/images/tree.png'
@@ -26,19 +39,15 @@ const navigationItems: NavigationItem[] = [
   { icon: Home, label: 'Home', path: '/home' },
   { icon: Bell, label: 'Notifications', path: '/notifications' },
   { icon: User, label: 'Self Nominations', path: '/self-nominations' },
-  //  { icon: User, label: 'Nominations Form', path: '/self-nominations' },
   { icon: FileText, label: 'My Nominations', path: '/my-nominations' },
-  { icon: Settings, label: 'Referral Approval', path: '/referral-approval' },
+  { icon: ClipboardList, label: 'Referral Approval', path: '/referral-approval' },
   { icon: CircleCheckBig, label: 'Approvals', path: '/approvals' },
   { icon: Gavel, label: 'Business Jury', path: '/business-jury' },
-  { icon: Gavel, label: 'President Unit', path: '/president-unit' },
+  { icon: Shield, label: 'President Unit', path: '/president-unit' },
   { icon: Users, label: 'President Level', path: '/president-level' },
-   { icon: Settings, label: 'Award Management', path: '/award-management' },
+  { icon: Award, label: 'Award Management', path: '/award-management' },
   { icon: Settings, label: 'Admin Setting', path: '/admin-setting' },
-   
- 
-  
-  // { icon: LogOut, label: 'Admin Page', path: '/admin' },
+  { icon: UserPlus, label: 'Other Nomination', path: '/other-nomination' },
 ];
 
 
