@@ -583,13 +583,16 @@ const referralPayload = referrals.map(ref => ({
             placeholder="Best Innovation"
             value={form.title}
             disabled={isReadOnly}
-            onChange={(e: React.ChangeEvent<HTMLInputElement>) => {const value = e.target.value;
+            maxLength={100}
+            onChange={(e: React.ChangeEvent<HTMLInputElement>) => {const value = e.target.value.slice(0, 100);
             setForm(prevForm => ({...prevForm,title: value }));
             if (value) {setErrors(prevErrors => ({...prevErrors, title: ""}));}}}         
              className={`w-full mt-1 border rounded px-3 py-2
               ${isReadOnly ? "bg-gray-100 text-gray-700 cursor-not-allowed" : "bg-white text-black"}`}
           />
           {errors.title && <p className="text-red-500 text-sm mt-1">{errors.title}</p>}
+           <p className="text-gray-500 text-sm mt-1">{form.title.length}/100 characters</p>
+
         </div>
 
         {/* Nominee & Department */}
@@ -599,10 +602,14 @@ const referralPayload = referrals.map(ref => ({
             <input
               type="text"
               value={form.nomineeName || ""}
-              disabled={isReadOnly}
-               className={`w-full mt-1 border rounded px-3 py-2
-               ${isReadOnly ? "bg-gray-100 text-gray-700 cursor-not-allowed" : "bg-white text-black"}`}
-            />
+              disabled
+              tabIndex={-1}
+              aria-disabled="true"
+              onMouseDown={(e) => e.preventDefault()}
+              onFocus={(e) => e.currentTarget.blur()}
+              onKeyDown={(e) => e.preventDefault()}
+              style={{ userSelect: "none", pointerEvents: "none", caretColor: "transparent", outline: "none" }}
+              className="w-full mt-1 border rounded px-3 py-2 bg-gray-100 text-gray-700 cursor-not-allowed"            />
           </div>
           <div>
             <Label.Root className="block text-sm font-medium">Department</Label.Root>
@@ -610,9 +617,13 @@ const referralPayload = referrals.map(ref => ({
               type="text"
               value={form.department}
               disabled
-               className={`w-full mt-1 border rounded px-3 py-2
-               ${isReadOnly ? "bg-gray-100 text-gray-700 cursor-not-allowed" : "bg-white text-black"}`}
-            />
+              tabIndex={-1}
+              aria-disabled="true"
+              onMouseDown={(e) => e.preventDefault()}
+              onFocus={(e) => e.currentTarget.blur()}
+              onKeyDown={(e) => e.preventDefault()}
+              style={{ userSelect: "none", pointerEvents: "none", caretColor: "transparent", outline: "none" }}
+              className="w-full mt-1 border rounded px-3 py-2 bg-gray-100 text-gray-700 cursor-not-allowed"            />
           </div>
         </div>
 
@@ -624,19 +635,28 @@ const referralPayload = referrals.map(ref => ({
               type="email"
               value={form.email || ""}
               disabled
-               className={`w-full mt-1 border rounded px-3 py-2
-               ${isReadOnly ? "bg-gray-100 text-gray-700 cursor-not-allowed" : "bg-white text-black"}`}
-            />
+              tabIndex={-1}
+              aria-disabled="true"
+              onMouseDown={(e) => e.preventDefault()}
+              onFocus={(e) => e.currentTarget.blur()}
+              onKeyDown={(e) => e.preventDefault()}
+              style={{ userSelect: "none", pointerEvents: "none", caretColor: "transparent", outline: "none" }}
+              className="w-full mt-1 border rounded px-3 py-2 bg-gray-100 text-gray-700 cursor-not-allowed"            />
           </div>
+          {/* Mobile */}
           <div>
             <Label.Root className="block text-sm font-medium">Mobile Number</Label.Root>
             <input
               type="tel"
               value={form.mobile}
               disabled
-               className={`w-full mt-1 border rounded px-3 py-2
-              ${isReadOnly ? "bg-gray-100 text-gray-700 cursor-not-allowed" : "bg-white text-black"}`}
-            />
+              tabIndex={-1}
+              aria-disabled="true"
+              onMouseDown={(e) => e.preventDefault()}
+              onFocus={(e) => e.currentTarget.blur()}
+              onKeyDown={(e) => e.preventDefault()}
+              style={{ userSelect: "none", pointerEvents: "none", caretColor: "transparent", outline: "none" }}
+              className="w-full mt-1 border rounded px-3 py-2 bg-gray-100 text-gray-700 cursor-not-allowed"            />
           </div>
         </div>
 
@@ -650,9 +670,13 @@ const referralPayload = referrals.map(ref => ({
               type="email"
               value={form.managerEmail}
               disabled
-               className={`w-full mt-1 border rounded px-3 py-2
-              ${isReadOnly ? "bg-gray-100 text-gray-700 cursor-not-allowed" : "bg-white text-black"}`}
-            />
+              tabIndex={-1}
+              aria-disabled="true"
+              onMouseDown={(e) => e.preventDefault()}
+              onFocus={(e) => e.currentTarget.blur()}
+              onKeyDown={(e) => e.preventDefault()}
+              style={{ userSelect: "none", pointerEvents: "none", caretColor: "transparent", outline: "none" }}
+              className="w-full mt-1 border rounded px-3 py-2 bg-gray-100 text-gray-700 cursor-not-allowed"            />
 
             {/* Contest Dropdown */}
             <div className="mb-6">

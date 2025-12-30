@@ -62,8 +62,12 @@ const PresidentUnit: React.FC = () => {
   const [data, setData] = useState<GeneralJury[]>([]);
   const [loading, setLoading] = useState(true);
   const [globalFilter, setGlobalFilter] = useState("");
-  const [selectedNominee, setSelectedNominee] = useState<GeneralJury | null>(null);
-  const [isPanelOpen, setIsPanelOpen] = useState(false);
+
+   const statusColors: Record<GeneralJury["Status"], string> = {
+    Pending: "bg-orange-100 text-orange-800",
+    Approved: "bg-green-100 text-green-800",
+    Rejected: "bg-red-100 text-red-800",
+  };
 
   useEffect(() => {
     const fetchGeneralJury = async () => {
@@ -113,6 +117,21 @@ const PresidentUnit: React.FC = () => {
             </div>
           ),
         },
+        {
+                accessorKey: "Status",
+                header: "Status",
+                cell: ({ getValue }) => {
+                  const status = getValue() as GeneralJury["Status"];
+                  const colorClass = statusColors[status] || "bg-gray-100 text-gray-700";
+                  return (
+                    <span
+                      className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium ${colorClass}`}
+                    >
+                      {status}
+                    </span>
+                  );
+                },     
+             }, 
 
 
       // {

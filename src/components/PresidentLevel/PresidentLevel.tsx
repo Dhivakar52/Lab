@@ -27,6 +27,8 @@ export interface PresidentLevelNominee {
   NominatedBy: string;
   ConsolidatedAvgScore: number;
   PresidentScore: number;
+  Status: "Approved" | "Rejected" | "Pending" | string;
+
 }
 
 const apiUrl = import.meta.env.VITE_API_URL;
@@ -38,6 +40,12 @@ const PresidentLevel: React.FC = () => {
   const [data, setData] = useState<PresidentLevelNominee[]>([]);
   const [loading, setLoading] = useState(true);
   const [globalFilter, setGlobalFilter] = useState("");
+
+  const statusColors: Record<PresidentLevelNominee["Status"], string> = {
+      Pending: "bg-orange-100 text-orange-800",
+      Approved: "bg-green-100 text-green-800",
+      Rejected: "bg-red-100 text-red-800",
+    };
 
   useEffect(() => {
     const fetchData = async () => {
@@ -94,6 +102,21 @@ const PresidentLevel: React.FC = () => {
             </div>
           ),
         },
+        {
+        accessorKey: "Status",
+        header: "Status",
+        cell: ({ getValue }) => {
+          const status = getValue() as PresidentLevelNominee["Status"];
+          const colorClass = statusColors[status] || "bg-gray-100 text-gray-700";
+          return (
+            <span
+              className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium ${colorClass}`}
+            >
+              {status}
+            </span>
+          );
+        },     
+      }, 
       {
         header: "Actions",
         cell: ({ row }) => (

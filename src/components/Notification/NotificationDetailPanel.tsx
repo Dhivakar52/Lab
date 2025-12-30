@@ -97,7 +97,7 @@ const NotificationDetailPanel: React.FC<NotificationDetailPanelProps> = ({ isOpe
          style={linkStyle}
         onMouseEnter={handleMouseEnter}  // Add onMouseEnter event
         onMouseLeave={handleMouseLeave}  // Add onMouseLeave event
-        onClick={() => closeSidebarAndNavigate(`/nomination-details/${notification.Nomination[0].NominationID}`)}
+        onClick={() => closeSidebarAndNavigate(`/nomination-detail/${notification.Nomination[0].NominationID}`)}
         >
         View Nomination Details
         </Link>

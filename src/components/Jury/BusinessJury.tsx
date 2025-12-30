@@ -115,21 +115,21 @@ const BusinessJury: React.FC = () => {
           ),
         },
        
-    //     {
-    //     accessorKey: "Status",
-    //     header: "Status",
-    //     cell: ({ getValue }) => {
-    //       const status = getValue() as BusinessJury["Status"];
-    //       const colorClass = statusColors[status] || "bg-gray-100 text-gray-700";
-    //       return (
-    //         <span
-    //           className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium ${colorClass}`}
-    //         >
-    //           {status}
-    //         </span>
-    //       );
-    //     },     
-    //  },             
+        {
+        accessorKey: "Status",
+        header: "Status",
+        cell: ({ getValue }) => {
+          const status = getValue() as BusinessJury["Status"];
+          const colorClass = statusColors[status] || "bg-gray-100 text-gray-700";
+          return (
+            <span
+              className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium ${colorClass}`}
+            >
+              {status}
+            </span>
+          );
+        },     
+     },             
     //            {
     //   header: "Actions",
     //   cell: ({ row }) => {
