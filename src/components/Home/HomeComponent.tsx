@@ -213,7 +213,7 @@ const filteredList = useMemo(() => {
                   )}
 
                   {activeTab === "My Lists" && (
-                    <ListCard list={filteredList} />
+                    <ListCard list={filteredList} setList={setList} />
                   )}
                 </div>
               </div>

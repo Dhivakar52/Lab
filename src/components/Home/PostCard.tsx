@@ -311,9 +311,7 @@ const addView = async (nominationId: number) => {
         params: {
           NominationID: nominationId,
           Active: true,
-
           ViewedBy:userId,
-
           SubmittedBy: userId,
         },
         headers: {
@@ -536,13 +534,29 @@ const nestedComments = buildCommentTree(filteredFlat);
                       </p>
                     </div>
 
-                   <MoreHorizontal
+<MoreHorizontal
   className="w-5 h-5 text-gray-400 hover:text-gray-600 cursor-pointer"
-  onClick={() => {
+  onClick={async (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    e.nativeEvent.stopImmediatePropagation();
+
+    // Add the view if not already viewed
+    if (!viewed[post.NominationID]) {
+      await addView(post.NominationID);  // Add view on backend
+      setViewed((prev) => ({ ...prev, [post.NominationID]: true }));
+    }
+
+   
+    await fetchViews(post.NominationID);
+
+    setShowViewers(false);
     setSelectedPost(post);
     setShowModal(true);
   }}
 />
+
+
                   </div>
                  <p
   className="text-gray-800 mt-2 text-sm leading-relaxed line-clamp-2"
