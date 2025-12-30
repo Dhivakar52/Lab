@@ -6,7 +6,6 @@ import {
   MoreHorizontal,
   Eye,
   Send,
-  Trophy ,UsersRound
 } from "lucide-react";
 import axios from "axios";
 import type { Feed } from "../../dataTypes/nomination";
@@ -58,7 +57,6 @@ const ListCard: React.FC<ListCardProps> = ({ list }) => {
   const [selectedPost, setSelectedPost] = useState<any>(null);
    const [viewed, setViewed] = useState<{ [key:number]: boolean }>({});
   const [showModal, setShowModal] = useState(false);
-  const [expandedDesc, setExpandedDesc] = useState<Record<number, boolean>>({});
 
 
   useEffect(() => {
@@ -84,16 +82,8 @@ const ListCard: React.FC<ListCardProps> = ({ list }) => {
     };
     fetchComments();
   }, []);
-  const toggleDescription = (id: number) => {
-  setExpandedDesc(prev => ({
-    ...prev,
-    [id]: !prev[id],
-  }));
-};
- 
-const addView = async (nominationId: number) => {
+ const addView = async (nominationId: number) => {
   try {
-    
     await axios.post(
       `${apiUrl}/api/nominationview`,
       null,
@@ -101,7 +91,6 @@ const addView = async (nominationId: number) => {
         params: {
           NominationID: nominationId,
           Active: true,
-          ViewedBy:userId,
           SubmittedBy: userId,
         },
         headers: {
@@ -110,7 +99,7 @@ const addView = async (nominationId: number) => {
         },
       }
     );
-debugger;
+
     console.log("View added for: ", nominationId);
   } catch (err) {
     console.error("❌ Error adding view:", err);
@@ -357,12 +346,14 @@ const toggleComments = (id: number) => {
                       <h3 className="font-semibold text-gray-900 text-sm sm:text-base truncate">
                         {item.Nominee}
                       </h3>
-                       <span className="px-2 py-1 rounded-full text-xs bg-purple-100 text-purple-800 flex items-center">
-                           <Trophy size={16}/>  <span className="ms-1"> {item.AwardCategory}</span>
-                        </span>
-                         <span className="px-2 py-1 rounded-full text-xs bg-blue-100 text-blue-800 flex items-center">
-                           <UsersRound size={16}/>  <span className="ms-1"> {item.NominatedCount}</span>
-                        </span>
+
+                      <span className="px-2 py-1 rounded-full text-xs bg-blue-100 text-blue-800">
+                        👥 {item.NominatedCount} Nominated
+                      </span>
+
+                      <span className="px-2 py-1 rounded-full text-xs bg-purple-100 text-purple-800">
+                        🏆 {item.AwardCategory}
+                      </span>
                     </div>
 
                     <p className="text-xs sm:text-sm text-gray-600">
@@ -379,25 +370,7 @@ const toggleComments = (id: number) => {
                  />
                 </div>
 
-                {/* <p className="text-gray-800 mt-2 text-sm">{item.Description}</p> */}
-                <p
-                    className={`text-gray-800 mt-2 text-sm leading-relaxed transition-all duration-300 ${
-                      expandedDesc[NominationID] ? "" : "line-clamp-2"
-                    }`}
-                  >
-                    {item.Description}
-                  </p>
-
-                  {item.Description?.length > 120 && (
-                    <button
-                      type="button"
-                      onClick={() => toggleDescription(NominationID)}
-                      className="text-blue-600 text-xs mt-1 hover:underline font-medium"
-                    >
-                      {expandedDesc[NominationID] ? "See less" : "See more"}
-                    </button>
-                  )}
-
+                <p className="text-gray-800 mt-2 text-sm">{item.Description}</p>
 
                 {/* LIKE BAR */}
                 <div

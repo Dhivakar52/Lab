@@ -1,4 +1,4 @@
-import React ,{useState,useEffect} from "react";
+import React ,{useState} from "react";
 import { Eye, MessageCircle } from "lucide-react";
 import FeedLikeComponent from "./FeedLikeComponent";
 import FeedComment from "./FeedComment";
@@ -58,6 +58,8 @@ likedPosts,
 const [activeTab, setActiveTab] = useState("like");
  const {username}= useAuth();
 
+  
+ 
  
  if (!open || !post) return null;
   const isLiked = likedPosts.includes(post.NominationID);
@@ -222,9 +224,7 @@ const [activeTab, setActiveTab] = useState("like");
     )}
 
     {activeTab === "views" && (
-      
       <div className="max-h-40 overflow-y-auto space-y-2 pr-1">
-        
           {viewers.length === 0 ? (
             <p className="text-gray-600 text-sm text-center py-4">
               No viewers yet
