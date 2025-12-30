@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect , useMemo } from "react";
 import { Heart, MessageCircle, Share, MoreHorizontal, Eye, Send ,Trophy ,UsersRound} from "lucide-react";  
 import axios from "axios";
 import type { Feed } from "../../dataTypes/nomination";
@@ -72,7 +72,7 @@ const [showModal, setShowModal] = useState(false);
         });
            const data = res.data;
        setComments(Array.isArray(data) ? data : []);
-        console.log("Comments", res.data)
+      console.log("Comments",res.data)
       } catch (err) {
         console.error("❌ Error fetching comments:", err);
       }
@@ -229,9 +229,9 @@ const handleAddComment = async (post: Feed) => {
 
     const newID = res.data; 
 
-
+const tempId = crypto.randomUUID();
     const newComment = {
-      NominationCommentsID: newID,
+      NominationCommentsID: tempId,
       NominationID: post.NominationID,
       CommentedBy: username,
       CommentsText: text,
@@ -286,7 +286,7 @@ const fetchViews = async (nominationId: number) => {
 
     const total = res.data?.[0]?.TotalRowCount;
 
-    console.log("Views", res.data);
+   
 
     setViewerList(res.data);
 
@@ -322,8 +322,7 @@ const addView = async (nominationId: number) => {
         },
       }
     );
-debugger;
-    console.log("View added for: ", nominationId);
+ 
   } catch (err) {
     console.error("❌ Error adding view:", err);
   }
@@ -342,20 +341,60 @@ useEffect(() => {
 }, [posts]);
 
 
+// const buildCommentTree = (flatComments: any[]) => {
+//   const map: Record<number, any> = {};
+//   const roots: any[] = [];
+
+//   flatComments.forEach((c) => {
+//     // ensure ChildComments array exists for easier recursion
+//     map[c.NominationCommentsID] = { ...c, ChildComments: c.ChildComments || [] };
+//   });
+
+//   flatComments.forEach((c) => {
+//     if (c.ParentCommentID && map[c.ParentCommentID]) {
+//       map[c.ParentCommentID].ChildComments.push(map[c.NominationCommentsID]);
+//     } else {
+//       roots.push(map[c.NominationCommentsID]);
+//     }
+//   });
+
+//   return roots;
+// };
+
+
+
 const buildCommentTree = (flatComments: any[]) => {
+  // First, remove any duplicates
+  const uniqueComments = flatComments.filter((comment, index, self) =>
+    index === self.findIndex(c => 
+      c.NominationCommentsID === comment.NominationCommentsID
+    )
+  );
+
   const map: Record<number, any> = {};
   const roots: any[] = [];
 
-  flatComments.forEach((c) => {
-    // ensure ChildComments array exists for easier recursion
+  uniqueComments.forEach((c) => {
     map[c.NominationCommentsID] = { ...c, ChildComments: c.ChildComments || [] };
   });
 
-  flatComments.forEach((c) => {
+  uniqueComments.forEach((c) => {
     if (c.ParentCommentID && map[c.ParentCommentID]) {
-      map[c.ParentCommentID].ChildComments.push(map[c.NominationCommentsID]);
+      // Check if child is not already in the array
+      const existingChild = map[c.ParentCommentID].ChildComments.find(
+        (child: any) => child.NominationCommentsID === c.NominationCommentsID
+      );
+      if (!existingChild) {
+        map[c.ParentCommentID].ChildComments.push(map[c.NominationCommentsID]);
+      }
     } else {
-      roots.push(map[c.NominationCommentsID]);
+      // Check if root is not already in the array
+      const existingRoot = roots.find(
+        root => root.NominationCommentsID === c.NominationCommentsID
+      );
+      if (!existingRoot) {
+        roots.push(map[c.NominationCommentsID]);
+      }
     }
   });
 
@@ -363,19 +402,18 @@ const buildCommentTree = (flatComments: any[]) => {
 };
 
 
-
 const handleReply = async (postId: number, text: string, parentId: number) => {
   if (!text.trim()) return;
-
+const tempId = crypto.randomUUID();
   // Optimistically update the UI to show the new reply
   const newComment = {
-    NominationCommentsID: Date.now(), // Temporarily use the current timestamp as ID (optimistic approach)
+    NominationCommentsID: tempId, // Temporarily use the current timestamp as ID (optimistic approach)
     NominationID: postId,
     ParentCommentID: parentId,
     CommentedBy: username, 
     CommentsText: text,
     CommentedAt: new Date().toISOString(),
-    ChildComments: [], // Start with no child comments, can be updated later
+    ChildComments: [], 
   };
 
   // Update the state to include the new reply immediately
@@ -419,6 +457,7 @@ const handleReply = async (postId: number, text: string, parentId: number) => {
           : comment
       )
     );
+    
   } catch (err) {
     console.error("Error posting reply:", err);
     // Optionally, you could revert the optimistic update here in case of an error
@@ -448,8 +487,20 @@ const handleReply = async (postId: number, text: string, parentId: number) => {
           const isLiked = likedPosts.includes(NominationID);
           const isCommentOpen = showComments[NominationID] || false;
 
-         const filteredFlat = (comments || []).filter(c => c.NominationID === post.NominationID);
-
+        //  const filteredFlat = (comments || []).filter(c => c.NominationID === post.NominationID);
+       
+        const filteredFlat = (comments || [])
+  .filter(c => c.NominationID === post.NominationID)
+  // Remove duplicates by creating a Map
+  .reduce((acc: any[], current) => {
+    const existing = acc.find(item => 
+      item.NominationCommentsID === current.NominationCommentsID
+    );
+    if (!existing) {
+      acc.push(current);
+    }
+    return acc;
+  }, []);
 const nestedComments = buildCommentTree(filteredFlat);
 
           return (
@@ -591,6 +642,7 @@ const nestedComments = buildCommentTree(filteredFlat);
   handleAddComment={() => handleAddComment(post)}
   handleReply={handleReply}        
 />
+
 )}
 
                 </div>
