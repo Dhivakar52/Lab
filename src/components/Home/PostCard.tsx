@@ -43,7 +43,8 @@ const PostCard: React.FC<PostCardProps> = ({ posts, setPosts }) => {
   const [viewerList, setViewerList] = useState<any[]>([]);
   const [viewed, setViewed] = useState<{ [key:number]: boolean }>({});
   const [showLikePopup, setShowLikePopup] = useState(false);
-const [likeList, setLikeList] = useState<any[]>([]);
+  const [likeList, setLikeList] = useState<any[]>([]);
+  const [expandedDesc, setExpandedDesc] = useState<Record<number, boolean>>({});
 
 const [showModal, setShowModal] = useState(false);
 
@@ -80,6 +81,12 @@ const [showModal, setShowModal] = useState(false);
 
     fetchComments();
   }, []);
+  const toggleDescription = (id: number) => {
+  setExpandedDesc(prev => ({
+    ...prev,
+    [id]: !prev[id],
+  }));
+};
 
   // LIKE / UNLIKE
  const handleLike = async (post: Feed) => {
@@ -544,29 +551,24 @@ const nestedComments = buildCommentTree(filteredFlat);
   }}
 />
                   </div>
-                 <p
-  className="text-gray-800 mt-2 text-sm leading-relaxed line-clamp-2"
-  title={post.Description}
->
-  {post.Description}
-</p>
-                  {/* <p className="text-gray-800 mt-2 text-sm leading-relaxed">
+                   <p
+                    className={`text-gray-800 mt-2 text-sm leading-relaxed transition-all duration-300 ${
+                      expandedDesc[NominationID] ? "" : "line-clamp-2"
+                    }`}
+                  >
                     {post.Description}
-                  </p> */}
+                  </p>
 
-                  {/* <div
-       className="flex justify-between border-b-1 border-gray-200 mt-3 py-3 cursor-pointer"
-  
-  onClick={() => {
-    setLikeList(post.LikedBy || []);
-    setShowLikePopup(true);
-  }}
->
-  
-  <span className="text-sm font-medium">
-    {getLikeText(post.LikedBy, userId)}
-  </span>
-</div> */}
+                  {post.Description?.length > 120 && (
+                    <button
+                      type="button"
+                      onClick={() => toggleDescription(NominationID)}
+                      className="text-blue-600 text-xs mt-1 hover:underline font-medium"
+                    >
+                      {expandedDesc[NominationID] ? "See less" : "See more"}
+                    </button>
+                  )}
+                 
                 <div className="flex justify-between border-b-1 border-gray-200 mt-3 py-3">
                   <span
                     className="text-sm font-medium cursor-pointer hover:text-blue-600"
