@@ -1,4 +1,5 @@
 import React from "react";
+import {Trophy} from "lucide-react";
 
 interface LikeListPopupProps {
   likedBy: any[];
@@ -15,8 +16,8 @@ const FeedLikePop: React.FC<LikeListPopupProps> = ({ likedBy, onClose, post, ite
       <div className="bg-white w-80 rounded-xl shadow-sm p-4">
         <div className="flex justify-between items-center mb-3">
           <h2 className="text-lg font-semibold text-gray-800">
-            {post.Nominee || item.Nominee} - <span className="px-2 py-1 rounded-full text-xs bg-purple-100 text-purple-800">
-                          🏆 {post.AwardCategory || item.AwardCategory}
+            {post.Nominee || item.Nominee} - <span className="mt-1 inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs bg-purple-100 text-purple-800">
+                          <Trophy size={16}/>  {post.AwardCategory || item.AwardCategory}
                         </span>
           </h2>
           <button
