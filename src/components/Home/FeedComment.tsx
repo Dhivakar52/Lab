@@ -30,6 +30,8 @@ const FeedComment: React.FC<CommentSectionProps> = ({
     }
   }, [comments]);
  console.log(post)
+
+console.log("Comments 2", comments);
   return (
     <div className="mt-4 pt-4 border-t border-gray-200">
       {/* Typing Box */}
@@ -73,6 +75,7 @@ const FeedComment: React.FC<CommentSectionProps> = ({
 
       <div className="mt-3">
       {comments.map((c) => (
+       
         <FeedNestedComment
           key={c.NominationCommentsID}
           comment={c}

@@ -56,7 +56,7 @@ const HomeComponent: React.FC = () => {
           );
 
          setUserDetail(fetchUserDetail.data);
-         console.log("profileDetails", fetchUserDetail.data)
+      
 
         const cat = [...new Set(res.data.map((x: any) => x.AwardCategory))] as string[];
         setCategories(cat);
@@ -67,7 +67,7 @@ const HomeComponent: React.FC = () => {
 
 
         const filtered = res.data.filter((feed: any) => feed.UserID === userId);
-        console.log("Feed", res.data)
+       
 
         setPosts(res.data);
         setProfile(filtered);
@@ -80,7 +80,7 @@ const HomeComponent: React.FC = () => {
         });
 
         setList(listCard.data);
-        console.log("List ", listCard.data)
+   
 
       } catch (err) {
         console.error("❌ Error fetching feeds:", err);
