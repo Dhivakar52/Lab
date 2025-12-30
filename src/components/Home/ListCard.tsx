@@ -18,6 +18,7 @@ import FilterFeed from "./FilterFeed";
 
 interface ListCardProps {
   list: Feed[] | null | undefined;
+  setList: React.Dispatch<React.SetStateAction<Feed[]>>;
 }
 
 const getLikeText = (likedByList: any[] = [], currentUserId: number | null) => {
@@ -38,7 +39,7 @@ const getLikeText = (likedByList: any[] = [], currentUserId: number | null) => {
   return `${firstUser} & ${others} others`;
 };
 
-const ListCard: React.FC<ListCardProps> = ({ list }) => {
+const ListCard: React.FC<ListCardProps> = ({ list, setList }) => {
   const safeList = list ?? [];
   const { authToken, userId, username } = useAuth();
   const apiUrl = import.meta.env.VITE_API_URL;
@@ -212,106 +213,192 @@ const toggleComments = (id: number) => {
   };
 
   // ---------------- COMMENT ADD ----------------
-  const handleAddComment = async (item: Feed) => {
-    const text = commentText[item.NominationID]?.trim();
-    if (!text) return;
+ 
 
-    try {
-      const res = await axios.post(
-        `${apiUrl}/api/nominationcomments`,
-        {
-          nominationID: item.NominationID,
-          commentedBy: userId,
-          commentsText: text,
-          active: true,
-          submittedBy: userId,
+  const handleAddComment = async (post: Feed) => {
+  const text = commentText[post.NominationID]?.trim();
+  if (!text) return;
+
+  try {
+    const res = await axios.post(
+      `${apiUrl}/api/nominationcomments`,
+      {
+        nominationID: post.NominationID,
+        commentedBy: userId,
+        commentsText: text,
+        active: true,
+        submittedBy: userId,
+      },
+      {
+        params: {
+          id: post.NominationID, 
         },
-        {
-          params: { id: item.NominationID },
-          headers: { Authorization: `Bearer ${authToken}` },
-        }
-      );
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${authToken}`,
+        },
+      }
+    );
 
-      const newComment = {
-        NominationCommentsID: res.data,
-        NominationID: item.NominationID,
-        CommentedBy: username,
-        CommentsText: text,
-        CommentedAt: new Date().toISOString(),
-      };
+    const newID = res.data; 
 
-      setComments((prev) => [...prev, newComment]);
-      item.Comments = (item.Comments ?? 0) + 1;
+const tempId = crypto.randomUUID();
+    const newComment = {
+      NominationCommentsID: tempId,
+      NominationID: post.NominationID,
+      CommentedBy: username,
+      CommentsText: text,
+      CommentedAt: new Date().toISOString(),
+    };
 
-      setCommentText((prev) => ({ ...prev, [item.NominationID]: "" }));
-      setShowComments((prev) => ({ ...prev, [item.NominationID]: true }));
-    } catch (err) {
-      console.error("Comment error:", err);
-    }
-  };
+    // Add into main comment list (used by filteredComments)
+    setComments((prev) => [...prev, newComment]);
+
+    // Update post comment count
+    setList((prev) =>
+      prev.map((p) =>
+        p.NominationID === post.NominationID
+          ? { ...p, Comments: p.Comments + 1 }
+          : p
+      )
+    );
+
+    // Clear text box
+    setCommentText((prev) => ({ ...prev, [post.NominationID]: "" }));
+
+    // ⭐ keep section open after posting
+    setShowComments((prev) => ({
+      ...prev,
+      [post.NominationID]: true,
+    }));
+
+  } catch (err) {
+    console.error("❌ Error posting comment:", err);
+  }
+};
 
   // ---------------- REPLY COMMENT ----------------
-  const handleReply = async (postId: any, text: any, parentId: any) => {
-    if (!text.trim()) return;
+const buildCommentTree = (flatComments: any[]) => {
+  // First, remove any duplicates
+  const uniqueComments = flatComments.filter((comment, index, self) =>
+    index === self.findIndex(c => 
+      c.NominationCommentsID === comment.NominationCommentsID
+    )
+  );
 
-    try {
-      const res = await axios.post(
-        `${apiUrl}/api/nominationcomments`,
-        {
-          nominationID: postId,
-          commentedBy: userId,
-          commentsText: text,
-          parentCommentID: parentId,
-          active: true,
-          submittedBy: userId,
-        },
-        {
-          params: { id: postId },
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${authToken}`,
-          },
-        }
-      );
-
-      const newId = res.data;
-
-      setComments((prev) => [
-        ...prev,
-        {
-          NominationCommentsID: newId,
-          NominationID: postId,
-          ParentCommentID: parentId,
-          CommentedBy: username,
-          CommentsText: text,
-          CommentedAt: new Date().toISOString(),
-          ChildComments: [],
-        },
-      ]);
-    } catch (err) {
-      console.error("Reply failed:", err);
-    }
-  };
-
-  const buildCommentTree = (flatComments: any[]) => {
   const map: Record<number, any> = {};
   const roots: any[] = [];
 
-  flatComments.forEach((c) => {
-    // ensure ChildComments array exists for easier recursion
+  uniqueComments.forEach((c) => {
     map[c.NominationCommentsID] = { ...c, ChildComments: c.ChildComments || [] };
   });
 
-  flatComments.forEach((c) => {
+  uniqueComments.forEach((c) => {
     if (c.ParentCommentID && map[c.ParentCommentID]) {
-      map[c.ParentCommentID].ChildComments.push(map[c.NominationCommentsID]);
+      // Check if child is not already in the array
+      const existingChild = map[c.ParentCommentID].ChildComments.find(
+        (child: any) => child.NominationCommentsID === c.NominationCommentsID
+      );
+      if (!existingChild) {
+        map[c.ParentCommentID].ChildComments.push(map[c.NominationCommentsID]);
+      }
     } else {
-      roots.push(map[c.NominationCommentsID]);
+      // Check if root is not already in the array
+      const existingRoot = roots.find(
+        root => root.NominationCommentsID === c.NominationCommentsID
+      );
+      if (!existingRoot) {
+        roots.push(map[c.NominationCommentsID]);
+      }
     }
   });
 
   return roots;
 };
+
+
+const handleReply = async (postId: number, text: string, parentId: number) => {
+  if (!text.trim()) return;
+const tempId = crypto.randomUUID();
+  // Optimistically update the UI to show the new reply
+  const newComment = {
+    NominationCommentsID: tempId, // Temporarily use the current timestamp as ID (optimistic approach)
+    NominationID: postId,
+    ParentCommentID: parentId,
+    CommentedBy: username, 
+    CommentsText: text,
+    CommentedAt: new Date().toISOString(),
+    ChildComments: [], 
+  };
+
+  // Update the state to include the new reply immediately
+  setComments((prev) => [
+    ...prev,
+    {
+      ...newComment,
+      ChildComments: [], // Empty initially
+    },
+  ]);
+
+  try {
+    // Make the API call to persist the new comment
+    const res = await axios.post(
+      `${apiUrl}/api/nominationcomments`,
+      {
+        nominationID: postId,
+        commentedBy: userId,
+        commentsText: text,
+        parentCommentID: parentId,
+        active: true,
+        submittedBy: userId,
+      },
+      {
+        params: { id: postId },
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${authToken}`,
+        },
+      }
+    );
+
+    // Get the actual comment ID from the response
+    const newId = res.data;
+
+    // Update the comment ID and other details once the response is received
+    setComments((prev) =>
+      prev.map((comment) =>
+        comment.NominationCommentsID === newComment.NominationCommentsID
+          ? { ...comment, NominationCommentsID: newId }
+          : comment
+      )
+    );
+    
+  } catch (err) {
+    console.error("Error posting reply:", err);
+    // Optionally, you could revert the optimistic update here in case of an error
+  }
+};
+
+
+//   const buildCommentTree = (flatComments: any[]) => {
+//   const map: Record<number, any> = {};
+//   const roots: any[] = [];
+
+//   flatComments.forEach((c) => {
+//     // ensure ChildComments array exists for easier recursion
+//     map[c.NominationCommentsID] = { ...c, ChildComments: c.ChildComments || [] };
+//   });
+
+//   flatComments.forEach((c) => {
+//     if (c.ParentCommentID && map[c.ParentCommentID]) {
+//       map[c.ParentCommentID].ChildComments.push(map[c.NominationCommentsID]);
+//     } else {
+//       roots.push(map[c.NominationCommentsID]);
+//     }
+//   });
+
+//   return roots;
+// };
 
   
 
@@ -323,11 +410,20 @@ const toggleComments = (id: number) => {
         // const filteredComments = comments.filter(
         //   (c) => c.NominationID === NominationID
         // );
-         const filteredFlat = (comments || []).filter(
-          (c) => c.NominationID === NominationID
-        );
-       // const filteredFlat = comments.filter(c => c.NominationID === NominationID);
-        const nestedComments = buildCommentTree(filteredFlat);
+        const filteredFlat = (comments || [])
+  .filter(c => c.NominationID === item.NominationID)
+  // Remove duplicates by creating a Map
+  .reduce((acc: any[], current) => {
+    const existing = acc.find(item => 
+      item.NominationCommentsID === current.NominationCommentsID
+    );
+    if (!existing) {
+      acc.push(current);
+    }
+    return acc;
+  }, []);
+const nestedComments = buildCommentTree(filteredFlat);
+
 
         return (
           <div
@@ -363,10 +459,25 @@ const toggleComments = (id: number) => {
 
                  <MoreHorizontal
                    className="w-5 h-5 text-gray-400 hover:text-gray-600 cursor-pointer"
-                   onClick={() => {
-                     setSelectedPost(item);
-                     setShowModal(true);
+                   onClick={async (e) => {
+
+     e.preventDefault();
+                        e.stopPropagation();
+                      e.nativeEvent.stopImmediatePropagation();
+                        if (!viewed[item.NominationID]) {
+                          await addView(item.NominationID);
+                          setViewed(prev => ({ ...prev, [item.NominationID]: true }));
+                        }
+
+                        await fetchViews(item.NominationID);
+                        setShowViewers(false);
+                        setSelectedPost(item)
+                        setShowModal(true);
                    }}
+
+ 
+
+
                  />
                 </div>
 

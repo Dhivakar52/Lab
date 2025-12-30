@@ -150,14 +150,14 @@ const [activeTab, setActiveTab] = useState("like");
     }}
   >
     <Eye className="w-4 h-4" />
-    <span>{post.Views || 0} Views</span>
+    <span>{viewers.length || 0} Views</span>
   </div>
 
 </div>
 
 
   {/* CONTENT AREA */}
-  <div className="mt-3">
+  <div className="my-3 py-3 overflow-y-scroll h-[300px]">
    {activeTab === "like" && (
   <div className="max-h-48 overflow-y-auto space-y-2 pr-1">
     {(post.LikedBy?.length || 0) === 0 ? (
