@@ -45,6 +45,9 @@ const PostCard: React.FC<PostCardProps> = ({ posts, setPosts }) => {
   const [showLikePopup, setShowLikePopup] = useState(false);
 const [likeList, setLikeList] = useState<any[]>([]);
 
+ 
+  const [expandedDesc, setExpandedDesc] = useState<Record<number, boolean>>({});
+ 
 const [showModal, setShowModal] = useState(false);
 
   const { authToken, userId, username } = useAuth();
@@ -80,6 +83,12 @@ const [showModal, setShowModal] = useState(false);
 
     fetchComments();
   }, []);
+ const toggleDescription = (id: number) => {
+  setExpandedDesc(prev => ({
+    ...prev,
+    [id]: !prev[id],
+  }));
+};
 
   // LIKE / UNLIKE
  const handleLike = async (post: Feed) => {
@@ -426,16 +435,6 @@ const handleReply = async (postId: number, text: string, parentId: number) => {
 };
 
 
-
-
-
-
-
-
-
-
-
-
   return (
     <div>
       {posts.length === 0 ? (
@@ -450,7 +449,7 @@ const handleReply = async (postId: number, text: string, parentId: number) => {
 
          const filteredFlat = (comments || []).filter(c => c.NominationID === post.NominationID);
 
-const nestedComments = buildCommentTree(filteredFlat);
+        const nestedComments = buildCommentTree(filteredFlat);
 
           return (
             <div
@@ -485,20 +484,56 @@ const nestedComments = buildCommentTree(filteredFlat);
                       </p>
                     </div>
 
-                   <MoreHorizontal
-  className="w-5 h-5 text-gray-400 hover:text-gray-600 cursor-pointer"
-  onClick={() => {
-    setSelectedPost(post);
-    setShowModal(true);
-  }}
-/>
+                   {/* <MoreHorizontal
+                    className="w-5 h-5 text-gray-400 hover:text-gray-600 cursor-pointer"
+                    onClick={() => {
+                      setSelectedPost(post);
+                      setShowModal(true);
+                      
+                    }}
+                  /> */}
+                  <MoreHorizontal
+                    className="w-5 h-5 text-gray-400 hover:text-gray-600 cursor-pointer"
+                    onClick={async () => {
+                      setSelectedPost(post);       
+                      setShowModal(true);
+
+                      if (!viewed[post.NominationID]) {
+                        await addView(post.NominationID); 
+                        setViewed(prev => ({ ...prev, [post.NominationID]: true }));
+                      }
+                      await fetchViews(post.NominationID);
+                        setShowViewers(false) ;
+
+                      
+                    }}
+                  />
+
                   </div>
-                 <p
-  className="text-gray-800 mt-2 text-sm leading-relaxed line-clamp-2"
-  title={post.Description}
->
-  {post.Description}
-</p>
+                 {/* <p
+                    className="text-gray-800 mt-2 text-sm leading-relaxed line-clamp-2"
+                    title={post.Description}
+                  >
+                    {post.Description}
+                  </p> */}
+                  <p
+                    className={`text-gray-800 mt-2 text-sm leading-relaxed transition-all duration-300 ${
+                      expandedDesc[NominationID] ? "" : "line-clamp-2"
+                    }`}
+                  >
+                    {post.Description}
+                  </p>
+
+                  {post.Description?.length > 120 && (
+                    <button
+                      type="button"
+                      onClick={() => toggleDescription(NominationID)}
+                      className="text-blue-600 text-xs mt-1 hover:underline font-medium"
+                    >
+                      {expandedDesc[NominationID] ? "See less" : "See more"}
+                    </button>
+                  )}
+
                   {/* <p className="text-gray-800 mt-2 text-sm leading-relaxed">
                     {post.Description}
                   </p> */}
