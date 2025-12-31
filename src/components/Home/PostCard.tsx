@@ -541,27 +541,27 @@ const nestedComments = buildCommentTree(filteredFlat);
                       </p>
                     </div>
 
-<MoreHorizontal
-  className="w-5 h-5 text-gray-400 hover:text-gray-600 cursor-pointer"
-  onClick={async (e) => {
-    e.preventDefault();
-    e.stopPropagation();
-    e.nativeEvent.stopImmediatePropagation();
+                  <MoreHorizontal
+                    className="w-5 h-5 text-gray-400 hover:text-gray-600 cursor-pointer"
+                    onClick={async (e) => {
+                      e.preventDefault();
+                      e.stopPropagation();
+                      e.nativeEvent.stopImmediatePropagation();
 
-    // Add the view if not already viewed
-    if (!viewed[post.NominationID]) {
-      await addView(post.NominationID);  // Add view on backend
-      setViewed((prev) => ({ ...prev, [post.NominationID]: true }));
-    }
+                      // Add the view if not already viewed
+                      if (!viewed[post.NominationID]) {
+                        await addView(post.NominationID);  // Add view on backend
+                        setViewed((prev) => ({ ...prev, [post.NominationID]: true }));
+                      }
 
-   
-    await fetchViews(post.NominationID);
+                    
+                      await fetchViews(post.NominationID);
 
-    setShowViewers(false);
-    setSelectedPost(post);
-    setShowModal(true);
-  }}
-/>
+                      setShowViewers(false);
+                      setSelectedPost(post);
+                      setShowModal(true);
+                    }}
+                  />
 
 
                   </div>
@@ -627,10 +627,10 @@ const nestedComments = buildCommentTree(filteredFlat);
                       e.preventDefault();
                       e.stopPropagation();
                     e.nativeEvent.stopImmediatePropagation();
-                      if (!viewed[post.NominationID]) {
-                        await addView(post.NominationID);
-                        setViewed(prev => ({ ...prev, [post.NominationID]: true }));
-                      }
+                      // if (!viewed[post.NominationID]) {
+                      //   await addView(post.NominationID);
+                      //   setViewed(prev => ({ ...prev, [post.NominationID]: true }));
+                      // }
 
                       await fetchViews(post.NominationID);
                       setShowViewers(true) ;
