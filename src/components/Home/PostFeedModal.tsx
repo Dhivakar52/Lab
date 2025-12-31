@@ -71,7 +71,7 @@ const [activeTab, setActiveTab] = useState("like");
       onClick={onClose}
     >
       <div
-        className="bg-white rounded-xl shadow-sm w-11/12 sm:w-3/4 lg:w-1/2 p-6 relative  h-[450px] overflow-hidden  max-h-[90vh]"
+        className="bg-white rounded-xl shadow-sm w-11/12 sm:w-3/4 lg:w-1/2 p-6 relative  h-[500px] overflow-hidden  max-h-[90vh]"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Close Button */}
@@ -157,7 +157,7 @@ const [activeTab, setActiveTab] = useState("like");
 
 
   {/* CONTENT AREA */}
-  <div className="my-3 py-3 overflow-y-scroll h-[300px]">
+  <div className="my-3 py-3 overflow-y-scroll h-[250px]">
    {activeTab === "like" && (
   <div className="max-h-48 overflow-y-auto space-y-2 pr-1">
     {(post.LikedBy?.length || 0) === 0 ? (
