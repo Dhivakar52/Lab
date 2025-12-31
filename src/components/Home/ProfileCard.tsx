@@ -1,5 +1,5 @@
 import React from 'react';
-import { Heart, MessageCircle,Eye } from 'lucide-react';
+import { Heart, MessageCircle,Eye, Trophy, UsersRound } from 'lucide-react';
 import avatar from '../../assets/images/profile.png';
 
 import "swiper/css";
@@ -78,31 +78,55 @@ const ProfileCard: React.FC<ProfileCardProps> = ({ profile, userDetail }) => {
               <SwiperSlide key={index}>
                 <div className="p-4 bg-white rounded-xl border border-gray-200 shadow text-black my-3">
                   <div className="flex items-center justify-center space-x-3 mb-3 whitespace-nowrap overflow-hidden">
-                    <span className="px-2 py-1 rounded-full text-xs bg-purple-100 text-purple-800 max-w-[200px]">
-                      🏆 {cat.AwardCategory || "-"}
-                    </span>
-
-                    <span className="px-2 py-1 rounded-full text-xs bg-blue-100 text-blue-800">
-                      👥 {cat.NominatedCount || 0} Nominated
-                    </span>
+                    
+                     <span className="px-2 py-1 rounded-full text-xs bg-purple-100 text-purple-800 flex items-center">
+                      <Trophy size={16}/>  <span className="ms-1">{cat.AwardCategory || "-"}</span>
+                      </span>
+                    <span className="px-2 py-1 rounded-full text-xs bg-blue-100 text-blue-800 flex items-center">
+                    <UsersRound size={16}/>  <span className="ms-1"> {cat.NominatedCount || 0}</span>
+                         </span>
                   </div>
 
-                  <div className="flex justify-between items-center border-b border-gray-200 pb-3">
-                    <span className="text-sm font-medium flex items-center space-x-1 text-gray-700">
-                      <Heart className="w-4 h-4 text-red-500" /> 
-                      <span>{cat.Likes || 0} Likes</span>
-                    </span>
+               <div className="flex items-center gap-2 border-b border-gray-200 py-2">
 
-                    <span className="text-sm font-medium flex items-center space-x-1 text-gray-600">
-                      <MessageCircle className="w-4 h-4 text-blue-500" /> 
-                      <span>{cat.Comments || 0} Comments</span>
-                    </span>
+  {/* Likes */}
+  <span
+    className="flex items-center gap-1 px-2 py-0.5
+               rounded-full border border-gray-300
+               text-xs font-medium text-gray-700
+               hover:bg-red-50 hover:border-red-300
+               transition cursor-pointer"
+  >
+    <Heart className="w-3.5 h-3.5 text-red-500" />
+    <span>{cat.Likes || 0} Likes</span>
+  </span>
 
-                    <span className="text-sm font-medium flex items-center space-x-1 text-gray-600">
-                      <Eye className="w-4 h-4" /> 
-                      <span>{cat.Views || 0} Views</span>
-                    </span>
-                  </div>
+  {/* Comments */}
+  <span
+    className="flex items-center gap-1 px-2 py-0.5
+               rounded-full border border-gray-300
+               text-xs font-medium text-gray-700
+               hover:bg-blue-50 hover:border-blue-300
+               transition cursor-pointer"
+  >
+    <MessageCircle className="w-3.5 h-3.5 text-blue-500" />
+    <span>{cat.Comments || 0} Comments</span>
+  </span>
+
+  {/* Views */}
+  <span
+    className="flex items-center gap-1 px-2 py-0.5
+               rounded-full border border-gray-300
+               text-xs font-medium text-gray-700
+               hover:bg-gray-100 hover:border-gray-400
+               transition cursor-pointer"
+  >
+    <Eye className="w-3.5 h-3.5 text-gray-600" />
+    <span>{cat.Views || 0} Views</span>
+  </span>
+
+</div>
+
                 </div>
               </SwiperSlide>
             ))}
