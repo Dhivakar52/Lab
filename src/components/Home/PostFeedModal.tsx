@@ -112,7 +112,7 @@ const [activeTab, setActiveTab] = useState("like");
             onClick={() => setShowFullDesc(!showFullDesc)}
             className="text-blue-600 text-sm font-medium mt-1 hover:underline"
           >
-            {showFullDesc ? "See less" : "See more"}
+            {showFullDesc ? "Show less" : "Show more"}
           </button>
         )}
       </div>

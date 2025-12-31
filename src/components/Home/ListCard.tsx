@@ -511,7 +511,7 @@ const nestedComments = buildCommentTree(filteredFlat);
                       onClick={() => toggleDescription(NominationID)}
                       className="text-blue-600 text-xs mt-1 hover:underline font-medium"
                     >
-                      {expandedDesc[NominationID] ? "See less" : "See more"}
+                      {expandedDesc[NominationID] ? "Show less" : "Show more"}
                     </button>
                   )}
 
