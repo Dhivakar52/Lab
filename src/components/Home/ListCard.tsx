@@ -577,10 +577,10 @@ const nestedComments = buildCommentTree(filteredFlat);
                         e.preventDefault();
                         e.stopPropagation();
                       e.nativeEvent.stopImmediatePropagation();
-                        if (!viewed[item.NominationID]) {
-                          await addView(item.NominationID);
-                          setViewed(prev => ({ ...prev, [item.NominationID]: true }));
-                        }
+                        // if (!viewed[item.NominationID]) {
+                        //   await addView(item.NominationID);
+                        //   setViewed(prev => ({ ...prev, [item.NominationID]: true }));
+                        // }
 
                         await fetchViews(item.NominationID);
                         setShowViewers(true);

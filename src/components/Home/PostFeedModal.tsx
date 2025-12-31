@@ -57,6 +57,7 @@ likedPosts,
 
 const [activeTab, setActiveTab] = useState("like");
  const {username}= useAuth();
+ const [showFullDesc, setShowFullDesc] = useState(false);
 
   
  
@@ -71,7 +72,7 @@ const [activeTab, setActiveTab] = useState("like");
       onClick={onClose}
     >
       <div
-        className="bg-white rounded-xl shadow-sm w-11/12 sm:w-3/4 lg:w-1/2 p-6 relative  h-[500px] overflow-hidden  max-h-[90vh]"
+        className="bg-white rounded-xl shadow-sm w-11/12 sm:w-3/4 lg:w-1/2 p-6 relative  overflow-hidden  max-h-[90vh]"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Close Button */}
@@ -95,10 +96,27 @@ const [activeTab, setActiveTab] = useState("like");
           </div>
         </div>
 
-        {/* Description */}
-        <p className="text-gray-800 mt-4 text-sm leading-relaxed">
+        
+        {/* Description with See More / See Less */}
+      <div className="mt-4">
+        <p
+          className={`text-gray-800 text-sm leading-relaxed transition-all ${
+            showFullDesc ? "" : "line-clamp-3"
+          }`}
+        >
           {post.Description}
         </p>
+
+        {post.Description?.length > 150 && (
+          <button
+            onClick={() => setShowFullDesc(!showFullDesc)}
+            className="text-blue-600 text-sm font-medium mt-1 hover:underline"
+          >
+            {showFullDesc ? "See less" : "See more"}
+          </button>
+        )}
+      </div>
+
 
         {/* Like text line */}
         <div className="flex justify-between border-b border-gray-200 mt-4 py-3">
@@ -157,7 +175,7 @@ const [activeTab, setActiveTab] = useState("like");
 
 
   {/* CONTENT AREA */}
-  <div className="my-3 py-3 overflow-y-scroll h-[250px]">
+  <div className="my-3 py-3 ">
    {activeTab === "like" && (
   <div className="max-h-48 overflow-y-auto space-y-2 pr-1">
     {(post.LikedBy?.length || 0) === 0 ? (
@@ -199,7 +217,7 @@ const [activeTab, setActiveTab] = useState("like");
 
     {activeTab === "comments" && (
       
-<div>
+<div className="overflow-y-scroll h-[150px]">
   {/* Comments Section SAME LIKE POST CARD */}
 <FeedComment
   post={post}
