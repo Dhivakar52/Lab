@@ -551,7 +551,7 @@ const referralPayload = referrals.map(ref => ({
       </div>
     )} */}
 
-    <div className="min-h-screen bg-gray-100 flex flex-col">
+    <div className="bg-gray-100 flex flex-col">
       <form
         onSubmit={handleSubmit}
         className="px-2 py-4 rounded-lg bg-white shadow nominate-form">
@@ -571,32 +571,34 @@ const referralPayload = referrals.map(ref => ({
               : "text-gray-500 cursor-default no-underline px-4 py-2 btn-theme" }>
             You have {totalSelfNominations} nominations
           </a>
-        </div>
-        {/* Title */}
-        <div className="mb-4">
-          <Label.Root htmlFor="title" className="block text-sm font-medium">
-            Title of Submission<span className="text-red-500"> *</span>
-          </Label.Root>
-          <input
-            id="title"
-            type="text"
-            placeholder="Best Innovation"
-            value={form.title}
-            disabled={isReadOnly}
-            maxLength={100}
-            onChange={(e: React.ChangeEvent<HTMLInputElement>) => {const value = e.target.value.slice(0, 100);
-            setForm(prevForm => ({...prevForm,title: value }));
-            if (value) {setErrors(prevErrors => ({...prevErrors, title: ""}));}}}         
-             className={`w-full mt-1 border rounded px-3 py-2
-              ${isReadOnly ? "bg-gray-100 text-gray-700 cursor-not-allowed" : "bg-white text-black"}`}
-          />
-          {errors.title && <p className="text-red-500 text-sm mt-1">{errors.title}</p>}
-           <p className="text-gray-500 text-sm mt-1">{form.title.length}/100 characters</p>
+       </div>
 
-        </div>
+       
+         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-4">
+           {/* Title */}
+          <div >
+            <Label.Root htmlFor="title" className="block text-sm font-medium">
+              Title of Submission<span className="text-red-500"> *</span>
+            </Label.Root>
+            <input
+              id="title"
+              type="text"
+              placeholder="Best Innovation"
+              value={form.title}
+              disabled={isReadOnly}
+              maxLength={100}
+              onChange={(e: React.ChangeEvent<HTMLInputElement>) => {const value = e.target.value.slice(0, 100);
+              setForm(prevForm => ({...prevForm,title: value }));
+              if (value) {setErrors(prevErrors => ({...prevErrors, title: ""}));}}}         
+              className={`w-full mt-1 border rounded px-3 py-2
+                ${isReadOnly ? "bg-gray-100 text-gray-700 cursor-not-allowed" : "bg-white text-black"}`}
+            />
+            {errors.title && <p className="text-red-500 text-sm mt-1">{errors.title}</p>}
+            <p className="text-gray-500 text-sm mt-1">{form.title.length}/100 characters</p>
 
-        {/* Nominee & Department */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-4">
+          </div>
+
+          {/* Nominee */}
           <div>
             <Label.Root className="block text-sm font-medium">Nominee Name</Label.Root>
             <input
@@ -611,6 +613,10 @@ const referralPayload = referrals.map(ref => ({
               style={{ userSelect: "none", pointerEvents: "none", caretColor: "transparent", outline: "none" }}
               className="w-full mt-1 border rounded px-3 py-2 bg-gray-100 text-gray-700 cursor-not-allowed"            />
           </div>
+        </div>
+       
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-4">
+           {/* Department */}
           <div>
             <Label.Root className="block text-sm font-medium">Department</Label.Root>
             <input
@@ -625,10 +631,8 @@ const referralPayload = referrals.map(ref => ({
               style={{ userSelect: "none", pointerEvents: "none", caretColor: "transparent", outline: "none" }}
               className="w-full mt-1 border rounded px-3 py-2 bg-gray-100 text-gray-700 cursor-not-allowed"            />
           </div>
-        </div>
 
-        {/* Email & Mobile */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-4">
+          {/* Email */}
           <div>
             <Label.Root className="block text-sm font-medium">Email ID</Label.Root>
             <input
@@ -643,6 +647,10 @@ const referralPayload = referrals.map(ref => ({
               style={{ userSelect: "none", pointerEvents: "none", caretColor: "transparent", outline: "none" }}
               className="w-full mt-1 border rounded px-3 py-2 bg-gray-100 text-gray-700 cursor-not-allowed"            />
           </div>
+        </div>
+
+        
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-4">
           {/* Mobile */}
           <div>
             <Label.Root className="block text-sm font-medium">Mobile Number</Label.Root>
@@ -658,62 +666,64 @@ const referralPayload = referrals.map(ref => ({
               style={{ userSelect: "none", pointerEvents: "none", caretColor: "transparent", outline: "none" }}
               className="w-full mt-1 border rounded px-3 py-2 bg-gray-100 text-gray-700 cursor-not-allowed"            />
           </div>
+
+          {/* Manager*/}
+            <div className="mb-2">
+              <Label.Root className="block text-sm font-medium">
+                Manager Email ID
+              </Label.Root>
+              <input
+                type="email"
+                value={form.managerEmail}
+                disabled
+                tabIndex={-1}
+                aria-disabled="true"
+                onMouseDown={(e) => e.preventDefault()}
+                onFocus={(e) => e.currentTarget.blur()}
+                onKeyDown={(e) => e.preventDefault()}
+                style={{ userSelect: "none", pointerEvents: "none", caretColor: "transparent", outline: "none" }}
+                className="w-full mt-1 border rounded px-3 py-2 bg-gray-100 text-gray-700 cursor-not-allowed"            />
+          </div>
+
         </div>
 
-        {/* Manager & Contest */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <div className="mb-2">
-            <Label.Root className="block text-sm font-medium">
-              Manager Email ID
-            </Label.Root>
-            <input
-              type="email"
-              value={form.managerEmail}
-              disabled
-              tabIndex={-1}
-              aria-disabled="true"
-              onMouseDown={(e) => e.preventDefault()}
-              onFocus={(e) => e.currentTarget.blur()}
-              onKeyDown={(e) => e.preventDefault()}
-              style={{ userSelect: "none", pointerEvents: "none", caretColor: "transparent", outline: "none" }}
-              className="w-full mt-1 border rounded px-3 py-2 bg-gray-100 text-gray-700 cursor-not-allowed"            />
-
-            {/* Contest Dropdown */}
-            <div className="mb-6">
-              <label className="block text-sm font-medium mb-2">Contest Type
-                <span className="text-red-500"> *</span>
-              </label>
-              <Select
-                name="contestType"
-                value={
-                  contest
-                    .filter((c: any) => c.AwardCategoryID === Number(form.contestType))
-                    .map((c: any) => ({
-                      value: c.AwardCategoryID,
-                      label: c.CategoryName,
-                    }))[0] || null
-                }
-                onChange={(selectedOption: { value: string } | null) => {setForm(prevForm => ({
-                  ...prevForm,
-                  contestType: selectedOption?.value ?? ""
-                  }));
-                if (selectedOption?.value) {
-                  setErrors(prevErrors => ({...prevErrors, contestType: ""
-                  }));
-                  }}}
-                options={contest.map((c: any) => ({
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-4">  
+          {/* Contest Dropdown */}
+        <div >
+          <label className="block text-sm font-medium mb-2">Contest Type
+            <span className="text-red-500"> *</span>
+          </label>
+          <Select
+            name="contestType"
+            value={
+              contest
+                .filter((c: any) => c.AwardCategoryID === Number(form.contestType))
+                .map((c: any) => ({
                   value: c.AwardCategoryID,
                   label: c.CategoryName,
-                  }))}
-                placeholder="Select Contest Type"
-                className="text-sm"
-                styles={contestSelectStyles}
-              />
-              {errors.contestType && <p className="text-red-500 text-sm mt-1">{errors.contestType}</p>}
-            </div>
-          </div>
+                }))[0] || null
+            }
+            onChange={(selectedOption: { value: string } | null) => {setForm(prevForm => ({
+              ...prevForm,
+              contestType: selectedOption?.value ?? ""
+              }));
+            if (selectedOption?.value) {
+              setErrors(prevErrors => ({...prevErrors, contestType: ""
+              }));
+              }}}
+            options={contest.map((c: any) => ({
+              value: c.AwardCategoryID,
+              label: c.CategoryName,
+              }))}
+            placeholder="Select Contest Type"
+            className="text-sm"
+            styles={contestSelectStyles}
+          />
+          {errors.contestType && <p className="text-red-500 text-sm mt-1">{errors.contestType}</p>}
+        </div>    
+
           {/* Referrals */}
-          <div className="">
+          <div>
             <label className="block text-sm font-medium mb-2">
               Referrals Email ID 
             </label>
@@ -753,107 +763,116 @@ const referralPayload = referrals.map(ref => ({
                 {errorMessage}
               </div>
             )}
-            
-     <div className="">
-  <Label.Root className="block text-sm font-medium">
-    Supporting Documents 
-    <span className="text-red-500">(Maximum 5 files allowed & File must be below 2 MB)</span>
-  </Label.Root>
 
-  <label
-    htmlFor="fileUpload"
-    className="inline-block bg-gray-100 text-gray-700 border border-gray-300 px-6 py-2 rounded cursor-pointer mt-2 hover:bg-gray-200"
-  >
-    Choose File
-  </label>
-  <input
-    id="fileUpload"
-    ref={fileInputRef}
-    type="file"
-    multiple
-    onChange={handleFileUpload}
-    className="hidden"
-  />
-
-  {fileError && <p className="text-red-500 text-sm mt-1">{fileError}</p>}
-
-  {/* Render both existing API files and newly uploaded files */}
-  <div className="mt-3 flex flex-wrap gap-2">
-    {allDocuments.map((doc: any, index: number) => (
-      <div
-        key={doc.source === "api" ? doc.fileNameGUID : index}
-        className="flex items-center gap-2 bg-gray-100 px-3 py-1 rounded-lg shadow-sm border relative"
-      >
-        {/* File Name */}
-        <span
-          className="text-sm truncate max-w-[180px] cursor-pointer text-blue-600 hover:underline"
-          onClick={async () => {
-            const ext = (doc.originalFileName || doc.name).split(".").pop()?.toLowerCase();
-
-            if (doc.source === "api") {
-              try {
-                const downloadUrl = `${apiUrl}/api/download?fileName=${doc.fileNameGUID}`;
-                const response = await axios.get(downloadUrl, {
-                  responseType: "blob",
-                  headers: { Authorization: `Bearer ${authToken}` },
-                });
-                const blobUrl = URL.createObjectURL(response.data);
-
-                if (["jpg","jpeg","png","gif"].includes(ext || "")) {
-                  setPreviewType(ext);
-                  setPreviewFile(blobUrl);
-                  setPreviewOpen(true);
-                } else if (ext === "pdf") window.open(blobUrl, "_blank");
-                else {
-                  const link = document.createElement("a");
-                  link.href = blobUrl;
-                  link.download = doc.originalFileName;
-                  document.body.appendChild(link);
-                  link.click();
-                  link.remove();
-                }
-              } catch (err) {
-                console.error("Download failed:", err);
-                alert("File not found");
-              }
-            } else {
-              const blobUrl = URL.createObjectURL(doc);
-              if (["jpg","jpeg","png","gif"].includes(ext || "")) {
-                setPreviewType(ext);
-                setPreviewFile(blobUrl);
-                setPreviewOpen(true);
-              } else {
-                const link = document.createElement("a");
-                link.href = blobUrl;
-                link.download = doc.name;
-                document.body.appendChild(link);
-                link.click();
-                link.remove();
-              }
-            }
-          }}
-        >
-          {doc.originalFileName || doc.name}
-        </span>
-        <button
-          type="button"
-          onClick={() => {
-            if (doc.source === "api") {
-              setExistingDocs(prev => prev.map(d => d.fileNameGUID === doc.fileNameGUID ? { ...d, isDeleted: true } : d));
-            } else {
-              setForm(prev => ({ ...prev, files: prev.files.filter((_, i) => i !== index) }));
-            }
-          }}
-          className="text-red-500 hover:text-red-700 font-bold text-lg leading-none"
-        >
-          ×
-        </button>
-      </div>
-    ))}
-  </div>
-</div>
           </div>
+
         </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-4">         
+        
+          {/* Supporting Documents   */}
+          <div>
+            <Label.Root className="block text-sm font-medium">
+              Supporting Documents 
+              <span className="text-red-500">(Maximum 5 files allowed & File must be below 2 MB)</span>
+            </Label.Root>
+
+            <label
+              htmlFor="fileUpload"
+              className="inline-block bg-gray-100 text-gray-700 border border-gray-300 px-6 py-2 rounded cursor-pointer mt-2 hover:bg-gray-200"
+            >
+              Choose File
+            </label>
+            <input
+              id="fileUpload"
+              ref={fileInputRef}
+              type="file"
+              multiple
+              onChange={handleFileUpload}
+              className="hidden"
+            />
+
+            {fileError && <p className="text-red-500 text-sm mt-1">{fileError}</p>}
+
+          </div>
+
+        </div>
+
+          
+          {/* Render both existing API files and newly uploaded files */}
+          <div className="mt-3 flex flex-wrap gap-2">
+            {allDocuments.map((doc: any, index: number) => (
+              <div
+                key={doc.source === "api" ? doc.fileNameGUID : index}
+                className="flex items-center gap-2 bg-gray-100 px-3 py-1 rounded-lg shadow-sm border relative"
+              >
+                {/* File Name */}
+                <span
+                  className="text-sm truncate max-w-[180px] cursor-pointer text-blue-600 hover:underline"
+                  onClick={async () => {
+                    const ext = (doc.originalFileName || doc.name).split(".").pop()?.toLowerCase();
+
+                    if (doc.source === "api") {
+                      try {
+                        const downloadUrl = `${apiUrl}/api/download?fileName=${doc.fileNameGUID}`;
+                        const response = await axios.get(downloadUrl, {
+                          responseType: "blob",
+                          headers: { Authorization: `Bearer ${authToken}` },
+                        });
+                        const blobUrl = URL.createObjectURL(response.data);
+
+                        if (["jpg","jpeg","png","gif"].includes(ext || "")) {
+                          setPreviewType(ext);
+                          setPreviewFile(blobUrl);
+                          setPreviewOpen(true);
+                        } else if (ext === "pdf") window.open(blobUrl, "_blank");
+                        else {
+                          const link = document.createElement("a");
+                          link.href = blobUrl;
+                          link.download = doc.originalFileName;
+                          document.body.appendChild(link);
+                          link.click();
+                          link.remove();
+                        }
+                      } catch (err) {
+                        console.error("Download failed:", err);
+                        alert("File not found");
+                      }
+                    } else {
+                      const blobUrl = URL.createObjectURL(doc);
+                      if (["jpg","jpeg","png","gif"].includes(ext || "")) {
+                        setPreviewType(ext);
+                        setPreviewFile(blobUrl);
+                        setPreviewOpen(true);
+                      } else {
+                        const link = document.createElement("a");
+                        link.href = blobUrl;
+                        link.download = doc.name;
+                        document.body.appendChild(link);
+                        link.click();
+                        link.remove();
+                      }
+                    }
+                  }}
+                >
+                  {doc.originalFileName || doc.name}
+                </span>
+                <button
+                  type="button"
+                  onClick={() => {
+                    if (doc.source === "api") {
+                      setExistingDocs(prev => prev.map(d => d.fileNameGUID === doc.fileNameGUID ? { ...d, isDeleted: true } : d));
+                    } else {
+                      setForm(prev => ({ ...prev, files: prev.files.filter((_, i) => i !== index) }));
+                    }
+                  }}
+                  className="text-red-500 hover:text-red-700 font-bold text-lg leading-none"
+                >
+                  ×
+                </button>
+              </div>
+            ))}
+          </div>
 
         {/* Description */}
         <div className="">
@@ -874,6 +893,8 @@ const referralPayload = referrals.map(ref => ({
     {form.description.length}/1000 characters
   </p>
         </div>
+
+
        </div>  
         </div> 
         {/* Buttons */}

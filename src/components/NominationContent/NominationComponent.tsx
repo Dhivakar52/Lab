@@ -12,9 +12,7 @@ const NominationComponent = () => {
     const location = useLocation();
     const navigate=useNavigate();
     const [tab, setTab] = React.useState("table");
-    const handleForm=()=>{
-     navigate("add-nomination");
-    }
+
     useEffect(() => {
   if (location.state?.tab) {
     setTab(location.state.tab);
@@ -54,10 +52,7 @@ const NominationComponent = () => {
         <Tabs.Content value="form" >
             {/* <FilterComponent/> */}
                      <div>
-             <div className='flex justify-end items-baseline'>
-     <button className="px-4 py-2 btn-theme" onClick={handleForm}>Add Nomination</button>
-     {/* <FilterComponent/> */}
-  </div>
+
           </div>
         <OtherNominationTable  />
         </Tabs.Content>

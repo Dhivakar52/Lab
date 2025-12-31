@@ -218,6 +218,11 @@ const NominationTable: React.FC = () => {
   }
  const referralEmails: string[] =
   selectedNomination?.["Referrals ID"]?.map((r) => r.Email) || [];
+
+       const handleForm=()=>{
+       navigate("add-nomination");
+      }
+
   return (
     <>
       <div className="p-6">
@@ -229,6 +234,8 @@ const NominationTable: React.FC = () => {
             placeholder="Search nominations..."
             className="border border-gray-300 rounded-md px-4 py-2 w-1/3 text-sm"
           />
+        <button className="px-4 py-2 btn-theme" onClick={handleForm}>Add Nomination</button>
+
         </div>
 
         {/* 🧾 Table */}
