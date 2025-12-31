@@ -47,7 +47,7 @@ const navigationItems: NavigationItem[] = [
   { icon: Users, label: 'President Level', path: '/president-level' },
   { icon: Award, label: 'Award Management', path: '/award-management' },
   { icon: Settings, label: 'Admin Setting', path: '/admin-setting' },
-  { icon: UserPlus, label: 'Other Nomination', path: '/other-nomination' },
+  //{ icon: UserPlus, label: 'Other Nomination', path: '/other-nomination' },
 ];
 
 
