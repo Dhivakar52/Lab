@@ -163,15 +163,29 @@ const headerTitleMap: Record<string, string> = {
         </div>
 
         {/* Profile Section */}
-        <div className="flex items-center space-x-3 cursor-pointer hover:bg-gray-50 px-2 sm:px-3 py-2 rounded-lg transition-colors">
-          <div className="w-8 sm:w-10 h-8 sm:h-10 bg-blue-500 rounded-full flex items-center justify-center text-white font-semibold text-sm">
-            {username ? username.trim().charAt(0).toUpperCase() : "?"}
-          </div>
-          <div className="text-sm hidden sm:block">
-            <div className="font-semibold text-gray-800">{username}</div>
-            <div className="text-gray-500 text-xs">{email}</div>
-          </div>
-        </div>
+       <div className="flex items-center space-x-3 cursor-pointer hover:bg-gray-50 px-2 sm:px-3 py-2 rounded-lg transition-colors group">
+
+  {/* Avatar ONLY – increased */}
+  <div
+    className="w-9 h-9 sm:w-11 sm:h-11
+               rounded-full flex items-center justify-center
+               text-base sm:text-lg font-semibold text-white
+               shrink-0"
+    style={{
+      background: "linear-gradient(90deg, rgb(8,128,94) 16%, rgb(24,97,174) 100%)"
+    }}
+  >
+    {username ? username.trim().charAt(0).toUpperCase() : ""}
+  </div>
+
+  {/* Text unchanged */}
+  <div className="text-sm hidden sm:block min-w-0 flex-1">
+    <div className="font-semibold text-gray-800 truncate">{username}</div>
+    <div className="text-gray-500 text-xs truncate">{email}</div>
+  </div>
+
+</div>
+
       </div>
 
       {/* Notification Modal */}
