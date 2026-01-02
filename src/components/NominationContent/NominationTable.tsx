@@ -165,24 +165,12 @@ const [refreshKey, setRefreshKey] = useState(0);
     return (
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
-          <button className="p-2 rounded hover:bg-gray-100 transition">
+          <button className="p-2 rounded hover:bg-gray-100 transition"  title="View Details" onClick={() => handleDetailsView(row.original)}>
             <Menu size={18} className="text-blue-600" />
           </button>
-        </DropdownMenuTrigger>
-
-        <DropdownMenuContent align="end" className="w-30 bg-white shadow-xl rounded-sm">
-          {/* <DropdownMenuItem
-            onClick={() => handleEditNomiation(row.original)}
-            className="hover:bg-blue-50 hover:text-blue-700 p-3" >
-             Edit
-          </DropdownMenuItem> */}
-          <DropdownMenuItem
-            onClick={() => handleDetailsView(row.original)}
-            className="hover:bg-blue-50 hover:text-blue-700 p-3" >
-             View
-          </DropdownMenuItem>
-        </DropdownMenuContent>
+        </DropdownMenuTrigger>      
       </DropdownMenu>
+ 
     );
   },
 },
