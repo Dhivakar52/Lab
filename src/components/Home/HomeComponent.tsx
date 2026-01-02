@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useReducer, useMemo } from "react";
+import React, { useEffect, useState, useReducer, useMemo, useRef, useCallback } from "react";
 import { useAuth } from "../ContextAPI/AuthContext";
 import axios from "axios";
 import homelogo from "../../assets/images/home_bg.png";
@@ -10,7 +10,6 @@ import TopPerformers from "./TopPerformers";
 import ListCard from "./ListCard";
 import type { Feed } from "../../dataTypes/nomination";
 
-
 import {
   filterReducer,
   initialFilterState,
@@ -21,19 +20,29 @@ const HomeComponent: React.FC = () => {
   const [activeTab, setActiveTab] = useState<"Feeds" | "My Lists">("Feeds");
   const [posts, setPosts] = useState<Feed[]>([]);
   const [categories, setCategories] = useState<string[]>([]);
-    const [tenants, setTenants] = useState<string[]>([]);
+  const [tenants, setTenants] = useState<string[]>([]);
 
   const [list, setList] = useState<Feed[]>([]);
   const [profile, setProfile] = useState([]);
   
   const { authToken, userId } = useAuth();
   const [showDropdown, setShowDropdown] = useState(false);
-   // user profile detail
   const [userDetail, setUserDetail] = useState<any>(null);
   const apiUrl = import.meta.env.VITE_API_URL;
 
-  // ⭐ ADD FILTER REDUCER HERE
-  const [state, dispatch] = useReducer(filterReducer, initialFilterState);
+
+  const [feedsState, feedsDispatch] = useReducer(filterReducer, initialFilterState);
+  const [listsState, listsDispatch] = useReducer(filterReducer, initialFilterState);
+
+ 
+  const filterRef = useRef<HTMLDivElement>(null);
+
+  
+  const handleClickOutside = useCallback((event: MouseEvent) => {
+    if (filterRef.current && !filterRef.current.contains(event.target as Node)) {
+      setShowDropdown(false);
+    }
+  }, []);
 
   useEffect(() => {
     const fetchFeeds = async () => {
@@ -44,19 +53,19 @@ const HomeComponent: React.FC = () => {
             Authorization: `Bearer ${authToken}`,
           },
         });
-         //user profile card detail 
-         const fetchUserDetail = await axios.get(
-            `${apiUrl}/api/users?userId=${userId}`,
-            {
-              headers: {
-                "Content-Type": "application/json",
-                Authorization: `Bearer ${authToken}`,
-              },
-            }
-          );
+        
+        const fetchUserDetail = await axios.get(
+          `${apiUrl}/api/users?userId=${userId}`,
+          {
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${authToken}`,
+            },
+          }
+        );
 
-         setUserDetail(fetchUserDetail.data);
-      
+        setUserDetail(fetchUserDetail.data);
+        console.log("profileDetails", fetchUserDetail.data);
 
         const cat = [...new Set(res.data.map((x: any) => x.AwardCategory))] as string[];
         setCategories(cat);
@@ -64,14 +73,12 @@ const HomeComponent: React.FC = () => {
         const ten = [...new Set(res.data.map((x: any) => x.Tenant))] as string[];
         setTenants(ten);
 
-
-
         const filtered = res.data.filter((feed: any) => feed.UserID === userId);
-       
+        console.log("Feed", res.data);
 
         setPosts(res.data);
         setProfile(filtered);
-        // List Card
+        
         const listCard = await axios.get(`${apiUrl}/api/nomiantionmylist`, {
           headers: {
             "Content-Type": "application/json",
@@ -80,7 +87,7 @@ const HomeComponent: React.FC = () => {
         });
 
         setList(listCard.data);
-   
+        console.log("List ", listCard.data);
 
       } catch (err) {
         console.error("❌ Error fetching feeds:", err);
@@ -88,81 +95,75 @@ const HomeComponent: React.FC = () => {
     };
 
     fetchFeeds();
-  }, [authToken, apiUrl]);
+  }, [authToken, apiUrl, userId]);
 
-const filteredPosts = useMemo(() => {
-  let data = [...posts];
+  const filteredPosts = useMemo(() => {
+    let data = [...posts];
 
-  // Search
-  if (state.search) {
-    data = data.filter((p) =>
-      p.Nominee.toLowerCase().includes(state.search.toLowerCase())
-    );
-  }
+    if (feedsState.search) {
+      data = data.filter((p) =>
+        p.Nominee.toLowerCase().includes(feedsState.search.toLowerCase())
+      );
+    }
+    if (feedsState.category) {
+      data = data.filter((p) => p.AwardCategory === feedsState.category);
+    }
+    if (feedsState.tenant) {
+      data = data.filter((p) => p.Tenant === feedsState.tenant);
+    }
 
-  // Category
-  if (state.category) {
-    data = data.filter((p) => p.AwardCategory === state.category);
-  }
+    switch (feedsState.sortBy) {
+      case "likes": data.sort((a, b) => b.Likes - a.Likes); break;
+      case "comments": data.sort((a, b) => b.Comments - a.Comments); break;
+      case "views": data.sort((a, b) => b.Views - a.Views); break;
+      case "nominated": data.sort((a, b) => b.NominatedCount - a.NominatedCount); break;
+      case "name": data.sort((a, b) => a.Nominee.localeCompare(b.Nominee)); break;
+      case "category": data.sort((a, b) => a.AwardCategory.localeCompare(b.AwardCategory)); break;
+      default: break;
+    }
+    return data;
+  }, [feedsState, posts]);
 
-  // Tenant
-  if (state.tenant) {
-    data = data.filter((p) => p.Tenant === state.tenant);
-  }
+  // ⭐ LISTS FILTER WITH EMPTY CHECK
+  const filteredList = useMemo(() => {
+    let data = [...list];
 
-  // Sort by selected option
-  switch (state.sortBy) {
-    case "likes":
-      data.sort((a, b) => b.Likes - a.Likes);
-      break;
+    if (listsState.search) {
+      data = data.filter((p) =>
+        p.Nominee.toLowerCase().includes(listsState.search.toLowerCase())
+      );
+    }
+    if (listsState.category) {
+      data = data.filter((p) => p.AwardCategory === listsState.category);
+    }
+    if (listsState.tenant) {
+      data = data.filter((p) => p.Tenant === listsState.tenant);
+    }
 
-    case "comments":
-      data.sort((a, b) => b.Comments - a.Comments);
-      break;
+    switch (listsState.sortBy) {
+      case "likes": data.sort((a, b) => b.Likes - a.Likes); break;
+      case "comments": data.sort((a, b) => b.Comments - a.Comments); break;
+      case "views": data.sort((a, b) => b.Views - a.Views); break;
+      case "nominated": data.sort((a, b) => b.NominatedCount - a.NominatedCount); break;
+      case "name": data.sort((a, b) => a.Nominee.localeCompare(b.Nominee)); break;
+      case "category": data.sort((a, b) => a.AwardCategory.localeCompare(b.AwardCategory)); break;
+      default: break;
+    }
+    return data;
+  }, [listsState, list]);
 
-    case "views":
-      data.sort((a, b) => b.Views - a.Views);
-      break;
+  // OUTSIDE CLICK EFFECT
+  useEffect(() => {
+    if (showDropdown) {
+      document.addEventListener("mousedown", handleClickOutside);
+    } else {
+      document.removeEventListener("mousedown", handleClickOutside);
+    }
 
-    case "nominated":
-      data.sort((a, b) => b.NominatedCount - a.NominatedCount);
-      break;
-
-    case "name":
-      data.sort((a, b) => a.Nominee.localeCompare(b.Nominee));
-      break;
-
-    case "category":
-      data.sort((a, b) => a.AwardCategory.localeCompare(b.AwardCategory));
-      break;
-
-    default:
-      break;
-  }
-
-  return data;
-}, [state, posts]);
-
-  
-const filteredList = useMemo(() => {
-  let data = [...list];
-
-  if (state.search) {
-    data = data.filter((p) =>
-      p.Nominee.toLowerCase().includes(state.search.toLowerCase())
-    );
-  }
-
-  if (state.category) {
-    data = data.filter((p) => p.AwardCategory === state.category);
-  }
-
-  if (state.tenant) {
-    data = data.filter((p) => p.Tenant === state.tenant);
-  }
-
-  return data;
-}, [state, list]);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, [showDropdown, handleClickOutside]);
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -181,39 +182,68 @@ const filteredList = useMemo(() => {
             <div className="lg:col-span-8">
               <div className="bg-white rounded-lg shadow-sm relative">
 
-                <TabsSection activeTab={activeTab} setActiveTab={setActiveTab} 
-                onFilterClick={() => setShowDropdown((prev) => !prev)}  />
-{showDropdown && (
-  <div className="absolute top-[42px] right-4 mt-2 z-50 w-72">
-    <FilterFeed
-      search={state.search}
-      category={state.category}
-      tenant={state.tenant}
-      sortBy={state.sortBy}
-      categories={categories}
-      tenants={tenants}
-      dispatch={dispatch}
-    />
-  </div>
-)}
+                <TabsSection 
+                  activeTab={activeTab} 
+                  setActiveTab={setActiveTab} 
+                  onFilterClick={() => setShowDropdown((prev) => !prev)} 
+                />
 
+                {showDropdown && (
+                  <div ref={filterRef} className="absolute top-[42px] right-4 mt-2 z-50 w-72">
+                    <FilterFeed
+                      {...(activeTab === "Feeds" 
+                        ? {
+                            search: feedsState.search,
+                            category: feedsState.category,
+                            tenant: feedsState.tenant,
+                            sortBy: feedsState.sortBy,
+                            dispatch: feedsDispatch
+                          }
+                        : {
+                            search: listsState.search,
+                            category: listsState.category,
+                            tenant: listsState.tenant,
+                            sortBy: listsState.sortBy,
+                            dispatch: listsDispatch
+                          }
+                      )}
+                      categories={categories}
+                      tenants={tenants}
+                    />
+                  </div>
+                )}
 
                 <div className="divide-y divide-gray-100">
-                  {/* {activeTab === "Feeds" ? (
-                    <PostCard posts={filteredPosts} setPosts={setPosts} />
-                  ) : (
-                    <ListCard list={list} />
-                  )}
-                   */}
-                    {/* TAB CONTENT FIXED */}
-                
-
+                  {/* ⭐ FEEDS TAB WITH NO DATA MESSAGE */}
                   {activeTab === "Feeds" && (
-                    <PostCard posts={filteredPosts} setPosts={setPosts} />
+                    filteredPosts.length === 0 ? (
+                      <div className="p-8 text-center">
+                        <div className="text-gray-500 text-lg font-medium mb-2">
+                          No matching data found
+                        </div>
+                        <div className="text-gray-400 text-sm">
+                          Try adjusting your filters
+                        </div>
+                      </div>
+                    ) : (
+                      <PostCard posts={filteredPosts} setPosts={setPosts} />
+                    )
                   )}
 
+                  {/* ⭐ MY LISTS TAB WITH NO DATA MESSAGE */}
                   {activeTab === "My Lists" && (
-                    <ListCard list={filteredList} setList={setList} />
+                    filteredList.length === 0 ? (
+                      <div className="p-8 text-center">
+                        <div className="text-gray-500 text-lg font-medium mb-2">
+                          No matching data found
+                        </div>
+                        <div className="text-gray-400 text-sm">
+                          Try adjusting your filters
+                        </div>
+                      </div>
+                    ) : (
+                      <ListCard list={filteredList} />
+                    )
                   )}
                 </div>
               </div>
@@ -221,10 +251,8 @@ const filteredList = useMemo(() => {
 
             {/* Sidebar */}
             <div className="lg:col-span-4 space-y-6 mt-6 lg:mt-0 ">
-              {/* <ProfileCard profile={profile} /> */}
               <ProfileCard profile={profile} userDetail={userDetail} />
               <NominationStats />
-               
               <TopPerformers />
             </div>
 

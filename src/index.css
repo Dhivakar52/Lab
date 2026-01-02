@@ -71,6 +71,7 @@ th{
   right: 0px;
 }
 
+
 /* Mobile hide */
 @media (max-width: 480px) {
   .mySwiper .swiper-button-prev,
