@@ -23,25 +23,25 @@ const AddJuryMemberPanel: React.FC<Props> = ({
   isEdit = false,
   editData,
 }) => {
-  const { authToken,userId } = useAuth();
+  const { authToken, userId } = useAuth();
 
   const [name, setName] = useState("");
   const [tenantId, setTenantId] = useState("");
+  const [tenantName, setTenantName] = useState(""); // 🔥 NEW
   const [role, setRole] = useState<"Business" | "General">("Business");
 
   const [tenants, setTenants] = useState<Tenant[]>([]);
   const [loading, setLoading] = useState(false);
 
-  /* ================= FETCH TENANTS ================= */
+  /* ================= FETCH TENANTS (ADD MODE ONLY) ================= */
   useEffect(() => {
-    if (!isOpen) return;
+    if (!isOpen || isEdit) return;
 
     const fetchTenants = async () => {
       try {
         setLoading(true);
         const res = await axios.get(`${apiUrl}/api/tenants`, {
           headers: {
-            "Content-Type": "application/json",
             Authorization: `Bearer ${authToken}`,
           },
         });
@@ -54,44 +54,81 @@ const AddJuryMemberPanel: React.FC<Props> = ({
     };
 
     fetchTenants();
-
-    // reset ONLY in add mode
-    if (!isEdit) {
-      setName("");
-      setTenantId("");
-      setRole("Business");
-    }
+    setName("");
+    setTenantId("");
+    setRole("Business");
   }, [isOpen, isEdit, authToken]);
 
-  /* ================= PREFILL EDIT DATA ================= */
+  
   useEffect(() => {
     if (isEdit && editData) {
       setName(editData.UserName || "");
       setTenantId(editData.TenantID?.toString() || "");
+      setTenantName(editData.TenantName || ""); 
       setRole(
         editData.RoleName?.includes("Business") ? "Business" : "General"
       );
     }
   }, [isEdit, editData]);
+
+  /* ================= SAVE ================= */
   const handleSave = async () => {
+    try {
+      const payload = {
+        userID: Number(tenantId),
+        roleID: role === "Business" ? 1 : 2,
+        active: true,
+        submittedBy: userId,
+      };
+
+      await axios.post(`${apiUrl}/api/usersrole`, payload, {
+        headers: {
+          Authorization: `Bearer ${authToken}`,
+        },
+      });
+
+      onClose();
+    } catch (error) {
+      console.error("Save failed", error);
+    }
+  };
+  const handleSave1 = async () => {
   try {
     const payload = {
-      userID: Number(tenantId),     
+      userName: name,
+      tenantID: Number(tenantId),
       roleID: role === "Business" ? 1 : 2,
       active: true,
-      submittedBy: userId, 
+      submittedBy: userId,
     };
 
-    await axios.post(`${apiUrl}/api/usersrole`, payload, {
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${authToken}`,
-      },
-    });
+    if (isEdit && editData?.UserRoleID) {
+      // 🔥 EDIT → PUT
+      await axios.put(
+        `${apiUrl}/api/usersrole/${editData.UserRoleID}`,
+        payload,
+        {
+          headers: {
+            Authorization: `Bearer ${authToken}`,
+          },
+        }
+      );
+      console.log("UPDATED SUCCESSFULLY");
+    } else {
+      // 🔥 ADD → POST
+      await axios.post(
+        `${apiUrl}/api/usersrole`,
+        payload,
+        {
+          headers: {
+            Authorization: `Bearer ${authToken}`,
+          },
+        }
+      );
+      console.log("ADDED SUCCESSFULLY");
+    }
 
-    console.log(isEdit ? "UPDATED SUCCESSFULLY" : "ADDED SUCCESSFULLY");
-
-    onClose(); // close panel
+    onClose();
   } catch (error) {
     console.error("Save failed", error);
   }
@@ -122,47 +159,60 @@ const AddJuryMemberPanel: React.FC<Props> = ({
           {/* Name */}
           <div>
             <label className="block text-sm font-medium mb-1">
-              Name <span className="text-red-500">*</span>
+              Name {!isEdit && <span className="text-red-500">*</span>}
             </label>
-            <input
+            {/* <input
               value={name}
               onChange={(e) => setName(e.target.value)}
-              autoComplete="off"
-              placeholder="Enter jury member name"
-              className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm
-                         focus:outline-none focus:ring-0 focus:border-gray-300"
+              className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm"
+            /> */}
+             <input
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              readOnly={isEdit}   
+              className={`w-full border rounded-md px-3 py-2 text-sm
+                ${isEdit 
+                  ? "bg-gray-100 cursor-not-allowed border-gray-300" 
+                  : "border-gray-300"}
+              `}
             />
           </div>
 
           {/* Tenant */}
           <div>
             <label className="block text-sm font-medium mb-1">
-              Tenant <span className="text-red-500">*</span>
+              Tenant {!isEdit && <span className="text-red-500">*</span>}
             </label>
-            <select
-              value={tenantId}
-              onChange={(e) => setTenantId(e.target.value)}
-              className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm
-                         focus:outline-none focus:ring-0 focus:border-gray-300"
-            >
-              <option value="">Select entity</option>
-              {loading && <option>Loading...</option>}
-              {!loading &&
-                tenants.map((t) => (
-                  <option key={t.TenantID} value={t.TenantID}>
-                    {t.TenantName}
-                  </option>
-                ))}
-            </select>
+            {isEdit ? (
+              <div className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm bg-gray-100">
+                {tenantName}
+              </div>
+            ) : (
+              <select
+                value={tenantId}
+                onChange={(e) => setTenantId(e.target.value)}
+                className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm"
+              >
+                <option value="">Select entity</option>
+                {loading && <option>Loading...</option>}
+                {!loading &&
+                  tenants.map((t) => (
+                    <option
+                      key={t.TenantID}
+                      value={t.TenantID.toString()}
+                    >
+                      {t.TenantName}
+                    </option>
+                  ))}
+              </select>
+            )}
           </div>
 
           {/* Role */}
           <div>
-            <label className="block text-sm font-medium mb-2">
-              Jury Role
-            </label>
+            <label className="block text-sm font-medium mb-2">Jury Role</label>
             <div className="flex gap-6">
-              <label className="flex items-center gap-2 text-sm">
+              <label className="flex items-center gap-2">
                 <input
                   type="radio"
                   checked={role === "Business"}
@@ -170,8 +220,7 @@ const AddJuryMemberPanel: React.FC<Props> = ({
                 />
                 Business Jury
               </label>
-
-              <label className="flex items-center gap-2 text-sm">
+              <label className="flex items-center gap-2">
                 <input
                   type="radio"
                   checked={role === "General"}
@@ -187,16 +236,14 @@ const AddJuryMemberPanel: React.FC<Props> = ({
         <div className="px-6 py-4 border-t flex justify-between">
           <button
             onClick={onClose}
-            className="px-4 py-2 text-sm border border-gray-300 rounded-md"
+            className="px-4 py-2 text-sm border rounded-md"
           >
             Back List
           </button>
 
           <button
-            className="px-4 py-2 text-sm bg-green-600 text-white rounded-md hover:bg-green-700"
-            onClick={() => {
-              handleSave
-            }}
+            onClick={handleSave}
+            className="px-4 py-2 text-sm bg-green-600 text-white rounded-md"
           >
             {isEdit ? "Update Jury Member" : "Add Jury Member"}
           </button>
