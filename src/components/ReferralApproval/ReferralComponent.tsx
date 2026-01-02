@@ -346,7 +346,7 @@ const ReferralTable: React.FC = () => {
       <div className="p-6">
         <div className="overflow-x-auto bg-white shadow-md rounded-lg p-6">
         <div className="mb-4 flex justify-between items-center">
-          <h2 className="text-xl font-semibold ">Your Team's Nominations</h2>
+          <h2 className="text-xl font-semibold ">Nominations with your referral</h2>
             <input
               value={globalFilter ?? ""}
               onChange={(e) => setGlobalFilter(e.target.value)}
