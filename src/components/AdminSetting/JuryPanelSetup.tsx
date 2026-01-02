@@ -8,7 +8,7 @@ import {
   flexRender,
 } from "@tanstack/react-table";
 import type { ColumnDef } from "@tanstack/react-table";
-import { Search, Plus, Menu } from "lucide-react";
+import { Search, Plus, Menu , Edit2, Trash2 } from "lucide-react";
 import BackToSetting from "../BackToSetting";
 import AddJuryMemberPanel from "./AddJuryMemberPanel";
 import { useAuth } from "../ContextAPI/AuthContext";
@@ -20,6 +20,7 @@ interface JuryMember {
   UserName: string;
   RoleName: string;
   TenantName?: string;
+  TenantID?: number;
 }
 
 const JuryPanelSetup: React.FC = () => {
@@ -35,7 +36,6 @@ const JuryPanelSetup: React.FC = () => {
 const [selectedMember, setSelectedMember] = useState<JuryMember | null>(null);
 
 const [isEditMode, setIsEditMode] = useState(false);
-const [isDeleteOpen, setIsDeleteOpen] = useState(false);
 
   /* ================= FETCH DATA ================= */
   useEffect(() => {
@@ -50,6 +50,7 @@ const [isDeleteOpen, setIsDeleteOpen] = useState(false);
           UserName: item.UserName,
           RoleName: item.RoleName,
           TenantName: item.TenantName || "-",
+           TenantID: item.TenantID,
         }));
 
         setData(juryPanelData);
@@ -62,9 +63,18 @@ const [isDeleteOpen, setIsDeleteOpen] = useState(false);
 
     fetchJuryPanelList();
   }, [authToken]);
+   const handleEdit = (item: JuryMember) => {
+    setSelectedMember(item);
+    setIsEditMode(true);
+    setIsPanelOpen(true);
+  };
 
   /* ================= COLUMNS ================= */
   const columns = useMemo<ColumnDef<JuryMember>[]>(() => [
+     {
+      accessorKey: "UserRoleID",
+      header: "UserRoleID",
+    },
     {
       accessorKey: "UserName",
       header: "Jury Member List",
@@ -125,40 +135,29 @@ const [isDeleteOpen, setIsDeleteOpen] = useState(false);
         );
       },
     },
-
-    // {
-    //   id: "actions",
-    //   header: "Actions",
-    //   cell: ({ row }) => (
-    //     <div className="flex justify-left">
-    //       <button
-    //         onClick={() => console.log("View", row.original.UserRoleID)}
-    //         className="text-blue-600 hover:text-blue-800"
-    //       >
-    //         <Menu size={18} />
-    //       </button>
-    //     </div>
-    //   ),
-    // },
-   {
-      id: "actions",
-      header: "Actions",
-      cell: ({ row }) => (
-        <div className="flex justify-left">
-          <button
-            onClick={() => {
-              setSelectedMember(row.original);
-              setIsEditMode(true);
-              setIsPanelOpen(true);
-            }}
-            className="text-blue-600 hover:text-blue-800"
-            title="Edit Jury Member"
-          >
-            <Menu size={18} />
-          </button>
-        </div>
-      ),
-    },
+       {
+          id: "actions",
+          header: "Actions",
+          cell: ({ row }) => {
+            const item = row.original;
+            return (
+              <div className="flex  gap-3">
+                 <button
+                  className="text-blue-600 hover:text-blue-800"
+                   onClick={() => handleEdit(item)}
+                >
+                  <Edit2 size={16} />
+                </button>
+                <button
+                  className="text-red-600 hover:text-red-800"
+                 
+                >
+                  <Trash2 size={16} />
+                </button>
+              </div>
+            );
+          },
+        },
 
   ], []);
 
@@ -276,9 +275,19 @@ const [isDeleteOpen, setIsDeleteOpen] = useState(false);
       </div>
 
       {/* SIDE PANEL */}
-      <AddJuryMemberPanel
+      {/* <AddJuryMemberPanel
         isOpen={isPanelOpen}
         onClose={() => setIsPanelOpen(false)}
+      /> */}
+       <AddJuryMemberPanel
+        isOpen={isPanelOpen}
+        onClose={() => {
+          setIsPanelOpen(false);
+          setIsEditMode(false);
+          setSelectedMember(null);
+        }}
+        isEdit={isEditMode}
+        editData={selectedMember}
       />
     </div>
   );
