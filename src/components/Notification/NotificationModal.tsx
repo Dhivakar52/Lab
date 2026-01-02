@@ -1,4 +1,4 @@
-import React,{useState} from 'react';
+import React, { useState, useRef } from 'react';
 import * as Dialog from '@radix-ui/react-dialog';
 import { Bell, X, FileText } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
@@ -35,6 +35,9 @@ const NotificationModal: React.FC<NotificationModalProps> = ({
     const [isPanelOpen, setIsPanelOpen] = useState(false);
       const [selectedNominee, setSelectedNominee] = useState<Notification | null>(null);
         const [data, setData] = useState<Notification[]>([]);
+
+    // Ref for the close button so we can control focus when dialog opens
+    const closeBtnRef = useRef<HTMLButtonElement | null>(null);
       
     
     const { authToken, userId } = useAuth();
@@ -112,20 +115,44 @@ const NotificationModal: React.FC<NotificationModalProps> = ({
 
 
   return (
-    <Dialog.Root open={isOpen} onOpenChange={onClose}>
+    <Dialog.Root
+      open={isOpen}
+      onOpenChange={onClose}
+    >
       <Dialog.Portal>
         <Dialog.Overlay className="fixed inset-0 bg-black/20 backdrop-blur-sm z-40" />
 
-        <Dialog.Content className="fixed top-0 right-0 h-full w-full max-w-md bg-white shadow-2xl border-l border-gray-200 overflow-y-auto z-50">
+        <Dialog.Content
+          onOpenAutoFocus={(e: any) => {
+            // Prevent Radix from focusing the first focusable element (e.g., the "Mark all as read" button)
+            e.preventDefault();
+            // Move focus to the close button for a sensible initial focus target
+            closeBtnRef.current?.focus();
+          }}
+          className="fixed top-0 right-0 h-full w-full max-w-md bg-white shadow-2xl border-l border-gray-200 overflow-y-auto z-50"
+        >
           <div className="flex items-center justify-between px-6 py-4 border-b border-gray-200 bg-white sticky top-0 z-10">
             <div className="flex items-center space-x-2">
               <Bell className="w-5 h-5 text-gray-600" />
               <Dialog.Title className="text-lg font-semibold text-gray-900">
                 Notifications
               </Dialog.Title>
+                        {notifications.length > 0 ? (
+              <button
+                onClick={handleMarkAllRead}
+                className="text-sm font-medium text-blue-600 hover:underline focus:outline-none  focus:ring-blue-200"
+              >
+                Mark all as read
+              </button>
+ 
+           ): (
+              <div className="text-center text-gray-500 py-2">
+                All Notifications are Marked Read
+              </div>
+            )}
             </div>
 
-            <Dialog.Close className="p-1 rounded-md hover:bg-gray-100 transition-colors">
+            <Dialog.Close ref={closeBtnRef} className="p-1 rounded-md hover:bg-gray-100 transition-colors">
               <X size={20} className="text-gray-500" />
             </Dialog.Close>
           </div>
@@ -174,27 +201,12 @@ const NotificationModal: React.FC<NotificationModalProps> = ({
               </div>
             )}
           </div>
-
           <div className="px-6 py-4 border-t border-gray-200 bg-gray-50 fixed bottom-0 w-full max-w-md">
-            <div className="flex justify-between space-x-3">
-         
-          {notifications.length > 0 ? (
-              <button
-                onClick={handleMarkAllRead}
-                className="px-4 py-2 text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 border border-gray-300 rounded-md transition-colors"
-              >
-                Mark All Read
-              </button>
- 
-           ): (
-              <div className="text-center text-gray-500 py-2">
-                All Notifications are Marked Read
-              </div>
-            )}
-           
+
+            <div className="text-center">
               <button
                 onClick={handleView}
-                className="px-4 py-2 text-sm font-medium text-white bg-teal-600 hover:bg-teal-700 rounded-md transition-colors"
+                className="text-sm font-medium text-blue-600 hover:underline focus:outline-none focus:ring-2 focus:ring-blue-200"
               >
                 View All
               </button>
