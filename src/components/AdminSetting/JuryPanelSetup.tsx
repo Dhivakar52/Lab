@@ -45,13 +45,29 @@ const [isEditMode, setIsEditMode] = useState(false);
           headers: { Authorization: `Bearer ${authToken}` },
         });
 
-        const juryPanelData = res.data.map((item: any) => ({
+        // const juryPanelData = res.data.map((item: any) => ({
+        //   UserRoleID: item.UserRoleID,
+        //   UserName: item.UserName,
+        //   RoleName: item.RoleName,
+        //   TenantName: item.TenantName || "-",
+        //    TenantID: item.TenantID,
+        // }));
+        const juryPanelData = res.data
+        .filter(
+          (item: any) =>
+            item.RoleName === "Business Jury" ||
+            item.RoleName === "General Jury"
+        )
+        .map((item: any) => ({
           UserRoleID: item.UserRoleID,
           UserName: item.UserName,
           RoleName: item.RoleName,
           TenantName: item.TenantName || "-",
-           TenantID: item.TenantID,
+          TenantID: item.TenantID,
         }));
+
+      setData(juryPanelData);
+
 
         setData(juryPanelData);
       } catch (err) {
@@ -68,7 +84,39 @@ const [isEditMode, setIsEditMode] = useState(false);
     setIsEditMode(true);
     setIsPanelOpen(true);
   };
+    // ================= PUT REQUEST TO UPDATE JURY MEMBER =================
+  const handleUpdateJuryMember = async (updatedMember: JuryMember) => {
+    try {
+      const res = await axios.put(
+        `${apiUrl}/api/usersrole/${updatedMember.UserRoleID}`,
+        {
+          userID: userId,
+          roleID: updatedMember.RoleName === "Business Jury" ? 1 : 2, 
+          active: true,
+          submittedBy: userId, 
+        },
+        {
+          headers: { Authorization: `Bearer ${authToken}` },
+        }
+      );
 
+      if (res.status === 200) {
+        // Update the table data
+        setData((prevData) =>
+          prevData.map((member) =>
+            member.UserRoleID === updatedMember.UserRoleID
+              ? { ...member, ...updatedMember }
+              : member
+          )
+        );
+        setIsPanelOpen(false);
+        setIsEditMode(false);
+        setSelectedMember(null);
+      }
+    } catch (err) {
+      console.error("Error updating jury member", err);
+    }
+  };
   /* ================= COLUMNS ================= */
   const columns = useMemo<ColumnDef<JuryMember>[]>(() => [
      {
@@ -83,58 +131,58 @@ const [isEditMode, setIsEditMode] = useState(false);
       accessorKey: "TenantName",
       header: "Entity",
     },
-    // {
-    //   accessorKey: "RoleName",
-    //   header: "Role",
-    //   cell: ({ row }) => (
-    //     row.original.RoleName === "Business" ? (
-    //       <span className="px-3 py-1 bg-blue-100 text-blue-700 rounded-md text-xs font-medium">
-    //         Business
-    //       </span>
-    //     ) : (
-    //       <span className="px-3 py-1 bg-green-100 text-green-700 rounded-md text-xs font-medium">
-    //         General
-    //       </span>
-    //     )
-    //   ),
-    // },
     {
-        accessorKey: "RoleName",
-        header: "Role",
-        cell: ({ row }) => {
-          const role = row.original.RoleName;
-
-          if (role === "Business Jury") {
-            return (
-              <span className="px-3 py-1 bg-blue-100 text-blue-700 rounded-md text-xs font-medium">
-                {role}
-              </span>
-            );
-          }
-
-          if (role === "Manager") {
-            return (
-              <span className="px-3 py-1 bg-purple-100 text-purple-700 rounded-md text-xs font-medium">
-                {role}
-              </span>
-            );
-          }
-
-          if (role === "Admin") {
-            return (
-              <span className="px-3 py-1 bg-red-100 text-red-700 rounded-md text-xs font-medium">
-                {role}
-              </span>
-            );
-          }
-
-        return (
-          <span className="px-3 py-1 bg-green-100 text-green-700 rounded-md text-xs font-medium">
-            {role}
+      accessorKey: "RoleName",
+      header: "Role",
+      cell: ({ row }) =>
+        row.original.RoleName === "Business Jury" ? (
+          <span className="px-3 py-1 bg-blue-100 text-blue-700 rounded-md text-xs font-medium">
+            Business Jury
           </span>
-        );
-      },
+        ) : (
+          <span className="px-3 py-1 bg-green-100 text-green-700 rounded-md text-xs font-medium">
+            General Jury
+          </span>
+        ),
     },
+
+    // {
+    //     accessorKey: "RoleName",
+    //     header: "Role",
+    //     cell: ({ row }) => {
+    //       const role = row.original.RoleName;
+
+    //       if (role === "Business Jury") {
+    //         return (
+    //           <span className="px-3 py-1 bg-blue-100 text-blue-700 rounded-md text-xs font-medium">
+    //             {role}
+    //           </span>
+    //         );
+    //       }
+
+    //       if (role === "Manager") {
+    //         return (
+    //           <span className="px-3 py-1 bg-purple-100 text-purple-700 rounded-md text-xs font-medium">
+    //             {role}
+    //           </span>
+    //         );
+    //       }
+
+    //       if (role === "Admin") {
+    //         return (
+    //           <span className="px-3 py-1 bg-red-100 text-red-700 rounded-md text-xs font-medium">
+    //             {role}
+    //           </span>
+    //         );
+    //       }
+
+    //     return (
+    //       <span className="px-3 py-1 bg-green-100 text-green-700 rounded-md text-xs font-medium">
+    //         {role}
+    //       </span>
+    //     );
+    //   },
+    // },
        {
           id: "actions",
           header: "Actions",
@@ -288,6 +336,7 @@ const [isEditMode, setIsEditMode] = useState(false);
         }}
         isEdit={isEditMode}
         editData={selectedMember}
+        // onSave={handleUpdateJuryMember}
       />
     </div>
   );

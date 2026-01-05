@@ -17,6 +17,7 @@ import { useAuth } from "../ContextAPI/AuthContext";
 import NominationDetailsModal from "./NominationDetailsModal";
 import { ColorBadge } from "../TenantBadges";
 import { useNavigate } from "react-router-dom";
+import Pagination from "../Pagination";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -272,30 +273,9 @@ const [refreshKey, setRefreshKey] = useState(0);
               )}
             </tbody>
           </table>
+            <Pagination table={table} />
         </div>
 
-        {/* 📄 Pagination */}
-        <div className="flex items-center justify-between mt-4">
-          <div className="text-sm text-gray-600">
-            Page {table.getState().pagination.pageIndex + 1} of {table.getPageCount()}
-          </div>
-          <div className="space-x-2">
-            <button
-              onClick={() => table.previousPage()}
-              disabled={!table.getCanPreviousPage()}
-              className="px-3 py-1 bg-gray-200 rounded disabled:opacity-50"
-            >
-              Prev
-            </button>
-            <button
-              onClick={() => table.nextPage()}
-              disabled={!table.getCanNextPage()}
-              className="px-3 py-1 bg-gray-200 rounded disabled:opacity-50"
-            >
-              Next
-            </button>
-          </div>
-        </div>
       </div>
 </div>
       {/* 🔍 Modal */}

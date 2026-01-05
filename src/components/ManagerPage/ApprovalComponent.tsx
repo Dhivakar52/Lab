@@ -15,6 +15,7 @@ import { Menu } from "lucide-react";
 import ApprovalPanel from "./ApprovalPanel";
 import { ColorBadge } from "../TenantBadges";
 import { useNavigate } from "react-router-dom";
+import Pagination from "../Pagination";
 
 interface ApprovalData {
   id: number;
@@ -348,29 +349,15 @@ const ApprovalTable: React.FC = () => {
             </tbody>
           </table>
 
-          <div className="flex items-center justify-between mt-4">
-            <div className="text-sm text-gray-600">
-              Page {table.getState().pagination.pageIndex + 1} of {table.getPageCount()}
-            </div>
+         
+         
 
-            <div className="space-x-2">
-              <button
-                onClick={() => table.previousPage()}
-                disabled={!table.getCanPreviousPage()}
-                className="px-3 py-1 bg-gray-200 rounded disabled:opacity-50"
-              >
-                Prev
-              </button>
+   
 
-              <button
-                onClick={() => table.nextPage()}
-                disabled={!table.getCanNextPage()}
-                className="px-3 py-1 bg-gray-200 rounded disabled:opacity-50"
-              >
-                Next
-              </button>
-            </div>
-          </div>
+<Pagination table={table} />
+
+
+
         </div>
       </div>
 

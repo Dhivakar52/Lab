@@ -10,6 +10,11 @@ interface Tenant {
   TenantName: string;
 }
 
+interface UserSearch {
+  UserID: number;
+  UserName: string;
+}
+
 interface Props {
   isOpen: boolean;
   onClose: () => void;
@@ -27,13 +32,19 @@ const AddJuryMemberPanel: React.FC<Props> = ({
 
   const [name, setName] = useState("");
   const [tenantId, setTenantId] = useState("");
-  const [tenantName, setTenantName] = useState(""); // 🔥 NEW
-  const [role, setRole] = useState<"Business" | "General">("Business");
+  const [tenantName, setTenantName] = useState("");
+  const [role, setRole] = useState<"Business" | "General" | null>(null);
 
   const [tenants, setTenants] = useState<Tenant[]>([]);
   const [loading, setLoading] = useState(false);
 
-  /* ================= FETCH TENANTS (ADD MODE ONLY) ================= */
+  /* 🔍 USER SEARCH STATES */
+  const [users, setUsers] = useState<UserSearch[]>([]);
+  const [showDropdown, setShowDropdown] = useState(false);
+  const [searchLoading, setSearchLoading] = useState(false);
+  const [selectedUserId, setSelectedUserId] = useState<number | null>(null);
+
+  /* ================= FETCH TENANTS ================= */
   useEffect(() => {
     if (!isOpen || isEdit) return;
 
@@ -41,9 +52,7 @@ const AddJuryMemberPanel: React.FC<Props> = ({
       try {
         setLoading(true);
         const res = await axios.get(`${apiUrl}/api/tenants`, {
-          headers: {
-            Authorization: `Bearer ${authToken}`,
-          },
+          headers: { Authorization: `Bearer ${authToken}` },
         });
         setTenants(res.data || []);
       } catch (error) {
@@ -56,84 +65,78 @@ const AddJuryMemberPanel: React.FC<Props> = ({
     fetchTenants();
     setName("");
     setTenantId("");
-    setRole("Business");
+    setRole(null);
   }, [isOpen, isEdit, authToken]);
 
-  
+  /* ================= EDIT MODE PREFILL ================= */
   useEffect(() => {
     if (isEdit && editData) {
       setName(editData.UserName || "");
       setTenantId(editData.TenantID?.toString() || "");
-      setTenantName(editData.TenantName || ""); 
-      setRole(
-        editData.RoleName?.includes("Business") ? "Business" : "General"
-      );
+      setTenantName(editData.TenantName || "");
+
+      if (editData.RoleName === "Business Jury") setRole("Business");
+      else if (editData.RoleName === "General Jury") setRole("General");
+      else setRole(null);
     }
   }, [isEdit, editData]);
+
+  /* ================= USER SEARCH ================= */
+  useEffect(() => {
+    if (!name || isEdit) {
+      setUsers([]);
+      setShowDropdown(false);
+      return;
+    }
+
+    const debounce = setTimeout(async () => {
+      try {
+        setSearchLoading(true);
+        const res = await axios.get(`${apiUrl}/api/usersrole`, {
+          params: { searchText: name },
+          headers: { Authorization: `Bearer ${authToken}` },
+        });
+
+        setUsers(res.data || []);
+        setShowDropdown(true);
+      } catch (err) {
+        console.error("User search error", err);
+      } finally {
+        setSearchLoading(false);
+      }
+    }, 300);
+
+    return () => clearTimeout(debounce);
+  }, [name, isEdit, authToken]);
 
   /* ================= SAVE ================= */
   const handleSave = async () => {
     try {
       const payload = {
-        userID: Number(tenantId),
+        userId: isEdit ? editData.UserID : selectedUserId,
+        tenantID: Number(tenantId),
         roleID: role === "Business" ? 1 : 2,
         active: true,
         submittedBy: userId,
       };
 
-      await axios.post(`${apiUrl}/api/usersrole`, payload, {
-        headers: {
-          Authorization: `Bearer ${authToken}`,
-        },
-      });
+      if (isEdit && editData?.UserRoleID) {
+        await axios.put(
+          `${apiUrl}/api/usersrole/${editData.UserRoleID}`,
+          payload,
+          { headers: { Authorization: `Bearer ${authToken}` } }
+        );
+      } else {
+        await axios.post(`${apiUrl}/api/usersrole`, payload, {
+          headers: { Authorization: `Bearer ${authToken}` },
+        });
+      }
 
       onClose();
     } catch (error) {
       console.error("Save failed", error);
     }
   };
-  const handleSave1 = async () => {
-  try {
-    const payload = {
-      userName: name,
-      tenantID: Number(tenantId),
-      roleID: role === "Business" ? 1 : 2,
-      active: true,
-      submittedBy: userId,
-    };
-
-    if (isEdit && editData?.UserRoleID) {
-      // 🔥 EDIT → PUT
-      await axios.put(
-        `${apiUrl}/api/usersrole/${editData.UserRoleID}`,
-        payload,
-        {
-          headers: {
-            Authorization: `Bearer ${authToken}`,
-          },
-        }
-      );
-      console.log("UPDATED SUCCESSFULLY");
-    } else {
-      // 🔥 ADD → POST
-      await axios.post(
-        `${apiUrl}/api/usersrole`,
-        payload,
-        {
-          headers: {
-            Authorization: `Bearer ${authToken}`,
-          },
-        }
-      );
-      console.log("ADDED SUCCESSFULLY");
-    }
-
-    onClose();
-  } catch (error) {
-    console.error("Save failed", error);
-  }
-};
-
 
   if (!isOpen) return null;
 
@@ -161,21 +164,54 @@ const AddJuryMemberPanel: React.FC<Props> = ({
             <label className="block text-sm font-medium mb-1">
               Name {!isEdit && <span className="text-red-500">*</span>}
             </label>
-            {/* <input
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm"
-            /> */}
-             <input
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              readOnly={isEdit}   
-              className={`w-full border rounded-md px-3 py-2 text-sm
-                ${isEdit 
-                  ? "bg-gray-100 cursor-not-allowed border-gray-300" 
-                  : "border-gray-300"}
-              `}
-            />
+
+            <div className="relative">
+              <input
+                value={name}
+                onChange={(e) => {
+                  setName(e.target.value);
+                  setSelectedUserId(null);
+                  setShowDropdown(true);
+                }}
+                readOnly={isEdit}
+                className={`w-full border rounded-md px-3 py-2 text-sm
+                  ${isEdit
+                    ? "bg-gray-100 cursor-not-allowed border-gray-300"
+                    : "border-gray-300"}
+                `}
+              />
+
+              {!isEdit && showDropdown && (
+                <div className="absolute z-50 w-full bg-white border rounded-md shadow mt-1 max-h-40 overflow-auto">
+                  {searchLoading && (
+                    <div className="px-3 py-2 text-sm text-gray-500">
+                      Searching...
+                    </div>
+                  )}
+
+                  {!searchLoading && users.length === 0 && (
+                    <div className="px-3 py-2 text-sm text-gray-500">
+                      No users found
+                    </div>
+                  )}
+
+                  {!searchLoading &&
+                    users.map((u) => (
+                      <div
+                        key={u.UserID}
+                        onClick={() => {
+                          setName(u.UserName);
+                          setSelectedUserId(u.UserID);
+                          setShowDropdown(false);
+                        }}
+                        className="px-3 py-2 text-sm cursor-pointer hover:bg-gray-100"
+                      >
+                        {u.UserName}
+                      </div>
+                    ))}
+                </div>
+              )}
+            </div>
           </div>
 
           {/* Tenant */}
@@ -183,6 +219,7 @@ const AddJuryMemberPanel: React.FC<Props> = ({
             <label className="block text-sm font-medium mb-1">
               Tenant {!isEdit && <span className="text-red-500">*</span>}
             </label>
+
             {isEdit ? (
               <div className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm bg-gray-100">
                 {tenantName}
@@ -197,10 +234,7 @@ const AddJuryMemberPanel: React.FC<Props> = ({
                 {loading && <option>Loading...</option>}
                 {!loading &&
                   tenants.map((t) => (
-                    <option
-                      key={t.TenantID}
-                      value={t.TenantID.toString()}
-                    >
+                    <option key={t.TenantID} value={t.TenantID.toString()}>
                       {t.TenantName}
                     </option>
                   ))}

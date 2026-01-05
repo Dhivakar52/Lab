@@ -217,7 +217,7 @@ const [activeTab, setActiveTab] = useState("like");
 
     {activeTab === "comments" && (
       
-<div className="overflow-y-scroll h-[150px]">
+<div className="overflow-y-scroll h-[250px]">
   {/* Comments Section SAME LIKE POST CARD */}
 <FeedComment
   post={post}
