@@ -77,10 +77,10 @@ th{
   right: 0px;
 }
 /* ===== Avatar Gradient (Reusable) ===== */
-.avatar-gradient {
+/* .avatar-gradient {
   @apply w-9 h-9 sm:w-11 sm:h-11 rounded-full flex items-center justify-center text-base sm:text-lg font-semibold text-white shrink-0;
   background: linear-gradient(90deg, rgb(8,128,94) 16%, rgb(24,97,174) 100%);
-}
+} */
 
 /* Mobile hide */
 @media (max-width: 480px) {
