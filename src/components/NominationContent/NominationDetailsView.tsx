@@ -998,9 +998,16 @@ return (
                     if (!item) return null;
                     return (
                       <div key={level} className="flex gap-4 px-6 py-2 items-start">
-                        <div className="w-9 h-9 rounded-full bg-blue-600 flex items-center justify-center text-white text-sm font-bold">
+                        {/* <div className="w-9 h-9 rounded-full bg-blue-600 flex items-center justify-center text-white text-sm font-bold">
                           {item.ApprovalName?.charAt(0)?.toUpperCase() || level.charAt(0)}
-                        </div>
+                        </div> */}
+                       <div
+  className="w-9 h-9 rounded-full flex items-center justify-center text-white text-sm font-bold
+          themeColor"
+>
+  {item.ApprovalName?.charAt(0)?.toUpperCase() || level?.charAt(0)?.toUpperCase()}
+</div>
+
                         <div className="flex-1 flex justify-between gap-6">
                           <div className="flex-1">
                             <p className="text-sm font-semibold text-gray-900">

@@ -373,7 +373,7 @@ const handleDelete = async (category: Category) => {
         description={description}
         setDescription={setDescription}
         onSave={handleSave}
-       editCategoryId={editCategoryId}   
+        editCategoryId={editCategoryId}   
       />
     </div>
   );

@@ -26,6 +26,8 @@ import ReferralReasonPanel from "./ReferralDetailView";
 
 import { ColorBadge } from "../TenantBadges";
 
+import Pagination from "../Pagination";
+
 
 interface ReferralData {
   id: number;
@@ -395,28 +397,8 @@ const ReferralTable: React.FC = () => {
             </tbody>
           </table>
 
-          <div className="flex items-center justify-between mt-4">
-            <div className="text-sm text-gray-600">
-              Page {table.getState().pagination.pageIndex + 1} of {table.getPageCount()}
-            </div>
+          <Pagination table={table} />
 
-            <div className="space-x-2">
-              <button
-                onClick={() => table.previousPage()}
-                disabled={!table.getCanPreviousPage()}
-                className="px-3 py-1 bg-gray-200 rounded disabled:opacity-50"
-              >
-                Prev
-              </button>
-              <button
-                onClick={() => table.nextPage()}
-                disabled={!table.getCanNextPage()}
-                className="px-3 py-1 bg-gray-200 rounded disabled:opacity-50"
-              >
-                Next
-              </button>
-            </div>
-          </div>
         </div>
       </div>
 

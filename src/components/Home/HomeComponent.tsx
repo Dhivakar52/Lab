@@ -167,6 +167,7 @@ const HomeComponent: React.FC = () => {
 
   return (
     <div className="min-h-screen bg-gray-50">
+       
       <div
         style={{
           backgroundImage: `url(${homelogo})`,
@@ -175,13 +176,17 @@ const HomeComponent: React.FC = () => {
           height: "200px",
         }}
       >
-        <div className="px-4 sm:px-6 lg:px-8 -mt-4">
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 pt-10">
+        {/* <div className="px-4 sm:px-6 lg:px-8 -mt-4">
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 pt-10"> */}
+               <div className="px-4 sm:px-6 lg:px-8 h-full">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 pt-10 h-full">
             
             {/* Main Content */}
-            <div className="lg:col-span-8">
-              <div className="bg-white rounded-lg shadow-sm relative">
+          <div className="lg:col-span-8 h-full  pr-2">
 
+            {/* <div className="lg:col-span-8"> */}
+              <div className="bg-white rounded-lg shadow-sm relative">
+                
                 <TabsSection 
                   activeTab={activeTab} 
                   setActiveTab={setActiveTab} 
@@ -214,6 +219,7 @@ const HomeComponent: React.FC = () => {
                 )}
 
                 <div className="divide-y divide-gray-100">
+
                   {/* ⭐ FEEDS TAB WITH NO DATA MESSAGE */}
                   {activeTab === "Feeds" && (
                     filteredPosts.length === 0 ? (
@@ -226,7 +232,9 @@ const HomeComponent: React.FC = () => {
                         </div>
                       </div>
                     ) : (
+                      <div className="overflow-y-auto h-[550px] min-h-screen">
                       <PostCard posts={filteredPosts} setPosts={setPosts} />
+                      </div>
                     )
                   )}
 
@@ -242,7 +250,9 @@ const HomeComponent: React.FC = () => {
                         </div>
                       </div>
                     ) : (
-                      <ListCard list={filteredList} />
+                       <div className="overflow-y-auto h-[550px] min-h-screen">
+                      <ListCard list={filteredList} setList={setList}/>
+                       </div>
                     )
                   )}
                 </div>
@@ -250,6 +260,7 @@ const HomeComponent: React.FC = () => {
             </div>
 
             {/* Sidebar */}
+             
             <div className="lg:col-span-4 space-y-6 mt-6 lg:mt-0 ">
               <ProfileCard profile={profile} userDetail={userDetail} />
               <NominationStats />

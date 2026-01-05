@@ -126,6 +126,8 @@ const headerTitleMap: Record<string, string> = {
         return "Others Nominate Form";
       case "/my-nominations/:nominationId":
         return "Others Nominate Form";  
+         case "/admin-setting/jury-panel-setup":
+        return "jury Panel";
       default:
         return "Nomination Management";
     }

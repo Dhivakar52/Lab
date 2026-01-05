@@ -9,6 +9,7 @@ import { useNavigate } from "react-router-dom";
 import { useParams } from "react-router-dom";
 import * as Dialog from "@radix-ui/react-dialog";
 import { X } from "lucide-react"; 
+import Pagination from "../Pagination";
 
 // interface OptionType {
 //   value: number;
