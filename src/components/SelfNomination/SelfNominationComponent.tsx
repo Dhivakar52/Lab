@@ -125,10 +125,11 @@ useEffect(() => {
           ? String(data.AwardCategoryID)
           : "",
       }));
-      setReferrals(
+       setReferrals(
       data["Referrals ID"]?.map((r: any) => ({
         UserID: r.UserID,
-        UserInfo: r.Email,     
+        UserInfo: r.Email,
+        ReferralID:r.ReferralID     
       })) || []
     );
      if (data?.["Supporting Documents"]) {
@@ -407,53 +408,48 @@ if (form.files && form.files.length > 0) {
 }
 const documentsPayload = [
   ...existingDocs.map(doc => ({
-    nominationFileID: Number(nominationId),
-    nominationID: Number(nominationId),
+    nominationFileID: 0,
+    nominationID: isEditMode ? Number(nominationId) : 0,
     originalFileName: doc.originalFileName,
     fileType: doc.fileType,
-    fileSize: `${(doc.fileSize / 1024).toFixed(2)} KB`,
+    fileSize: doc.fileSize,
     fileNameGUID: doc.fileNameGUID,
     filePath: doc.filePath,
     active: !doc.isDeleted,   
-    createdBy:  Number(userId),
-    updatedBy:  Number(userId),
+    createdBy: userId,
+    updatedBy: userId
   })),
 
   ...uploadedDocs.map((doc: UploadedDocument) => ({
-    nominationFileID: Number(userId),
-    nominationID: Number(nominationId || 0),
+    nominationFileID: 0,
+    nominationID: isEditMode ? Number(nominationId) : 0,
     originalFileName: doc.originalFileName,
     fileType: doc.fileType,
     fileSize: `${(doc.fileSize / 1024).toFixed(2)} KB`,
     fileNameGUID: doc.fileNameGUID,
     filePath: doc.fileUrl,
     active: true,
-    createdBy: Number(userId),
-    updatedBy: Number(userId),
+    createdBy: userId,
+    updatedBy: userId
   }))
 ];
 const referralPayload = referrals.map(ref => ({
-  // nominationID: nominationId ? Number(nominationId) : 0,
-  // referralID: ref.UserID,
-  // referralUserID: ref.userId,
-  // active: !ref.isRemoved,   
-  // createdBy: userId,
-  // updatedBy: userId
-  referralID: ref.UserID,
-  nominationID: Number(nominationId || 0),
+  referralID: ref.ReferralID,
+  nominationID: isEditMode ? Number(nominationId) : 0,
   referralUserID: ref.UserID,
   isReferralApproved: true,
   approvalComments: "",
   active: true,
   createdBy: Number(userId),
   updatedBy: Number(userId),
-  referralEmail: ref.UserInfo  
+  referralEmail: ref.UserInfo
+
 }));
 
   const payload = {
     nomination: {
       cycleID: 1,
-      //nominationID: Number(nominationId || 0),
+      nominationID: isEditMode ? Number(nominationId) : 0,
       awardCategoryID: Number(form.contestType),
       userID: Number(userId),
       nominationTitle: form.title,
@@ -525,6 +521,7 @@ const referralPayload = referrals.map(ref => ({
       },
     });
     const returnVal = res.data?.nominationID ?? res.data;
+    
     if (returnVal === -100) {
       setErrorMessage("Duplicate nomination. Please try diffrent contest type.");
       setTimeout(() => setErrorMessage(""), 3000);
@@ -538,7 +535,6 @@ const referralPayload = referrals.map(ref => ({
     setShowErrorModal(true);
   }
 };
-
  return (
   <>
     {/* Success message on top
@@ -560,12 +556,14 @@ const referralPayload = referrals.map(ref => ({
       <div className="flex justify-end">
           {/* <h2 className="text-xl font-semibold">Self Nominate Form</h2> */}
            <a
-            href={totalSelfNominations > 0 ? "/my-nominations" : undefined}
+            href="#"
             onClick={(e) => {
-              if (totalSelfNominations === 0) {
-                e.preventDefault();
+              e.preventDefault();
+              if (totalSelfNominations > 0) {
+                navigate("/my-nominations");
               }
             }}
+ 
             className={totalSelfNominations > 0
               ? "text-blue-600  cursor-pointer px-4 py-2 btn-theme"
               : "text-gray-500 cursor-default no-underline px-4 py-2 btn-theme" }>
@@ -876,6 +874,7 @@ const referralPayload = referrals.map(ref => ({
 
         {/* Description */}
         <div className="">
+          <br/>
           <Label.Root className="block text-sm font-medium">Description  (Max 1000 chars)</Label.Root>
           <textarea
             rows={2}
@@ -938,8 +937,12 @@ const referralPayload = referrals.map(ref => ({
   <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
     <div className="bg-white p-6 rounded shadow-md w-96 text-center">
       {/* <h2 className="text-lg font-semibold mb-4">Success!</h2> */}
-      <p className="mb-6">Nomination submitted successfully!</p>
-      <button onClick={handleModalOk } className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700">OK</button>
+       <p className="mb-6">
+{isEditMode
+          ? "Nomination updated successfully!"
+          : "Nomination submitted successfully!"}
+</p>
+      <button onClick={handleModalOk }  className="px-4 py-2 btn-theme">OK</button>
     </div>
   </div>
 )}

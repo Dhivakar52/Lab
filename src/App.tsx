@@ -172,6 +172,55 @@ const App: React.FC = () => {
            </ProtectedRoute>
          }
        />
+
+ {/* Self Nomination */}
+       <Route
+         path="/self-nominations"
+         element={
+           <ProtectedRoute
+             userRole={userRole}
+             allowedRoles={getAllowedRoles('Self Nomination')}
+           >
+             <SelfNominationPage />
+           </ProtectedRoute>
+         }
+       />
+        <Route
+            path="/self-nominations/:nominationId"
+            element={
+              <ProtectedRoute
+                userRole={userRole}
+                allowedRoles={getAllowedRoles("Self Nomination")}
+              >
+                <SelfNominationPage />
+              </ProtectedRoute>
+            } 
+        />
+
+       {/* Add Nomination nested route */}
+       <Route
+         path="/my-nominations/add-nomination"
+         element={
+           <ProtectedRoute
+             userRole={userRole}
+             allowedRoles={getAllowedRoles('Add Nomination')}
+           >
+             <AddNomination />
+           </ProtectedRoute>
+         }
+       />
+       <Route
+            path="/my-nominations/add-nomination/:nominationId"
+            element={
+              <ProtectedRoute
+                userRole={userRole}
+                allowedRoles={getAllowedRoles("Edit Nomination")}
+              >
+                <AddNomination />
+              </ProtectedRoute>
+            } 
+        />
+
         {/* ✔️ Referral Detail route OUTSIDE layout */}
         <Route
           path="/referral-detail"

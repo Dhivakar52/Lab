@@ -6,7 +6,7 @@ import { ArrowLeft } from "lucide-react";
 import { useAuth } from "../ContextAPI/AuthContext";
 import type { AddNominationState } from "../../dataTypes/nomination";
 import Select from "react-select";
-import { useNavigate } from "react-router-dom";
+import { useParams,useNavigate } from "react-router-dom";
 
 // interface OptionType {
 //   value: number;
@@ -37,6 +37,20 @@ interface UserType {
   ManagerEmail : string;
 }
 
+const emptyForm: AddNominationState = {
+  title: "",
+  nomineeName: "",
+  nomineeData: "",
+  department: "",
+  email: "",
+  mobile: "",
+  managerEmail: "",
+  contestType: "",
+  description: "",
+  entityName: "",
+  file: null,
+};
+
 const apiUrl = import.meta.env.VITE_API_URL;
 
 export default function AddNomination() {
@@ -46,7 +60,7 @@ export default function AddNomination() {
   const [allUsers, setAllUsers] = useState<UserType[]>([]); 
   const [filteredUsers, setFilteredUsers] = useState<UserType[]>([]); 
   const [users, setUsers] = useState<any[]>([]);
-  const [referrals, setReferrals] = useState<any[]>([]);
+ 
   // const [entitydropdown, setEntityName] = useState<any[]>([]);
   const [successMsg, setSuccessMsg] = useState("");
   const [searchText, setSearchText] = useState("");
@@ -73,7 +87,12 @@ export default function AddNomination() {
   // const [entity, setEntity] = useState("");
   const [errors, setErrors] = useState<{ [key: string]: string }>({});
   const [showErrorModal, setShowErrorModal] = useState(false);
-
+  const [referrals, setReferrals] = useState<any[]>([]);
+  const [data, setData] = useState<any>(null);
+  const [loading, setLoading] = useState(true);
+  const { nominationId } = useParams<{ nominationId: string }>();
+  const [errorMessage, setErrorMessage] = useState("");
+  const isEditMode = Boolean(nominationId);
   const validateForm = () => {
   const newErrors: { [key: string]: string } = {};
 
@@ -91,6 +110,7 @@ export default function AddNomination() {
     console.log("Form Submitted");
   const { authToken, userId } = useAuth();
   const navigate = useNavigate();
+const disableFields = isEditMode;
 
 useEffect(() => {
     const fetchData = async () => {
@@ -123,18 +143,21 @@ useEffect(() => {
   }, [searchText, apiUrl, authToken]);
 
   // ✔ Select result → fill textbox
-  const handleSelect = (item : any) => {
-    setForm({
-      ...form,
-      nomineeName: item.UserName,
-      managerEmail: item.Email,
-    });
-    const formatted = `${item.UserName} - ${item.DeptName} - ${item.TenantName}`;
-    setSearchText(formatted);
-    setShowList(false);
-    setSelectedUserID(item.UserID);
-    setSelectedTenantID(item.TenantID);
-  };
+   const handleSelect = (item: any) => {
+  const formattedLabel = `${item.UserName} - ${item.DeptName} - ${item.TenantName}`;
+
+  setSearchText(formattedLabel);   // ✅ bind text to input
+  setShowList(false);              // hide dropdown
+
+  // setForm(prev => ({
+  //   ...prev,
+  //   nomineeName: item.UserName,
+  //   managerEmail: item.ManagerEmail,
+  // }));
+
+  setSelectedUserID(item.UserID);
+  setSelectedTenantID(item.TenantID);
+};
  
   useEffect(() => {
     const fetchUser = async () => {
@@ -164,7 +187,8 @@ useEffect(() => {
             Authorization: `Bearer ${authToken}`,
           },
         });
-        setUsers(res4.data.Users || []);
+        setUsers(res4.data.Users|| []);
+         console.log("All Referrals:", users);
 
         // Fetch all departments
         const departmentResponse = await axios.get(`${apiUrl}/api/departments`, {
@@ -211,6 +235,65 @@ useEffect(() => {
     fetchUser();
   }, [authToken, userId]);
 
+
+ 
+useEffect(() => {
+  if (!isEditMode || !nominationId) return;
+
+  const fetchNominationById = async () => {
+    try {
+      const res = await axios.get(
+        `${apiUrl}/api/nominations/${nominationId}`,
+        {
+          headers: {
+            Authorization: `Bearer ${authToken}`,
+          },
+        }
+      );
+      const data = res.data[0];
+      console.log("sucess",res.data)
+
+      setForm(prev => ({
+        ...prev,
+        title: data.NominationTitle ?? "",
+        nomineeName: data.Nominee ?? "",
+        department: data.NomineeDepartment ?? "",
+        description: data.Descriptions ?? "",
+        email: prev.email ?? "",
+        mobile: prev.mobile ?? "",
+        managerEmail: data.ManagerName ?? "",
+        contestType: data.AwardCategoryID
+          ? String(data.AwardCategoryID)
+          : "",
+      }));
+       setSearchText(
+      `${data.Nominee} - ${data.NomineeDepartment} - ${data.Tenant}`
+    );
+    setSelectedUserID(data.UserID);
+    setSelectedTenantID(data.TenantID);
+       setForm(prev => ({
+      ...prev,
+      nomineeName: data.UserName,
+      managerEmail: data.ManagerEmail,
+    }));
+    
+      setReferrals(
+      data["Referrals ID"]?.map((r: any) => ({
+        UserID: r.UserID,
+        UserInfo: r.Email,
+        ReferralID:r.ReferralID     
+      })) || []
+    );
+   
+    console.log("Refe--",referrals);
+    } catch (err) {
+      console.error("❌ Error fetching nomination:", err);
+    }
+  };
+
+  fetchNominationById();
+}, [nominationId, isEditMode, authToken]);
+
   // Filter departments when entity (tenant) is selected
   useEffect(() => {
     if (form.entityName) {
@@ -255,28 +338,10 @@ useEffect(() => {
     console.log("Filtered Users:", filtered);
   }, [form.entityName, form.department, allUsers, filteredDepartments]);
 
-  // const handleEntityChange = (selectedOption: any) => {
-  //   const tenantID = selectedOption?.value || "";
-  //   setForm({ ...form, entityName: tenantID, department: "", nomineeData: "" });
-  // };
-
-  // const handleDepartmentChange = (selectedOption: any) => {
-  //   const deptName = selectedOption?.value || "";
-  //   setForm({ ...form, department: deptName, nomineeData: "" });
-  // };
-
-  // const handleNomineeChange = (selectedOption: any) => {
-  //   const nomineeName = selectedOption?.value || "";
-  //   const selectedUser = filteredUsers.find(user => user.UserName === nomineeName);
-    
-  //   setForm({ 
-  //     ...form, 
-  //     nomineeData: nomineeName,
-  //     email: selectedUser?.Email || "",
-  //     mobile: selectedUser?.PhoneNo || "",
-  //     managerEmail: selectedUser?.ManagerEmail || ""
-  //   });
-  // };
+  //const [tab, setTab] = useState<"table" | "form">("table");
+  const handleBackward = () => {
+      navigate("/my-nominations", { state: { tab: "form" } });
+  };
 
   const handleSelectReferral = (selected: { value: string; label: string } | null) => {
   if (!selected) return;
@@ -288,10 +353,7 @@ useEffect(() => {
   const removeReferral = (userID: number) => {
     setReferrals(referrals.filter((r) => r.UserID !== userID));
   };
-  //const [tab, setTab] = useState<"table" | "form">("table");
-  const handleBackward = () => {
-  navigate("/my-nominations", { state: { tab: "form" } });
-  };
+
   const handleModalOk = () => {
     setShowSuccessModal(false);
     navigate("/my-nominations", { state: { tab: "form" } });
@@ -321,39 +383,37 @@ useEffect(() => {
   // Reset any errors
   setErrors({});
 };
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!validateForm()) return; 
+ const handleSubmit = async (e: React.FormEvent) => {
+  e.preventDefault();
 
-    console.log("Form submitted successfully", form, referrals);
-    if (!authToken) {
-      alert("⚠️ You are not authorized. Please log in again.");
-      return;
-    }
+  if (!validateForm()) return; 
+  if (!authToken) {
+    alert("⚠️ You are not authorized. Please log in again.");
+    return;
+  }
 
-    const payload = {
-      nomination: {
-        cycleID: 1,
-        // awardCategoryID: Number(form.contestType),
-        // userID: Number(userId),
-        awardCategoryID: selectedTenantID,
-        userID: selectedUserID,
-        nominationTitle: form.title,
-        isSelf: false,
-        nominationCreatedBy: Number(userId),
-        descriptions: form.description,
-        approvalTypeID: 1,
-        isManagerApproved: true,
-        approvalComments: "Submitted via UI",
-        statusID: 1,
-        active: true,
-        businessJuryID: 0,
-        createdBy: Number(userId),
-        updatedBy: Number(userId),
-      },
-      referralIDs: referrals.map((ref) => ({
-        referralID: ref.UserID,
-        nominationID: 0,
+const payload = {
+    nomination: {
+      cycleID: 1,
+      nominationID: isEditMode ? Number(nominationId) : 0,
+      awardCategoryID: Number(form.contestType),
+      userID: selectedUserID,
+      nominationTitle: form.title,
+      isSelf: false, 
+      nominationCreatedBy: Number(userId),
+      descriptions: form.description,
+      approvalTypeID: 1,
+      isManagerApproved: true,
+      approvalComments: "Submitted via UI",
+      statusID: 1,
+      active: true,
+      businessJuryID: 0,
+      createdBy: Number(userId),
+      updatedBy: Number(userId),
+    },
+    referralIDs: referrals.map((ref) => ({
+        referralID: ref.ReferralID,
+        nominationID: isEditMode ? Number(nominationId) : 0,
         referralUserID: ref.UserID,
         isReferralApproved: true,
         approvalComments: "",
@@ -361,49 +421,40 @@ useEffect(() => {
         createdBy: Number(userId),
         updatedBy: Number(userId),
         referralEmail: ref.UserInfo
-      })),
-      documents: form.file
-        ? [
-            {
-              nominationFileID: Number(userId),
-              nominationID: Number(userId),
-              originalFileName: form.file.name,
-              fileType: form.file.type,
-              fileSize: `${(form.file.size / 1024).toFixed(2)} KB`,
-              fileNameGUID: crypto.randomUUID(),
-              filePath: `/uploads/${form.file.name}`,
-              active: true,
-              createdBy: Number(userId),
-              updatedBy: Number(userId),
-            },
-          ]
-        : [],
-    };
-
-    console.log("📦 Sending payload:", payload);
-
-    try {
-      const res = await axios.post(
-        "http://172.16.5.106:5195/api/nomination",
-        payload,
-        {
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${authToken}`,
-          },
-        }
-      );
-      setShowSuccessModal(true);
-      console.log("✅ Success:", res.data);
-    
-      // alert("Nomination submitted successfully!");
-      // navigate("/my-nominations");
-    } catch (err) {
-      console.error("❌ Error submitting nomination:", err);
-     setShowErrorModal(true);
-    }
+      })),    
   };
 
+  try {    
+     const url = isEditMode 
+      ? `${apiUrl}/api/nominations/${nominationId}`
+      : `${apiUrl}/api/nomination`;
+
+    const method = isEditMode ? "put" : "post";
+
+    const res = await axios({
+      method,
+      url,
+      data: payload,
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${authToken}`,
+      },
+    });
+    const returnVal = res.data?.nominationID ?? res.data;
+    if (returnVal === -100) {
+      setErrorMessage("Duplicate nomination. Please try diffrent contest type.");
+      setShowErrorModal(true);
+      setTimeout(() => setErrorMessage(""), 3000);
+      return;
+    }
+       setShowSuccessModal(true);
+
+    console.log("✅ Success:", res.data);
+  } catch (err) {
+    console.error("❌ Error submitting nomination:", err);
+    setShowErrorModal(true);
+  }
+};
   return (
     <>
     {successMsg && (
@@ -435,11 +486,12 @@ useEffect(() => {
               type="text"
               placeholder="Best Innovation"
               value={form.title}
+	      disabled={disableFields}
               // onChange={(e) => setForm({ ...form, title: e.target.value })}
               onChange={(e: React.ChangeEvent<HTMLInputElement>) => {const value = e.target.value;
               setForm(prevForm => ({...prevForm,title: value }));
               if (value) {setErrors(prevErrors => ({...prevErrors, title: ""}));}}}
-              className="w-full mt-1 border rounded px-3 py-2"
+              className="w-full mt-1 border rounded px-3 py-2 disabled:bg-gray-100"
             />
              {errors.title && <p className="text-red-500 text-sm mt-1">{errors.title}</p>}
              </div>
@@ -448,6 +500,7 @@ useEffect(() => {
                 Contest Type<span className="text-red-500"> *</span>
               </label>
               <Select
+              isDisabled={isEditMode}   
                 name="contestType"
                 value={contest
                   .filter((c: any) => c.AwardCategoryID === Number(form.contestType))
@@ -485,14 +538,17 @@ useEffect(() => {
                   type="text"
                   placeholder="Nomination search"
                   value={searchText}
+                  disabled={disableFields}
                   //onChange={(e) => setSearchText(e.target.value)}
                   onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
                     const target = e.target as HTMLInputElement;
                     const value = target.value;
                     setSearchText(value);
                     if (value) { setErrors(prevErrors => ({...prevErrors, nomineeSearch: "" }));  } }}
-                  className="w-full p-2.5 rounded border border-gray-300"
-                />
+                  className="w-full p-2.5 rounded border border-gray-300 disabled:bg-gray-100"
+                />  
+                  
+
               {showList && results.length > 0 && (
                 <ul
                   className="list-none m-0 p-1 absolute top-[45px] w-full bg-white border border-gray-300 
@@ -523,7 +579,7 @@ useEffect(() => {
                 type="text"
                 value={form.nomineeName || ""}
                 disabled
-                className="w-full mt-1 border rounded px-3 py-2"
+                className="w-full mt-1 border rounded bg-gray-100 px-3 py-2"
               />
                 {errors.nomineeName && <p className="text-red-500 text-sm mt-1">{errors.nomineeName}</p>}
             </div>
@@ -536,7 +592,7 @@ useEffect(() => {
                 placeholder="Manager Email"
                 value={form.managerEmail}
                 disabled
-                className="w-full mt-1 border rounded px-3 py-2"
+                className="w-full mt-1 border rounded bg-gray-100 px-3 py-2"
               />
              {errors.managerEmail && <p className="text-red-500 text-sm mt-1">{errors.managerEmail}</p>}
             </div>
@@ -616,9 +672,16 @@ useEffect(() => {
           {/* Buttons */}
           <div className="flex justify-end space-x-4">
             <button
-              type="button" onClick={handleClear}
+              type="button"
+              onClick={() => {
+            if (isEditMode) {
+              navigate(-1);
+            } else {
+              handleClear(); 
+            }
+          }}
               className="px-4 py-2 border rounded text-gray-600 hover:bg-gray-100" >
-              Clear
+                {isEditMode ? "Cancel" : "Clear"}
             </button>
             {/* <button type="submit" className="px-4 py-2 btn-theme">
             Submit Nomination
@@ -628,7 +691,7 @@ useEffect(() => {
               type="submit"
               className="px-4 py-2 btn-theme"
             >
-              Submit Nomination
+             {isEditMode ? "Update Nomination" : "Submit Nomination"}
             </button> }
           </div>
         </form>    
@@ -652,8 +715,12 @@ useEffect(() => {
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
           <div className="bg-white p-6 rounded shadow-md w-96 text-center">
             {/* <h2 className="text-lg font-semibold mb-4">Success!</h2> */}
-            <p className="mb-6">Nomination submitted successfully!</p>
-            <button onClick={handleModalOk } className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700">OK</button>
+             <p className="mb-6">
+{isEditMode
+          ? "Nomination updated successfully!"
+          : "Nomination submitted successfully!"}
+</p>
+            <button onClick={handleModalOk }  className="px-4 py-2 btn-theme">OK</button>
           </div>
         </div>
       )}

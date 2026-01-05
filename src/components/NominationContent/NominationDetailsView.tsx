@@ -8,6 +8,8 @@ import * as Dialog from "@radix-ui/react-dialog";
 import { useLocation } from "react-router-dom";
 //import Swal from "sweetalert2";
 import { motion } from 'framer-motion';
+import { Edit } from "lucide-react";
+
  
 interface NominationDetailViewProps {
   isOpen: boolean;
@@ -61,6 +63,7 @@ const NominationDetailView: React.FC<NominationDetailViewProps> = ({
   const [popupComments, setPopupComments] = useState("");
   const [popupErrors, setPopupErrors] = useState({ score: "", comments: "" });
   const [successModalOpen, setSuccessModalOpen] = useState(false);
+  const [IsSelf, setIsSelf] = useState<boolean | null>(null);
  
   const headerTitleMap: Record<string, string> = {
   "my-nominations": "My Nomination Details",
@@ -124,6 +127,7 @@ const NominationDetailView: React.FC<NominationDetailViewProps> = ({
         return;
       }
       setData(result);
+      setIsSelf(result.IsSelf);
       setReferrals(result["Referrals ID"] || []);
       setDocuments(result["Supporting Documents"]|| []);
       const businessJury = result.BusinessJuryDetails?.[0] || null;
@@ -658,7 +662,16 @@ const SCORE_REQUIRED_TYPES = [
 //     type === "President Jury"
 //   );
 // };
- 
+
+const handleEdit = () => {
+  const id = location.pathname.split("/").pop();  
+  if (IsSelf) {
+      navigate(`/self-nominations/${id}`);
+    } else {
+      navigate(`/my-nominations/add-nomination/${id}`);
+    }  
+};
+
 const needsScore = (type: string) =>
   SCORE_REQUIRED_TYPES.includes(type);
 // ✅ CUSTOM APPROVAL SUCCESS MODAL COMPONENT
@@ -673,7 +686,8 @@ const ApprovalSuccessModal = () => {
   const buttonBg = isApprove
     ? "bg-gradient-to-r from-emerald-500 to-teal-600 hover:shadow-xl"
     : "bg-gradient-to-r from-red-500 to-rose-600 hover:shadow-xl";
- 
+
+  
   return (
     <div
       className="fixed inset-0 z-[1000] bg-black/45 flex items-center justify-center p-4"
@@ -766,11 +780,26 @@ return (
         </div>
         <div className="grid grid-cols-5 gap-6 mb-4">
           <div>
-            <div className="text-sm font-medium text-gray-900">Designation</div>
-            <div className="text-sm text-gray-600">{data?.NomineeDesignation &&
-            data.NomineeDesignation.trim() !== "" ? data.NomineeDesignation: "—"}
+            <div className="text-sm font-medium text-gray-900">
+              <span className="relative inline-block">
+                Designation
+                {/* hyphen positioned absolutely and centered under the label */}
+                {(!data?.NomineeDesignation || data.NomineeDesignation.trim() === "") && (
+                  <span
+                    className="absolute left-1/2 -translate-x-1/2 text-gray-600"
+                    style={{ top: "110%" }}
+                    aria-hidden
+                  >
+                    —
+                  </span>
+                )}
+              </span>
+            </div>
+            <div className="text-sm text-gray-600 h-5">
+              {data?.NomineeDesignation && data.NomineeDesignation.trim() !== "" ? data.NomineeDesignation : <span className="invisible">—</span>}
             </div>
           </div>
+ 
           <div>
             <div className="text-sm font-medium text-gray-900">Submission Date</div>
             {/* <div className="text-sm text-gray-600">{data.SubmittedDate} */}
@@ -1076,7 +1105,17 @@ return (
          <button onClick={handleBackward} className="flex items-center text-blue-600 bg-white border rounded-sm px-2 py-1 font-medium">
          <span className=""><ArrowLeft size={14}/></span> Back
           </button>
+           {showWithdrawButton && ( 
+          <button
+  onClick={handleEdit}
+  className="flex items-center gap-1 text-blue-600 bg-white border rounded-sm px-2 py-1 font-medium hover:bg-blue-50 transition"
+>
+  <Edit size={14} />
+  Edit
+</button>
+)}
         {showWithdrawButton && (
+          
           <button
             onClick={() => setIsWithdrawDialogOpen(true)}
                   className="px-4 py-2 btn-theme-reject">
