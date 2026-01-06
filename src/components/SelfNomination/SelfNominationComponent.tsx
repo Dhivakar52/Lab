@@ -547,133 +547,67 @@ const referralPayload = referrals.map(ref => ({
         {successMsg}
       </div>
     )} */}
-
-    <div className="bg-gray-100 flex flex-col">
-      <form
-        onSubmit={handleSubmit}
-        className="px-2 py-4 rounded-lg bg-white shadow nominate-form">
-    <div className="flex-1 bg-white">
-      <div className="w-full h-full px-6 py-4">    
-      <div className="flex justify-end">
-          {/* <h2 className="text-xl font-semibold">Self Nominate Form</h2> */}
-           <a
-            href="#"
-            onClick={(e) => {
-              e.preventDefault();
-              if (totalSelfNominations > 0) {
-                navigate("/my-nominations");
-              }
-            }}
- 
-            className={totalSelfNominations > 0
-              ? "text-blue-600  cursor-pointer px-4 py-2 btn-theme"
-              : "text-gray-500 cursor-default no-underline px-4 py-2 btn-theme" }>
-            You have {totalSelfNominations} nominations
-          </a>
-       </div>
-
-       
-         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-4">
-           {/* Title */}
-          <div >
-            <Label.Root htmlFor="title" className="block text-sm font-medium">
-              Title of Submission<span className="text-red-500"> *</span>
-            </Label.Root>
-            <input
-              id="title"
-              type="text"
-              placeholder="Best Innovation"
-              value={form.title}
-              disabled={isReadOnly}
-              maxLength={100}
-              onChange={(e: React.ChangeEvent<HTMLInputElement>) => {const value = e.target.value.slice(0, 100);
-              setForm(prevForm => ({...prevForm,title: value }));
-              if (value) {setErrors(prevErrors => ({...prevErrors, title: ""}));}}}         
-              className={`w-full mt-1 border rounded px-3 py-2
-                ${isReadOnly ? "bg-gray-100 text-gray-700 cursor-not-allowed" : "bg-white text-black"}`}
-            />
-            {errors.title && <p className="text-red-500 text-sm mt-1">{errors.title}</p>}
-            <p className="text-gray-500 text-sm mt-1">{form.title.length}/100 characters</p>
-
-          </div>
-
-          {/* Nominee */}
-          <div>
-            <Label.Root className="block text-sm font-medium">Nominee Name</Label.Root>
-            <input
-              type="text"
-              value={form.nomineeName || ""}
-              disabled
-              tabIndex={-1}
-              aria-disabled="true"
-              onMouseDown={(e) => e.preventDefault()}
-              onFocus={(e) => e.currentTarget.blur()}
-              onKeyDown={(e) => e.preventDefault()}
-              style={{ userSelect: "none", pointerEvents: "none", caretColor: "transparent", outline: "none" }}
-              className="w-full mt-1 border rounded px-3 py-2 bg-gray-100 text-gray-700 cursor-not-allowed"            />
-          </div>
+    <div className="fixed bg-white border-b border-t border-gray-200 w-full h-15 flex items-center  top-20 left-0  pl-[260px] pr-6 z-10">
+      <div className="flex justify-between w-full">
+        <div className="space-x-4 flex items-center ml-auto mr-25">
+            {/* <h2 className="text-xl font-semibold">Self Nominate Form</h2> */}
+            <a
+              href="#"
+              onClick={(e) => {
+                e.preventDefault();
+                if (totalSelfNominations > 0) {
+                  navigate("/my-nominations");
+                }
+              }}
+  
+              className={totalSelfNominations > 0
+                ? "text-blue-600  cursor-pointer px-4 py-2 btn-theme"
+                : "text-gray-500 cursor-default no-underline px-4 py-2 btn-theme" }>
+              You have {totalSelfNominations} nominations
+            </a>
         </div>
-       
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-4">
-           {/* Department */}
-          <div>
-            <Label.Root className="block text-sm font-medium">Department</Label.Root>
-            <input
-              type="text"
-              value={form.department}
-              disabled
-              tabIndex={-1}
-              aria-disabled="true"
-              onMouseDown={(e) => e.preventDefault()}
-              onFocus={(e) => e.currentTarget.blur()}
-              onKeyDown={(e) => e.preventDefault()}
-              style={{ userSelect: "none", pointerEvents: "none", caretColor: "transparent", outline: "none" }}
-              className="w-full mt-1 border rounded px-3 py-2 bg-gray-100 text-gray-700 cursor-not-allowed"            />
-          </div>
-
-          {/* Email */}
-          <div>
-            <Label.Root className="block text-sm font-medium">Email ID</Label.Root>
-            <input
-              type="email"
-              value={form.email || ""}
-              disabled
-              tabIndex={-1}
-              aria-disabled="true"
-              onMouseDown={(e) => e.preventDefault()}
-              onFocus={(e) => e.currentTarget.blur()}
-              onKeyDown={(e) => e.preventDefault()}
-              style={{ userSelect: "none", pointerEvents: "none", caretColor: "transparent", outline: "none" }}
-              className="w-full mt-1 border rounded px-3 py-2 bg-gray-100 text-gray-700 cursor-not-allowed"            />
-          </div>
         </div>
+    </div>
+    <div className="bg-gray-100 flex flex-col p-6 pt-15"> 
+      <div className="w-full h-full px-1 py-1 pb-[50px]" >
+        <form
+          onSubmit={handleSubmit}
+          className="px-2 py-4 rounded-lg bg-white shadow nominate-form">
+      <div className="flex-1 bg-white">
+        <div className="w-full h-full px-6 py-4">    
+        
 
         
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-4">
-          {/* Mobile */}
-          <div>
-            <Label.Root className="block text-sm font-medium">Mobile Number</Label.Root>
-            <input
-              type="tel"
-              value={form.mobile}
-              disabled
-              tabIndex={-1}
-              aria-disabled="true"
-              onMouseDown={(e) => e.preventDefault()}
-              onFocus={(e) => e.currentTarget.blur()}
-              onKeyDown={(e) => e.preventDefault()}
-              style={{ userSelect: "none", pointerEvents: "none", caretColor: "transparent", outline: "none" }}
-              className="w-full mt-1 border rounded px-3 py-2 bg-gray-100 text-gray-700 cursor-not-allowed"            />
-          </div>
-
-          {/* Manager*/}
-            <div className="mb-2">
-              <Label.Root className="block text-sm font-medium">
-                Manager Email ID
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-4">
+            {/* Title */}
+            <div >
+              <Label.Root htmlFor="title" className="block text-sm font-medium">
+                Title of Submission<span className="text-red-500"> *</span>
               </Label.Root>
               <input
-                type="email"
-                value={form.managerEmail}
+                id="title"
+                type="text"
+                placeholder="Best Innovation"
+                value={form.title}
+                disabled={isReadOnly}
+                maxLength={100}
+                onChange={(e: React.ChangeEvent<HTMLInputElement>) => {const value = e.target.value.slice(0, 100);
+                setForm(prevForm => ({...prevForm,title: value }));
+                if (value) {setErrors(prevErrors => ({...prevErrors, title: ""}));}}}         
+                className={`w-full mt-1 border rounded px-3 py-2
+                  ${isReadOnly ? "bg-gray-100 text-gray-700 cursor-not-allowed" : "bg-white text-black"}`}
+              />
+              {errors.title && <p className="text-red-500 text-sm mt-1">{errors.title}</p>}
+              <p className="text-gray-500 text-sm mt-1">{form.title.length}/100 characters</p>
+
+            </div>
+
+            {/* Nominee */}
+            <div>
+              <Label.Root className="block text-sm font-medium">Nominee Name</Label.Root>
+              <input
+                type="text"
+                value={form.nomineeName || ""}
                 disabled
                 tabIndex={-1}
                 aria-disabled="true"
@@ -682,223 +616,300 @@ const referralPayload = referrals.map(ref => ({
                 onKeyDown={(e) => e.preventDefault()}
                 style={{ userSelect: "none", pointerEvents: "none", caretColor: "transparent", outline: "none" }}
                 className="w-full mt-1 border rounded px-3 py-2 bg-gray-100 text-gray-700 cursor-not-allowed"            />
-          </div>
-
-        </div>
-
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-4">  
-          {/* Contest Dropdown */}
-        <div >
-          <label className="block text-sm font-medium mb-2">Contest Type
-            <span className="text-red-500"> *</span>
-          </label>
-          <Select
-            name="contestType"
-            value={
-              contest
-                .filter((c: any) => c.AwardCategoryID === Number(form.contestType))
-                .map((c: any) => ({
-                  value: c.AwardCategoryID,
-                  label: c.CategoryName,
-                }))[0] || null
-            }
-            onChange={(selectedOption: { value: string } | null) => {setForm(prevForm => ({
-              ...prevForm,
-              contestType: selectedOption?.value ?? ""
-              }));
-            if (selectedOption?.value) {
-              setErrors(prevErrors => ({...prevErrors, contestType: ""
-              }));
-              }}}
-            options={contest.map((c: any) => ({
-              value: c.AwardCategoryID,
-              label: c.CategoryName,
-              }))}
-            placeholder="Select Contest Type"
-            className="text-sm"
-            styles={contestSelectStyles}
-          />
-          {errors.contestType && <p className="text-red-500 text-sm mt-1">{errors.contestType}</p>}
-        </div>    
-
-          {/* Referrals */}
-          <div>
-            <label className="block text-sm font-medium mb-2">
-              Referrals Email ID 
-            </label>
-            <Select
-              options={users.map((u) => ({
-                value: u.UserID,
-                label: u.UserInfo,
-              }))}
-              value={referrals.length ? { value: referrals[referrals.length - 1].UserID, 
-              label: referrals[referrals.length - 1].UserInfo } : null}
-              onChange={handleSelectReferral}
-              placeholder="Search and select referral..."
-              isSearchable
-              className="text-sm"
-            />
-            {/* Selected Referrals */}
-            <div className="mt-3 space-y-2">
-              {referrals.map((ref) => (
-                <div
-                  key={ref.UserID}
-                  className="flex items-center justify-between bg-gray-100 px-3 py-2 rounded"
-                >
-                  <span>{ref.UserInfo}</span>
-                  <button
-                    type="button"
-                    onClick={() => removeReferral(ref.UserID)}
-                    className="px-2 py-1 bg-red-500 text-white rounded"
-                  >
-                    ✕
-                  </button>
-                </div>
-              ))}
             </div>
-            {errorMessage && (
-              <div className="fixed top-5 right-5 z-[9999] bg-red-600 text-white px-5 py-3 
-              rounded-lg shadow-xl text-sm font-medium animate-slide-in">
-                {errorMessage}
-              </div>
-            )}
-
           </div>
-
-        </div>
-
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-4">         
         
-          {/* Supporting Documents   */}
-          <div>
-            <Label.Root className="block text-sm font-medium">
-              Supporting Documents 
-              <span className="text-red-500">(Maximum 5 files allowed & File must be below 2 MB)</span>
-            </Label.Root>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-4">
+            {/* Department */}
+            <div>
+              <Label.Root className="block text-sm font-medium">Department</Label.Root>
+              <input
+                type="text"
+                value={form.department}
+                disabled
+                tabIndex={-1}
+                aria-disabled="true"
+                onMouseDown={(e) => e.preventDefault()}
+                onFocus={(e) => e.currentTarget.blur()}
+                onKeyDown={(e) => e.preventDefault()}
+                style={{ userSelect: "none", pointerEvents: "none", caretColor: "transparent", outline: "none" }}
+                className="w-full mt-1 border rounded px-3 py-2 bg-gray-100 text-gray-700 cursor-not-allowed"            />
+            </div>
 
-            <label
-              htmlFor="fileUpload"
-              className="inline-block bg-gray-100 text-gray-700 border border-gray-300 px-6 py-2 rounded cursor-pointer mt-2 hover:bg-gray-200"
-            >
-              Choose File
-            </label>
-            <input
-              id="fileUpload"
-              ref={fileInputRef}
-              type="file"
-              multiple
-              onChange={handleFileUpload}
-              className="hidden"
-            />
-
-            {fileError && <p className="text-red-500 text-sm mt-1">{fileError}</p>}
-
+            {/* Email */}
+            <div>
+              <Label.Root className="block text-sm font-medium">Email ID</Label.Root>
+              <input
+                type="email"
+                value={form.email || ""}
+                disabled
+                tabIndex={-1}
+                aria-disabled="true"
+                onMouseDown={(e) => e.preventDefault()}
+                onFocus={(e) => e.currentTarget.blur()}
+                onKeyDown={(e) => e.preventDefault()}
+                style={{ userSelect: "none", pointerEvents: "none", caretColor: "transparent", outline: "none" }}
+                className="w-full mt-1 border rounded px-3 py-2 bg-gray-100 text-gray-700 cursor-not-allowed"            />
+            </div>
           </div>
-
-        </div>
 
           
-          {/* Render both existing API files and newly uploaded files */}
-          <div className="mt-3 flex flex-wrap gap-2">
-            {allDocuments.map((doc: any, index: number) => (
-              <div
-                key={doc.source === "api" ? doc.fileNameGUID : index}
-                className="flex items-center gap-2 bg-gray-100 px-3 py-1 rounded-lg shadow-sm border relative"
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-4">
+            {/* Mobile */}
+            <div>
+              <Label.Root className="block text-sm font-medium">Mobile Number</Label.Root>
+              <input
+                type="tel"
+                value={form.mobile}
+                disabled
+                tabIndex={-1}
+                aria-disabled="true"
+                onMouseDown={(e) => e.preventDefault()}
+                onFocus={(e) => e.currentTarget.blur()}
+                onKeyDown={(e) => e.preventDefault()}
+                style={{ userSelect: "none", pointerEvents: "none", caretColor: "transparent", outline: "none" }}
+                className="w-full mt-1 border rounded px-3 py-2 bg-gray-100 text-gray-700 cursor-not-allowed"            />
+            </div>
+
+            {/* Manager*/}
+              <div className="mb-2">
+                <Label.Root className="block text-sm font-medium">
+                  Manager Email ID
+                </Label.Root>
+                <input
+                  type="email"
+                  value={form.managerEmail}
+                  disabled
+                  tabIndex={-1}
+                  aria-disabled="true"
+                  onMouseDown={(e) => e.preventDefault()}
+                  onFocus={(e) => e.currentTarget.blur()}
+                  onKeyDown={(e) => e.preventDefault()}
+                  style={{ userSelect: "none", pointerEvents: "none", caretColor: "transparent", outline: "none" }}
+                  className="w-full mt-1 border rounded px-3 py-2 bg-gray-100 text-gray-700 cursor-not-allowed"            />
+            </div>
+
+          </div>
+
+          {/* Description */}
+          <div className="">
+            <Label.Root className="block text-sm font-medium">Description  (Max 1000 chars)</Label.Root>
+            <textarea
+              rows={2}
+              placeholder="Describe the nomination..."
+              value={form.description}
+              onChange={(e) => { const value = e.target.value;
+              if (value.length <= 1000) {
+              setForm({ ...form, description: value });
+              }
+            }}
+              className="w-full mt-1 border rounded px-3 py-2 resize-none"
+              // className="w-full mt-1 border rounded px-3 py-2 h-28 resize-none"
+            />
+            <p className="text-gray-500 text-sm mt-1">{form.description.length}/1000 characters</p>
+          </div>
+
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-4">  
+            {/* Contest Dropdown */}
+          <div >
+            <label className="block text-sm font-medium mb-2">Contest Type
+              <span className="text-red-500"> *</span>
+            </label>
+            <Select
+              name="contestType"
+              value={
+                contest
+                  .filter((c: any) => c.AwardCategoryID === Number(form.contestType))
+                  .map((c: any) => ({
+                    value: c.AwardCategoryID,
+                    label: c.CategoryName,
+                  }))[0] || null
+              }
+              onChange={(selectedOption: { value: string } | null) => {setForm(prevForm => ({
+                ...prevForm,
+                contestType: selectedOption?.value ?? ""
+                }));
+              if (selectedOption?.value) {
+                setErrors(prevErrors => ({...prevErrors, contestType: ""
+                }));
+                }}}
+              options={contest.map((c: any) => ({
+                value: c.AwardCategoryID,
+                label: c.CategoryName,
+                }))}
+              placeholder="Select Contest Type"
+              className="text-sm"
+              styles={contestSelectStyles}
+            />
+            {errors.contestType && <p className="text-red-500 text-sm mt-1">{errors.contestType}</p>}
+
+            {/* Supporting Documents   */}
+            <div className="mt-4">
+              <Label.Root className="block text-sm font-medium">
+                Supporting Documents 
+                <span className="text-red-500">(Maximum 5 files allowed & File must be below 2 MB)</span>
+              </Label.Root>
+
+              <label
+                htmlFor="fileUpload"
+                className="inline-block bg-gray-100 text-gray-700 border border-gray-300 px-6 py-2 rounded cursor-pointer mt-2 hover:bg-gray-200"
               >
-                {/* File Name */}
-                <span
-                  className="text-sm truncate max-w-[180px] cursor-pointer text-blue-600 hover:underline"
-                  onClick={async () => {
-                    const ext = (doc.originalFileName || doc.name).split(".").pop()?.toLowerCase();
+                Choose File
+              </label>
+              <input
+                id="fileUpload"
+                ref={fileInputRef}
+                type="file"
+                multiple
+                onChange={handleFileUpload}
+                className="hidden"
+              />
 
-                    if (doc.source === "api") {
-                      try {
-                        const downloadUrl = `${apiUrl}/api/download?fileName=${doc.fileNameGUID}`;
-                        const response = await axios.get(downloadUrl, {
-                          responseType: "blob",
-                          headers: { Authorization: `Bearer ${authToken}` },
-                        });
-                        const blobUrl = URL.createObjectURL(response.data);
+              {fileError && <p className="text-red-500 text-sm mt-1">{fileError}</p>}
 
+            </div>
+                        {/* Render both existing API files and newly uploaded files */}
+            <div className="mt-3 flex flex-wrap gap-2">
+              {allDocuments.map((doc: any, index: number) => (
+                <div
+                  key={doc.source === "api" ? doc.fileNameGUID : index}
+                  className="flex items-center gap-2 bg-gray-100 px-3 py-1 rounded-lg shadow-sm border relative"
+                >
+                  {/* File Name */}
+                  <span
+                    className="text-sm truncate max-w-[180px] cursor-pointer text-blue-600 hover:underline"
+                    onClick={async () => {
+                      const ext = (doc.originalFileName || doc.name).split(".").pop()?.toLowerCase();
+
+                      if (doc.source === "api") {
+                        try {
+                          const downloadUrl = `${apiUrl}/api/download?fileName=${doc.fileNameGUID}`;
+                          const response = await axios.get(downloadUrl, {
+                            responseType: "blob",
+                            headers: { Authorization: `Bearer ${authToken}` },
+                          });
+                          const blobUrl = URL.createObjectURL(response.data);
+
+                          if (["jpg","jpeg","png","gif"].includes(ext || "")) {
+                            setPreviewType(ext);
+                            setPreviewFile(blobUrl);
+                            setPreviewOpen(true);
+                          } else if (ext === "pdf") window.open(blobUrl, "_blank");
+                          else {
+                            const link = document.createElement("a");
+                            link.href = blobUrl;
+                            link.download = doc.originalFileName;
+                            document.body.appendChild(link);
+                            link.click();
+                            link.remove();
+                          }
+                        } catch (err) {
+                          console.error("Download failed:", err);
+                          alert("File not found");
+                        }
+                      } else {
+                        const blobUrl = URL.createObjectURL(doc);
                         if (["jpg","jpeg","png","gif"].includes(ext || "")) {
                           setPreviewType(ext);
                           setPreviewFile(blobUrl);
                           setPreviewOpen(true);
-                        } else if (ext === "pdf") window.open(blobUrl, "_blank");
-                        else {
+                        } else {
                           const link = document.createElement("a");
                           link.href = blobUrl;
-                          link.download = doc.originalFileName;
+                          link.download = doc.name;
                           document.body.appendChild(link);
                           link.click();
                           link.remove();
                         }
-                      } catch (err) {
-                        console.error("Download failed:", err);
-                        alert("File not found");
                       }
-                    } else {
-                      const blobUrl = URL.createObjectURL(doc);
-                      if (["jpg","jpeg","png","gif"].includes(ext || "")) {
-                        setPreviewType(ext);
-                        setPreviewFile(blobUrl);
-                        setPreviewOpen(true);
+                    }}
+                  >
+                    {doc.originalFileName || doc.name}
+                  </span>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      if (doc.source === "api") {
+                        setExistingDocs(prev => prev.map(d => d.fileNameGUID === doc.fileNameGUID ? { ...d, isDeleted: true } : d));
                       } else {
-                        const link = document.createElement("a");
-                        link.href = blobUrl;
-                        link.download = doc.name;
-                        document.body.appendChild(link);
-                        link.click();
-                        link.remove();
+                        setForm(prev => ({ ...prev, files: prev.files.filter((_, i) => i !== index) }));
                       }
-                    }
-                  }}
-                >
-                  {doc.originalFileName || doc.name}
-                </span>
-                <button
-                  type="button"
-                  onClick={() => {
-                    if (doc.source === "api") {
-                      setExistingDocs(prev => prev.map(d => d.fileNameGUID === doc.fileNameGUID ? { ...d, isDeleted: true } : d));
-                    } else {
-                      setForm(prev => ({ ...prev, files: prev.files.filter((_, i) => i !== index) }));
-                    }
-                  }}
-                  className="text-red-500 hover:text-red-700 font-bold text-lg leading-none"
-                >
-                  ×
-                </button>
-              </div>
-            ))}
+                    }}
+                    className="text-red-500 hover:text-red-700 font-bold text-lg leading-none"
+                  >
+                    ×
+                  </button>
+                </div>
+              ))}
+            </div>
+
+
+          </div>    
+
+            {/* Referrals */}
+            <div>
+              <label className="block text-sm font-medium mb-2">
+                Referrals Email ID 
+              </label>
+              <Select
+                options={users.map((u) => ({
+                  value: u.UserID,
+                  label: u.UserInfo,
+                }))}
+                value={referrals.length ? { value: referrals[referrals.length - 1].UserID, 
+                label: referrals[referrals.length - 1].UserInfo } : null}
+                onChange={handleSelectReferral}
+                placeholder="Search and select referral..."
+                isSearchable
+                className="text-sm"
+              />
+              {/* Selected Referrals */}
+                  <div className="mt-3 space-y-2 max-h-[180px] overflow-y-auto pr-2">
+                    {referrals.map((ref) => (
+                      <div
+                        key={ref.UserID}
+                        className="flex items-center justify-between bg-gray-100 px-3 py-2 rounded"
+                      >
+                        <span className="truncate">
+                          {ref.UserInfo}
+                        </span>
+                  
+                        <button
+                          type="button"
+                          onClick={() => removeReferral(ref.UserID)}
+                          className="ml-2 px-2 py-1 bg-red-500 text-white rounded"
+                        >
+                          ✕
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                  
+              {errorMessage && (
+                <div className="fixed top-5 right-5 z-[9999] bg-red-600 text-white px-5 py-3 
+                rounded-lg shadow-xl text-sm font-medium animate-slide-in">
+                  {errorMessage}
+                </div>
+              )}
+
+            </div>
+
           </div>
-
-        {/* Description */}
-        <div className="">
-          <br/>
-          <Label.Root className="block text-sm font-medium">Description  (Max 1000 chars)</Label.Root>
-          <textarea
-            rows={2}
-            placeholder="Describe the nomination..."
-            value={form.description}
-            onChange={(e) => { const value = e.target.value;
-            if (value.length <= 1000) {
-            setForm({ ...form, description: value });
-            }
-           }}
-             className="w-full mt-1 border rounded px-3 py-2 resize-none"
-            // className="w-full mt-1 border rounded px-3 py-2 h-28 resize-none"
-          />
-           <p className="text-gray-500 text-sm mt-1">
-    {form.description.length}/1000 characters
-  </p>
-        </div>
+         
 
 
-       </div>  
-        </div> 
-        {/* Buttons */}
-        <div className="flex justify-end space-x-4">
+
+        </div>  
+          </div> 
+          
+        </form>
+      </div>
+    </div>
+    {/* Buttons */}
+    {/* <div className="bg-white border-t border-gray-200 px-6 py-4 shrink-0 sticky bottom-0 w-405 shadow-md padding: 16px;"> */}
+    <div className="fixed bottom-0 left-0 w-full h-15 bg-white border-t border-gray-200 flex items-center pl-[260px] pr-6">
+        <div className="flex justify-end space-x-4 ml-auto" >
           <button
           type="button"
           onClick={() => {
@@ -919,9 +930,8 @@ const referralPayload = referrals.map(ref => ({
             {isEditMode ? "Update Nomination" : "Save Nomination"}
           </button>
         </div> 
-      </form>
-      <Outlet />
     </div>
+
     {showErrorModal && (
   <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
     <div className="bg-white p-6 rounded shadow-md w-96 text-center">
