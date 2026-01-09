@@ -5,7 +5,8 @@ import Layout from './layout/Layout';
 import HomePage from './pages/HomePage';
 import NotificationsPage from './pages/NotificationPage';
 import SelfNominationPage from './pages/SelfNominationPage';
-import NominationPage from './pages/NominationPage';
+// import NominationPage from './pages/NominationPage';
+import MyNominationPage from './components/NominationContent/NominationTable.tsx';
 import AddNomination from './components/NominationContent/AddNomination';
 import ApprovalComponent from './components/ManagerPage/ApprovalComponent';
 import BusinessJury from './components/Jury/BusinessJury';
@@ -47,7 +48,8 @@ const pageComponents: Record<string, React.ReactNode> = {
   'Home': <HomePage />,
   'Notifications': <NotificationsPage />,
   'Self Nominations': <SelfNominationPage />,
-  'My Nominations': <NominationPage />,
+  // 'My Nominations': <NominationPage />,
+  'My Nominations': <MyNominationPage />,
   'Approvals': <ApprovalComponent />,
   'Business Jury': <BusinessJury />,
   'President Unit': <PresidentUnit />,
