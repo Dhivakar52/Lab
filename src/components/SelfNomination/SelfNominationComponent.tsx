@@ -547,14 +547,34 @@ const referralPayload = referrals.map(ref => ({
         {successMsg}
       </div>
     )} */}
-    <div className="bg-gray-100 flex flex-col"> 
+      <div className="fixed bg-white border-b border-t border-gray-200 w-full h-15 flex items-center  top-20 left-0  pl-[260px] pr-6 z-10">
+      <div className="flex justify-between w-full">
+        <div className="space-x-4 flex items-center ml-auto mr-25">
+            {/* <h2 className="text-xl font-semibold">Self Nominate Form</h2> */}
+            <a
+              href="#"
+              onClick={(e) => {
+                e.preventDefault();
+                if (totalSelfNominations > 0) {
+                  navigate("/my-nominations");
+                }
+              }}
+  
+              className={totalSelfNominations > 0
+                ? "text-blue-600  cursor-pointer px-4 py-2 btn-theme"
+                : "text-gray-500 cursor-default no-underline px-4 py-2 btn-theme" }>
+              You have {totalSelfNominations} nominations
+            </a>
+        </div>
+        </div>
+    </div>
+    <div className="bg-gray-100 flex flex-col p-6 pt-15"> 
       <div className="w-full h-full px-1 py-1 pb-[50px]" >
         <form
           onSubmit={handleSubmit}
           className="px-2 py-4 rounded-lg bg-white shadow nominate-form">
       <div className="flex-1 bg-white">
         <div className="w-full h-full px-6 py-4">    
-        <div className="flex justify-end"><a href="#" className="text-blue-600  cursor-pointer px-4 py-2 btn-theme">You have 13 nominations</a></div>     
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-4">
             {/* Title */}
             <div >
