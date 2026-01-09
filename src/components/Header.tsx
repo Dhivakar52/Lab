@@ -72,8 +72,8 @@ const Header: React.FC<HeaderProps> = ({ onMobileMenuToggle }) => {
   }, [userId]);
 
 const headerTitleMap: Record<string, string> = {
-  "my-nominations": "My Nomination Details",
-  "other-nominations": "Other Nomination Details",
+  // "my-nominations": "My Nomination Details",
+  // "other-nominations": "Other Nomination Details",
   "referral-approval": "Referral Approval Details",
   "approvals": "Manager Approval Details",
   "business-jury": "Business Jury Review",
@@ -85,8 +85,14 @@ const headerTitleMap: Record<string, string> = {
   // ----------------------------
   const getHeaderTitle = () => {
   const from = location.state?.from;
+  const tab = location.state?.tab;
 
-    if (from && headerTitleMap[from]) {
+    if (from === "nominations") {
+      return tab === "others"
+        ? "Other Nomination Details"
+        : "My Nomination Details";
+    }
+    else if (from && headerTitleMap[from]) {
       return headerTitleMap[from];
     }
 

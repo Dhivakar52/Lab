@@ -56,7 +56,7 @@ const NominationDetailView: React.FC<NominationDetailViewProps> = ({
   const location = useLocation();
   const from = location.state?.from;
   const tab = location.state?.tab;
-  const withdrawAllowedFrom = ["my-nominations", "other-nominations"];
+  const withdrawAllowedFrom = ["nominations"];
   const [popupOpen, setPopupOpen] = useState(false);
   const [actionType, setActionType] = useState<"approve" | "reject" | null>(null);
   const [popupScore, setPopupScore] = useState("");
@@ -169,13 +169,20 @@ const NominationDetailView: React.FC<NominationDetailViewProps> = ({
   }
 };
  
-  const handleBackward = () => {
-  if (from === "my-nominations") {
-    navigate("/my-nominations");
+  const handleBackward1= () => {
+
+ if (from === "nominations") {
+    navigate("/my-nominations", {
+      state: { tab: tab || "my" },
+    });
+    return;
   }
-  else if (from === "other-nominations") {
-    navigate("/my-nominations", { state: { tab: tab || "form" } });
-  }
+  // if (from === "my-nominations") {
+  //   navigate("/my-nominations");
+  // }
+  // else if (from === "other-nominations") {
+  //   navigate("/my-nominations", { state: { tab: tab || "form" } });
+  // }
   else if (from === "referral-approval") {
     navigate("/referral-approval");
   }
@@ -192,7 +199,40 @@ const NominationDetailView: React.FC<NominationDetailViewProps> = ({
     navigate("/business-jury");
   }
 };
- 
+const handleBackward = () => {
+
+  if (from === "nominations") {
+    navigate("/my-nominations", {
+      state: { tab: location.state?.tab},
+    });
+    return;
+  }
+  switch (from) {
+    case "referral-approval":
+      navigate("/referral-approval");
+      break;
+
+    case "approvals":
+      navigate("/approvals");
+      break;
+
+    case "business-jury":
+      navigate("/business-jury");
+      break;
+
+    case "president-level":
+      navigate("/president-level");
+      break;
+
+    case "president-unit":
+      navigate("/president-unit");
+      break;
+
+    default:
+      navigate(-1); 
+  }
+};
+
 const description =
   data?.Descriptions && data.Descriptions.trim() !== ""
     ? data.Descriptions.trim()
@@ -749,11 +789,7 @@ const ApprovalSuccessModal = () => {
  
 return (
   <div>
-  <div className="bg-gray-100 flex flex-col p-6">
-    {/* <div className="bg-white border-b border-gray-200 px-6 py-4">
-      <h1 className="text-2xl font-semibold">{headerTitle}</h1>
-     </div> */}
-      {/* <div className="flex-1 overflow-y-auto"> */}
+  <div className="bg-gray-100 flex flex-col p-6 pb-20">
      <div className="overflow-x-auto bg-white shadow-md rounded-lg p-6">
       <div className="w-full h-full px-1 py-1">
         <div className="grid grid-cols-5 gap-6 mb-4">
@@ -820,8 +856,7 @@ return (
                   : data.Status === "Under Review"
                   ? "bg-yellow-100 text-yellow-700"
                   : "bg-gray-100 text-gray-700"
-              }`}
-            >
+              }`} >
               {data.Status}
             </span>
           </div>
@@ -1001,13 +1036,9 @@ return (
                         {/* <div className="w-9 h-9 rounded-full bg-blue-600 flex items-center justify-center text-white text-sm font-bold">
                           {item.ApprovalName?.charAt(0)?.toUpperCase() || level.charAt(0)}
                         </div> */}
-                       <div
-  className="w-9 h-9 rounded-full flex items-center justify-center text-white text-sm font-bold
-          themeColor"
->
-  {item.ApprovalName?.charAt(0)?.toUpperCase() || level?.charAt(0)?.toUpperCase()}
-</div>
-
+                       <div className="w-9 h-9 rounded-full flex items-center justify-center text-white text-sm font-bold themeColor">
+                          {item.ApprovalName?.charAt(0)?.toUpperCase() || level?.charAt(0)?.toUpperCase()}
+                        </div>
                         <div className="flex-1 flex justify-between gap-6">
                           <div className="flex-1">
                             <p className="text-sm font-semibold text-gray-900">
@@ -1027,8 +1058,7 @@ return (
                                   {truncated && (
                                     <button
                                       onClick={() => toggleComment(level)}
-                                      className="ml-1 text-blue-600 underline text-sm"
-                                    >
+                                      className="ml-1 text-blue-600 underline text-sm">
                                       {expandedComments[level] ? "Show less" : "See more"}
                                     </button>
                                   )}
@@ -1107,20 +1137,19 @@ return (
     </div>
    </div>
 </div>
-    <div className="bg-white border-t border-gray-200 px-6 py-4 shrink-0 sticky bottom-0 z-20 shadow-sm">
-         <div className="flex justify-end gap-3">
+    {/* <div className="bg-white border-t border-gray-200 px-6 py-4 shrink-0 sticky bottom-0 z-20 shadow-sm">
+         <div className="flex justify-end gap-3"> */}
+    <div className="fixed bottom-0 left-0 w-full h-15 bg-white border-t border-gray-200 flex items-center pl-[260px] pr-6">
+      <div className="flex justify-end space-x-4 ml-auto" >          
          <button onClick={handleBackward} className="flex items-center text-blue-600 bg-white border rounded-sm px-2 py-1 font-medium">
          <span className=""><ArrowLeft size={14}/></span> Back
           </button>
-           {showWithdrawButton && ( 
+        {showWithdrawButton && ( 
           <button
-  onClick={handleEdit}
-  className="flex items-center gap-1 text-blue-600 bg-white border rounded-sm px-2 py-1 font-medium hover:bg-blue-50 transition"
->
-  <Edit size={14} />
-  Edit
-</button>
-)}
+          onClick={handleEdit}
+          className="flex items-center gap-1 text-blue-600 bg-white border rounded-sm px-2 py-1 font-medium hover:bg-blue-50 transition">
+          <Edit size={14} /> Edit </button>
+        )}
         {showWithdrawButton && (
           
           <button
@@ -1209,8 +1238,7 @@ return (
                     }
                     setPopupScore(v);
                     setPopupErrors(prev => ({ ...prev, score: "" }));
-                  }}
-                />
+                  }} />
                 <div className="absolute right-2 bottom-2 text-xs text-gray-500 pointer-events-none">
                   {popupScore ? popupScore : "1"}/100
                 </div>
@@ -1230,8 +1258,7 @@ return (
                   onChange={(e) => {
                     setPopupComments(e.target.value);
                     setPopupErrors(prev => ({ ...prev, comments: "" }));
-                  }}
-                />
+                  }}/>
                 <div className="absolute right-2 bottom-2 text-xs text-gray-500 pointer-events-none">
                   {popupComments.length > 0 ? popupComments.length : 1}/500
                 </div>
