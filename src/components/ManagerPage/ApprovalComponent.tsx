@@ -16,6 +16,10 @@ import ApprovalPanel from "./ApprovalPanel";
 import { ColorBadge } from "../TenantBadges";
 import { useNavigate } from "react-router-dom";
 import Pagination from "../Pagination";
+import StatusFlow from "../CommonStatusFlow"; 
+import { Flag } from "lucide-react";
+import { ChevronDown, ChevronUp } from "lucide-react";
+import { levelColors, levelTextColors } from "../../statusColors.ts";
 
 interface ApprovalData {
   id: number;
@@ -85,14 +89,11 @@ interface ApprovalView {
   ApprovalType: string;
   }[];
 }
-
+type ExpandedRow = {
+  id: number;
+  type: "flag" | "status";
+} | null;
 const apiUrl = import.meta.env.VITE_API_URL;
-
-const statusColors: Record<ApprovalData["Status"], string> = {
-  Pending: "bg-orange-100 text-orange-800",
-  Approved: "bg-green-100 text-green-800",
-  Rejected: "font-semibold bg-red-100 text-red-800",
-};
 
 const ApprovalTable: React.FC = () => {
   const [isPanelOpen, setIsPanelOpen] = useState(false);
@@ -104,6 +105,10 @@ const ApprovalTable: React.FC = () => {
   const [successMessage, setSuccessMessage] = useState("");
   const [reason, setReason] = useState("");
   const [toastType, setToastType] = useState<"success" | "error">("success");
+  const [flagReason, setFlagReason] = useState<Record<number, string>>({});
+  const [flagError, setFlagError] = useState<Record<number, string>>({});
+  const [expandedFlagRow, setExpandedFlagRow] = useState<number | null>(null);
+  const [expandedRow, setExpandedRow] = useState<ExpandedRow>(null);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -125,7 +130,22 @@ const ApprovalTable: React.FC = () => {
 
     fetchApprovals();
   }, []);
-
+  const handleFlagClick = (item: any) => {
+    setExpandedRow(prev => {
+      if (prev?.id === item.NominationID && prev?.type === "flag") {
+        return null;
+      }
+      return { id: item.NominationID, type: "flag" };
+    });
+  };
+  const handleStatusClick = (item: any) => {
+    setExpandedRow(prev => {
+      if (prev?.id === item.NominationID && prev?.type === "status") {
+        return null;
+      }
+      return { id: item.NominationID, type: "status" };
+    });
+  };
   const handleApprove = async (nominationID: number) => {
     try {
       await axios.put(
@@ -199,7 +219,6 @@ const ApprovalTable: React.FC = () => {
   const columns = useMemo<ColumnDef<ApprovalData>[]>(() => [
     { accessorKey: "NominationID", header: "Nomination ID" },
     { accessorKey: "Nominee", header: "Nominee Name" },
-
     {
       accessorKey: "Tenant",
       header: "Entity Name",
@@ -212,49 +231,55 @@ const ApprovalTable: React.FC = () => {
       { accessorKey: "AwardCategory", header: "AwardCategory" },
 
     { accessorKey: "SubmittedDate", header: "Submitted Date" },
-
-    {
-      accessorKey: "Status",
-      header: "Status",
-      cell: ({ getValue }) => {
-        const status = getValue() as ApprovalData["Status"];
-        return (
-          <span className={`px-3 py-1 rounded-full text-sm font-medium ${statusColors[status]}`}>
-            {status}
-          </span>
-        );
-      },
-    },
-
-      // {
-      //   header: "Actions",
-      //   cell: ({ row }) => {
-      //     const item = row.original;
+ {
+                accessorKey: "Status",
+                header: "Status",
+                cell: ({ row, getValue }) => {
+                  const status = getValue() as string;
+                  const isOpen =
+                    expandedRow?.id === row.original.NominationID &&
+                    expandedRow?.type === "status";
     
-      //      const handleDetailsView = (item: ApprovalData) => {
-      //       navigate(`/nomination-detail/${item.NominationID}`, {
-      //         state: { from: "approvals" }
-      //       });
-      //     };
-      //     return (
-      //       <DropdownMenu>
-      //         <DropdownMenuTrigger asChild>
-      //           <button className="p-2 rounded hover:bg-gray-100 transition">
-      //             <Menu size={18} className="text-blue-600" />
-      //           </button>
-      //         </DropdownMenuTrigger>
-      
-      //         <DropdownMenuContent align="end" className="w-30 bg-white shadow-xl rounded-sm">
-      //           <DropdownMenuItem
-      //             onClick={() => handleDetailsView(row.original)}
-      //             className="hover:bg-blue-50 hover:text-blue-700 p-3" >
-      //              View
-      //           </DropdownMenuItem>
-      //         </DropdownMenuContent>
-      //       </DropdownMenu>
-      //     );
-      //   },
-      // },
+                  const bgClass = levelColors[status] || "bg-gray-100 border-gray-300";
+                  const textClass = levelTextColors[status] || "text-gray-700";
+    
+                  return (
+                    <div
+                      className={`inline-flex items-center border rounded overflow-hidden ${bgClass} ${textClass}`}>
+                      <button
+                        onClick={() => handleStatusClick(row.original)}
+                        className="px-3 py-1 text-sm font-medium flex-1 text-left">
+                        {status}
+                      </button>
+                      <span className="w-px self-stretch bg-current opacity-30" />
+                      <button
+                        onClick={() => handleStatusClick(row.original)}
+                        className="px-2 flex items-center justify-center" >
+                       {isOpen ? <ChevronUp size={18} /> : <ChevronDown size={18} />}
+                      </button>
+                    </div>
+                  );
+                },
+           },
+           {
+            header: "Flag",
+            cell: ({ row }) => {
+              const item = row.original as any;
+              const flagStatus = Number(item.FlagStatus);
+              if (flagStatus < 0) return null;
+              const isRed = flagStatus === 1;
+              return (
+                <button
+                  onClick={() => handleFlagClick(item)}
+                  className="p-1"
+                  title={isRed ? "Click to Flag" : "Click to UnFlag"}>
+                  <Flag
+                    size={18}
+                    className={isRed ? "text-red-600 fill-red-600" : "text-gray-400 fill-gray-400"}/>
+                </button>
+              );
+            },
+          },
       {
         header: "Actions",
         cell: ({ row }) => {
@@ -277,8 +302,7 @@ const ApprovalTable: React.FC = () => {
           );
         },
       },
-
-  ], []);
+  ],[expandedRow]);
 
   const table = useReactTable({
     data,
@@ -328,36 +352,146 @@ const ApprovalTable: React.FC = () => {
               ))}
             </thead>
 
-            <tbody className="divide-y divide-gray-100">
-              {table.getRowModel().rows.length ? (
-                table.getRowModel().rows.map((row) => (
-                  <tr key={row.id} className="hover:bg-gray-50">
-                    {row.getVisibleCells().map((cell) => (
-                      <td key={cell.id} className="px-4 py-2 text-sm text-gray-800">
-                        {flexRender(cell.column.columnDef.cell, cell.getContext())}
+             <tbody className="divide-y divide-gray-100">
+              {table.getRowModel().rows.map((row) => {
+                const item = row.original as any;
+                const isFlagExpanded =
+                  expandedRow?.id === item.NominationID &&
+                  expandedRow?.type === "flag";
+
+                const isStatusExpanded =
+                  expandedRow?.id === item.NominationID &&
+                  expandedRow?.type === "status";
+                const submitFlag = async (
+                  nominationID: number,
+                  isFlag: 0 | 1,
+                  reason: string
+                ) => {
+                  if (isFlag === 1 && (!reason || reason.trim() === "")) {
+                  setFlagError(prev => ({
+                    ...prev,
+                    [nominationID]: "Reason is mandatory"
+                  }));
+                  return; 
+                }
+
+                setFlagError(prev => ({
+                  ...prev,
+                  [nominationID]: ""
+                }));
+                  try {
+                    await axios.put(
+                      `${apiUrl}/api/nominationflag/${nominationID}`,
+                      {
+                        isFlag: isFlag === 1,
+                        flagReason: isFlag === 1 ? reason : "",
+                        updatedBy: userId,
+                      },
+                      {
+                        headers: {
+                          "Content-Type": "application/json",
+                          Authorization: `Bearer ${authToken}`,
+                        },
+                      }
+                    );
+                    setData((prev) =>
+                      prev.map((item: any) =>
+                        item.NominationID === nominationID
+                          ? {
+                              ...item,
+                              FlagStatus: isFlag.toString(), 
+                              FlagReason: isFlag === 1 ? reason : "",
+                            }
+                          : item
+                      )
+                    );
+                     setFlagReason(prev => ({
+                        ...prev,
+                        [nominationID]: isFlag === 1 ? reason : ""
+                      }));
+                    setExpandedFlagRow(null);
+
+                  } catch (error) {
+                    console.error("Flag Error:", error);
+                    alert("Flag update failed");
+                  }
+                };
+                return (
+                  <React.Fragment key={row.id}>
+                    <tr className="hover:bg-gray-50">
+                      {row.getVisibleCells().map((cell) => (
+                        <td key={cell.id} className="px-4 py-2 text-sm">
+                          {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                        </td>
+                      ))}
+                    </tr>
+                   {isFlagExpanded && (
+                    <tr className="bg-gray-50">
+                      <td colSpan={columns.length} className="px-6 py-4">
+                        <div className="flex items-center gap-3">
+                          {item.FlagStatus === "1" && (
+                            <Flag size={18} className="text-red-500" />
+                          )}
+                          <span
+                            className={`text-sm font-semibold whitespace-nowrap text-red-700 `}>
+                            Reason For Flagging:
+                          </span>
+                          {item.FlagStatus === "1" ? (
+                            <>
+                              <label className="flex-1 text-sm text-gray-700">
+                                 {flagReason[item.NominationID] || item.FlagReason}
+                              </label>
+                              <button
+                                onClick={() => submitFlag(item.NominationID, 0, flagReason[item.NominationID])}
+                                className="px-4 py-2 btn-theme-reject"> Remove Flag </button>
+                            </>
+                          ) : (
+                            <>
+                              <input
+                                type="text"
+                                value={flagReason[item.NominationID] || ""}
+                                onChange={(e) =>
+                                  setFlagReason(prev => ({
+                                    ...prev,
+                                    [item.NominationID]: e.target.value,
+                                  }))
+                                }
+                                placeholder="Enter flag reason"
+                                className="flex-1 border border-gray-300 rounded px-3 py-2 text-sm text-gray-700"/>
+                                {flagError[item.NominationID] && (
+                                  <p className="text-xs text-red-600 mt-1">
+                                    {flagError[item.NominationID]}
+                                  </p>
+                                )}
+                              <button
+                                onClick={() => submitFlag(item.NominationID, 1, flagReason[item.NominationID])}
+                                className="px-4 py-2 btn-theme"> Save</button>
+                            </>
+                          )}
+                        </div>
                       </td>
-                    ))}
-                  </tr>
-                ))
-              ) : (
-                <tr>
-                  <td colSpan={columns.length} className="text-center py-6 text-gray-500">
-                    No approvals found
-                  </td>
-                </tr>
-              )}
+                    </tr>
+                  )}
+                  {isStatusExpanded && (
+                    <tr className="bg-gray-50">
+                      <td colSpan={columns.length} className="px-2 py-2">
+                        <StatusFlow
+                          steps={(item.ApprovalStatus || []).map((a: any) => ({
+                            type: a.ApprovalType,
+                            status: a.Status,
+                            level: a.ApprovalFlow,
+                            approvedAt: a.ApprovedAt,
+                          }))}
+                        />
+                      </td>
+                    </tr>
+                  )}
+                  </React.Fragment>
+                );
+              })}
             </tbody>
           </table>
-
-         
-         
-
-   
-
 <Pagination table={table} />
-
-
-
         </div>
       </div>
 

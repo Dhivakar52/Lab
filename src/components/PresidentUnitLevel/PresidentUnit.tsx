@@ -21,8 +21,11 @@ import { ColorBadge } from "../TenantBadges";
 import { useAuth } from "../ContextAPI/AuthContext";
 import { useNavigate } from "react-router-dom";
 import PresidentSidePanel from "./PresidentUnitPanel";
-
 import Pagination from "../Pagination";
+import StatusFlow from "../CommonStatusFlow"; 
+import { Flag } from "lucide-react";
+import { ChevronDown, ChevronUp } from "lucide-react";
+import { levelColors, levelTextColors } from "../../statusColors.ts";
 
 export interface GeneralJury {
   TotalRowCount: number;
@@ -54,7 +57,10 @@ export interface GeneralJury {
     FilePath: string;
   }[];
 }
-
+type ExpandedRow = {
+  id: number;
+  type: "flag" | "status";
+} | null;
 const apiUrl = import.meta.env.VITE_API_URL;
 
 const PresidentUnit: React.FC = () => {
@@ -64,13 +70,9 @@ const PresidentUnit: React.FC = () => {
   const [data, setData] = useState<GeneralJury[]>([]);
   const [loading, setLoading] = useState(true);
   const [globalFilter, setGlobalFilter] = useState("");
-
-   const statusColors: Record<GeneralJury["Status"], string> = {
-    Pending: "bg-orange-100 text-orange-800",
-    Approved: "bg-green-100 text-green-800",
-    Rejected: "bg-red-100 text-red-800",
-  };
-
+  const [flagReason, setFlagReason] = useState<Record<number, string>>({});
+  const [expandedRow, setExpandedRow] = useState<ExpandedRow>(null);
+ 
   useEffect(() => {
     const fetchGeneralJury = async () => {
       try {
@@ -93,7 +95,22 @@ const PresidentUnit: React.FC = () => {
 
     fetchGeneralJury();
   }, [authToken, userId]);
-
+  const handleFlagClick = (item: any) => {
+    setExpandedRow(prev => {
+      if (prev?.id === item.NominationID && prev?.type === "flag") {
+        return null;
+      }
+      return { id: item.NominationID, type: "flag" };
+    });
+  };
+  const handleStatusClick = (item: any) => {
+    setExpandedRow(prev => {
+      if (prev?.id === item.NominationID && prev?.type === "status") {
+        return null;
+      }
+      return { id: item.NominationID, type: "status" };
+    });
+  };
   const columns = useMemo<ColumnDef<GeneralJury>[]>(
     () => [
       { accessorKey: "Nominee", header: "Nominee" },
@@ -106,10 +123,8 @@ const PresidentUnit: React.FC = () => {
           return <ColorBadge label={tenant} />;
         },
       },
-
       { accessorKey: "CategoryName", header: "Category" },
       { accessorKey: "NominatedBy", header: "Nominated By" },
-     
       {
           accessorKey: "GeneralJuryScore",
           header: () => <div className="text-center">Score</div>,
@@ -119,57 +134,56 @@ const PresidentUnit: React.FC = () => {
             </div>
           ),
         },
-        {
-                accessorKey: "Status",
-                header: "Status",
-                cell: ({ getValue }) => {
-                  const status = getValue() as GeneralJury["Status"];
-                  const colorClass = statusColors[status] || "bg-gray-100 text-gray-700";
+ {
+            accessorKey: "Status",
+            header: "Status",
+            cell: ({ row, getValue }) => {
+              const status = getValue() as string;
+              const isOpen =
+                expandedRow?.id === row.original.NominationID &&
+                expandedRow?.type === "status";
+
+              const bgClass = levelColors[status] || "bg-gray-100 border-gray-300";
+              const textClass = levelTextColors[status] || "text-gray-700";
+
+              return (
+                <div
+                  className={`inline-flex items-center border rounded overflow-hidden ${bgClass} ${textClass}`}>
+                  <button
+                    onClick={() => handleStatusClick(row.original)}
+                    className="px-3 py-1 text-sm font-medium flex-1 text-left">
+                    {status}
+                  </button>
+                  <span className="w-px self-stretch bg-current opacity-30" />
+                  <button
+                    onClick={() => handleStatusClick(row.original)}
+                    className="px-2 flex items-center justify-center" >
+                   {isOpen ? <ChevronUp size={18} /> : <ChevronDown size={18} />}
+                  </button>
+                </div>
+              );
+            },
+       },
+       {
+            header: "Flag",
+            cell: ({ row }) => {
+              const item = row.original as any;
+              const flagStatus = Number(item.FlagStatus);
+              if (flagStatus < 0) return null;
+              if (flagStatus === 1) {
                   return (
-                    <span
-                      className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium ${colorClass}`}
-                    >
-                      {status}
-                    </span>
-                  );
-                },     
-             }, 
-
-
-      // {
-      //   header: "Actions",
-      //   cell: ({ row }) => {
-      //     const item = row.original;
-
-      //     const handleDetailsView = () => {
-      //       navigate(`/nomination-detail/${item.NominationID}`, {
-      //         state: { from: "president-unit" },
-      //       });
-      //     };
-
-      //     return (
-      //       <DropdownMenu>
-      //         <DropdownMenuTrigger asChild>
-      //           <button className="p-2 rounded hover:bg-gray-100 transition">
-      //             <Menu size={18} className="text-blue-600" />
-      //           </button>
-      //         </DropdownMenuTrigger>
-
-      //         <DropdownMenuContent
-      //           align="end"
-      //           className="w-30 bg-white shadow-xl rounded-sm"
-      //         >
-      //           <DropdownMenuItem
-      //             onClick={handleDetailsView}
-      //             className="hover:bg-blue-50 hover:text-blue-700 p-3"
-      //           >
-      //             View
-      //           </DropdownMenuItem>
-      //         </DropdownMenuContent>
-      //       </DropdownMenu>
-      //     );
-      //   },
-      // },
+                   <button
+                    onClick={() => handleFlagClick(item)}
+                    className="p-1" title="Flagged">
+                   <Flag
+                    size={18} className="text-red-600 fill-red-600" /></button>
+                );
+              }
+                return (
+                  <span className="text-green-600 text-xl leading-none"  title="Not Flagged">✔</span>
+                );
+              },
+        },          
       {
           header: "Actions",
           cell: ({ row }) => {
@@ -191,12 +205,8 @@ const PresidentUnit: React.FC = () => {
               </button>
             );
           },
-        },
-
-     
-    ],
-    [navigate]
-  );
+        },   
+    ],[navigate,expandedRow]);
 
   const table = useReactTable({
     data,
@@ -243,8 +253,7 @@ const PresidentUnit: React.FC = () => {
                   <th
                     key={header.id}
                     onClick={header.column.getToggleSortingHandler()}
-                    className="px-4 py-3 text-left text-xs font-semibold uppercase cursor-pointer"
-                  >
+                    className="px-4 py-3 text-left text-xs font-semibold uppercase cursor-pointer">
                     {flexRender(
                       header.column.columnDef.header,
                       header.getContext()
@@ -257,34 +266,58 @@ const PresidentUnit: React.FC = () => {
             ))}
           </thead>
 
-          <tbody className="divide-y divide-gray-100">
-            {table.getRowModel().rows.length ? (
-              table.getRowModel().rows.map((row) => (
-                <tr key={row.id} className="hover:bg-gray-50">
-                  {row.getVisibleCells().map((cell) => (
-                    <td
-                      key={cell.id}
-                      className="px-4 py-3 text-sm text-gray-800"
-                    >
-                      {flexRender(
-                        cell.column.columnDef.cell,
-                        cell.getContext()
-                      )}
-                    </td>
-                  ))}
-                </tr>
-              ))
-            ) : (
-              <tr>
-                <td
-                  colSpan={columns.length}
-                  className="text-center py-6 text-gray-500"
-                >
-                  No President Unit Evaluation found
-                </td>
-              </tr>
-            )}
-          </tbody>
+             <tbody className="divide-y divide-gray-100">
+              {table.getRowModel().rows.map((row) => {
+                const item = row.original as any;
+                const isFlagExpanded =
+                  expandedRow?.id === item.NominationID &&
+                  expandedRow?.type === "flag";
+                const isStatusExpanded =
+                  expandedRow?.id === item.NominationID &&
+                  expandedRow?.type === "status";
+
+                return (
+                  <React.Fragment key={row.id}>
+                    <tr className="hover:bg-gray-50">
+                      {row.getVisibleCells().map((cell) => (
+                        <td key={cell.id} className="px-4 py-2 text-sm">
+                          {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                        </td>
+                      ))}
+                    </tr>
+                  {isFlagExpanded && (
+                    <tr className="bg-gray-50">
+                      <td colSpan={columns.length} className="px-6 py-4">
+                        <div className="flex items-center gap-3">
+                          <Flag size={18} className="text-red-600 fill-red-600" />
+                          <span className="text-sm font-semibold text-red-700">
+                            Reason For Flagging:
+                          </span>
+                          <span className="text-sm text-gray-700">
+                            {flagReason[item.NominationID] || item.FlagReason}
+                          </span>
+                        </div>
+                      </td>
+                    </tr>
+                  )}
+                  {isStatusExpanded && (
+                    <tr className="bg-gray-50">
+                      <td colSpan={columns.length} className="px-2 py-2">
+                        <StatusFlow
+                          steps={(item.ApprovalStatus || []).map((a: any) => ({
+                            type: a.ApprovalType,
+                            status: a.Status,
+                            level: a.ApprovalFlow,
+                            approvedAt: a.ApprovedAt,
+                          }))}
+                        />
+                      </td>
+                    </tr>
+                  )}
+                  </React.Fragment>
+                );
+              })}
+            </tbody>  
         </table>
 
         {/* Pagination */}
