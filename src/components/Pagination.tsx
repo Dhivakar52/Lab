@@ -35,12 +35,20 @@ const Pagination: React.FC<PaginationProps> = ({ table }) => {
   const pages = getPages();
 
   return (
-    <div className="flex items-center justify-end gap-1 mt-4">
+     <div className="flex items-center justify-between gap-1 mt-4">
+     
+      {/* LEFT : Page info */}
+      <div className="justify-right text-sm text-gray-600">
+        Page <span className="font-semibold">{currentPage}</span> of{" "}
+        <span className="font-semibold">{totalPages}</span>
+      </div>
+
+      <div>
       {/* Previous */}
       <button
         onClick={() => table.previousPage()}
         disabled={!table.getCanPreviousPage()}
-        className="px-3 py-1 rounded bg-gray-200 disabled:opacity-50"
+        className="px-3 py-1 mx-1 rounded bg-gray-200 disabled:opacity-50"
       >
         ‹
       </button>
@@ -48,14 +56,14 @@ const Pagination: React.FC<PaginationProps> = ({ table }) => {
       {/* Page numbers */}
       {pages.map((p, idx) =>
         p === "..." ? (
-          <span key={idx} className="px-2 py-1">
+          <span key={idx} className="px-2 py-1 mx-1">
             ...
           </span>
         ) : (
           <button
             key={idx}
             onClick={() => table.setPageIndex(Number(p) - 1)}
-            className={`px-3 py-1 rounded ${
+            className={`px-3 py-1 mx-1 rounded ${
               p === currentPage ? " themeColor text-white" : "bg-gray-200"
             }`}
           >
@@ -68,10 +76,11 @@ const Pagination: React.FC<PaginationProps> = ({ table }) => {
       <button
         onClick={() => table.nextPage()}
         disabled={!table.getCanNextPage()}
-        className="px-3 py-1 rounded bg-gray-200 disabled:opacity-50"
+        className="px-3 py-1 mx-1 rounded bg-gray-200 disabled:opacity-50"
       >
         ›
       </button>
+      </div>
     </div>
   );
 };

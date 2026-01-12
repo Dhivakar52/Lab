@@ -11,8 +11,11 @@ interface Tenant {
 }
 
 interface UserSearch {
-  UserID: number;
+  
+   UserID: number;
   UserName: string;
+  TenantID: number;
+  TenantName: string;
 }
 
 interface Props {
@@ -43,6 +46,12 @@ const AddJuryMemberPanel: React.FC<Props> = ({
   const [showDropdown, setShowDropdown] = useState(false);
   const [searchLoading, setSearchLoading] = useState(false);
   const [selectedUserId, setSelectedUserId] = useState<number | null>(null);
+  /* 🔴 VALIDATION ERRORS */
+  const [errors, setErrors] = useState<{
+    tenant?: string;
+    name?: string;
+    role?: string;
+  }>({});
 
   /* ================= FETCH TENANTS ================= */
   useEffect(() => {
@@ -66,6 +75,7 @@ const AddJuryMemberPanel: React.FC<Props> = ({
     setName("");
     setTenantId("");
     setRole(null);
+     setErrors({});
   }, [isOpen, isEdit, authToken]);
 
   /* ================= EDIT MODE PREFILL ================= */
@@ -108,9 +118,22 @@ const AddJuryMemberPanel: React.FC<Props> = ({
 
     return () => clearTimeout(debounce);
   }, [name, isEdit, authToken]);
+   /* ================= VALIDATION ================= */
+  const validateForm = () => {
+    const newErrors: any = {};
+
+    if (!tenantId) newErrors.tenant = "Tenant is required";
+    if (!name) newErrors.name = "Name is required";
+   
+    if (!role) newErrors.role = "Please select jury role";
+
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
 
   /* ================= SAVE ================= */
   const handleSave = async () => {
+    if (!validateForm()) return;
     try {
       const payload = {
         userId: isEdit ? editData.UserID : selectedUserId,
@@ -159,6 +182,37 @@ const AddJuryMemberPanel: React.FC<Props> = ({
 
         {/* Body */}
         <div className="p-6 space-y-5 flex-1">
+           {/* Tenant */}
+          <div>
+            <label className="block text-sm font-medium mb-1">
+              Tenant {!isEdit && <span className="text-red-500">*</span>}
+            </label>
+
+            {isEdit ? (
+              <div className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm bg-gray-100">
+                {tenantName}
+              </div>
+            ) : (
+              <select
+                value={tenantId}
+                onChange={(e) => setTenantId(e.target.value)}
+                className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm"
+              >
+                <option value="">Select entity</option>
+                {loading && <option>Loading...</option>}
+                {!loading &&
+                  tenants.map((t) => (
+                    <option key={t.TenantID} value={t.TenantID.toString()}>
+                      {t.TenantName}
+                    </option>
+                  ))}
+              </select>
+              
+            )}
+             {errors.tenant && (
+              <p className="text-xs text-red-500">{errors.tenant}</p>
+            )}
+          </div>
           {/* Name */}
           <div>
             <label className="block text-sm font-medium mb-1">
@@ -195,7 +249,7 @@ const AddJuryMemberPanel: React.FC<Props> = ({
                     </div>
                   )}
 
-                  {!searchLoading &&
+                  {/* {!searchLoading &&
                     users.map((u) => (
                       <div
                         key={u.UserID}
@@ -208,39 +262,38 @@ const AddJuryMemberPanel: React.FC<Props> = ({
                       >
                         {u.UserName}
                       </div>
-                    ))}
+                    ))} */}
+                    {!searchLoading &&
+                  users.map((u) => (
+                    <div
+                      key={u.UserID}
+                      onClick={() => {
+                        setName(u.UserName);
+                        setSelectedUserId(u.UserID);
+
+                        // ✅ AUTO SET TENANT
+                        setTenantId(u.TenantID.toString());
+                        setTenantName(u.TenantName);
+
+                        setShowDropdown(false);
+                      }}
+                      className="px-3 py-2 text-sm cursor-pointer hover:bg-gray-100"
+                    >
+                      {u.UserName}
+                    </div>
+                  ))}
+                 
                 </div>
+                
               )}
             </div>
-          </div>
-
-          {/* Tenant */}
-          <div>
-            <label className="block text-sm font-medium mb-1">
-              Tenant {!isEdit && <span className="text-red-500">*</span>}
-            </label>
-
-            {isEdit ? (
-              <div className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm bg-gray-100">
-                {tenantName}
-              </div>
-            ) : (
-              <select
-                value={tenantId}
-                onChange={(e) => setTenantId(e.target.value)}
-                className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm"
-              >
-                <option value="">Select entity</option>
-                {loading && <option>Loading...</option>}
-                {!loading &&
-                  tenants.map((t) => (
-                    <option key={t.TenantID} value={t.TenantID.toString()}>
-                      {t.TenantName}
-                    </option>
-                  ))}
-              </select>
+             {errors.name && (
+              <p className="text-xs text-red-500">{errors.name}</p>
             )}
+
           </div>
+
+         
 
           {/* Role */}
           <div>
@@ -263,6 +316,9 @@ const AddJuryMemberPanel: React.FC<Props> = ({
                 General Jury
               </label>
             </div>
+             {errors.role && (
+              <p className="text-xs text-red-500">{errors.role}</p>
+            )}
           </div>
         </div>
 
