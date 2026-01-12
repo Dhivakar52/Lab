@@ -1,6 +1,5 @@
 import React, { useState,useEffect,useMemo } from "react";
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@radix-ui/react-dropdown-menu";
-import { ArrowRight, Menu,  } from "lucide-react";
+import {ChevronDown, ChevronUp, Menu,  } from "lucide-react";
 import BusinessPanel from "./BusinessPanel"; 
 import axios from "axios";
 import { useAuth } from "../ContextAPI/AuthContext";
@@ -20,7 +19,6 @@ import { useNavigate } from "react-router-dom";
 import Pagination from "../Pagination";
 import StatusFlow from "../CommonStatusFlow"; 
 import { Flag } from "lucide-react";
-import { ChevronDown, ChevronUp } from "lucide-react";
 import { levelColors, levelTextColors } from "../../statusColors.ts";
 
 
@@ -129,7 +127,7 @@ const BusinessJury: React.FC = () => {
           accessorKey: "BusinessJuryScore",
           header: () => <div className="text-center">Score</div>,
           cell: ({ getValue }) => (
-            <div className="text-center">
+            <div className="text-center pr-4">
               {getValue() as number}
             </div>
           ),
@@ -244,14 +242,20 @@ const BusinessJury: React.FC = () => {
                 {headerGroup.headers.map(header => (
                   <th
                     key={header.id}
-                    className={`px-4 py-3 text-sm text-left text-gray-600 ${
+                    onClick={header.column.getToggleSortingHandler()}
+                    className={`px-4 py-3 text-sm text-left text-gray-600 cursor-pointer select-none${
                       (header.column.columnDef.meta as any)?.className ?? ""
                     }`}
-                  >
+                  > 
+                  <span className="flex items-center gap-1">
                     {flexRender(
                       header.column.columnDef.header,
                       header.getContext()
                     )}
+                    {header.column.getIsSorted() === "asc" && <ChevronUp size={14}/>}
+                    {header.column.getIsSorted() === "desc" && <ChevronDown size={14}/>}
+                  </span>
+
                   </th>
                 ))}
               </tr>

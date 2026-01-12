@@ -8,17 +8,14 @@ import {
   getFilteredRowModel,
   flexRender,
 } from "@tanstack/react-table";
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@radix-ui/react-dropdown-menu";
 import type { ColumnDef } from "@tanstack/react-table";
 import { useAuth } from "../ContextAPI/AuthContext";
-import { Menu } from "lucide-react";
 import ApprovalPanel from "./ApprovalPanel";
 import { ColorBadge } from "../TenantBadges";
 import { useNavigate } from "react-router-dom";
 import Pagination from "../Pagination";
 import StatusFlow from "../CommonStatusFlow"; 
-import { Flag } from "lucide-react";
-import { ChevronDown, ChevronUp } from "lucide-react";
+import { ChevronDown, ChevronUp, Menu,Flag } from "lucide-react";
 import { levelColors, levelTextColors } from "../../statusColors.ts";
 
 interface ApprovalData {
@@ -341,11 +338,14 @@ const ApprovalTable: React.FC = () => {
                     <th
                       key={header.id}
                       onClick={header.column.getToggleSortingHandler()}
-                      className="px-4 py-3 text-left text-xs font-semibold uppercase cursor-pointer"
+                      className="px-4 py-3 text-left text-sm font-semibold uppercase cursor-pointer select-none"
                     >
-                      {flexRender(header.column.columnDef.header, header.getContext())}
-                      {header.column.getIsSorted() === "asc" ? " 🔼" : ""}
-                      {header.column.getIsSorted() === "desc" ? " 🔽" : ""}
+                      <span className="flex items-center gap-1">
+    
+                        {flexRender(header.column.columnDef.header, header.getContext() )}
+                        {header.column.getIsSorted() === "asc" && <ChevronUp size={14}/>}
+                        {header.column.getIsSorted() === "desc" && <ChevronDown size={14}/>}
+                      </span>
                     </th>
                   ))}
                 </tr>

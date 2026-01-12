@@ -12,7 +12,6 @@ import {
 import type {
   ColumnDef,
 } from "@tanstack/react-table";
-import { Menu } from "lucide-react";
 import { useAuth } from "../ContextAPI/AuthContext";
 import { ColorBadge } from "../TenantBadges";
 import { useNavigate } from "react-router-dom";
@@ -20,7 +19,7 @@ import PresidentSidePanel from "./PresidentSidePanel";
 import Pagination from "../Pagination";
 import StatusFlow from "../CommonStatusFlow"; 
 import { Flag } from "lucide-react";
-import { ChevronDown, ChevronUp } from "lucide-react";
+import { ChevronDown, ChevronUp, Menu } from "lucide-react";
 import { levelColors, levelTextColors } from "../../statusColors.ts";
 
 export interface PresidentLevelNominee {
@@ -103,20 +102,20 @@ const PresidentLevel: React.FC = () => {
       },
       { accessorKey: "CategoryName", header: "Category" },
       { accessorKey: "NominatedBy", header: "Nominated By" },
-      {
+       {
             accessorKey: "ConsolidatedAvgScore",
-            header: () => <div className="text-center">Consolidated Avg Score</div>,
+            header: () => <div className="text-end">Consolidated Avg Score</div>,
             cell: ({ getValue }) => (
-              <div className="text-center">
+              <div className="text-end pr-5">
                 {getValue() as number}
               </div>
             ),
           },
         {
           accessorKey: "PresidentScore",
-          header: () => <div className="text-center">President Score</div>,
+          header: () => <div className="text-end">President Score</div>,
           cell: ({ getValue }) => (
-            <div className="text-center">
+            <div className="text-end pr-3">
               {getValue() as number}
             </div>
           ),
@@ -241,12 +240,18 @@ const PresidentLevel: React.FC = () => {
               {table.getHeaderGroups()[0].headers.map((header) => (
                 <th
                   key={header.id}
-                  className="px-4 py-3 text-left text-sm font-semibold text-gray-600"
+                    onClick={header.column.getToggleSortingHandler()}
+                    className="px-4 py-3 text-left text-sm font-semibold uppercase cursor-pointer select-none"
                 >
-                  {flexRender(
-                    header.column.columnDef.header,
-                    header.getContext()
-                  )}
+                  <span className="flex items-center gap-1">
+
+                    {flexRender(
+                      header.column.columnDef.header,
+                      header.getContext()
+                    )}
+                    {header.column.getIsSorted() === "asc" && <ChevronUp size={14}/>}
+                    {header.column.getIsSorted() === "desc" && <ChevronDown size={14}/>}
+                    </span>
                 </th>
               ))}
             </tr>

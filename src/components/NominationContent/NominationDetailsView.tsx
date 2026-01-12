@@ -1147,8 +1147,10 @@ return (
         {showWithdrawButton && ( 
           <button
           onClick={handleEdit}
-          className="flex items-center gap-1 text-blue-600 bg-white border rounded-sm px-2 py-1 font-medium hover:bg-blue-50 transition">
-          <Edit size={14} /> Edit </button>
+          className="btn-theme-edit text-white rounded-sm px-2 py-1 hover:bg-blue-700 flex items-center"
+          > 
+          <span  className="edit-icon"><Edit size={14} /></span>Edit  
+          </button>
         )}
         {showWithdrawButton && (
           

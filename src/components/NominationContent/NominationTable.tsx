@@ -4,7 +4,7 @@ import axios from "axios";
 import {useReactTable, getCoreRowModel, getPaginationRowModel, getSortedRowModel,
 getFilteredRowModel, flexRender} from "@tanstack/react-table";
 import type { ColumnDef} from "@tanstack/react-table";
-import { Menu } from "lucide-react";
+import { ChevronDown, ChevronUp, Menu } from "lucide-react";
 import { Outlet } from "react-router-dom";
 import { useAuth } from "../ContextAPI/AuthContext";
 // import NominationDetailsModal from "./NominationDetailsModal";
@@ -14,7 +14,6 @@ import Pagination from "../Pagination";
 import {DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger,
 } from "@radix-ui/react-dropdown-menu";
 import StatusFlow from "../CommonStatusFlow"; 
-import { ChevronDown, ChevronUp } from "lucide-react";
 import { levelColors, levelTextColors } from "../../statusColors.ts";
 import { useLocation } from "react-router-dom";
 
@@ -295,11 +294,12 @@ const apiUrl = import.meta.env.VITE_API_URL;
                       key={header.id}
                       onClick={header.column.getToggleSortingHandler()}
                       className="px-4 py-3 text-left text-xs font-semibold text-gray-600  cursor-pointer select-none">
-                      {flexRender(header.column.columnDef.header, header.getContext())}
-                      {{
-                        asc: " 🔼",
-                        desc: " 🔽",
-                      }[header.column.getIsSorted() as string] ?? null}
+                  <span className="flex items-center gap-1">
+
+                    {flexRender(header.column.columnDef.header, header.getContext())}
+                    {header.column.getIsSorted() === "asc" && <ChevronUp size={14}/>}
+                    {header.column.getIsSorted() === "desc" && <ChevronDown size={14}/>}
+                  </span>
                     </th>
                   ))}
                 </tr>

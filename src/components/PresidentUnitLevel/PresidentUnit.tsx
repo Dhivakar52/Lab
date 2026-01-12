@@ -10,21 +10,13 @@ import {
   flexRender,
 } from "@tanstack/react-table";
 import type { ColumnDef } from "@tanstack/react-table";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@radix-ui/react-dropdown-menu";
-import { Menu } from "lucide-react";
 import { ColorBadge } from "../TenantBadges";
 import { useAuth } from "../ContextAPI/AuthContext";
 import { useNavigate } from "react-router-dom";
 import PresidentSidePanel from "./PresidentUnitPanel";
 import Pagination from "../Pagination";
 import StatusFlow from "../CommonStatusFlow"; 
-import { Flag } from "lucide-react";
-import { ChevronDown, ChevronUp } from "lucide-react";
+import { ChevronDown, ChevronUp, Menu,Flag } from "lucide-react";
 import { levelColors, levelTextColors } from "../../statusColors.ts";
 
 export interface GeneralJury {
@@ -127,9 +119,9 @@ const PresidentUnit: React.FC = () => {
       { accessorKey: "NominatedBy", header: "Nominated By" },
       {
           accessorKey: "GeneralJuryScore",
-          header: () => <div className="text-center">Score</div>,
+          header: () => <div className="text-center pr-4">Score</div>,
           cell: ({ getValue }) => (
-            <div className="text-center">
+            <div className="text-center pr-4">
               {getValue() as number}
             </div>
           ),
@@ -253,13 +245,17 @@ const PresidentUnit: React.FC = () => {
                   <th
                     key={header.id}
                     onClick={header.column.getToggleSortingHandler()}
-                    className="px-4 py-3 text-left text-xs font-semibold uppercase cursor-pointer">
+                    className="px-4 py-3 text-left text-sm font-semibold uppercase cursor-pointer select-none"
+                  >
+                  <span className="flex items-center gap-1">
+
                     {flexRender(
                       header.column.columnDef.header,
                       header.getContext()
                     )}
-                    {header.column.getIsSorted() === "asc" && " 🔼"}
-                    {header.column.getIsSorted() === "desc" && " 🔽"}
+                    {header.column.getIsSorted() === "asc" && <ChevronUp size={14}/>}
+                    {header.column.getIsSorted() === "desc" && <ChevronDown size={14}/>}
+                        </span>
                   </th>
                 ))}
               </tr>
