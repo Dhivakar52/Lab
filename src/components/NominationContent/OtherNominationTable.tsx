@@ -7,11 +7,12 @@ import {
   getSortedRowModel,
   getFilteredRowModel,
   flexRender,
+  expandRows,
 } from "@tanstack/react-table";
 import type {
   ColumnDef,
 } from "@tanstack/react-table";
-import { Menu } from "lucide-react";
+import { ChevronDown, ChevronUp, Menu } from "lucide-react";
 import { Outlet } from "react-router-dom";
 import { useAuth } from "../ContextAPI/AuthContext";
 import NominationDetailsModal from "./NominationDetailsModal";
@@ -19,12 +20,11 @@ import { ColorBadge } from "../TenantBadges";
 import { useNavigate } from "react-router-dom";
 import {
   DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@radix-ui/react-dropdown-menu";
-
 import Pagination from "../Pagination";
+import StatusFlow from "../CommonStatusFlow"; 
+import { levelColors, levelTextColors } from "../../statusColors.ts";
 
 interface Nomination {
   TotalRowCount: number;
@@ -77,16 +77,11 @@ const NominationTable: React.FC = () => {
   const [modalOpen, setModalOpen] = useState(false);
   const [selectedNomination, setSelectedNomination] = useState<Nomination | null>(null);
   const [successMessage, setSuccessMessage] = useState("");
-    const navigate = useNavigate();
+  const navigate = useNavigate();
   const { authToken, userId } = useAuth();
-
-  const statusColors: Record<Nomination["Status"], string> = {
-  Pending: "bg-orange-100 text-orange-800",
-  Approved: "bg-green-100 text-green-800",
-  Rejected: "bg-red-100 text-red-800",
-  "Under Review": "bg-yellow-100 text-yellow-700",
-};
-
+  const [expandedRow, setExpandedRow] = useState<number | null>(null);
+  const [tab, setTab] = useState("others");
+  
  const fetchNominations = async () => {
       try {
         // const res = await axios.get(`${apiUrl}/api/nominations`, {
@@ -105,6 +100,11 @@ const NominationTable: React.FC = () => {
       } finally {
         setLoading(false);
       }
+    };
+     const handleStatusClick = (nominationID: number) => {
+      setExpandedRow(prev =>
+        prev === nominationID ? null : nominationID
+      );
     };
   useEffect(() => {
     fetchNominations();
@@ -126,39 +126,34 @@ const NominationTable: React.FC = () => {
       { accessorKey: "AwardCategory", header: "Category" },
       { accessorKey: "NominatedBy", header: "Nominated By" },
       {
-        accessorKey: "Status",
-        header: "Status",
-        cell: ({ getValue }) => {
-          const status = getValue() as Nomination["Status"];
-          const colorClass = statusColors[status] || "bg-gray-100 text-gray-700";
-          return (
-            <span
-              className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium ${colorClass}`}
-            >
-              {status}
-            </span>
-          );
-        },
-     
-     },
-      // {
-      //   accessorKey: "NominationFile",
-      //   header: "Nomination File",
-      //   cell: (info) =>
-      //     info.getValue() ? (
-      //       <a
-      //         href={info.getValue() as string}
-      //         target="_blank"
-      //         rel="noopener noreferrer"
-      //         className="text-blue-600 underline"
-      //       >
-      //         View File
-      //       </a>
-      //     ) : (
-      //       <span className="text-gray-400">No File</span>
-      //     ),
-      // },
-          {
+            accessorKey: "Status",
+            header: "Status",
+            cell: ({ row, getValue }) => {
+              const status = getValue() as string;
+              const isOpen = expandedRow === row.original.NominationID;
+
+              const bgClass = levelColors[status] || "bg-gray-100 border-gray-300";
+              const textClass = levelTextColors[status] || "text-gray-700";
+
+              return (
+                <div
+                  className={`inline-flex items-center border rounded overflow-hidden ${bgClass} ${textClass}`}>
+                  <button
+                    onClick={() => handleStatusClick(row.original.NominationID)}
+                    className="px-3 py-1 text-sm font-medium flex-1 text-left">
+                    {status}
+                  </button>
+                  <span className="w-px self-stretch bg-current opacity-30" />
+                  <button
+                    onClick={() => handleStatusClick(row.original.NominationID)}
+                    className="px-2 flex items-center justify-center" >
+                   {isOpen ? <ChevronUp size={18} /> : <ChevronDown size={18} />}
+                  </button>
+                </div>
+              );
+            },
+       },  
+     {
         header: "Actions",
         cell: ({ row }) => {  
          const item = row.original;    
@@ -179,23 +174,7 @@ const NominationTable: React.FC = () => {
           );
         },
       },
-      // {
-      //   header: "Actions",
-      //   cell: ({ row }) => (
-      //     <button
-      //       onClick={() => {
-      //         setSelectedNomination(row.original);
-      //         setModalOpen(true);
-      //       }}
-      //       className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
-      //     >
-      //       <Menu size={16} className="text-gray-600" />
-      //     </button>
-      //   ),
-      // },
-    ],
-    []
-  );
+    ],[expandRows]);
 
   const table = useReactTable({
     data,
@@ -245,35 +224,48 @@ const NominationTable: React.FC = () => {
                       onClick={header.column.getToggleSortingHandler()}
                       className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase cursor-pointer select-none"
                     >
-                      {flexRender(header.column.columnDef.header, header.getContext())}
-                      {{
-                        asc: " 🔼",
-                        desc: " 🔽",
-                      }[header.column.getIsSorted() as string] ?? null}
+                  <span className="flex items-center gap-1">
+
+                    {flexRender(header.column.columnDef.header, header.getContext())}
+                    {header.column.getIsSorted() === "asc" && <ChevronUp size={14}/>}
+                    {header.column.getIsSorted() === "desc" && <ChevronDown size={14}/>}
+                  </span>
                     </th>
                   ))}
                 </tr>
               ))}
             </thead>
-            <tbody className="divide-y divide-gray-100">
-              {table.getRowModel().rows.length ? (
-                table.getRowModel().rows.map((row) => (
-                  <tr key={row.id} className="hover:bg-gray-50">
-                    {row.getVisibleCells().map((cell) => (
-                      <td key={cell.id} className="px-4 py-2 text-sm text-gray-800">
-                        {flexRender(cell.column.columnDef.cell, cell.getContext())}
+             <tbody className="divide-y divide-gray-100">
+              {table.getRowModel().rows.map((row) => {
+                const item = row.original as any;
+                const isExpanded = expandedRow === item.NominationID;
+                return (
+                  <React.Fragment key={row.id}>
+                    <tr className="hover:bg-gray-50">
+                      {row.getVisibleCells().map((cell) => (
+                        <td key={cell.id} className="px-4 py-2 text-sm">
+                          {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                        </td>
+                      ))}
+                    </tr>
+                  {isExpanded && (
+                    <tr className="bg-gray-50">
+                      <td colSpan={columns.length} className="px-6 py-4">
+                        <StatusFlow
+                          steps={(item.ApprovalStatus || []).map((a: any) => ({
+                            type: a.ApprovalType,
+                            status: a.Status,
+                            level: a.ApprovalFlow,
+                            approvedAt: a.ApprovedAt,
+                          }))}
+                        />
                       </td>
-                    ))}
-                  </tr>
-                ))
-              ) : (
-                <tr>
-                  <td colSpan={columns.length} className="text-center py-6 text-gray-500">
-                    No nominations found
-                  </td>
-                </tr>
-              )}
-            </tbody>
+                    </tr>
+                  )}
+                  </React.Fragment>
+                );
+              })}
+            </tbody>  
           </table>
         </div>
          <Pagination table={table} />

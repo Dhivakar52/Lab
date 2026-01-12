@@ -15,6 +15,7 @@ import type {
 import { useAuth } from "../ContextAPI/AuthContext";
 import NotificationDetailSidePanel from "../Notification/NotificationDetailSidePanel";
 import * as Dialog from '@radix-ui/react-dialog';
+import { ChevronDown, ChevronUp } from "lucide-react";
 
 import Pagination from "../Pagination";
 interface Notification {
@@ -168,13 +169,14 @@ const NotificationTable: React.FC<NotificationTableProps> = ({
                   <th
                     key={header.id}
                     onClick={header.column.getToggleSortingHandler()}
-                    className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider"
+                    className="px-4 py-3 text-left text-sm font-semibold uppercase cursor-pointer select-none"
                   >
+                    <span className="flex items-center gap-1">
+
                     {flexRender(header.column.columnDef.header, header.getContext())}
-                    {{
-                      asc: " 🔼",
-                      desc: " 🔽",
-                    }[header.column.getIsSorted() as string] ?? null}
+                    {header.column.getIsSorted() === "asc" && <ChevronUp size={14}/>}
+                    {header.column.getIsSorted() === "desc" && <ChevronDown size={14}/>}
+                  </span>
                   </th>
                 ))}
               </tr>

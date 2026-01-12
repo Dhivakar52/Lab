@@ -339,8 +339,13 @@ useEffect(() => {
   }, [form.entityName, form.department, allUsers, filteredDepartments]);
 
   //const [tab, setTab] = useState<"table" | "form">("table");
+  // const handleBackward = () => {
+  //     navigate("/my-nominations", { state: { tab: "form" } });
+  // };
   const handleBackward = () => {
-      navigate("/my-nominations", { state: { tab: "form" } });
+    navigate("/my-nominations", {
+      state: { tab: "others" }   
+    });
   };
 
   const handleSelectReferral = (selected: { value: string; label: string } | null) => {

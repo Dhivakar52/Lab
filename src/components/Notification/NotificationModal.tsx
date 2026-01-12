@@ -132,7 +132,7 @@ const NotificationModal: React.FC<NotificationModalProps> = ({
           className="fixed top-0 right-0 h-full w-full max-w-md bg-white shadow-2xl border-l border-gray-200 overflow-y-auto z-50"
         >
           <div className="flex items-center justify-between px-6 py-4 border-b border-gray-200 bg-white sticky top-0 z-10">
-            <div className="flex items-center space-x-2">
+            <div className="flex items-center space-x-2 cursor-pointer">
               <Bell className="w-5 h-5 text-gray-600" />
               <Dialog.Title className="text-lg font-semibold text-gray-900">
                 Notifications
@@ -140,7 +140,7 @@ const NotificationModal: React.FC<NotificationModalProps> = ({
                         {notifications.length > 0 ? (
               <button
                 onClick={handleMarkAllRead}
-                className="text-sm font-medium text-blue-600 hover:underline focus:outline-none  focus:ring-blue-200"
+                className="text-sm font-medium text-blue-600 hover:underline focus:outline-none focus:ring-blue-200 cursor-pointer"
               >
                 Mark all as read
               </button>
@@ -206,7 +206,7 @@ const NotificationModal: React.FC<NotificationModalProps> = ({
             <div className="text-center">
               <button
                 onClick={handleView}
-                className="text-sm font-medium text-blue-600 hover:underline focus:outline-none focus:ring-2 focus:ring-blue-200"
+                className="text-sm font-medium text-blue-600 hover:underline focus:outline-none focus:ring-2 focus:ring-blue-200 cursor-pointer"
               >
                 View All
               </button>

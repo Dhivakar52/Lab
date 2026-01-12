@@ -8,25 +8,18 @@ import {
   getFilteredRowModel,
   flexRender,
 } from "@tanstack/react-table";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@radix-ui/react-dropdown-menu";
 import type { ColumnDef } from "@tanstack/react-table";
 import { useAuth } from "../ContextAPI/AuthContext";
-import { Menu } from "lucide-react";
-
 // Correct Component Import
 import ReferralPanel from "./ReferralPanel";
 import { useNavigate } from "react-router-dom";
 import ReferralReasonPanel from "./ReferralDetailView";
 // Components
-
 import { ColorBadge } from "../TenantBadges";
-
 import Pagination from "../Pagination";
+import StatusFlow from "../CommonStatusFlow"; 
+import { ChevronDown, ChevronUp, Menu } from "lucide-react";
+import { levelColors, levelTextColors } from "../../statusColors.ts";
 
 
 interface ReferralData {
@@ -67,7 +60,6 @@ interface ReferralData {
   BusinessJuryStatus: string;
 }
 
-
 interface ReferralView {
   NominationID: number;
   ReferralUserID:number;
@@ -106,12 +98,6 @@ interface ReferralView {
 // interface ReferralView extends ReferralData {}
 const apiUrl = import.meta.env.VITE_API_URL;
 
-const statusColors: Record<ReferralData["Status"], string> = {
-  Pending: "bg-orange-100 text-orange-800",
-  Approved: "bg-green-100 text-green-800",
-  Rejected: "bg-red-100 text-red-800",
-};
-
 const ReferralTable: React.FC = () => {
   const [isPanelOpen, setIsPanelOpen] = useState(false);
   const [selectedNomination, setSelectedNomination] =
@@ -123,10 +109,11 @@ const ReferralTable: React.FC = () => {
   const [globalFilter, setGlobalFilter] = useState("");
   const { userId, authToken } = useAuth();
   const [successMessage, setSuccessMessage] = useState("");
-  
-    const [reason, setReason] = useState("");
-    const navigate = useNavigate();
+  const [reason, setReason] = useState("");
+  const navigate = useNavigate();
   const [toastType, setToastType] = useState<"success" | "error">("success");
+  const [flagReason, setFlagReason] = useState<Record<number, string>>({});
+  const [expandedRow, setExpandedRow] = useState<number | null>(null);
 
   useEffect(() => {
     const fetchApprovals = async () => {
@@ -149,7 +136,11 @@ const ReferralTable: React.FC = () => {
 
     fetchApprovals();
   }, []);
-
+  const handleStatusClick = (nominationID: number) => {
+    setExpandedRow(prev =>
+      prev === nominationID ? null : nominationID
+    );
+  };
   const handleApprove = async (nominationID: number) => {
      if (!selectedNomination) return;
     try {
@@ -256,52 +247,34 @@ const ReferralTable: React.FC = () => {
       { accessorKey: "AwardCategory", header: "AwardCategory" },
      // { accessorKey: "Tenant", header: "Entity Name" },
       { accessorKey: "SubmittedDate", header: "Submitted Date" },
+       {
+            accessorKey: "Status",
+            header: "Status",
+            cell: ({ row, getValue }) => {
+              const status = getValue() as string;
+              const isOpen = expandedRow === row.original.NominationID;
 
-      {
-        accessorKey: "Status",
-        header: "Status",
-        cell: ({ getValue }) => {
-          const status = getValue() as ReferralData["Status"];
-          const colorClass = statusColors[status];
-          return (
-            <span className={`px-3 py-1 rounded-full text-sm font-medium ${colorClass}`}>
-              {status}
-            </span>
-          );
-        },
-      },
+              const bgClass = levelColors[status] || "bg-gray-100 border-gray-300";
+              const textClass = levelTextColors[status] || "text-gray-700";
 
-  
-    // {
-    //   header: "Actions",
-    //   cell: ({ row }) => {
-    //     const item = row.original;
-  
-    //      const handleDetailsView = (item: ReferralData) => {
-    //       navigate(`/nomination-detail/${item.NominationID}`, {
-    //         state: { from: "referral-approval" }
-    //       });
-          
-    //     };
-    //     return (
-    //       <DropdownMenu>
-    //         <DropdownMenuTrigger asChild>
-    //           <button className="p-2 rounded hover:bg-gray-100 transition">
-    //             <Menu size={18} className="text-blue-600" />
-    //           </button>
-    //         </DropdownMenuTrigger>
-    
-    //         <DropdownMenuContent align="end" className="w-30 bg-white shadow-xl rounded-sm">
-    //           <DropdownMenuItem
-    //             onClick={() => handleDetailsView(row.original)}
-    //             className="hover:bg-blue-50 hover:text-blue-700 p-3" >
-    //              View
-    //           </DropdownMenuItem>
-    //         </DropdownMenuContent>
-    //       </DropdownMenu>
-    //     );
-    //   },
-    // },
+              return (
+                <div
+                  className={`inline-flex items-center border rounded overflow-hidden ${bgClass} ${textClass}`}>
+                  <button
+                    onClick={() => handleStatusClick(row.original.NominationID)}
+                    className="px-3 py-1 text-sm font-medium flex-1 text-left">
+                    {status}
+                  </button>
+                  <span className="w-px self-stretch bg-current opacity-30" />
+                  <button
+                    onClick={() => handleStatusClick(row.original.NominationID)}
+                    className="px-2 flex items-center justify-center" >
+                   {isOpen ? <ChevronUp size={18} /> : <ChevronDown size={18} />}
+                  </button>
+                </div>
+              );
+            },
+       },  
     {
         header: "Actions",
         cell: ({ row }) => {
@@ -325,8 +298,7 @@ const ReferralTable: React.FC = () => {
         },
       },
 
-    ];
-  }, []);
+    ];},[]);
 
   const table = useReactTable({
     data,
@@ -365,43 +337,55 @@ const ReferralTable: React.FC = () => {
                     <th
                       key={header.id}
                       onClick={header.column.getToggleSortingHandler()}
-                      className="px-4 py-3 text-left text-xs font-semibold uppercase cursor-pointer"
-                    >
-                      {flexRender(header.column.columnDef.header, header.getContext())}
-                      {header.column.getIsSorted() === "asc" ? " 🔼" : ""}
-                      {header.column.getIsSorted() === "desc" ? " 🔽" : ""}
+                      className="px-4 py-3 text-left text-sm font-semibold uppercase cursor-pointer select-none"
+                  >
+                  <span className="flex items-center gap-1">
+
+                    {flexRender(header.column.columnDef.header, header.getContext())}
+                    {header.column.getIsSorted() === "asc" && <ChevronUp size={14}/>}
+                    {header.column.getIsSorted() === "desc" && <ChevronDown size={14}/>}
+                  </span>
                     </th>
                   ))}
                 </tr>
               ))}
             </thead>
 
-            <tbody className="divide-y divide-gray-100">
-              {table.getRowModel().rows.length ? (
-                table.getRowModel().rows.map((row) => (
-                  <tr key={row.id} className="hover:bg-gray-50">
-                    {row.getVisibleCells().map((cell) => (
-                      <td key={cell.id} className="px-4 py-2 text-sm text-gray-800">
-                        {flexRender(cell.column.columnDef.cell, cell.getContext())}
+           <tbody className="divide-y divide-gray-100">
+              {table.getRowModel().rows.map((row) => {
+                const item = row.original as any;
+                const isExpanded = expandedRow === item.NominationID;
+                return (
+                  <React.Fragment key={row.id}>
+                    <tr className="hover:bg-gray-50">
+                      {row.getVisibleCells().map((cell) => (
+                        <td key={cell.id} className="px-4 py-2 text-sm">
+                          {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                        </td>
+                      ))}
+                    </tr>
+                  {isExpanded && (
+                    <tr className="bg-gray-50">
+                      <td colSpan={columns.length} className="px-2 py-2">
+                        <StatusFlow
+                          steps={(item.ApprovalStatus || []).map((a: any) => ({
+                            type: a.ApprovalType,
+                            status: a.Status,
+                            level: a.ApprovalFlow,
+                            approvedAt: a.ApprovedAt,
+                          }))}
+                        />
                       </td>
-                    ))}
-                  </tr>
-                ))
-              ) : (
-                <tr>
-                  <td colSpan={columns.length} className="text-center py-6 text-gray-500">
-                    No approvals found
-                  </td>
-                </tr>
-              )}
-            </tbody>
+                    </tr>
+                  )}
+                  </React.Fragment>
+                );
+              })}
+            </tbody>  
           </table>
-
           <Pagination table={table} />
-
         </div>
       </div>
-
       {/* Final Correct Component */}
       <ReferralPanel
         isOpen={isPanelOpen}
