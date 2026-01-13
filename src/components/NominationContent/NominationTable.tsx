@@ -1,5 +1,5 @@
 import * as Tabs from "@radix-ui/react-tabs";
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useRef, useEffect, useMemo, useState } from "react";
 import axios from "axios";
 import {useReactTable, getCoreRowModel, getPaginationRowModel, getSortedRowModel,
 getFilteredRowModel, flexRender} from "@tanstack/react-table";
@@ -65,9 +65,6 @@ const apiUrl = import.meta.env.VITE_API_URL;
   const [data, setData] = useState<Nomination[]>([]);
   const [loading, setLoading] = useState(true);
   const [globalFilter, setGlobalFilter] = useState("");
-  // const [modalOpen, setModalOpen] = useState(false);
-  // const [selectedNomination, setSelectedNomination] = useState<Nomination | null>(null);
-  // const [successMessage, setSuccessMessage] = useState("");
   const [expandedRow, setExpandedRow] = useState<number | null>(null);
   const navigate = useNavigate();
   const [refreshKey, setRefreshKey] = useState(0);
@@ -76,6 +73,7 @@ const apiUrl = import.meta.env.VITE_API_URL;
   const location = useLocation();
   const [tab, setTab] = useState<"my" | "others">("my");
   const [initialized, setInitialized] = useState(false);
+  const tableWrapperRef = useRef<HTMLDivElement | null>(null);
 
   useEffect(() => {
     if (location.state?.tab) {
@@ -124,8 +122,22 @@ const apiUrl = import.meta.env.VITE_API_URL;
     } finally {
       setLoading(false);
     }
+    setExpandedRow(null);
+  };
+  useEffect(() => {
+  const handleClickOutside = (event: MouseEvent) => {
+    if (!tableWrapperRef.current) return;
+
+    const target = event.target as HTMLElement;
+
+    if (tableWrapperRef.current.contains(target)) return;
+
+    setExpandedRow(null);
   };
 
+    document.addEventListener("click", handleClickOutside);
+    return () => document.removeEventListener("click", handleClickOutside);
+  }, []);
   useEffect(() => {
     if (!initialized) return;
     fetchNominations();
@@ -176,13 +188,15 @@ const apiUrl = import.meta.env.VITE_API_URL;
                 <div
                   className={`inline-flex items-center border rounded overflow-hidden ${bgClass} ${textClass}`}>
                   <button
-                    onClick={() => handleStatusClick(row.original.NominationID)}
+                    onClick={(e) =>{ e.stopPropagation();
+                    handleStatusClick(row.original.NominationID)}}
                     className="px-3 py-1 text-sm font-medium flex-1 text-left">
                     {status}
                   </button>
                   <span className="w-px self-stretch bg-current opacity-30" />
                   <button
-                    onClick={() => handleStatusClick(row.original.NominationID)}
+                    onClick={(e) =>{ e.stopPropagation();
+                    handleStatusClick(row.original.NominationID)}}
                     className="px-2 flex items-center justify-center" >
                    {isOpen ? <ChevronUp size={18} /> : <ChevronDown size={18} />}
                   </button>
@@ -243,6 +257,9 @@ const apiUrl = import.meta.env.VITE_API_URL;
     getFilteredRowModel: getFilteredRowModel(),
     getPaginationRowModel: getPaginationRowModel(),
   });
+  useEffect(() => {
+    setExpandedRow(null);
+  }, [table.getState().pagination.pageIndex]);
 
   if (loading) {
     return <div className="text-center py-6 text-gray-600">Loading nominations...</div>;
@@ -285,17 +302,17 @@ const apiUrl = import.meta.env.VITE_API_URL;
           )}
         </div>
         {/* 🧾 Table */}
+        <div ref={tableWrapperRef}>
           <table className="min-w-full border border-gray-200">
             <thead className="bg-gray-50">
               {table.getHeaderGroups().map((headerGroup) => (
-                <tr key={headerGroup.id}>
+                <tr onClick={(e) => e.stopPropagation()} key={headerGroup.id}>
                   {headerGroup.headers.map((header) => (
                     <th
                       key={header.id}
                       onClick={header.column.getToggleSortingHandler()}
                       className="px-4 py-3 text-left text-xs font-semibold text-gray-600  cursor-pointer select-none">
-                  <span className="flex items-center gap-1">
-
+                    <span className="flex items-center gap-1">
                     {flexRender(header.column.columnDef.header, header.getContext())}
                     {header.column.getIsSorted() === "asc" && <ChevronUp size={14}/>}
                     {header.column.getIsSorted() === "desc" && <ChevronDown size={14}/>}
@@ -339,6 +356,7 @@ const apiUrl = import.meta.env.VITE_API_URL;
           </table>
             <Pagination table={table} />
       </div>
+     </div>
     </div>
    </div>
       {/* 🔍 Modal */}

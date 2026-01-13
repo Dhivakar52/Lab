@@ -61,6 +61,7 @@ export default function AddNomination() {
   const [existingDocs, setExistingDocs] = useState<any[]>([]);
   const navigate = useNavigate();
   const isReadOnly = isEditMode;
+  const loggedInUserId = Number(userId);
 
 
   const [form, setForm] = useState<FormState>({
@@ -97,6 +98,18 @@ export default function AddNomination() {
   setErrors(newErrors);
   return Object.keys(newErrors).length === 0;
 };
+const openPreview = (file: Blob, ext: string) => {
+  const blobUrl = URL.createObjectURL(file);
+  setPreviewType(ext);
+  setPreviewFile(blobUrl);
+  setPreviewOpen(true);
+};
+useEffect(() => {
+  return () => {
+    if (previewFile) URL.revokeObjectURL(previewFile);
+  };
+}, [previewFile]);
+
 useEffect(() => {
   if (!isEditMode || !authToken) return;
 
@@ -536,6 +549,7 @@ const referralPayload = referrals.map(ref => ({
     setShowErrorModal(true);
   }
 };
+
  return (
   <>
     {/* Success message on top
@@ -547,11 +561,12 @@ const referralPayload = referrals.map(ref => ({
         {successMsg}
       </div>
     )} */}
-      <div className="fixed bg-white border-b border-t border-gray-200 w-full h-15 flex items-center  top-20 left-0  pl-[260px] pr-6 z-10">
-      <div className="flex justify-between w-full">
-        <div className="space-x-4 flex items-center ml-auto mr-25">
-            {/* <h2 className="text-xl font-semibold">Self Nominate Form</h2> */}
-            <a
+ <div className="bg-gray-100 flex flex-col"> 
+  <div className="w-full h-full px-1 py-1 pb-[60px]" >
+    <form onSubmit={handleSubmit} className="px-2 py-4 rounded-lg bg-white shadow nominate-form">
+      <div className="flex-1 bg-white">
+        <div className="w-full h-full px-6 py-4">    
+        <div className="flex justify-end"> <a
               href="#"
               onClick={(e) => {
                 e.preventDefault();
@@ -564,19 +579,8 @@ const referralPayload = referrals.map(ref => ({
                 ? "text-blue-600  cursor-pointer px-4 py-2 btn-theme"
                 : "text-gray-500 cursor-default no-underline px-4 py-2 btn-theme" }>
               You have {totalSelfNominations} nominations
-            </a>
-        </div>
-        </div>
-    </div>
-    <div className="bg-gray-100 flex flex-col p-6 pt-15"> 
-      <div className="w-full h-full px-1 py-1 pb-[50px]" >
-        <form
-          onSubmit={handleSubmit}
-          className="px-2 py-4 rounded-lg bg-white shadow nominate-form">
-      <div className="flex-1 bg-white">
-        <div className="w-full h-full px-6 py-4">    
+            </a></div>     
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-4">
-            {/* Title */}
             <div >
               <Label.Root htmlFor="title" className="block text-sm font-medium">
                 Title of Submission<span className="text-red-500"> *</span>
@@ -592,13 +596,10 @@ const referralPayload = referrals.map(ref => ({
                 setForm(prevForm => ({...prevForm,title: value }));
                 if (value) {setErrors(prevErrors => ({...prevErrors, title: ""}));}}}         
                 className={`w-full mt-1 border rounded px-3 py-2
-                  ${isReadOnly ? "bg-gray-100 text-gray-700 cursor-not-allowed" : "bg-white text-black"}`}
-              />
+                  ${isReadOnly ? "bg-gray-100 text-gray-700 cursor-not-allowed" : "bg-white text-black"}`}/>
               {errors.title && <p className="text-red-500 text-sm mt-1">{errors.title}</p>}
               <p className="text-gray-500 text-sm mt-1">{form.title.length}/100 characters</p>
-
             </div>
-
             {/* Nominee */}
             <div>
               <Label.Root className="block text-sm font-medium">Nominee Name</Label.Root>
@@ -614,8 +615,7 @@ const referralPayload = referrals.map(ref => ({
                 style={{ userSelect: "none", pointerEvents: "none", caretColor: "transparent", outline: "none" }}
                 className="w-full mt-1 border rounded px-3 py-2 bg-gray-100 text-gray-700 cursor-not-allowed"            />
             </div>
-          </div>
-        
+          </div>     
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-4">
             {/* Department */}
             <div>
@@ -632,7 +632,6 @@ const referralPayload = referrals.map(ref => ({
                 style={{ userSelect: "none", pointerEvents: "none", caretColor: "transparent", outline: "none" }}
                 className="w-full mt-1 border rounded px-3 py-2 bg-gray-100 text-gray-700 cursor-not-allowed"            />
             </div>
-
             {/* Email */}
             <div>
               <Label.Root className="block text-sm font-medium">Email ID</Label.Root>
@@ -648,9 +647,7 @@ const referralPayload = referrals.map(ref => ({
                 style={{ userSelect: "none", pointerEvents: "none", caretColor: "transparent", outline: "none" }}
                 className="w-full mt-1 border rounded px-3 py-2 bg-gray-100 text-gray-700 cursor-not-allowed"            />
             </div>
-          </div>
-
-          
+          </div>         
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-4">
             {/* Mobile */}
             <div>
@@ -685,9 +682,7 @@ const referralPayload = referrals.map(ref => ({
                   style={{ userSelect: "none", pointerEvents: "none", caretColor: "transparent", outline: "none" }}
                   className="w-full mt-1 border rounded px-3 py-2 bg-gray-100 text-gray-700 cursor-not-allowed"            />
             </div>
-
           </div>
-
           {/* Description */}
           <div className="">
             <Label.Root className="block text-sm font-medium">Description  (Max 1000 chars)</Label.Root>
@@ -700,13 +695,9 @@ const referralPayload = referrals.map(ref => ({
               setForm({ ...form, description: value });
               }
             }}
-              className="w-full mt-1 border rounded px-3 py-2 resize-none"
-              // className="w-full mt-1 border rounded px-3 py-2 h-28 resize-none"
-            />
+              className="w-full mt-1 border rounded px-3 py-2 resize-none"/>
             <p className="text-gray-500 text-sm mt-1">{form.description.length}/1000 characters</p>
           </div>
-
-
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-4">  
             {/* Contest Dropdown */}
           <div >
@@ -737,8 +728,7 @@ const referralPayload = referrals.map(ref => ({
                 }))}
               placeholder="Select Contest Type"
               className="text-sm"
-              styles={contestSelectStyles}
-            />
+              styles={contestSelectStyles} />
             {errors.contestType && <p className="text-red-500 text-sm mt-1">{errors.contestType}</p>}
 
             {/* Supporting Documents   */}
@@ -747,11 +737,9 @@ const referralPayload = referrals.map(ref => ({
                 Supporting Documents 
                 <span className="text-red-500">(Maximum 5 files allowed & File must be below 2 MB)</span>
               </Label.Root>
-
               <label
                 htmlFor="fileUpload"
-                className="inline-block bg-gray-100 text-gray-700 border border-gray-300 px-6 py-2 rounded cursor-pointer mt-2 hover:bg-gray-200"
-              >
+                className="inline-block bg-gray-100 text-gray-700 border border-gray-300 px-6 py-2 rounded cursor-pointer mt-2 hover:bg-gray-200">
                 Choose File
               </label>
               <input
@@ -760,68 +748,75 @@ const referralPayload = referrals.map(ref => ({
                 type="file"
                 multiple
                 onChange={handleFileUpload}
-                className="hidden"
-              />
-
+                className="hidden" />
               {fileError && <p className="text-red-500 text-sm mt-1">{fileError}</p>}
-
             </div>
-                        {/* Render both existing API files and newly uploaded files */}
+          {/* Render both existing API files and newly uploaded files */}
             <div className="mt-3 flex flex-wrap gap-2">
               {allDocuments.map((doc: any, index: number) => (
                 <div
                   key={doc.source === "api" ? doc.fileNameGUID : index}
-                  className="flex items-center gap-2 bg-gray-100 px-3 py-1 rounded-lg shadow-sm border relative"
-                >
+                  className="flex items-center gap-2 bg-gray-100 px-3 py-1 rounded-lg shadow-sm border relative">
                   {/* File Name */}
                   <span
                     className="text-sm truncate max-w-[180px] cursor-pointer text-blue-600 hover:underline"
                     onClick={async () => {
-                      const ext = (doc.originalFileName || doc.name).split(".").pop()?.toLowerCase();
+                      const fileName = doc.originalFileName;
+                      const ext = fileName.split(".").pop()?.toLowerCase() || "";
 
                       if (doc.source === "api") {
                         try {
-                          const downloadUrl = `${apiUrl}/api/download?fileName=${doc.fileNameGUID}`;
-                          const response = await axios.get(downloadUrl, {
-                            responseType: "blob",
-                            headers: { Authorization: `Bearer ${authToken}` },
-                          });
+                          const response = await axios.get(
+                            `${apiUrl}/api/download?fileName=${doc.fileNameGUID}`,
+                            {
+                              responseType: "blob",
+                              headers: { Authorization: `Bearer ${authToken}` },
+                            }
+                          );
                           const blobUrl = URL.createObjectURL(response.data);
-
-                          if (["jpg","jpeg","png","gif"].includes(ext || "")) {
-                            setPreviewType(ext);
-                            setPreviewFile(blobUrl);
-                            setPreviewOpen(true);
-                          } else if (ext === "pdf") window.open(blobUrl, "_blank");
+                          if (["jpg", "jpeg", "png", "gif"].includes(ext)) {
+                            openPreview(response.data, ext);
+                          } 
+                          else if (ext === "pdf") {
+                            const pdfBlob = new Blob([response.data], { type: "application/pdf" });
+                            const pdfUrl = URL.createObjectURL(pdfBlob);
+                            window.open(pdfUrl, "_blank");
+                          }
+                          // else if (ext === "pdf") {
+                          //   window.open(blobUrl, "_blank");  
+                          // }
                           else {
                             const link = document.createElement("a");
-                            link.href = blobUrl;
-                            link.download = doc.originalFileName;
-                            document.body.appendChild(link);
+                            link.href = URL.createObjectURL(response.data);
+                            link.download = fileName;
                             link.click();
-                            link.remove();
                           }
-                        } catch (err) {
-                          console.error("Download failed:", err);
+                        } catch {
                           alert("File not found");
                         }
-                      } else {
-                        const blobUrl = URL.createObjectURL(doc);
-                        if (["jpg","jpeg","png","gif"].includes(ext || "")) {
-                          setPreviewType(ext);
-                          setPreviewFile(blobUrl);
-                          setPreviewOpen(true);
-                        } else {
+                      }
+
+                      else {
+                        const file = doc.file;
+                        if (!(file instanceof File)) return;
+
+                        if (["jpg", "jpeg", "png", "gif"].includes(ext)) {
+                          openPreview(file, ext);
+                        } 
+                         else if (ext === "pdf") {
+                          const pdfBlob = new Blob([file], { type: "application/pdf" });
+                          const pdfUrl = URL.createObjectURL(pdfBlob);
+                          window.open(pdfUrl, "_blank");    
+                          }
+                          else {
                           const link = document.createElement("a");
-                          link.href = blobUrl;
-                          link.download = doc.name;
-                          document.body.appendChild(link);
+                          link.href = URL.createObjectURL(file);
+                          link.download = file.name;
                           link.click();
-                          link.remove();
                         }
                       }
                     }}
-                  >
+                     >
                     {doc.originalFileName || doc.name}
                   </span>
                   <button
@@ -833,24 +828,22 @@ const referralPayload = referrals.map(ref => ({
                         setForm(prev => ({ ...prev, files: prev.files.filter((_, i) => i !== index) }));
                       }
                     }}
-                    className="text-red-500 hover:text-red-700 font-bold text-lg leading-none"
-                  >
+                    className="text-red-500 hover:text-red-700 font-bold text-lg leading-none">
                     ×
                   </button>
                 </div>
               ))}
             </div>
-
-
           </div>    
-
             {/* Referrals */}
             <div>
               <label className="block text-sm font-medium mb-2">
                 Referrals Email ID 
               </label>
               <Select
-                options={users.map((u) => ({
+                options={users
+                  .filter((u) => u.UserID !== loggedInUserId)
+                  .map((u) => ({
                   value: u.UserID,
                   label: u.UserInfo,
                 }))}
@@ -859,47 +852,35 @@ const referralPayload = referrals.map(ref => ({
                 onChange={handleSelectReferral}
                 placeholder="Search and select referral..."
                 isSearchable
-                className="text-sm"
-              />
+                className="text-sm"/>
               {/* Selected Referrals */}
                   <div className="mt-3 space-y-2 max-h-[180px] overflow-y-auto pr-2">
                     {referrals.map((ref) => (
                       <div
                         key={ref.UserID}
-                        className="flex items-center justify-between bg-gray-100 px-3 py-2 rounded"
-                      >
+                        className="flex items-center justify-between bg-gray-100 px-3 py-2 rounded">
                         <span className="truncate">
                           {ref.UserInfo}
                         </span>
-                  
                         <button
                           type="button"
                           onClick={() => removeReferral(ref.UserID)}
-                          className="ml-2 px-2 py-1 bg-red-500 text-white rounded"
-                        >
+                          className="ml-2 px-2 py-1 bg-red-500 text-white rounded">
                           ✕
                         </button>
                       </div>
                     ))}
                   </div>
-                  
               {errorMessage && (
                 <div className="fixed top-5 right-5 z-[9999] bg-red-600 text-white px-5 py-3 
                 rounded-lg shadow-xl text-sm font-medium animate-slide-in">
                   {errorMessage}
                 </div>
               )}
-
             </div>
-
           </div>
-         
-
-
-
         </div>  
-          </div> 
-          
+       </div>     
         </form>
       </div>
     </div>
@@ -928,50 +909,57 @@ const referralPayload = referrals.map(ref => ({
           </button>
         </div> 
     </div>
-
     {showErrorModal && (
-  <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-    <div className="bg-white p-6 rounded shadow-md w-96 text-center">
-      <h2 className="text-lg font-semibold mb-4 text-red-600">Error</h2>
-      <p className="mb-6">Failed to submit nomination. Please try again</p>
-      <button
-        onClick={() => setShowErrorModal(false)}
-        className="px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700">OK
-      </button>
-    </div>
-  </div>
-)}
-   {showSuccessModal && (
-  <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-    <div className="bg-white p-6 rounded shadow-md w-96 text-center">
-      {/* <h2 className="text-lg font-semibold mb-4">Success!</h2> */}
-       <p className="mb-6">
-{isEditMode
-          ? "Nomination updated successfully!"
-          : "Nomination submitted successfully!"}
-</p>
-      <button onClick={handleModalOk }  className="px-4 py-2 btn-theme">OK</button>
-    </div>
-  </div>
-)}
-<Dialog.Root open={previewOpen} onOpenChange={setPreviewOpen}>
-  <Dialog.Portal>
-    <Dialog.Overlay className="fixed inset-0 bg-black/40 z-50" />
-    <Dialog.Content className="fixed top-1/2 left-1/2 z-50 w-[90%] h-[80%] max-w-3xl -translate-x-1/2 -translate-y-1/2 bg-white p-4 rounded-lg shadow-xl overflow-hidden">
-      <div className="flex justify-between items-center mb-3">
-        <h2 className="text-lg font-semibold">Document Preview</h2>
-        <button className="p-1 hover:bg-gray-200 rounded" onClick={() => setPreviewOpen(false)}>
-          <X size={20} />
-        </button>
+      <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+        <div className="bg-white p-6 rounded shadow-md w-96 text-center">
+          <h2 className="text-lg font-semibold mb-4 text-red-600">Error</h2>
+          <p className="mb-6">Failed to submit nomination. Please try again</p>
+          <button
+            onClick={() => setShowErrorModal(false)}
+            className="px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700">OK
+          </button>
+        </div>
       </div>
-      <div className="w-full h-full border rounded overflow-auto flex justify-center items-center bg-gray-50">
-        {["jpg","jpeg","png","gif"].includes(previewType || "") && (
-          <img src={previewFile!} alt="Preview" className="max-h-full max-w-full object-contain" />
-        )}
-      </div>
-    </Dialog.Content>
-  </Dialog.Portal>
-</Dialog.Root>
-  </>
-);
-}
+    )}
+    {showSuccessModal && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+          <div className="bg-white p-6 rounded shadow-md w-96 text-center">
+            {/* <h2 className="text-lg font-semibold mb-4">Success!</h2> */}
+            <p className="mb-6">
+            {isEditMode
+                ? "Nomination updated successfully!"
+                : "Nomination submitted successfully!"}
+            </p>
+            <button onClick={handleModalOk }  className="px-4 py-2 btn-theme">OK</button>
+          </div>
+        </div>
+      )}
+    <Dialog.Root
+      open={previewOpen}
+      onOpenChange={setPreviewOpen}>
+      <Dialog.Portal>
+        <Dialog.Overlay className="fixed inset-0 bg-black/40 z-50" />
+        <Dialog.Content className="fixed top-1/2 left-1/2 z-50 w-[90%] h-[80%] max-w-3xl
+          -translate-x-1/2 -translate-y-1/2 bg-white p-4 rounded-lg shadow-xl overflow-hidden">
+          <div className="flex justify-between items-center mb-3">
+            <h2 className="text-lg font-semibold">Document Preview</h2>
+            <button
+              className="p-1 hover:bg-gray-200 rounded"
+              onClick={() => setPreviewOpen(false)}>
+              <X size={20} />
+            </button>
+          </div>
+          <div className="w-full h-full border rounded overflow-auto flex justify-center items-center bg-gray-50">
+            {["jpg", "jpeg", "png", "gif"].includes(previewType || "") && (
+              <img
+                src={previewFile!}
+                alt="Preview"
+                className="max-h-full max-w-full object-contain"/>
+            )}
+          </div>
+        </Dialog.Content>
+      </Dialog.Portal>
+    </Dialog.Root>
+      </>
+    );
+    }

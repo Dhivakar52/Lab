@@ -40,14 +40,14 @@ interface UserType {
 const emptyForm: AddNominationState = {
   title: "",
   nomineeName: "",
-  nomineeData: "",
-  department: "",
+  nomineeData: [],
+  department: [],
   email: "",
   mobile: "",
   managerEmail: "",
   contestType: "",
   description: "",
-  entityName: "",
+  entityName: [],
   file: null,
 };
 
@@ -72,14 +72,14 @@ export default function AddNomination() {
   const [form, setForm] = useState<AddNominationState>({
     title: "",
     nomineeName: "",
-    nomineeData: "",
-    department: "",
+    nomineeData: [],
+    department: [],
     email: "",
     mobile: "",
     managerEmail: "",
     contestType: "",
     description: "",
-    entityName: "",
+    entityName: [],
     file: null as File | null,
   });
   // const [nominee, setNominee] = useState("");
@@ -109,6 +109,8 @@ export default function AddNomination() {
 
     console.log("Form Submitted");
   const { authToken, userId } = useAuth();
+    const loggedInUserId = Number(userId);
+
   const navigate = useNavigate();
 const disableFields = isEditMode;
 
@@ -145,18 +147,23 @@ useEffect(() => {
   // ✔ Select result → fill textbox
    const handleSelect = (item: any) => {
   const formattedLabel = `${item.UserName} - ${item.DeptName} - ${item.TenantName}`;
-
-  setSearchText(formattedLabel);   // ✅ bind text to input
-  setShowList(false);              // hide dropdown
-
-  // setForm(prev => ({
-  //   ...prev,
-  //   nomineeName: item.UserName,
-  //   managerEmail: item.ManagerEmail,
-  // }));
-
+ 
+  setSearchText(formattedLabel);
+  setShowList(false);
+ 
   setSelectedUserID(item.UserID);
   setSelectedTenantID(item.TenantID);
+ 
+  setForm(prev => ({
+    ...prev,
+    managerEmail: item.Email || "",  
+  }));
+ 
+  setErrors(prev => ({
+    ...prev,
+    nomineeSearch: "",
+    managerEmail: "",
+  }));
 };
  
   useEffect(() => {
@@ -222,7 +229,7 @@ useEffect(() => {
           ...prev,
           nomineeName: user?.UserName?.trim() || "",
           department: user?.DeptName || "",
-          managerEmail: user?.ManagerEmail || "",
+          managerEmail: "",
           email: user?.Email || "",
           mobile: user?.PhoneNo || "",
         }));
@@ -235,8 +242,6 @@ useEffect(() => {
     fetchUser();
   }, [authToken, userId]);
 
-
- 
 useEffect(() => {
   if (!isEditMode || !nominationId) return;
 
@@ -304,7 +309,7 @@ useEffect(() => {
       console.log("Filtered Departments for Tenant", form.entityName, ":", filteredDepts);
       
       // Clear department and nominee when entity changes
-      setForm(prev => ({ ...prev, department: "", nomineeData: "" }));
+      setForm(prev => ({ ...prev, department: [], nomineeData: [] }));
     } else {
       setFilteredDepartments([]);
     }
@@ -325,7 +330,7 @@ useEffect(() => {
     if (form.department) {
       // Find the department ID from the department name
       const selectedDept = filteredDepartments.find(
-        (dept) => dept.DeptName === form.department
+        (dept) => dept.DeptName === form.department[0]
       );
       if (selectedDept) {
         filtered = filtered.filter(
@@ -466,49 +471,107 @@ const payload = {
       <div
         className="fixed top-4 left-1/2 transform -translate-x-1/2 
                    bg-green-500 text-white px-6 py-3 rounded shadow-lg 
-                   z-50 text-sm font-medium"
-      >
+                   z-50 text-sm font-medium">
         {successMsg}
       </div>
     )}
-
-      <div className='p-5 pb-15'>
-        <button onClick={handleBackward} className="flex items-center text-blue-600 bg-white border-gray-100 rounded-sm px-2 py-1 font-medium">
-          <span className="me-2"><ArrowLeft size={14}/></span> Back
-        </button>
-
-        <form className="my-8 p-6 border rounded-lg bg-white shadow nominate-form">
-          
-          <h2 className="text-xl font-semibold mb-6">Others Nominate Form </h2>
-      
-          {/* Title */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-4">
+    <div className='p-5 pb-[96px]'>
+      <div className="bg-gray-100 flex flex-col"> 
+        <div className="w-full px-1 py-1">
+         <form className="px-8 py-8 pb-[96px] rounded-lg bg-white shadow nominate-form">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-4">
           <div className="">
             <Label.Root htmlFor="title" className="block text-sm font-medium">
               Title of Submission<span className="text-red-500"> *</span>
             </Label.Root>
-            <input
-              id="title"
-              type="text"
-              placeholder="Best Innovation"
-              value={form.title}
-	      disabled={disableFields}
+            <input id="title" type="text" placeholder="Best Innovation" value={form.title} 
+            disabled={disableFields} maxLength={100}
               // onChange={(e) => setForm({ ...form, title: e.target.value })}
               onChange={(e: React.ChangeEvent<HTMLInputElement>) => {const value = e.target.value;
               setForm(prevForm => ({...prevForm,title: value }));
               if (value) {setErrors(prevErrors => ({...prevErrors, title: ""}));}}}
-              className="w-full mt-1 border rounded px-3 py-2 disabled:bg-gray-100"
-            />
+              className="w-full mt-1 border rounded px-3 py-2 disabled:bg-gray-100"/>
              {errors.title && <p className="text-red-500 text-sm mt-1">{errors.title}</p>}
+             <p className="text-gray-500 text-sm mt-1">{form.title.length}/100 characters</p>
              </div>
-            <div className="">
+             <div className="">
+          <Label.Root htmlFor="title" className="block text-sm font-medium">
+            Nominee<span className="text-red-500"> *</span>
+          </Label.Root>
+          <div className="relative mb-3">
+             <input type="text" placeholder="Nomination search" value={searchText}
+              disabled={disableFields} onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
+              const target = e.target as HTMLInputElement;
+              const value = target.value;
+              setSearchText(value);
+              if (value) { setErrors(prevErrors => ({...prevErrors, nomineeSearch: "" }));  } }}
+              className="w-full mt-1 border rounded px-3 py-2 disabled:bg-gray-100"/>  
+              {showList && results.length > 0 && (
+                <ul
+                  className="list-none m-0 p-1 absolute top-[45px] w-full bg-white border border-gray-300 
+                  rounded max-h-[220px] overflow-y-auto z-50 ">
+                  {results.map((item, index) => (
+                    <li
+                      key={index}
+                      onClick={() => handleSelect(item)}
+                      className="p-2 border-b border-gray-200 cursor-pointer">
+                      <strong>{item.UserName}</strong> – {item.DeptName} - {item.TenantName}{" "}
+                    </li>
+                  ))}
+                </ul>
+              )}
+                {errors.nomineeSearch && <p className="text-red-500 text-sm mt-1">{errors.nomineeSearch}</p>}
+            </div>
+          </div>
+          </div>
+          {/* Nominated By & Manager Email */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-4">
+            <div>
+              <Label.Root className="block text-sm font-medium">
+                Nominated by<span className="text-red-500"> *</span>
+              </Label.Root>
+              <input
+                type="text"
+                value={form.nomineeName || ""}
+                disabled
+                className="w-full mt-1 border rounded bg-gray-100 px-3 py-2"/>
+                {errors.nomineeName && <p className="text-red-500 text-sm mt-1">{errors.nomineeName}</p>}
+            </div>
+            <div>
+              <Label.Root className="block text-sm font-medium">
+                Manager Email Id<span className="text-red-500"> *</span>
+              </Label.Root>
+              <input
+                type="email"
+                placeholder="Manager Email"
+                value={form.managerEmail}
+                disabled
+                className="w-full mt-1 border rounded bg-gray-100 px-3 py-2"/>
+             {errors.managerEmail && <p className="text-red-500 text-sm mt-1">{errors.managerEmail}</p>}
+            </div>
+          </div>
+           {/* Description */}
+          <div className="">
+            <Label.Root className="block text-sm font-medium">Description  (Max 1000 chars)</Label.Root>
+            <textarea
+              rows={2}
+              placeholder="Describe the nomination..."
+              value={form.description}
+              onChange={(e) => { const value = e.target.value;
+              if (value.length <= 1000) {
+              setForm({ ...form, description: value });
+              }
+            }}
+              className="w-full mt-1 border rounded px-3 py-2 resize-none"/>
+            <p className="text-gray-500 text-sm mt-1">{form.description.length}/1000 characters</p>
+          </div>           
+          {/*Contest Type & Referrals */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-4">
+             <div className="">
               <label className="block text-sm font-medium text-gray-700 mb-2">
                 Contest Type<span className="text-red-500"> *</span>
               </label>
-              <Select
-              isDisabled={isEditMode}   
-                name="contestType"
-                value={contest
+              <Select isDisabled={isEditMode} name="contestType" value={contest
                   .filter((c: any) => c.AwardCategoryID === Number(form.contestType))
                   .map((c: any) => ({
                     value: c.AwardCategoryID,
@@ -521,116 +584,26 @@ const payload = {
                   ...prevForm,
                   contestType: selectedOption?.value ?? ""
                   }));
-               if (selectedOption?.value) {
-                  setErrors(prevErrors => ({...prevErrors, contestType: ""
-                  }));
-                  }}}
+                if (selectedOption?.value) {
+                    setErrors(prevErrors => ({...prevErrors, contestType: ""
+                    }));
+                    }}}
                 options={contest.map((c: any) => ({
                   value: c.AwardCategoryID,
                   label: c.CategoryName,
                 }))}
                 placeholder="Select Contest Type"
-                className="text-sm"
-              />
+                className="text-sm"/>
                 {errors.contestType && <p className="text-red-500 text-sm mt-1">{errors.contestType}</p>}
             </div>
-          </div>
-          <div className="">
-          <Label.Root htmlFor="title" className="block text-sm font-medium">
-                Nominee<span className="text-red-500"> *</span>
-              </Label.Root>
-          <div className="relative mb-3">
-                <input
-                  type="text"
-                  placeholder="Nomination search"
-                  value={searchText}
-                  disabled={disableFields}
-                  //onChange={(e) => setSearchText(e.target.value)}
-                  onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
-                    const target = e.target as HTMLInputElement;
-                    const value = target.value;
-                    setSearchText(value);
-                    if (value) { setErrors(prevErrors => ({...prevErrors, nomineeSearch: "" }));  } }}
-                  className="w-full p-2.5 rounded border border-gray-300 disabled:bg-gray-100"
-                />  
-                  
-
-              {showList && results.length > 0 && (
-                <ul
-                  className="list-none m-0 p-1 absolute top-[45px] w-full bg-white border border-gray-300 
-                  rounded max-h-[220px] overflow-y-auto z-50 "
-                >
-                  {results.map((item, index) => (
-                    <li
-                      key={index}
-                      onClick={() => handleSelect(item)}
-                      className="p-2 border-b border-gray-200 cursor-pointer"
-                    >
-                      <strong>{item.UserName}</strong> – {item.DeptName} - {item.TenantName}{" "}
-                      
-                    </li>
-                  ))}
-                </ul>
-              )}
-                {errors.nomineeSearch && <p className="text-red-500 text-sm mt-1">{errors.nomineeSearch}</p>}
-            </div>
-            </div>
-          {/* Nominated By & Manager Email */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-4">
-            <div >
-              <Label.Root className="block text-sm font-medium">
-                Nominated by<span className="text-red-500"> *</span>
-              </Label.Root>
-              <input
-                type="text"
-                value={form.nomineeName || ""}
-                disabled
-                className="w-full mt-1 border rounded bg-gray-100 px-3 py-2"
-              />
-                {errors.nomineeName && <p className="text-red-500 text-sm mt-1">{errors.nomineeName}</p>}
-            </div>
             <div>
-              <Label.Root className="block text-sm font-medium">
-                Manager Email Id<span className="text-red-500"> *</span>
-              </Label.Root>
-              <input
-                type="email"
-                placeholder="Manager Email"
-                value={form.managerEmail}
-                disabled
-                className="w-full mt-1 border rounded bg-gray-100 px-3 py-2"
-              />
-             {errors.managerEmail && <p className="text-red-500 text-sm mt-1">{errors.managerEmail}</p>}
-            </div>
-          </div>
-            {/* Description */}
-          <div className="">
-            <Label.Root className="block text-sm font-medium">Description  (Max 1000 chars)</Label.Root>
-                      <textarea
-                        placeholder="Describe the nomination..."
-                        value={form.description}
-                        onChange={(e) => { const value = e.target.value;
-                        if (value.length <= 1000) {
-                        setForm({ ...form, description: value });
-                        }
-                       }}
-                        // onChange={(e) => setForm({ ...form, description: e.target.value })}
-                        className="w-full mt-1 border rounded px-3 py-2 h-28 resize-none"
-                      />
-                       <p className="text-gray-500 text-sm mt-1">
-                {form.description.length}/1000 characters
-              </p>
-              <br/>
-          </div>
-
-          {/* File Upload & Referrals */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-4">
-            <div>
-            <label className="block text-sm font-medium mb-2">
+              <label className="block text-sm font-medium mb-2">
                 Referrals Email ID 
               </label>
               <Select
-                options={users.map((u) => ({
+                options={users
+                  .filter((u) => u.UserID !== loggedInUserId)
+                  .map((u) => ({
                   value: u.UserID,
                   label: u.UserInfo,
                 }))}
@@ -639,99 +612,89 @@ const payload = {
                 onChange={handleSelectReferral}
                 placeholder="Search and select referral..."
                 isSearchable
-                className="text-sm"
-              />
+                className="text-sm" />
               {/* Selected Referrals */}
                   <div className="mt-3 space-y-2 max-h-[180px] overflow-y-auto pr-2">
                     {referrals.map((ref) => (
                       <div
                         key={ref.UserID}
-                        className="flex items-center justify-between bg-gray-100 px-3 py-2 rounded"
-                      >
+                        className="flex items-center justify-between bg-gray-100 px-3 py-2 rounded">
                         <span className="truncate">
                           {ref.UserInfo}
                         </span>
-                  
                         <button
                           type="button"
                           onClick={() => removeReferral(ref.UserID)}
-                          className="ml-2 px-2 py-1 bg-red-500 text-white rounded"
-                        >
+                          className="ml-2 px-2 py-1 bg-red-500 text-white rounded">
                           ✕
                         </button>
                       </div>
                     ))}
                   </div>
-                  
               {errorMessage && (
                 <div className="fixed top-5 right-5 z-[9999] bg-red-600 text-white px-5 py-3 
                 rounded-lg shadow-xl text-sm font-medium animate-slide-in">
                   {errorMessage}
                 </div>
               )}
-              </div>
-          </div>
-        </form>    
+            </div>
+          </div>       
+           {/* </div>
+           </div> */}
+        </form>   
         <Outlet />
-   
-
-  </div>
-         <div className="fixed bottom-0 left-0 w-full h-15 bg-white border-t border-gray-200 flex items-center pl-[260px] pr-6">
+        </div>
+         </div> 
+           {/* Buttons */}
+      <div className="fixed bottom-0 left-0 w-full h-15 bg-white border-t border-gray-200 flex items-center pl-[260px] pr-6">
         <div className="flex justify-end space-x-4 ml-auto" >
-            <button
-              type="button"
-              onClick={() => {
+          {/* <div className="flex justify-end space-x-4"> */}
+            <button onClick={handleBackward} className="flex items-center text-blue-600 bg-white border rounded-sm px-2 py-1 font-medium">
+             <span className=""><ArrowLeft size={14}/></span> Back
+             </button>
+            <button type="button"  onClick={() => {
             if (isEditMode) {
               navigate(-1);
             } else {
               handleClear(); 
             }
           }}
-              className="px-4 py-2 border rounded text-gray-600 hover:bg-gray-100" >
-                {isEditMode ? "Cancel" : "Clear"}
+          // className="px-4 py-2 bg-white border border-blue-600 rounded text-gray-600 hover:bg-blue-50"
+            className="px-4 py-2 border rounded text-gray-600 hover:bg-gray-100" >
+            {isEditMode ? "Cancel" : "Clear"}
             </button>
-            {/* <button type="submit" className="px-4 py-2 btn-theme">
-            Submit Nomination
-          </button> */}
             { <button
-              onClick={handleSubmit}
-              type="submit"
-              className="px-4 py-2 btn-theme"
-            >
+              onClick={handleSubmit} type="submit" className="px-4 py-2 btn-theme">
              {isEditMode ? "Update Nomination" : "Submit Nomination"}
             </button> }
-        </div> 
-    </div>
-      
-
+          </div>
+      </div>
+ </div>
       {showErrorModal && (
-  <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-    <div className="bg-white p-6 rounded shadow-md w-96 text-center">
-      <h2 className="text-lg font-semibold mb-4 text-red-600">Error</h2>
-      <p className="mb-6">Failed to submit nomination. Please try again</p>
-      <button
-        onClick={() => setShowErrorModal(false)}
-        className="px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700"
-      >
-        OK
-      </button>
-    </div>
-  </div>
-)}
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+          <div className="bg-white p-6 rounded shadow-md w-96 text-center">
+            <h2 className="text-lg font-semibold mb-4 text-red-600">Error</h2>
+            <p className="mb-6">Failed to submit nomination. Please try again</p>
+            <button
+              onClick={() => setShowErrorModal(false)}
+              className="px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700">
+              OK
+            </button>
+          </div>
+        </div>
+      )}
       {showSuccessModal && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
           <div className="bg-white p-6 rounded shadow-md w-96 text-center">
             {/* <h2 className="text-lg font-semibold mb-4">Success!</h2> */}
              <p className="mb-6">
-{isEditMode
-          ? "Nomination updated successfully!"
-          : "Nomination submitted successfully!"}
-</p>
-            <button onClick={handleModalOk }  className="px-4 py-2 btn-theme">OK</button>
-          </div>
-        </div>
-      )}
-    </>
-  );
-
+            {isEditMode
+              ? "Nomination updated successfully!"
+              : "Nomination submitted successfully!"}</p>
+                <button onClick={handleModalOk }  className="px-4 py-2 btn-theme">OK</button>
+              </div>
+            </div>
+          )}
+        </>
+      );
 }

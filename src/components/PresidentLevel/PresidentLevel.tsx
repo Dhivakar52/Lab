@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from "react";
+import React, { useRef, useState, useEffect, useMemo } from "react";
 import axios from "axios";
 import {
   useReactTable,
@@ -49,6 +49,7 @@ const PresidentLevel: React.FC = () => {
   const [globalFilter, setGlobalFilter] = useState("");
   const [flagReason, setFlagReason] = useState<Record<number, string>>({});
   const [expandedRow, setExpandedRow] = useState<ExpandedRow>(null);
+  const tableWrapperRef = useRef<HTMLDivElement | null>(null);
   
 
   useEffect(() => {
@@ -70,9 +71,23 @@ const PresidentLevel: React.FC = () => {
         setLoading(false);
       }
     };
-
     fetchData();
+    setExpandedRow(null);
   }, []);
+   useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (!tableWrapperRef.current) return;
+  
+      const target = event.target as HTMLElement;
+  
+      if (tableWrapperRef.current.contains(target)) return;
+  
+      setExpandedRow(null);
+    };
+  
+      document.addEventListener("click", handleClickOutside);
+      return () => document.removeEventListener("click", handleClickOutside);
+    }, []);
     const handleFlagClick = (item: any) => {
     setExpandedRow(prev => {
       if (prev?.id === item.NominationID && prev?.type === "flag") {
@@ -136,27 +151,14 @@ const PresidentLevel: React.FC = () => {
                 <div
                   className={`inline-flex items-center border rounded overflow-hidden ${bgClass} ${textClass}`}>
                   <button
-                    onClick={() => handleStatusClick(row.original)}
+                    onClick={(e) => { e.stopPropagation();handleStatusClick(row.original);}}
                     className="px-3 py-1 text-sm font-medium flex-1 text-left">
                     {status}
                   </button>
                   <span className="w-px self-stretch bg-current opacity-30" />
                   <button
-                    onClick={() => handleStatusClick(row.original)}
+                    onClick={(e) =>{ e.stopPropagation(); handleStatusClick(row.original);}}
                     className="px-2 flex items-center justify-center" >
-                    {/* <svg
-                      className={`w-4 h-4 transition-transform duration-200 ${
-                        isOpen ? "rotate-180" : "" }`}
-                      viewBox="0 0 24 24"
-                      fill="none"
-                      stroke="currentColor"
-                      strokeWidth={2} >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        d="M19 9l-7 7-7-7"
-                      />
-                    </svg> */}
                    {isOpen ? <ChevronUp size={18} /> : <ChevronDown size={18} />}
                   </button>
                 </div>
@@ -172,7 +174,7 @@ const PresidentLevel: React.FC = () => {
               if (flagStatus === 1) {
                   return (
                    <button
-                    onClick={() => handleFlagClick(item)}
+                    onClick={(e) =>{ e.stopPropagation(); handleFlagClick(item);}}
                     className="p-1" title="Flagged">
                    <Flag
                     size={18} className="text-red-600 fill-red-600" /></button>
@@ -211,7 +213,9 @@ const PresidentLevel: React.FC = () => {
     getFilteredRowModel: getFilteredRowModel(),
     getPaginationRowModel: getPaginationRowModel(),
   });
-
+  useEffect(() => {
+      setExpandedRow(null);
+    }, [table.getState().pagination.pageIndex]);
   if (loading) {
     return <div className="text-center py-6">Loading...</div>;
   }
@@ -233,10 +237,10 @@ const PresidentLevel: React.FC = () => {
       </div>
 
       {/* 🔹 Table */}
-      <div className="overflow-x-auto">
+      <div ref={tableWrapperRef} className="overflow-x-auto">
         <table className="min-w-full border border-gray-200">
           <thead className="bg-gray-50">
-            <tr>
+            <tr onClick={(e) => e.stopPropagation()}>
               {table.getHeaderGroups()[0].headers.map((header) => (
                 <th
                   key={header.id}

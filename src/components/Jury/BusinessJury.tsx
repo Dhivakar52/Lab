@@ -1,4 +1,4 @@
-import React, { useState,useEffect,useMemo } from "react";
+import React, { useRef,useState,useEffect,useMemo } from "react";
 import {ChevronDown, ChevronUp, Menu,  } from "lucide-react";
 import BusinessPanel from "./BusinessPanel"; 
 import axios from "axios";
@@ -69,7 +69,8 @@ const BusinessJury: React.FC = () => {
   const [isPanelOpen, setIsPanelOpen] = useState(false);
   const [flagReason, setFlagReason] = useState<Record<number, string>>({});
   const [expandedRow, setExpandedRow] = useState<ExpandedRow>(null);
-
+  const tableWrapperRef = useRef<HTMLDivElement | null>(null);
+  
   const navigate = useNavigate();
   
   useEffect(() => {
@@ -89,9 +90,23 @@ const BusinessJury: React.FC = () => {
         setLoading(false);
       }
     };
-
     fetchBusinessJury();
+    setExpandedRow(null);
   }, []);
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (!tableWrapperRef.current) return;
+  
+      const target = event.target as HTMLElement;
+  
+      if (tableWrapperRef.current.contains(target)) return;
+  
+      setExpandedRow(null);
+    };
+  
+      document.addEventListener("click", handleClickOutside);
+      return () => document.removeEventListener("click", handleClickOutside);
+    }, []);
   const handleFlagClick = (item: any) => {
     setExpandedRow(prev => {
       if (prev?.id === item.NominationID && prev?.type === "flag") {
@@ -148,13 +163,13 @@ const BusinessJury: React.FC = () => {
                 <div
                   className={`inline-flex items-center border rounded overflow-hidden ${bgClass} ${textClass}`}>
                   <button
-                    onClick={() => handleStatusClick(row.original)}
+                    onClick={(e) =>{ e.stopPropagation(); handleStatusClick(row.original);}}
                     className="px-3 py-1 text-sm font-medium flex-1 text-left">
                     {status}
                   </button>
                   <span className="w-px self-stretch bg-current opacity-30" />
                   <button
-                    onClick={() => handleStatusClick(row.original)}
+                    onClick={(e) =>{ e.stopPropagation(); handleStatusClick(row.original);}}
                     className="px-2 flex items-center justify-center" >
                    {isOpen ? <ChevronUp size={18} /> : <ChevronDown size={18} />}
                   </button>
@@ -171,7 +186,7 @@ const BusinessJury: React.FC = () => {
               if (flagStatus === 1) {
                   return (
                    <button
-                    onClick={() => handleFlagClick(item)}
+                    onClick={(e) =>{ e.stopPropagation(); handleFlagClick(item);}}
                     className="p-1" title="Flagged">
                    <Flag
                     size={18} className="text-red-600 fill-red-600" /></button>
@@ -214,7 +229,9 @@ const BusinessJury: React.FC = () => {
       getFilteredRowModel: getFilteredRowModel(),
       getPaginationRowModel: getPaginationRowModel(),
     });
-  
+  useEffect(() => {
+      setExpandedRow(null);
+    }, [table.getState().pagination.pageIndex]);
   if (loading) {
       return <div className="text-center py-6 text-gray-600">Loading...</div>;
     }
@@ -233,12 +250,11 @@ const BusinessJury: React.FC = () => {
               className="border border-gray-300 rounded-md px-4 py-2 w-1/3 text-sm"
             />
           </div>
-
+      <div ref={tableWrapperRef}>
         <table className="min-w-full border border-gray-200">
-         
           <thead className="bg-gray-50">
             {table.getHeaderGroups().map(headerGroup => (
-              <tr key={headerGroup.id}>
+              <tr onClick={(e) => e.stopPropagation()} key={headerGroup.id}>
                 {headerGroup.headers.map(header => (
                   <th
                     key={header.id}
@@ -318,6 +334,7 @@ const BusinessJury: React.FC = () => {
         {/* Pagination */}
          <Pagination table={table} />
       </div>
+    </div>
     <BusinessPanel
   isOpen={isPanelOpen}
   onClose={() => setIsPanelOpen(false)}

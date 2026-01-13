@@ -1015,9 +1015,8 @@ return (
               {(() => {
                 const approvedComments =
                   data?.ApprovalStatus?.filter(
-                    (x: any) => x.Status === "Approved"
+                    (x: any) => x.Status === "Approved" || x.Status === "Rejected"
                   ) || [];
- 
                 if (!approvedComments.length) {
                   return (
                     <div className="px-6 py-8 text-center text-sm text-gray-500">

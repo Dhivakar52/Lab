@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useRef, useEffect, useMemo, useState } from "react";
 import axios from "axios";
 import {
   useReactTable,
@@ -114,7 +114,8 @@ const ReferralTable: React.FC = () => {
   const [toastType, setToastType] = useState<"success" | "error">("success");
   const [flagReason, setFlagReason] = useState<Record<number, string>>({});
   const [expandedRow, setExpandedRow] = useState<number | null>(null);
-
+  const tableWrapperRef = useRef<HTMLDivElement | null>(null);
+  
   useEffect(() => {
     const fetchApprovals = async () => {
       try {
@@ -133,9 +134,23 @@ const ReferralTable: React.FC = () => {
         setLoading(false);
       }
     };
-
     fetchApprovals();
+    setExpandedRow(null);
   }, []);
+   useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (!tableWrapperRef.current) return;
+  
+      const target = event.target as HTMLElement;
+  
+      if (tableWrapperRef.current.contains(target)) return;
+  
+      setExpandedRow(null);
+    };
+  
+      document.addEventListener("click", handleClickOutside);
+      return () => document.removeEventListener("click", handleClickOutside);
+    }, []);
   const handleStatusClick = (nominationID: number) => {
     setExpandedRow(prev =>
       prev === nominationID ? null : nominationID
@@ -261,13 +276,14 @@ const ReferralTable: React.FC = () => {
                 <div
                   className={`inline-flex items-center border rounded overflow-hidden ${bgClass} ${textClass}`}>
                   <button
-                    onClick={() => handleStatusClick(row.original.NominationID)}
+                    onClick={(e) =>{ e.stopPropagation(); handleStatusClick(row.original.NominationID);}}
                     className="px-3 py-1 text-sm font-medium flex-1 text-left">
                     {status}
                   </button>
                   <span className="w-px self-stretch bg-current opacity-30" />
                   <button
-                    onClick={() => handleStatusClick(row.original.NominationID)}
+                    onClick={(e) =>{ e.stopPropagation();
+                     handleStatusClick(row.original.NominationID);}}
                     className="px-2 flex items-center justify-center" >
                    {isOpen ? <ChevronUp size={18} /> : <ChevronDown size={18} />}
                   </button>
@@ -310,7 +326,9 @@ const ReferralTable: React.FC = () => {
     getFilteredRowModel: getFilteredRowModel(),
     getPaginationRowModel: getPaginationRowModel(),
   });
-
+  useEffect(() => {
+      setExpandedRow(null);
+    }, [table.getState().pagination.pageIndex]);
   if (loading) {
     return <div className="text-center py-6 text-gray-600">Loading...</div>;
   }
@@ -328,17 +346,16 @@ const ReferralTable: React.FC = () => {
               className="border border-gray-300 rounded-md px-4 py-2 w-1/3 text-sm"
             />
           </div>
-
+        <div ref={tableWrapperRef}>
           <table className="min-w-full border border-gray-200">
             <thead className="bg-gray-50">
               {table.getHeaderGroups().map((headerGroup) => (
-                <tr key={headerGroup.id}>
+                <tr onClick={(e) => e.stopPropagation()} key={headerGroup.id}>
                   {headerGroup.headers.map((header) => (
                     <th
                       key={header.id}
                       onClick={header.column.getToggleSortingHandler()}
-                      className="px-4 py-3 text-left text-sm font-semibold uppercase cursor-pointer select-none"
-                  >
+                      className="px-4 py-3 text-left text-sm font-semibold uppercase cursor-pointer select-none">
                   <span className="flex items-center gap-1">
 
                     {flexRender(header.column.columnDef.header, header.getContext())}
@@ -385,6 +402,7 @@ const ReferralTable: React.FC = () => {
           </table>
           <Pagination table={table} />
         </div>
+       </div>
       </div>
       {/* Final Correct Component */}
       <ReferralPanel
