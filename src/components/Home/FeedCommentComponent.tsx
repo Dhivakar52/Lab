@@ -98,7 +98,8 @@ const FeedCommentComponent: React.FC<CommentSectionProps> = ({
                       {c.CommentsText}
                     </p>
                     <p className="text-[10px] text-gray-400 mt-1">
-                      {new Date(c.CommentedAt).toLocaleString()}
+                      {/* {new Date(c.CommentedAt).toLocaleString()} */}
+                       {c.CommentedAt}
                     </p>
                   </div>
                 </div>

@@ -207,6 +207,9 @@ const [activeTab, setActiveTab] = useState("like");
             <span className="text-gray-800 text-sm font-medium">
               {v.Tenant}
             </span>
+            <span className="text-gray-500 text-xs">
+            {v.ViewedAt}
+            </span>
           </div>
         </div>
       ))
@@ -273,7 +276,8 @@ const [activeTab, setActiveTab] = useState("like");
     </span>
 
     <span className="text-gray-500 text-xs">
-      {new Date(v.ViewedAt).toLocaleString()}
+      {/* {new Date(v.ViewedAt).toLocaleString()} */}
+      {v.ViewedAt}
     </span>
   </div>
 </div>

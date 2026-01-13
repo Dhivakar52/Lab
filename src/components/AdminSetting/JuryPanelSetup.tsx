@@ -12,15 +12,18 @@ import { Search, Plus, Menu , Edit2, Trash2 } from "lucide-react";
 import BackToSetting from "../BackToSetting";
 import AddJuryMemberPanel from "./AddJuryMemberPanel";
 import { useAuth } from "../ContextAPI/AuthContext";
+import Pagination from "../Pagination";
 
 const apiUrl = import.meta.env.VITE_API_URL;
 
 interface JuryMember {
   UserRoleID: number;
   UserName: string;
+  UserID:number;
   RoleName: string;
   TenantName?: string;
   TenantID?: number;
+  RoleID:number;
 }
 
 const JuryPanelSetup: React.FC = () => {
@@ -64,6 +67,8 @@ const [isEditMode, setIsEditMode] = useState(false);
           RoleName: item.RoleName,
           TenantName: item.TenantName || "-",
           TenantID: item.TenantID,
+          UserID: item.UserID,
+          RoleID:item.RoleID,
         }));
 
       setData(juryPanelData);
@@ -85,14 +90,14 @@ const [isEditMode, setIsEditMode] = useState(false);
     setIsPanelOpen(true);
   };
     // ================= PUT REQUEST TO UPDATE JURY MEMBER =================
-  const handleUpdateJuryMember = async (updatedMember: JuryMember) => {
+  const handleDelete = async (updatedMember: JuryMember) => {
     try {
       const res = await axios.put(
         `${apiUrl}/api/usersrole/${updatedMember.UserRoleID}`,
         {
-          userID: userId,
-          roleID: updatedMember.RoleName === "Business Jury" ? 1 : 2, 
-          active: true,
+          userID: updatedMember.UserID,
+          roleID: updatedMember.RoleName === "Business Jury" ? 3 : 4, 
+          active: false,
           submittedBy: userId, 
         },
         {
@@ -146,43 +151,6 @@ const [isEditMode, setIsEditMode] = useState(false);
         ),
     },
 
-    // {
-    //     accessorKey: "RoleName",
-    //     header: "Role",
-    //     cell: ({ row }) => {
-    //       const role = row.original.RoleName;
-
-    //       if (role === "Business Jury") {
-    //         return (
-    //           <span className="px-3 py-1 bg-blue-100 text-blue-700 rounded-md text-xs font-medium">
-    //             {role}
-    //           </span>
-    //         );
-    //       }
-
-    //       if (role === "Manager") {
-    //         return (
-    //           <span className="px-3 py-1 bg-purple-100 text-purple-700 rounded-md text-xs font-medium">
-    //             {role}
-    //           </span>
-    //         );
-    //       }
-
-    //       if (role === "Admin") {
-    //         return (
-    //           <span className="px-3 py-1 bg-red-100 text-red-700 rounded-md text-xs font-medium">
-    //             {role}
-    //           </span>
-    //         );
-    //       }
-
-    //     return (
-    //       <span className="px-3 py-1 bg-green-100 text-green-700 rounded-md text-xs font-medium">
-    //         {role}
-    //       </span>
-    //     );
-    //   },
-    // },
        {
           id: "actions",
           header: "Actions",
@@ -198,7 +166,7 @@ const [isEditMode, setIsEditMode] = useState(false);
                 </button>
                 <button
                   className="text-red-600 hover:text-red-800"
-                 
+                  onClick={() => handleDelete(item)}
                 >
                   <Trash2 size={16} />
                 </button>
@@ -249,7 +217,7 @@ const [isEditMode, setIsEditMode] = useState(false);
             {/* ADD BUTTON */}
             <button
               onClick={() => setIsPanelOpen(true)}
-              className="flex items-center gap-2 bg-green-600 text-white px-4 py-2 rounded-md text-sm"
+              className="flex items-center gap-2 themeColor  text-white px-4 py-2 rounded-md text-sm"
             >
               <Plus size={16} />
               Add New Jury Member
@@ -295,30 +263,7 @@ const [isEditMode, setIsEditMode] = useState(false);
               )}
             </tbody>
           </table>
-        </div>
-
-        {/* PAGINATION */}
-        <div className="flex justify-between items-center mt-4">
-          <span className="text-sm">
-            Page {table.getState().pagination.pageIndex + 1} of {table.getPageCount()}
-          </span>
-
-          <div className="space-x-2">
-            <button
-              onClick={() => table.previousPage()}
-              disabled={!table.getCanPreviousPage()}
-              className="px-3 py-1 bg-gray-200 rounded disabled:opacity-50"
-            >
-              Prev
-            </button>
-            <button
-              onClick={() => table.nextPage()}
-              disabled={!table.getCanNextPage()}
-              className="px-3 py-1 bg-gray-200 rounded disabled:opacity-50"
-            >
-              Next
-            </button>
-          </div>
+           <Pagination table={table} />
         </div>
       </div>
 

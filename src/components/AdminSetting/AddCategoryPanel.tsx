@@ -234,7 +234,7 @@ const AddCategoryPanel: React.FC<Props> = ({
           </button>
           <button
             onClick={handleSave}
-            className="px-4 py-2 text-sm bg-blue-600 text-white rounded-md"
+            className="px-4 py-2 text-sm themeColor  text-white rounded-md"
           >
             Save
           </button>

@@ -124,7 +124,6 @@ const AddJuryMemberPanel: React.FC<Props> = ({
 
     if (!tenantId) newErrors.tenant = "Tenant is required";
     if (!name) newErrors.name = "Name is required";
-   
     if (!role) newErrors.role = "Please select jury role";
 
     setErrors(newErrors);
@@ -135,15 +134,18 @@ const AddJuryMemberPanel: React.FC<Props> = ({
   const handleSave = async () => {
     if (!validateForm()) return;
     try {
-      const payload = {
-        userId: isEdit ? editData.UserID : selectedUserId,
-        tenantID: Number(tenantId),
-        roleID: role === "Business" ? 1 : 2,
-        active: true,
-        submittedBy: userId,
-      };
+      debugger;
+     const payload = {
+       userID: isEdit ? editData.UserID : selectedUserId,
+     //userID: editData.UserID : selectedUserId,
+      roleID: role === "Business" ? 3 : 4,
+      active: true,
+      submittedBy: userId,
+    };
 
+   debugger;
       if (isEdit && editData?.UserRoleID) {
+        debugger;
         await axios.put(
           `${apiUrl}/api/usersrole/${editData.UserRoleID}`,
           payload,
@@ -156,6 +158,7 @@ const AddJuryMemberPanel: React.FC<Props> = ({
       }
 
       onClose();
+       window.location.reload();
     } catch (error) {
       console.error("Save failed", error);
     }
@@ -171,7 +174,7 @@ const AddJuryMemberPanel: React.FC<Props> = ({
       {/* Panel */}
       <div className="fixed top-0 right-0 h-full w-[420px] bg-white shadow-xl z-50 flex flex-col">
         {/* Header */}
-        <div className="flex items-center justify-between px-6 py-4 border-b">
+        <div className="flex items-center justify-between px-6 py-4 border-b border-gray-300">
           <h2 className="text-lg font-semibold">
             {isEdit ? "Edit Jury Member" : "Add Jury Member"}
           </h2>
@@ -302,6 +305,7 @@ const AddJuryMemberPanel: React.FC<Props> = ({
               <label className="flex items-center gap-2">
                 <input
                   type="radio"
+                  value={3}
                   checked={role === "Business"}
                   onChange={() => setRole("Business")}
                 />
@@ -310,6 +314,7 @@ const AddJuryMemberPanel: React.FC<Props> = ({
               <label className="flex items-center gap-2">
                 <input
                   type="radio"
+                    value={4}
                   checked={role === "General"}
                   onChange={() => setRole("General")}
                 />
@@ -323,17 +328,17 @@ const AddJuryMemberPanel: React.FC<Props> = ({
         </div>
 
         {/* Footer */}
-        <div className="px-6 py-4 border-t flex justify-between">
+        <div className="px-6 py-4 border-t border-gray-300 flex justify-between">
           <button
             onClick={onClose}
-            className="px-4 py-2 text-sm border rounded-md"
+            className="px-4 py-2 text-sm border border-gray-300 rounded-md"
           >
             Back List
           </button>
 
           <button
             onClick={handleSave}
-            className="px-4 py-2 text-sm bg-green-600 text-white rounded-md"
+            className="px-4 py-2 text-sm themeColor text-white rounded-md"
           >
             {isEdit ? "Update Jury Member" : "Add Jury Member"}
           </button>

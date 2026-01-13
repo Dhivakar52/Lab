@@ -78,7 +78,8 @@ const ViewerModal: React.FC<ViewersModalProps> = ({ open, onClose, viewers, post
     </span>
 
     <span className="text-gray-500 text-xs">
-      {new Date(v.ViewedAt).toLocaleString()}
+      {/* {new Date(v.ViewedAt).toLocaleString()} */}
+       {v.ViewedAt}
     </span>
   </div>
 </div>
