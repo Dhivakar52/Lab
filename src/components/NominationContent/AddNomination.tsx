@@ -472,12 +472,13 @@ const payload = {
       </div>
     )}
 
-      <div className='p-5'>
+      <div className='p-5 pb-15'>
         <button onClick={handleBackward} className="flex items-center text-blue-600 bg-white border-gray-100 rounded-sm px-2 py-1 font-medium">
           <span className="me-2"><ArrowLeft size={14}/></span> Back
         </button>
 
-        <form className="mt-8 p-6 border rounded-lg bg-white shadow nominate-form">
+        <form className="my-8 p-6 border rounded-lg bg-white shadow nominate-form">
+          
           <h2 className="text-xl font-semibold mb-6">Others Nominate Form </h2>
       
           {/* Title */}
@@ -602,60 +603,7 @@ const payload = {
              {errors.managerEmail && <p className="text-red-500 text-sm mt-1">{errors.managerEmail}</p>}
             </div>
           </div>
-
-          {/* File Upload & Referrals */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-4">
-            {/* <div className="mb-4">
-              <Label.Root className="block text-sm font-medium">
-                Supporting documents
-              </Label.Root>
-              <input 
-                type="file"
-                onChange={(e) =>
-                  setForm({ ...form, file: e.target.files?.[0] || null })
-                }
-                className="mt-1 border-1 p-3 rounded-sm" 
-              />
-            </div> */}
-
-            <div className="">
-              <label className="block text-sm font-medium mb-2">
-                Referrals Email ID 
-              </label>
-              <Select
-                options={users.map((u) => ({
-                  value: u.UserID,
-                  label: u.UserInfo,
-                }))}
-                value={referrals.length ? { value: referrals[referrals.length - 1].UserID, 
-                label: referrals[referrals.length - 1].UserInfo } : null}
-                onChange={handleSelectReferral}
-                placeholder="Search and select referral..."
-                isSearchable
-                className="text-sm"
-              />
-                {errors.referrals && <p className="text-red-500 text-sm mt-1">{errors.referrals}</p>}
-              <div className="mt-3 space-y-2">
-                {referrals.map((ref) => (
-                  <div
-                    key={ref.UserID}
-                    className="flex items-center justify-between bg-gray-100 px-3 py-2 rounded"
-                  >
-                    <span>{ref.UserInfo}</span>
-                    <button
-                      type="button"
-                      onClick={() => removeReferral(ref.UserID)}
-                      className="px-2 py-1 bg-red-500 text-white rounded"
-                    >
-                      ✕
-                    </button>
-                  </div>
-                ))}
-              </div>
-            </div>
-          </div>
-
-          {/* Description */}
+            {/* Description */}
           <div className="">
             <Label.Root className="block text-sm font-medium">Description  (Max 1000 chars)</Label.Root>
                       <textarea
@@ -672,10 +620,64 @@ const payload = {
                        <p className="text-gray-500 text-sm mt-1">
                 {form.description.length}/1000 characters
               </p>
+              <br/>
           </div>
 
-          {/* Buttons */}
-          <div className="flex justify-end space-x-4">
+          {/* File Upload & Referrals */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-4">
+            <div>
+            <label className="block text-sm font-medium mb-2">
+                Referrals Email ID 
+              </label>
+              <Select
+                options={users.map((u) => ({
+                  value: u.UserID,
+                  label: u.UserInfo,
+                }))}
+                value={referrals.length ? { value: referrals[referrals.length - 1].UserID, 
+                label: referrals[referrals.length - 1].UserInfo } : null}
+                onChange={handleSelectReferral}
+                placeholder="Search and select referral..."
+                isSearchable
+                className="text-sm"
+              />
+              {/* Selected Referrals */}
+                  <div className="mt-3 space-y-2 max-h-[180px] overflow-y-auto pr-2">
+                    {referrals.map((ref) => (
+                      <div
+                        key={ref.UserID}
+                        className="flex items-center justify-between bg-gray-100 px-3 py-2 rounded"
+                      >
+                        <span className="truncate">
+                          {ref.UserInfo}
+                        </span>
+                  
+                        <button
+                          type="button"
+                          onClick={() => removeReferral(ref.UserID)}
+                          className="ml-2 px-2 py-1 bg-red-500 text-white rounded"
+                        >
+                          ✕
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                  
+              {errorMessage && (
+                <div className="fixed top-5 right-5 z-[9999] bg-red-600 text-white px-5 py-3 
+                rounded-lg shadow-xl text-sm font-medium animate-slide-in">
+                  {errorMessage}
+                </div>
+              )}
+              </div>
+          </div>
+        </form>    
+        <Outlet />
+   
+
+  </div>
+         <div className="fixed bottom-0 left-0 w-full h-15 bg-white border-t border-gray-200 flex items-center pl-[260px] pr-6">
+        <div className="flex justify-end space-x-4 ml-auto" >
             <button
               type="button"
               onClick={() => {
@@ -698,10 +700,10 @@ const payload = {
             >
              {isEditMode ? "Update Nomination" : "Submit Nomination"}
             </button> }
-          </div>
-        </form>    
-        <Outlet />
-      </div>
+        </div> 
+    </div>
+      
+
       {showErrorModal && (
   <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
     <div className="bg-white p-6 rounded shadow-md w-96 text-center">

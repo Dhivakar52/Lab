@@ -92,7 +92,10 @@ const NotificationDetailSidePanel: React.FC<NotificationDetailSidePanelProps> = 
           <span>{notification.Title}</span>
         </div> 
         <p>Received {formattedDate}</p>
-<Link 
+
+         {notification.Nomination && notification.Nomination.length > 0 ? (
+          <>
+          <Link 
         to="#"
          style={linkStyle}
         onMouseEnter={handleMouseEnter}  // Add onMouseEnter event
@@ -102,8 +105,6 @@ const NotificationDetailSidePanel: React.FC<NotificationDetailSidePanelProps> = 
         View Nomination Details
         </Link>
         <br/><br/>
-         {notification.Nomination && notification.Nomination.length > 0 ? (
-          <>
            <p><strong>REQUESTER INFORMATION</strong> </p>
             <div style={{ display: 'flex', alignItems: 'center' }}>
 
@@ -125,7 +126,7 @@ const NotificationDetailSidePanel: React.FC<NotificationDetailSidePanelProps> = 
             <br></br>
           </>
         ) : (
-          ''
+         <br/>
         )}
 
          
