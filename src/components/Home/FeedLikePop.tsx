@@ -60,10 +60,12 @@ const FeedLikePop: React.FC<LikeListPopupProps> = ({ likedBy, onClose, post, ite
     <span className="text-gray-800 text-sm font-medium">
       {v.Tenant}
     </span>
+     
 
-    {/* <span className="text-gray-500 text-xs">
-      {new Date(v.ViewedAt).toLocaleString()}
-    </span> */}
+    <span className="text-gray-500 text-xs">
+      {/* {new Date(v.ViewedAt).toLocaleString()} */}
+       {v.ViewedAt}
+    </span>
   </div>
 </div>
 

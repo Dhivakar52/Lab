@@ -13,6 +13,7 @@ import BackToSetting from "../BackToSetting";
 import { useAuth } from "../ContextAPI/AuthContext";
 import AddCategoryPanel from "./AddCategoryPanel";
 import Swal from "sweetalert2";
+import Pagination from "../Pagination";
 
 const apiUrl = import.meta.env.VITE_API_URL;
 
@@ -288,7 +289,7 @@ const handleDelete = async (category: Category) => {
             <button
              // onClick={() => setIsPanelOpen(true)}
                  onClick={handleAddClick}
-              className="flex items-center gap-2 bg-blue-600 text-white px-4 py-2 rounded-md text-sm"
+              className="flex items-center gap-2 themeColor  text-white px-4 py-2 rounded-md text-sm"
             >
               <Plus size={16} />
               Add New Category
@@ -335,31 +336,10 @@ const handleDelete = async (category: Category) => {
               )}
             </tbody>
           </table>
+            <Pagination table={table} />
         </div>
 
-        {/* PAGINATION */}
-        <div className="flex justify-between items-center mt-4">
-          <span className="text-sm">
-            Page {table.getState().pagination.pageIndex + 1} of {table.getPageCount()}
-          </span>
-
-          <div className="space-x-2">
-            <button
-              onClick={() => table.previousPage()}
-              disabled={!table.getCanPreviousPage()}
-              className="px-3 py-1 bg-gray-200 rounded disabled:opacity-50"
-            >
-              Prev
-            </button>
-            <button
-              onClick={() => table.nextPage()}
-              disabled={!table.getCanNextPage()}
-              className="px-3 py-1 bg-gray-200 rounded disabled:opacity-50"
-            >
-              Next
-            </button>
-          </div>
-        </div>
+      
       </div>
 
       {/*ADD/EDIT CATEGORY SIDE PANEL */}

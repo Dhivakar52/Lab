@@ -37,14 +37,27 @@ const FeedNestedComment: React.FC<FeedNestedCommentProps> = ({
       <div className="flex items-start space-x-3 bg-white p-3 rounded-md border border-gray-200">
         <div className="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center text-blue-600 font-semibold">
           {comment.CommentedBy?.charAt(0).toUpperCase()}
+          
         </div>
 
         <div className="w-full">
-          <p className="font-semibold text-gray-800 text-sm">
+           {/* Name + Date */}
+          <div className="flex items-center justify-between">
+            <p className="font-semibold text-gray-800 text-sm">
+              {comment.CommentedBy}
+            </p>
+
+            <p className="text-xs text-gray-500">
+              {comment.CommentedAt}
+            </p>
+          </div>
+          {/* <p className="font-semibold text-gray-800 text-sm">
             {comment.CommentedBy}
-          </p>
+          </p> */}
+         
 
           <p className="text-gray-700 text-sm">{comment.CommentsText}</p>
+         
 
           <div className="flex items-center space-x-3 mt-1">
 

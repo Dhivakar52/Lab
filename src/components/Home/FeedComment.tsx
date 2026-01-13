@@ -7,6 +7,7 @@ interface CommentSectionProps {
   username: string;
   comments: any[];
   commentText: string;
+  //commentedAt:string;
   setCommentText: (v: string) => void;
   handleAddComment: () => void;
   handleReply: (postId: number, text: string, parentId: number) => Promise<void>;
