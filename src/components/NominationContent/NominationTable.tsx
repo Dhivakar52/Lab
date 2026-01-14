@@ -288,7 +288,7 @@ const apiUrl = import.meta.env.VITE_API_URL;
               <Tabs.Trigger value="others"
                 className="flex-1 text-center px-6 py-2 text-sm data-[state=active]:border-b-2
                 data-[state=active]:border-green-500 data-[state=active]:text-green-600
-                hover:bg-gray-50"> Nominated By Me
+                hover:bg-gray-50"> Others
               </Tabs.Trigger>
             </Tabs.List>
           </Tabs.Root>
