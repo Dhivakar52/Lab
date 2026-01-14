@@ -35,7 +35,7 @@ const NominationComponent = () => {
             value="form"
             className="flex-1 text-sm px-4 py-2 text-center data-[state=active]:border-b-2 data-[state=active]:border-green-500 data-[state=active]:text-green-600 hover:bg-gray-100"
 >
-            Others
+           Nominated By Me
           </Tabs.Trigger>
         </Tabs.List>
 
