@@ -612,8 +612,7 @@ const referralPayload = referrals.map(ref => ({
                 onMouseDown={(e) => e.preventDefault()}
                 onFocus={(e) => e.currentTarget.blur()}
                 onKeyDown={(e) => e.preventDefault()}
-                style={{ userSelect: "none", pointerEvents: "none", caretColor: "transparent", outline: "none" }}
-                className="w-full mt-1 border rounded px-3 py-2 bg-gray-100 text-gray-700 cursor-not-allowed"            />
+                className="w-full mt-1 border rounded px-3 py-2 bg-gray-100 text-gray-700 cursor-not-allowed select-none pointer-events-none caret-transparent outline-none"            />
             </div>
           </div>     
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-4">

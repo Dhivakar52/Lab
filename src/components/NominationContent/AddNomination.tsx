@@ -156,7 +156,7 @@ useEffect(() => {
  
   setForm(prev => ({
     ...prev,
-    managerEmail: item.Email || "",  
+    managerEmail: item.ManagerEmail || "",  
   }));
  
   setErrors(prev => ({
@@ -229,7 +229,6 @@ useEffect(() => {
           ...prev,
           nomineeName: user?.UserName?.trim() || "",
           department: user?.DeptName || "",
-          managerEmail: "",
           email: user?.Email || "",
           mobile: user?.PhoneNo || "",
         }));
@@ -258,6 +257,18 @@ useEffect(() => {
       const data = res.data[0];
       console.log("sucess",res.data)
 
+      const userId = data?.UserID;
+ 
+      const userData = await axios.get(
+          `${apiUrl}/api/users?userId=${res.data[0].UserID}`,
+          {
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${authToken}`,
+            },
+          }
+        );
+
       setForm(prev => ({
         ...prev,
         title: data.NominationTitle ?? "",
@@ -266,7 +277,7 @@ useEffect(() => {
         description: data.Descriptions ?? "",
         email: prev.email ?? "",
         mobile: prev.mobile ?? "",
-        managerEmail: data.ManagerName ?? "",
+        managerEmail:  userData.data[0].ManagerEmail ?? "",
         contestType: data.AwardCategoryID
           ? String(data.AwardCategoryID)
           : "",
@@ -279,7 +290,7 @@ useEffect(() => {
        setForm(prev => ({
       ...prev,
       nomineeName: data.UserName,
-      managerEmail: data.ManagerEmail,
+      managerEmail: userData.data[0].ManagerEmail,
     }));
     
       setReferrals(
@@ -535,7 +546,7 @@ const payload = {
                 type="text"
                 value={form.nomineeName || ""}
                 disabled
-                className="w-full mt-1 border rounded bg-gray-100 px-3 py-2"/>
+                className="w-full mt-1 border rounded px-3 py-2 bg-gray-100 text-gray-700 cursor-not-allowed select-none pointer-events-none caret-transparent outline-none"/>
                 {errors.nomineeName && <p className="text-red-500 text-sm mt-1">{errors.nomineeName}</p>}
             </div>
             <div>
