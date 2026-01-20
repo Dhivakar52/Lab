@@ -51,6 +51,7 @@ export default function Login({ setUserRole }: LoginProps) {
       });
  
       const data = await res.json();
+      console.log("Data",data)
       if (!res.ok) {
         showMessage(data.message || "Invalid email or password", "error");
         return;
@@ -63,6 +64,8 @@ export default function Login({ setUserRole }: LoginProps) {
       const userid = data.userid ?? data.userId ?? data?.result?.userid;
       const username = data.username ?? data.userName ?? data?.result?.username;
       const userEmail = data.email ?? data.userEmail ?? data?.result?.email;
+       const tenantname = data.tenantname ?? data.tenantname ?? data?.result?.tenantname;
+       console.log(data.tenantname)
  
       if (!token) {
         showMessage("Login failed. Token missing.", "error");
@@ -92,6 +95,7 @@ export default function Login({ setUserRole }: LoginProps) {
       localStorage.setItem("username", username ?? "");
       localStorage.setItem("email", userEmail ?? "");
       localStorage.setItem("userRole", role_user);
+       localStorage.setItem("tenantname", tenantname);
  
       setUserRole(role_user);
       showMessage("Login successful!", "success");
@@ -185,6 +189,7 @@ console.log(data);
     const username = data.username;
     const userEmail = data.email;
     const refreshToken = data.refreshtoken;
+    const tenantname = data.tenantname;
 
     let role_user: UserRole;
       switch (Number(roleid)) {

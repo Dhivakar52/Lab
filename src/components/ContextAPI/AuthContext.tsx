@@ -8,6 +8,8 @@ interface AuthContextType {
   userId: number | null;
   userRole: string | null;
   username: string | null;
+  tenantname: string | null;
+
   setAuthData: (data: AuthContextType) => void;
   clearAuthData: () => void;
 }
@@ -27,14 +29,20 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const [userId, setUserId] = useState<number | null>(parseInt(localStorage.getItem("userId") || "0"));
   const [userRole, setUserRole] = useState<string | null>(localStorage.getItem("userRole"));
   const [username, setUsername] = useState<string | null>(localStorage.getItem("username"));
+   const [tenantname, setTenantname] = useState<string | null>(
+    localStorage.getItem("tenantname")
+  );
 
   const setAuthData = (data: AuthContextType) => {
+    console.log(data,"Data")
     setAuthToken(data.authToken);
     setEmail(data.email);
     setRefreshToken(data.refreshToken);
     setUserId(data.userId);
     setUserRole(data.userRole);
     setUsername(data.username);
+      setTenantname(data.tenantname);
+
 
     // Save to localStorage
     localStorage.setItem("authToken", data.authToken || "");
@@ -43,6 +51,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     localStorage.setItem("userId", String(data.userId));
     localStorage.setItem("userRole", data.userRole || "");
     localStorage.setItem("username", data.username || "");
+     localStorage.setItem("tenantname", data.tenantname || "");
   };
 
   const clearAuthData = () => {
@@ -52,6 +61,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     setUserId(null);
     setUserRole(null);
     setUsername(null);
+     setTenantname(null);
 
     localStorage.removeItem("authToken");
     localStorage.removeItem("email");
@@ -59,10 +69,11 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     localStorage.removeItem("userId");
     localStorage.removeItem("userRole");
     localStorage.removeItem("username");
+     localStorage.removeItem("tenantname");
   };
 
   return (
-    <AuthContext.Provider value={{ authToken, email, refreshToken, userId, userRole, username, setAuthData, clearAuthData }}>
+    <AuthContext.Provider value={{ authToken, email, refreshToken, userId, userRole, username,tenantname, setAuthData, clearAuthData }}>
       {children}  
     </AuthContext.Provider>
   );

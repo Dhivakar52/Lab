@@ -2,8 +2,8 @@ import React from "react";
 import { Filter } from "lucide-react";
 
 interface TabsProps {
-  activeTab: "Feeds" | "My Lists";
-  setActiveTab: (tab: "Feeds" | "My Lists") => void;
+  activeTab: "Feeds" | "My Lists"|"My Business";
+  setActiveTab: (tab: "Feeds" | "My Lists"|"My Business") => void;
   onFilterClick: () => void;
 }
 
@@ -14,10 +14,10 @@ const TabsSection: React.FC<TabsProps> = ({ activeTab, setActiveTab, onFilterCli
         
         {/* Tabs */}
         <div className="flex space-x-6 sm:space-x-8 overflow-x-auto">
-          {["Feeds", "My Lists"].map((tab) => (
+          {["Feeds", "My Lists","My Business"].map((tab) => (
             <button
               key={tab}
-              onClick={() => setActiveTab(tab as "Feeds" | "My Lists")}
+              onClick={() => setActiveTab(tab as "Feeds" | "My Lists" |"My Business")}
               className={`pb-2 text-sm font-medium border-b-2 transition-colors whitespace-nowrap ${
                 activeTab === tab
                   ? "text-teal-600 border-teal-600"
