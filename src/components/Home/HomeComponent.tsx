@@ -8,6 +8,7 @@ import ProfileCard from "./ProfileCard";
 import NominationStats from "./NominationStats";
 import TopPerformers from "./TopPerformers";
 import ListCard from "./ListCard";
+import BusinessCard from "./BusinessCard";
 import type { Feed } from "../../dataTypes/nomination";
 
 import {
@@ -17,15 +18,16 @@ import {
 import FilterFeed from "./FilterFeed";
 
 const HomeComponent: React.FC = () => {
-  const [activeTab, setActiveTab] = useState<"Feeds" | "My Lists">("Feeds");
+  const [activeTab, setActiveTab] = useState<"Feeds" | "My Lists"|"My Business">("Feeds");
   const [posts, setPosts] = useState<Feed[]>([]);
   const [categories, setCategories] = useState<string[]>([]);
   const [tenants, setTenants] = useState<string[]>([]);
 
   const [list, setList] = useState<Feed[]>([]);
+  const [business, setBusiness] = useState<Feed[]>([]);
   const [profile, setProfile] = useState([]);
   
-  const { authToken, userId } = useAuth();
+  const { authToken, userId ,tenantname } = useAuth();
   const [showDropdown, setShowDropdown] = useState(false);
   const [userDetail, setUserDetail] = useState<any>(null);
   const apiUrl = import.meta.env.VITE_API_URL;
@@ -33,9 +35,22 @@ const HomeComponent: React.FC = () => {
 
   const [feedsState, feedsDispatch] = useReducer(filterReducer, initialFilterState);
   const [listsState, listsDispatch] = useReducer(filterReducer, initialFilterState);
+  const [businessState, businessDispatch] = useReducer(
+  filterReducer,
+  initialFilterState
+);
 
  
   const filterRef = useRef<HTMLDivElement>(null);
+
+  // ✅ TAB CHANGE → FILTER RESET
+  useEffect(() => {
+    setShowDropdown(false);
+
+    if (activeTab === "Feeds") feedsDispatch({ type: "RESET" });
+    if (activeTab === "My Lists") listsDispatch({ type: "RESET" });
+    if (activeTab === "My Business") businessDispatch({ type: "RESET" });
+  }, [activeTab]);
 
   
   const handleClickOutside = useCallback((event: MouseEvent) => {
@@ -63,9 +78,23 @@ const HomeComponent: React.FC = () => {
             },
           }
         );
-
         setUserDetail(fetchUserDetail.data);
         console.log("profileDetails", fetchUserDetail.data);
+
+       
+       const businesstenant = await axios.get(
+          `${apiUrl}/api/nominationfeeds?searchText=${tenantname}`,
+          {
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${authToken}`,
+            },
+          }
+        );
+
+        setBusiness(businesstenant.data);
+
+        
 
         const cat = [...new Set(res.data.map((x: any) => x.AwardCategory))] as string[];
         setCategories(cat);
@@ -95,7 +124,7 @@ const HomeComponent: React.FC = () => {
     };
 
     fetchFeeds();
-  }, [authToken, apiUrl, userId]);
+  }, [authToken, apiUrl, userId,tenantname]);
 
   const filteredPosts = useMemo(() => {
     let data = [...posts];
@@ -152,6 +181,36 @@ const HomeComponent: React.FC = () => {
     return data;
   }, [listsState, list]);
 
+  const filteredBusiness = useMemo(() => {
+  let data = [...business];
+
+  if (businessState.search) {
+    data = data.filter((p) =>
+      p.Nominee.toLowerCase().includes(businessState.search.toLowerCase())
+    );
+  }
+
+  if (businessState.category) {
+    data = data.filter((p) => p.AwardCategory === businessState.category);
+  }
+
+  if (businessState.tenant) {
+    data = data.filter((p) => p.Tenant === businessState.tenant);
+  }
+
+  switch (businessState.sortBy) {
+    case "likes": data.sort((a, b) => b.Likes - a.Likes); break;
+    case "comments": data.sort((a, b) => b.Comments - a.Comments); break;
+    case "views": data.sort((a, b) => b.Views - a.Views); break;
+    case "nominated": data.sort((a, b) => b.NominatedCount - a.NominatedCount); break;
+    case "name": data.sort((a, b) => a.Nominee.localeCompare(b.Nominee)); break;
+    case "category": data.sort((a, b) => a.AwardCategory.localeCompare(b.AwardCategory)); break;
+  }
+
+  return data;
+}, [businessState, business]);
+
+
   // OUTSIDE CLICK EFFECT
   useEffect(() => {
     if (showDropdown) {
@@ -164,6 +223,17 @@ const HomeComponent: React.FC = () => {
       document.removeEventListener("mousedown", handleClickOutside);
     };
   }, [showDropdown, handleClickOutside]);
+
+  const getFilterProps = () => {
+    if (activeTab === "Feeds")
+      return { ...feedsState, dispatch: feedsDispatch };
+    if (activeTab === "My Lists")
+      return { ...listsState, dispatch: listsDispatch };
+    return { ...businessState, dispatch: businessDispatch };
+
+    //  if (activeTab === "My Business")
+    //   return { ...businessState, dispatch: businessDispatch };
+  };
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -193,7 +263,7 @@ const HomeComponent: React.FC = () => {
                   onFilterClick={() => setShowDropdown((prev) => !prev)} 
                 />
 
-                {showDropdown && (
+                {/* {showDropdown && (
                   <div ref={filterRef} className="absolute top-[42px] right-4 mt-2 z-50 w-72">
                     <FilterFeed
                       {...(activeTab === "Feeds" 
@@ -216,7 +286,22 @@ const HomeComponent: React.FC = () => {
                       tenants={tenants}
                     />
                   </div>
-                )}
+                )} */}
+
+               {showDropdown && (
+                <div
+                  ref={filterRef}
+                  className="absolute top-[42px] right-4 mt-2 z-50 w-72"
+                >
+                  <FilterFeed
+                    {...getFilterProps()}
+                    categories={categories}
+                    tenants={tenants}
+                  />
+                </div>
+              )}
+
+
 
                 <div className="divide-y divide-gray-100">
 
@@ -255,6 +340,22 @@ const HomeComponent: React.FC = () => {
                        </div>
                     )
                   )}
+
+                  
+                  {/* {activeTab === "My Business" && (
+                    <div className="overflow-y-auto h-[550px] min-h-screen">
+                      <BusinessCard />
+                    </div>
+                  )} */}
+                 {activeTab === "My Business" && (
+                  <BusinessCard
+                    business={filteredBusiness}
+                    setBusiness={setBusiness}
+                  />
+                )}
+
+
+                                  
                 </div>
               </div>
             </div>
