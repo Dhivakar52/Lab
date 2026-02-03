@@ -40,13 +40,19 @@ const navigationItems: NavigationItem[] = [
   { icon: Bell, label: 'Notifications', path: '/notifications' },
   { icon: User, label: 'Self Nominations', path: '/self-nominations' },
   { icon: FileText, label: 'My Nominations', path: '/my-nominations' },
+   { icon: Settings, label: 'Grand Jury', path: '/grand-jury' },
+   { icon: Settings, label: 'Primary Business Jury', path: '/primary-business-jury' },
+      
+   { icon: Settings, label: 'Leader Board', path: '/leader-board' },
   { icon: ClipboardList, label: 'Referral Approval', path: '/referral-approval' },
   { icon: CircleCheckBig, label: 'Approvals', path: '/approvals' },
   { icon: Gavel, label: 'Business Jury', path: '/business-jury' },
   { icon: Shield, label: 'President Unit', path: '/president-unit' },
   { icon: Users, label: 'President Level', path: '/president-level' },
   { icon: Award, label: 'Award Management', path: '/award-management' },
+   
   { icon: Settings, label: 'Admin Setting', path: '/admin-setting' },
+ 
   //{ icon: UserPlus, label: 'Other Nomination', path: '/other-nomination' },
 ];
 
@@ -74,6 +80,10 @@ const allowedPages = userRole ? ROLE_PAGES[userRole] : [];
     borderLeft: '4px solid white',
     color: 'white',
   };
+
+  const filteredNavItems = navigationItems.filter(item =>
+  allowedPages.some(page => page.trim() === item.label.trim())
+);
 
   return (
     <>
@@ -124,7 +134,7 @@ const allowedPages = userRole ? ROLE_PAGES[userRole] : [];
 
 
         <nav className="p-3 space-y-2 max-h-[70vh] overflow-y-auto">
-          {navigationItems
+          {filteredNavItems
            .filter(item => allowedPages.includes(item.label))
             .map((item) => {
               const isActive = location.pathname.startsWith(item.path);
