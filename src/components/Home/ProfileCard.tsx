@@ -79,18 +79,18 @@ const ProfileCard: React.FC<ProfileCardProps> = ({ profile, userDetail }) => {
                 <div className="p-4 bg-white rounded-xl border border-gray-200 shadow text-black my-3">
                   <div className="flex items-center justify-center space-x-3 mb-3 whitespace-nowrap overflow-hidden">
                     
-                     <span className="px-2 py-1 rounded-full text-xs bg-purple-100 text-purple-800 flex items-center">
+                     <span className="px-2 py-2 rounded-full text-xs bg-[#EDF4FF] text-[#213048] flex items-center">
                       <Trophy size={16}/>  <span className="ms-1">{cat.AwardCategory || "-"}</span>
                       </span>
-                    <span className="px-2 py-1 rounded-full text-xs bg-blue-100 text-blue-800 flex items-center">
+                    <span className="px-2 py-2 rounded-full text-xs bg-[#EDF4FF] text-[#213048] flex items-center">
                     <UsersRound size={16}/>  <span className="ms-1"> {cat.NominatedCount || 0}</span>
                          </span>
                   </div>
 
-               <div className="flex items-center gap-2 border-b border-gray-200 py-2">
+               {/* <div className="flex justify-center items-center gap-2  py-2">
 
-  {/* Likes */}
-  <span
+
+  <div
     className="flex items-center gap-1 px-2 py-0.5
                rounded-full border border-gray-300
                text-xs font-medium text-gray-700
@@ -99,11 +99,11 @@ const ProfileCard: React.FC<ProfileCardProps> = ({ profile, userDetail }) => {
   >
     <Heart className="w-3.5 h-3.5 text-red-500" />
     <span>{cat.Likes || 0} Likes</span>
-  </span>
+  </div>
 
-  {/* Comments */}
-  <span
-    className="flex items-center gap-1 px-2 py-0.5
+
+  <div
+    className="flex  items-center gap-1 px-2 py-0.5
                rounded-full border border-gray-300
                text-xs font-medium text-gray-700
                hover:bg-blue-50 hover:border-blue-300
@@ -111,9 +111,9 @@ const ProfileCard: React.FC<ProfileCardProps> = ({ profile, userDetail }) => {
   >
     <MessageCircle className="w-3.5 h-3.5 text-blue-500" />
     <span>{cat.Comments || 0} Comments</span>
-  </span>
+  </div>
 
-  {/* Views */}
+
   <span
     className="flex items-center gap-1 px-2 py-0.5
                rounded-full border border-gray-300
@@ -124,6 +124,38 @@ const ProfileCard: React.FC<ProfileCardProps> = ({ profile, userDetail }) => {
     <Eye className="w-3.5 h-3.5 text-gray-600" />
     <span>{cat.Views || 0} Views</span>
   </span>
+
+</div> */}
+
+
+
+<div className="flex flex-col sm:flex-row justify-center items-center gap-2 py-2">
+
+  {/* Likes */}
+  <div
+    className="w-full sm:w-auto
+               flex items-center justify-center gap-1 px-2 py-0.5
+               rounded-full border border-gray-300
+               text-xs font-medium text-gray-700
+               hover:bg-red-50 hover:border-red-300
+               transition cursor-pointer"
+  >
+    <Heart className="w-3.5 h-3.5 text-red-500" />
+    <span>{cat.Likes || 0} Likes</span>
+  </div>
+
+  {/* Comments */}
+  <div
+    className="w-full sm:w-auto
+               flex items-center justify-center gap-1 px-2 py-0.5
+               rounded-full border border-gray-300
+               text-xs font-medium text-gray-700
+               hover:bg-blue-50 hover:border-blue-300
+               transition cursor-pointer"
+  >
+    <MessageCircle className="w-3.5 h-3.5 text-blue-500" />
+    <span>{cat.Comments || 0} Comments</span>
+  </div>
 
 </div>
 

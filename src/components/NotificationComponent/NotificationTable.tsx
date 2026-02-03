@@ -6,18 +6,14 @@ import {
   getPaginationRowModel,
   getSortedRowModel,
   getFilteredRowModel,
-  flexRender,
-
 } from "@tanstack/react-table";
-import type {
-  ColumnDef,
-} from "@tanstack/react-table";
+import type { ColumnDef } from "@tanstack/react-table";
 import { useAuth } from "../ContextAPI/AuthContext";
 import NotificationDetailSidePanel from "../Notification/NotificationDetailSidePanel";
 import * as Dialog from '@radix-ui/react-dialog';
-import { ChevronDown, ChevronUp } from "lucide-react";
-
+import { Search, Bell } from "lucide-react";
 import Pagination from "../Pagination";
+
 interface Notification {
   TotalRowCount: number;
   NotificationID: number;
@@ -32,18 +28,19 @@ interface Notification {
   SentAt: string | null;
   IsRead: boolean | null;
   ReadAt: string | null;
-  CreatedAt:string;
-  Nomination: Nomination[] ; 
-
+  CreatedAt: string;
+  Nomination: Nomination[];
 }
+
 interface Nomination {
   NominationID: number;
   Nominee: string;
   Tenant: string;
   NominatedBy: string;
   AwardCategory: string;
-  Descriptions:string;
+  Descriptions: string;
 }
+
 interface NotificationTableProps {
   isOpen: boolean;
   onClose: () => void;
@@ -60,15 +57,13 @@ const NotificationTable: React.FC<NotificationTableProps> = ({
   const [data, setData] = useState<Notification[]>([]);
   const [loading, setLoading] = useState(true);
   const [globalFilter, setGlobalFilter] = useState("");
-  const { userId , authToken} = useAuth();
-      const [isPanelOpen, setIsPanelOpen] = useState(false);
-        const [selectedNominee, setSelectedNominee] = useState<Notification | null>(null);
-  
+  const { userId, authToken } = useAuth();
+  const [isPanelOpen, setIsPanelOpen] = useState(false);
+  const [selectedNominee, setSelectedNominee] = useState<Notification | null>(null);
 
   useEffect(() => {
     const fetchNotifications = async () => {
       try {
-       
         if (!authToken) throw new Error("No auth token found");
 
         const res = await axios.get(`${apiUrl}/api/notificationlog/${userId}`, {
@@ -84,41 +79,13 @@ const NotificationTable: React.FC<NotificationTableProps> = ({
     };
 
     fetchNotifications();
-  }, []);
+  }, [userId, authToken]);
 
   const columns = useMemo<ColumnDef<Notification>[]>(
     () => [
-      // {
-      //   header: "S.NO",
-      //   cell: (info) => info.row.index + 1,
-      // },
-      // { accessorKey: "NotificationID", header: "Notification ID" },
-      // { accessorKey: "ReferenceIdPK", header: "Reference ID" },
-      //{ accessorKey: "FromUser", header: "From User" },
-     
       { accessorKey: "Title", header: "Title" },
       { accessorKey: "NotificationContent", header: "Content" },
-       { accessorKey: "Time", header: "Time" },
-      // {
-      //   accessorKey: "IsSent",
-      //   header: "Is Sent",
-      //   cell: (info) =>
-      //     info.getValue() ? (
-      //       <span className="text-green-600 font-medium">Yes</span>
-      //     ) : (
-      //       <span className="text-red-500 font-medium">No</span>
-      //     ),
-      // },
-      // {
-      //   accessorKey: "IsRead",
-      //   header: "Is Read",
-      //   cell: (info) =>
-      //     info.getValue() ? (
-      //       <span className="text-green-600 font-medium">Read</span>
-      //     ) : (
-      //       <span className="text-red-500 font-medium">Unread</span>
-      //     ),
-      // },
+      { accessorKey: "CreatedAt", header: "Time" },
     ],
     []
   );
@@ -132,90 +99,108 @@ const NotificationTable: React.FC<NotificationTableProps> = ({
     getSortedRowModel: getSortedRowModel(),
     getFilteredRowModel: getFilteredRowModel(),
     getPaginationRowModel: getPaginationRowModel(),
+    initialState: {
+      pagination: {
+        pageSize: 8, 
+      },
+    },
   });
-   const handleSidePanelView = (notification: Notification) => {
+
+  const handleSidePanelView = (notification: Notification) => {
     setSelectedNominee(notification);
     setIsPanelOpen(true);
   };
 
+  const getTimeAgo = (dateString: string) => {
+    const date = new Date(dateString);
+    const now = new Date();
+    const diffInDays = Math.floor((now.getTime() - date.getTime()) / (1000 * 60 * 60 * 24));
+    
+    if (diffInDays === 0) return "Today";
+    if (diffInDays === 1) return "1 day ago";
+    return `${diffInDays} days ago`;
+  };
+
   if (loading) {
-    return <div className="text-center py-6 text-gray-600">Loading notifications...</div>;
+    return (
+      <div className="flex items-center justify-center h-screen">
+        <div className="text-center py-6 text-gray-600">Loading notifications...</div>
+      </div>
+    );
   }
 
-  
   return (
-        <Dialog.Root open={isOpen} onOpenChange={onClose}>
-    
-    <div className="p-6">
-      
+    <Dialog.Root open={isOpen} onOpenChange={onClose}>
+      <div className="min-h-screen ">
+        <div className="mx-3 p-6 bg-white rounded-lg shadow-sm my-3">
+          
+          {/* Header */}
+          <div className="mb-6 flex justify-between item-center">
+            <div className="flex items-center gap-3 mb-4">
+              <Bell className="w-6 h-6 text-gray-700" />
+              <h1 className="text-2xl font-semibold text-gray-900">All Notifications</h1>
+            </div>
 
-      {/* 🧾 Table */}
-      <div className="overflow-x-auto bg-white shadow-md rounded-lg p-6">
+            {/* Search Bar */}
+            <div className="relative w-75">
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
+              <input
+                type="text"
+                value={globalFilter ?? ""}
+                onChange={(e) => setGlobalFilter(e.target.value)}
+                placeholder="Search"
+                className="w-full pl-10 pr-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              />
+            </div>
+          </div>
 
-        {/* 🔍 Global Search */}
-      <div className="mb-4 flex justify-between items-center">
-        <input
-          value={globalFilter ?? ""}
-          onChange={(e) => setGlobalFilter(e.target.value)}
-          placeholder="Search notifications..."
-          className="border border-gray-300 rounded-md px-4 py-2 w-1/3 text-sm"
-        />
-      </div>
-        <table className="min-w-full border border-gray-200">
-          <thead className="bg-gray-50">
-            {table.getHeaderGroups().map((headerGroup) => (
-              <tr key={headerGroup.id}>
-                {headerGroup.headers.map((header) => (
-                  <th
-                    key={header.id}
-                    onClick={header.column.getToggleSortingHandler()}
-                    className="px-4 py-3 text-left text-sm font-semibold uppercase cursor-pointer select-none"
+          {/* Notifications Cards - Using table.getRowModel() */}
+          <div className="">
+            <div className="space-y-3 mb-6">
+              {table.getRowModel().rows.length > 0 ? (
+                table.getRowModel().rows.map((row) => (
+                  <div
+                    key={row.id}
+                    onClick={() => handleSidePanelView(row.original)}
+                    className="bg-[#F0F5FF] rounded-lg p-4 cursor-pointer hover:bg-[#E5EDFF] transition-all duration-200 border border-gray-200 shadow-sm hover:shadow-md"
                   >
-                    <span className="flex items-center gap-1">
+                    <div className="flex justify-between items-start gap-4">
+                      <div className="flex-1">
+                        <h3 className="font-semibold text-gray-900 mb-1.5 text-base">
+                          {row.original.Title}
+                        </h3>
+                        <p className="text-sm text-gray-600 line-clamp-2">
+                          {row.original.NotificationContent}
+                        </p>
+                      </div>
+                      <span className="text-xs text-gray-500 whitespace-nowrap mt-1">
+                        {getTimeAgo(row.original.CreatedAt)}
+                      </span>
+                    </div>
+                  </div>
+                ))
+              ) : (
+                <div className="text-center py-20 text-gray-500">
+                  <Bell className="w-16 h-16 mx-auto mb-4 text-gray-300" />
+                  <p className="text-lg">No notifications found</p>
+                </div>
+              )}
+            </div>
 
-                    {flexRender(header.column.columnDef.header, header.getContext())}
-                    {header.column.getIsSorted() === "asc" && <ChevronUp size={14}/>}
-                    {header.column.getIsSorted() === "desc" && <ChevronDown size={14}/>}
-                  </span>
-                  </th>
-                ))}
-              </tr>
-            ))}
-          </thead>
-          <tbody className="divide-y divide-gray-100">
-            {table.getRowModel().rows.length ? (
-              table.getRowModel().rows.map((row) => (
-                <tr key={row.id} className="hover:bg-gray-50" onClick={() => handleSidePanelView(row.original)}>
-                  {row.getVisibleCells().map((cell) => (
-                    <td key={cell.id} className="px-6 py-4 text-sm text-gray-900">
-                      {flexRender(cell.column.columnDef.cell, cell.getContext())}
-                    </td>
-                  ))}
-                </tr>
-              ))
-            ) : (
-              <tr>
-                <td colSpan={columns.length} className="text-center py-6 text-gray-500">
-                  No notifications found
-                </td>
-              </tr>
-            )}
-          </tbody>
-        </table>
+            {/* Your existing Pagination component */}
+            <Pagination table={table} />
+          </div>
 
-
-           <Pagination table={table} />
+          {/* Side Panel */}
+          <NotificationDetailSidePanel
+            isOpen={isPanelOpen}
+            onClose={() => setIsPanelOpen(false)}
+            notification={selectedNominee}
+          />
+        </div>
       </div>
-<NotificationDetailSidePanel
-        isOpen={isPanelOpen}
-        onClose={() => setIsPanelOpen(false)}
-        notification={selectedNominee}
-      />
-
-    </div>
     </Dialog.Root>
   );
-
 };
 
 export default NotificationTable;
