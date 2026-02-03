@@ -8,7 +8,8 @@ import Select from "react-select";
 import { useNavigate } from "react-router-dom";
 import { useParams } from "react-router-dom";
 import * as Dialog from "@radix-ui/react-dialog";
-import { X } from "lucide-react"; 
+import { X, User, Building2, Mail,Phone } from "lucide-react";
+
 import Pagination from "../Pagination";
 
 // interface OptionType {
@@ -552,35 +553,77 @@ const referralPayload = referrals.map(ref => ({
 
  return (
   <>
-    {/* Success message on top
-    {successMsg && (
-      <div
-        className="fixed top-4 left-1/2 transform -translate-x-1/2 
-                   bg-green-500 text-white px-6 py-3 rounded shadow-lg 
-                   z-50 text-sm font-medium">
-        {successMsg}
-      </div>
-    )} */}
  <div className="bg-gray-100 flex flex-col"> 
   <div className="w-full h-full px-1 py-1 pb-[60px]" >
     <form onSubmit={handleSubmit} className="px-2 py-4 rounded-lg bg-white shadow nominate-form">
       <div className="flex-1 bg-white">
-        <div className="w-full h-full px-6 py-4">    
-        <div className="flex justify-end"> <a
-              href="#"
-              onClick={(e) => {
-                e.preventDefault();
-                if (totalSelfNominations > 0) {
-                  navigate("/my-nominations");
-                }
-              }}
-  
-              className={totalSelfNominations > 0
-                ? "text-blue-600  cursor-pointer px-4 py-2 btn-theme"
-                : "text-gray-500 cursor-default no-underline px-4 py-2 btn-theme" }>
-              You have {totalSelfNominations} nominations
-            </a></div>     
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-4">
+        <div className="w-full h-full px-6 py-4">         
+           <div className="flex gap-6 items-start w-full">
+            <div
+              className="w-24 h-24 rounded-full border-4 border-emerald-500 flex items-center justify-center text-white font-bold text-5xl"
+              style={{
+                background: "linear-gradient(90deg, rgb(8, 128, 94) 16%, rgb(24, 97, 174) 100%)",
+              }}>
+              {form.nomineeName?.charAt(0).toUpperCase()}
+            </div>
+            <div className="flex-1">
+              <div className="flex justify-between items-start mb-4">
+                <h2 className="text-lg font-semibold text-gray-900">
+                  Self Nominate Form
+                </h2>
+                <div className="text-sm text-gray-600">
+                 <div className="flex justify-end"> <a
+                  href="#"
+                  onClick={(e) => {
+                    e.preventDefault();
+                    if (totalSelfNominations > 0) {
+                      navigate("/my-nominations");
+                    }
+                  }}
+      
+                  className={totalSelfNominations > 0
+                    ? "text-blue-600  cursor-pointer px-4 py-2 btn-theme"
+                    : "text-gray-500 cursor-default no-underline px-4 py-2 btn-theme" }>
+                  You have {totalSelfNominations} nominations
+                </a></div> 
+                </div>
+              </div>
+              <div className="grid grid-cols-3 gap-x-10 gap-y-6 text-sm w-full">
+                <div>
+                  <p className="text-gray-500">Nominee</p>
+                  <div className="flex items-center font-medium text-gray-900">
+                    <User size={16} className="text-gray-400 mr-2" />{form.nomineeName}
+                  </div>
+                </div>
+                <div>
+                  <p className="text-gray-500">Department</p>
+                  <div className="flex items-center font-medium">
+                    <Building2 size={16} className="text-gray-400 mr-2" />{form.department}
+                  </div>
+                </div>
+                 <div>
+                  <p className="text-gray-500">Email Id</p>
+                  <div className="flex items-center font-medium">
+                    <Mail size={16} className="text-gray-400 mr-2" />{form.email}
+                  </div>
+                </div>
+                 <div>
+                  <p className="text-gray-500">Mobile Nnumber</p>
+                  <div className="flex items-center font-medium">
+                    <Phone size={16} className="text-gray-400 mr-2" />{form.mobile}
+                  </div>
+                </div>
+                 <div>
+                  <p className="text-gray-500">Manager Email Id</p>
+                  <div className="flex items-center font-medium">
+                    <Mail size={16} className="text-gray-400 mr-2" />{form.managerEmail}
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div className="border-b border-gray-200 mt-6"></div>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-4 mt-6">
             <div >
               <Label.Root htmlFor="title" className="block text-sm font-medium">
                 Title of Submission<span className="text-red-500"> *</span>
@@ -600,107 +643,8 @@ const referralPayload = referrals.map(ref => ({
               {errors.title && <p className="text-red-500 text-sm mt-1">{errors.title}</p>}
               <p className="text-gray-500 text-sm mt-1">{form.title.length}/100 characters</p>
             </div>
-            {/* Nominee */}
             <div>
-              <Label.Root className="block text-sm font-medium">Nominee Name</Label.Root>
-              <input
-                type="text"
-                value={form.nomineeName || ""}
-                disabled
-                tabIndex={-1}
-                aria-disabled="true"
-                onMouseDown={(e) => e.preventDefault()}
-                onFocus={(e) => e.currentTarget.blur()}
-                onKeyDown={(e) => e.preventDefault()}
-                className="w-full mt-1 border rounded px-3 py-2 bg-gray-100 text-gray-700 cursor-not-allowed select-none pointer-events-none caret-transparent outline-none"            />
-            </div>
-          </div>     
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-4">
-            {/* Department */}
-            <div>
-              <Label.Root className="block text-sm font-medium">Department</Label.Root>
-              <input
-                type="text"
-                value={form.department}
-                disabled
-                tabIndex={-1}
-                aria-disabled="true"
-                onMouseDown={(e) => e.preventDefault()}
-                onFocus={(e) => e.currentTarget.blur()}
-                onKeyDown={(e) => e.preventDefault()}
-                style={{ userSelect: "none", pointerEvents: "none", caretColor: "transparent", outline: "none" }}
-                className="w-full mt-1 border rounded px-3 py-2 bg-gray-100 text-gray-700 cursor-not-allowed"            />
-            </div>
-            {/* Email */}
-            <div>
-              <Label.Root className="block text-sm font-medium">Email ID</Label.Root>
-              <input
-                type="email"
-                value={form.email || ""}
-                disabled
-                tabIndex={-1}
-                aria-disabled="true"
-                onMouseDown={(e) => e.preventDefault()}
-                onFocus={(e) => e.currentTarget.blur()}
-                onKeyDown={(e) => e.preventDefault()}
-                style={{ userSelect: "none", pointerEvents: "none", caretColor: "transparent", outline: "none" }}
-                className="w-full mt-1 border rounded px-3 py-2 bg-gray-100 text-gray-700 cursor-not-allowed"            />
-            </div>
-          </div>         
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-4">
-            {/* Mobile */}
-            <div>
-              <Label.Root className="block text-sm font-medium">Mobile Number</Label.Root>
-              <input
-                type="tel"
-                value={form.mobile}
-                disabled
-                tabIndex={-1}
-                aria-disabled="true"
-                onMouseDown={(e) => e.preventDefault()}
-                onFocus={(e) => e.currentTarget.blur()}
-                onKeyDown={(e) => e.preventDefault()}
-                style={{ userSelect: "none", pointerEvents: "none", caretColor: "transparent", outline: "none" }}
-                className="w-full mt-1 border rounded px-3 py-2 bg-gray-100 text-gray-700 cursor-not-allowed"            />
-            </div>
-
-            {/* Manager*/}
-              <div className="mb-2">
-                <Label.Root className="block text-sm font-medium">
-                  Manager Email ID
-                </Label.Root>
-                <input
-                  type="email"
-                  value={form.managerEmail}
-                  disabled
-                  tabIndex={-1}
-                  aria-disabled="true"
-                  onMouseDown={(e) => e.preventDefault()}
-                  onFocus={(e) => e.currentTarget.blur()}
-                  onKeyDown={(e) => e.preventDefault()}
-                  style={{ userSelect: "none", pointerEvents: "none", caretColor: "transparent", outline: "none" }}
-                  className="w-full mt-1 border rounded px-3 py-2 bg-gray-100 text-gray-700 cursor-not-allowed"            />
-            </div>
-          </div>
-          {/* Description */}
-          <div className="">
-            <Label.Root className="block text-sm font-medium">Description  (Max 1000 chars)</Label.Root>
-            <textarea
-              rows={2}
-              placeholder="Describe the nomination..."
-              value={form.description}
-              onChange={(e) => { const value = e.target.value;
-              if (value.length <= 1000) {
-              setForm({ ...form, description: value });
-              }
-            }}
-              className="w-full mt-1 border rounded px-3 py-2 resize-none"/>
-            <p className="text-gray-500 text-sm mt-1">{form.description.length}/1000 characters</p>
-          </div>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-4">  
-            {/* Contest Dropdown */}
-          <div >
-            <label className="block text-sm font-medium mb-2">Contest Type
+              <label className="block text-sm font-medium mb-2">Contest Type
               <span className="text-red-500"> *</span>
             </label>
             <Select
@@ -729,7 +673,25 @@ const referralPayload = referrals.map(ref => ({
               className="text-sm"
               styles={contestSelectStyles} />
             {errors.contestType && <p className="text-red-500 text-sm mt-1">{errors.contestType}</p>}
-
+            </div>
+          </div>      
+          {/* Description */}
+          <div className="">
+            <Label.Root className="block text-sm font-medium">Description  (Max 1000 chars)</Label.Root>
+            <textarea
+              rows={2}
+              placeholder="Describe the nomination..."
+              value={form.description}
+              onChange={(e) => { const value = e.target.value;
+              if (value.length <= 1000) {
+              setForm({ ...form, description: value });
+              }
+            }}
+              className="w-full mt-1 border rounded px-3 py-2 resize-none"/>
+            <p className="text-gray-500 text-sm mt-1">{form.description.length}/1000 characters</p>
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-4">  
+          <div >
             {/* Supporting Documents   */}
             <div className="mt-4">
               <Label.Root className="block text-sm font-medium">
@@ -879,13 +841,6 @@ const referralPayload = referrals.map(ref => ({
             </div>
           </div>
         </div>  
-       </div>     
-        </form>
-      </div>
-    </div>
-    {/* Buttons */}
-    {/* <div className="bg-white border-t border-gray-200 px-6 py-4 shrink-0 sticky bottom-0 w-405 shadow-md padding: 16px;"> */}
-    <div className="fixed bottom-0 left-0 w-full h-15 bg-white border-t border-gray-200 flex items-center pl-[260px] pr-6">
         <div className="flex justify-end space-x-4 ml-auto" >
           <button
           type="button"
@@ -896,17 +851,16 @@ const referralPayload = referrals.map(ref => ({
               handleClear(); 
             }
           }}
-          className="px-4 py-2 border rounded text-gray-600 hover:bg-gray-100">
+          className="px-4 py-2 border text-gray-700 hover:bg-gray-100 border-gray-300 rounded-[6px]">
           {isEditMode ? "Cancel" : "Clear"}
         </button>
-          {/* <button onClick={handleClear}
-          type="button" className="px-4 py-2 border rounded text-gray-600 hover:bg-gray-100">
-            Clear
-          </button> */}
           <button onClick={handleSubmit} type="submit" className="px-4 py-2 btn-theme">
             {isEditMode ? "Update Nomination" : "Save Nomination"}
           </button>
         </div> 
+       </div>     
+        </form>
+      </div>
     </div>
     {showErrorModal && (
       <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">

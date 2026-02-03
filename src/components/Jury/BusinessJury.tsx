@@ -202,11 +202,10 @@ const BusinessJury: React.FC = () => {
             cell: ({ row }) => {
               const item = row.original;
               const handleDetailsView = (item: BusinessJury) => {
-            navigate(`/nomination-detail/${item.NominationID}`, {
+            navigate(`/businessjury-detail/${item.NominationID}`, {
               state: { from: "business-jury" }
             });
           };
-
               return (
                 <button
                   onClick={() => handleDetailsView(row.original)}
