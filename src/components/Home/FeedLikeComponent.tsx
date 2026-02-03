@@ -18,7 +18,7 @@ const FeedLikeComponent: React.FC<LikeSectionProps> = ({ post, isLiked, onLike }
     >
       <Heart className="w-4 h-4" fill={isLiked ? "red" : "none"} />
       <span className="text-sm font-medium">
-        {post.LikedBy?.length || 0} Likes
+        {/* {post.LikedBy?.length || 0} Likes */}
       </span>
     </button>
   );

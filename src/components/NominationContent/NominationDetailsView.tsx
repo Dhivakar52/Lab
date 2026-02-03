@@ -8,7 +8,7 @@ import * as Dialog from "@radix-ui/react-dialog";
 import { useLocation } from "react-router-dom";
 //import Swal from "sweetalert2";
 import { motion } from 'framer-motion';
-import { Edit } from "lucide-react";
+import { Flag, Edit } from "lucide-react";
 
  
 interface NominationDetailViewProps {
@@ -64,7 +64,14 @@ const NominationDetailView: React.FC<NominationDetailViewProps> = ({
   const [popupErrors, setPopupErrors] = useState({ score: "", comments: "" });
   const [successModalOpen, setSuccessModalOpen] = useState(false);
   const [IsSelf, setIsSelf] = useState<boolean | null>(null);
- 
+  const [flagOpen, setFlagOpen] = useState(false);
+  const [flagOpen1, setFlagOpen1] = useState(false);
+  const [flagReason, setFlagReason] = useState("");
+  const [flagFiles, setFlagFiles] = useState<File[]>([]);
+  const [flagPreview, setFlagPreview] = useState<string | null>(null);
+  const [flagError, setFlagError] = useState("");
+  
+  
   const headerTitleMap: Record<string, string> = {
   "my-nominations": "My Nomination Details",
   "other-nominations": "Other Nomination Details",
@@ -144,7 +151,55 @@ const NominationDetailView: React.FC<NominationDetailViewProps> = ({
       setLoading(false);
     }
   };
- 
+  const handleFlagFileChange = (
+    e: React.ChangeEvent<HTMLInputElement>
+  ) => {
+    if (!e.target.files) return;
+
+    const selectedFiles = Array.from(e.target.files);
+    setFlagFiles(selectedFiles);
+  };
+
+ const submitFlagWithAttachment = async () => {
+  if (!flagReason.trim()) {
+    setFlagError("Please enter flag reason");
+    return;
+  }
+
+  const formData = new FormData();
+  formData.append("NominationID", data.NominationID);
+  formData.append("IsFlag", "true");
+  formData.append("FlagReason", flagReason);
+  formData.append("UpdatedBy", String(userId));
+
+  flagFiles.forEach((file) => {
+    formData.append("Files", file);
+  });
+
+  try {
+    await axios.post(
+      `${apiUrl}/api/nomination/flag-with-document`,
+      formData,
+      {
+        headers: {
+          Authorization: `Bearer ${authToken}`,
+          "Content-Type": "multipart/form-data",
+        },
+      }
+    );
+
+    setFlagOpen(false);
+    setFlagReason("");
+    setFlagFiles([]);
+    setFlagError("");
+
+    fetchNominationDetails();
+
+  } catch {
+    alert("Flag save failed");
+  }
+};
+
   const getFileIcon = (fileName: string) => {
   const ext = fileName.split('.').pop()?.toLowerCase();
  
@@ -232,6 +287,15 @@ const handleBackward = () => {
       navigate(-1); 
   }
 };
+const statusStyleMap: Record<string, string> = {
+  Approved: "bg-emerald-100 text-emerald-700",
+  Rejected: "bg-red-100 text-red-700",
+};
+const approvalTextColorMap: Record<string, string> = {
+  Approved: "text-emerald-700",
+  Rejected: "text-red-700",
+};
+
 
 const description =
   data?.Descriptions && data.Descriptions.trim() !== ""
@@ -714,7 +778,6 @@ const handleEdit = () => {
 
 const needsScore = (type: string) =>
   SCORE_REQUIRED_TYPES.includes(type);
-// ✅ CUSTOM APPROVAL SUCCESS MODAL COMPONENT
 const ApprovalSuccessModal = () => {
   if (!successModalOpen || !data) return null;
  
@@ -785,13 +848,13 @@ const ApprovalSuccessModal = () => {
     </div>
   );
 };
- 
- 
+
 return (
   <div>
   <div className="bg-gray-100 flex flex-col p-6 pb-20">
      <div className="overflow-x-auto bg-white shadow-md rounded-lg p-6">
       <div className="w-full h-full px-1 py-1">
+        
         <div className="grid grid-cols-5 gap-6 mb-4">
           <div>
             <div className="text-sm font-medium text-gray-900">Nominee</div>
@@ -864,7 +927,87 @@ return (
             <div className="text-sm font-medium text-gray-900">Reporting To</div>
             <div className="text-sm text-gray-600">{data.ManagerName}</div>
           </div>
+          <div>
+            <div className="text-sm font-medium text-gray-900">Flag</div>
+              <div className="text-sm text-gray-600">
+                  <button
+                    onClick={(e) => { e.stopPropagation(); setFlagOpen1(data); }}
+                    className="p-1"
+                    title={data.FlagStatus === 1 ? "Click to UnFlag" : "Click to Flag"} >
+                    <Flag
+                      size={18}
+                      className={
+                        data.FlagStatus === 1
+                          ? "text-red-600 fill-red-600"
+                          : "text-gray-400 fill-gray-400"
+                      }
+                    />
+                  </button>
+             </div>         
+         </div>
         </div>
+        {flagOpen1 && (
+  <div className="mt-6 border border-red-300 bg-red-50 rounded-xl p-5">
+
+    <div className="flex justify-between items-center mb-3">
+      <h3 className="text-red-700 font-semibold text-sm flex items-center gap-2">
+        🚩 Flag Nomination
+      </h3>
+
+      <button
+        onClick={() => {
+          setFlagOpen1(false);
+          setFlagReason("");
+          setFlagFiles([]);
+          setFlagError("");
+        }}
+        className="text-gray-600">
+        <X size={18} />
+      </button>
+    </div>
+    <div className="flex gap-4 items-start mb-4">
+      <div className="flex-1">
+        <label className="text-sm font-medium">
+          Reason <span className="text-red-600">*</span>
+        </label>
+        <textarea
+          rows={3}
+          value={flagReason}
+          onChange={(e) => setFlagReason(e.target.value)}
+          className="w-full mt-1 p-2 border rounded text-sm"
+          placeholder="Enter reason..." />
+        {flagError && (
+          <p className="text-xs text-red-600 mt-1">{flagError}</p>
+        )}
+      </div>
+      <div className="flex-1">
+        <label className="text-sm font-medium">
+          Upload Documents
+        </label>
+        <input
+          type="file"
+          multiple
+          onChange={handleFlagFileChange}
+          className="w-full mt-1 p-2 border rounded bg-white text-sm" />
+        {flagFiles.length > 0 && (
+          <div className="mt-1 text-sm text-gray-700 space-y-1">
+            {flagFiles.map((file, index) => (
+              <div key={index}>📎 {file.name}</div>
+            ))}
+          </div>
+        )}
+      </div>
+    </div>
+
+    <div className="flex justify-end gap-3">
+      <button
+        onClick={submitFlagWithAttachment}
+        className="px-4 py-2 bg-red-600 text-white rounded text-sm">
+        Submit Flag
+      </button>
+    </div>
+  </div>
+)}
          <div className="mb-4">
               <div className="text-sm font-medium text-gray-900">Description</div>
               <div className="text-sm text-gray-600">
@@ -877,7 +1020,7 @@ return (
                   </button>
                 )}
               </div>
-            </div>
+          </div>
         <div className="mb-4">
           <StatusFlow steps={approvalFlow} />
         </div>
@@ -1043,9 +1186,38 @@ return (
                             <p className="text-sm font-semibold text-gray-900">
                               {item.ApprovalName || level}
                             </p>
-                            <span className="inline-block mt-1 px-2 py-[2px] text-[11px] rounded-full bg-blue-50 text-blue-600">
+                            <span className=" inline-flex items-center gap-1 mt-1 px-3 py-[4px]
+                              text-[12px] rounded-full bg-blue-50 border border-blue-100 font-medium">
+                              <span className={approvalTextColorMap[item.Status] || "text-gray-600"}>
+                                {item.ApprovalFlow}
+                              </span>
+                              <span className="text-blue-600">
+                                {level}
+                              </span>
+                            </span>
+                            {/* <span className="inline-flex items-center gap-2 mt-1">
+                              <span
+                                className={`px-2 py-[2px] text-[11px] rounded-full font-medium
+                                  ${statusStyleMap[item.Status] || "bg-gray-100 text-gray-600"}`}>
+                                {item.ApprovalFlow}
+                              </span>
+                              <span className="px-2 py-[2px] text-[11px] rounded-full bg-blue-50 text-blue-600">
+                                {level}
+                              </span>
+                            </span> */}
+                            {/* <span className="inline-flex items-center gap-2 mt-1">
+                            <span className="px-2 py-[2px] text-[11px] rounded-full 
+                                            bg-emerald-100 text-emerald-700 font-medium">
+                              {item.ApprovalFlow}
+                            </span>
+                            <span className="px-2 py-[2px] text-[11px] rounded-full 
+                                            bg-blue-50 text-blue-600">
                               {level}
                             </span>
+                          </span> */}
+                            {/* <span className="inline-block mt-1 px-2 py-[2px] text-[11px] rounded-full bg-blue-50 text-blue-600">
+                                {item.ApprovalFlow } {level}
+                            </span> */}
                             {item.ApprovalComments && (() => {
                               const { text, truncated } = getCommentText(
                                 item.ApprovalComments,
@@ -1097,49 +1269,86 @@ return (
           </div>
         </div>
       </div>
- 
-  {/* <div className="mb-4">
-      {myReferral?.ApprovalComments?.trim() && (
-        <div className="flex items-center gap-4 mb-2 text-sm text-gray-700">
-          <span className="font-semibold text-gray-900 min-w-[140px]">
-            Referral
-          </span>
-          <span>
-            <span className="font-medium">Comments:</span>{" "}
-            {myReferral.ApprovalComments}
-          </span>
-        </div>
-      )}
-     {data?.ApprovalStatus?.map((item: any, index: number) => (
-        item.Status === "Approved" && (
-          <div
-            key={index}
-            className="flex items-center gap-4 mb-2 text-sm text-gray-700">
-            <span className="font-semibold text-gray-900 min-w-[140px]">
-              {item.ApprovalType}
-            </span>
-            {needsScore(item.ApprovalType) && (
-              <span>
-                <span className="font-medium">Score:</span>{" "}
-                {item.ApprovalScore ?? 0}
-              </span>
-            )}
-            <span>
-              <span className="font-medium">Comments:</span>{" "}
-              {item.ApprovalComments?.trim() || "—"}
-            </span>
-           
+{/* {flagOpen && (
+  <div className="mt-6 border border-red-300 bg-red-50 rounded-xl p-5">
+
+    <div className="flex justify-between items-center mb-3">
+      <h3 className="text-red-700 font-semibold text-sm flex items-center gap-2">
+        🚩 Flag Nomination
+      </h3>
+
+      <button
+        onClick={() => {
+          setFlagOpen(false);
+          setFlagReason("");
+          setFlagFiles([]);
+          setFlagError("");
+        }}
+        className="text-gray-600">
+        <X size={18} />
+      </button>
+    </div>
+    <div className="flex gap-4 items-start mb-4">
+      <div className="flex-1">
+        <label className="text-sm font-medium">
+          Reason <span className="text-red-600">*</span>
+        </label>
+        <textarea
+          rows={3}
+          value={flagReason}
+          onChange={(e) => setFlagReason(e.target.value)}
+          className="w-full mt-1 p-2 border rounded text-sm"
+          placeholder="Enter reason..." />
+        {flagError && (
+          <p className="text-xs text-red-600 mt-1">{flagError}</p>
+        )}
+      </div>
+      <div className="flex-1">
+        <label className="text-sm font-medium">
+          Upload Documents
+        </label>
+        <input
+          type="file"
+          multiple
+          onChange={handleFlagFileChange}
+          className="w-full mt-1 p-2 border rounded bg-white text-sm" />
+        {flagFiles.length > 0 && (
+          <div className="mt-1 text-sm text-gray-700 space-y-1">
+            {flagFiles.map((file, index) => (
+              <div key={index}>📎 {file.name}</div>
+            ))}
           </div>
-        )
-      ))}
-      </div> */}
+        )}
+      </div>
+    </div>
+
+    <div className="flex justify-end gap-3">
+      <button
+        onClick={() => setFlagOpen(false)}
+        className="px-4 py-2 bg-gray-200 rounded text-sm">
+        Cancel
+      </button>
+      <button
+        onClick={submitFlagWithAttachment}
+        className="px-4 py-2 bg-red-600 text-white rounded text-sm">
+        Submit Flag
+      </button>
+    </div>
+  </div>
+)} */}
     </div>
    </div>
 </div>
     {/* <div className="bg-white border-t border-gray-200 px-6 py-4 shrink-0 sticky bottom-0 z-20 shadow-sm">
          <div className="flex justify-end gap-3"> */}
     <div className="fixed bottom-0 left-0 w-full h-15 bg-white border-t border-gray-200 flex items-center pl-[260px] pr-6">
-      <div className="flex justify-end space-x-4 ml-auto" >          
+      <div className="flex justify-end space-x-4 ml-auto" >  
+        <button
+          onClick={() => setFlagOpen(true)}
+          className="px-4 py-2 bg-red-100 text-red-700 rounded-md border border-red-300">
+          🚩 Flag Nomination
+        </button>
+        
          <button onClick={handleBackward} className="flex items-center text-blue-600 bg-white border rounded-sm px-2 py-1 font-medium">
          <span className=""><ArrowLeft size={14}/></span> Back
           </button>
@@ -1281,6 +1490,80 @@ return (
           </div>
         </div>
       )}
+         {flagOpen && (
+  <div className="fixed inset-0 z-[9999] bg-black/40 flex items-center justify-center">
+    <div className="bg-white w-full max-w-lg rounded-xl shadow-xl p-6">
+
+      <div className="flex justify-between items-center mb-4">
+        <h3 className="text-lg font-semibold text-red-600">
+          🚩 Flag Nomination
+        </h3>
+        <button onClick={() => setFlagOpen(false)}>
+          <X />
+        </button>
+      </div>
+
+<div className="mb-4">
+  <label className="text-sm font-medium">
+    Reason <span className="text-red-500">*</span>
+  </label>
+
+  <textarea
+    rows={3}
+    value={flagReason}
+    onChange={(e) => setFlagReason(e.target.value)}
+    className="w-full mt-1 p-2 border rounded text-sm"
+    placeholder="Enter reason..."
+  />
+</div>
+
+<div className="mb-4">
+  <label className="text-sm font-medium">
+    Upload Supporting Documents
+  </label>
+
+  <input
+    type="file"
+    multiple
+    onChange={handleFlagFileChange}
+    className="w-full mt-1 border p-2 rounded text-sm"
+  />
+</div>
+
+{flagFiles.length > 0 && (
+  <div className="mt-2 space-y-1 text-sm text-gray-700">
+    {flagFiles.map((file, index) => (
+      <div key={index} className="flex items-center gap-2">
+        📄 {file.name}
+      </div>
+    ))}
+  </div>
+)}
+
+{flagError && (
+  <p className="text-red-600 text-sm mt-2">{flagError}</p>
+)}
+
+<div className="flex justify-end gap-3 mt-6">
+  <button
+    className="px-4 py-2 bg-gray-200 rounded"
+    onClick={() => setFlagOpen(false)}
+  >
+    Cancel
+  </button>
+
+  <button
+    onClick={submitFlagWithAttachment}
+    className="px-4 py-2 btn-theme-reject"
+  >
+    Submit Flag
+  </button>
+</div>
+
+    </div>
+  </div>
+)}
+
         {/* ✅ SUCCESS MODAL - NEW CUSTOM DESIGN */}
       <ApprovalSuccessModal />
 {/* ================= Withdraw Confirmation Dialog ================= */}
