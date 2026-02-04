@@ -106,7 +106,7 @@ const headerTitleMap: Record<string, string> = {
       case "/self-nominations/:nominationId":
         return "Self Nominate Form";  
       case "/my-nominations":
-        return "My Nominations";
+        return "Nomination Management";
       case "/referral-approval":
       case "/referral-detail":
         return "Referral Approval";
@@ -121,9 +121,9 @@ const headerTitleMap: Record<string, string> = {
       case "/business-jury":
         return "Business Jury";
       case "/president-unit":
-        return "President Unit";
+        return "Primary Business Jury";
       case "/president-level":
-        return "President Level";
+        return "Grand Jury";
       case "/award-management":
         return "Award Management";
       case "/admin-setting":
@@ -132,8 +132,10 @@ const headerTitleMap: Record<string, string> = {
         return "Others Nominate Form";
       case "/my-nominations/:nominationId":
         return "Others Nominate Form";  
-         case "/admin-setting/jury-panel-setup":
+      case "/admin-setting/jury-panel-setup":
         return "jury Panel";
+      case "/leader-board":
+        return "LeaderBoard";
       default:
         return "Nomination Management";
     }

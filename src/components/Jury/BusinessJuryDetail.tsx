@@ -8,7 +8,7 @@ import * as Dialog from "@radix-ui/react-dialog";
 import { useLocation } from "react-router-dom";
 //import Swal from "sweetalert2";
 import { motion } from 'framer-motion';
-import { Flag, Edit, Send ,User, Building2, Tag, 
+import { Flag, ChevronUp, ChevronDown ,User, Building2, Tag, 
   CalendarDays, FileText, Mail, BadgeCheck, Check } from "lucide-react";
 
 interface BusinessJuryDetailProps {
@@ -89,6 +89,9 @@ const BusinessJuryDetail: React.FC<BusinessJuryDetailProps> = ({
     const [popupType, setPopupType] = useState<
     "approve" | "score" | "evaluation" | null
   >(null);
+  const [expandedId, setExpandedId] = useState<number | null>(null);
+  const [openCard, setOpenCard] = useState<number | null>(null);
+
 
   const closePopup = () => setPopupType(null);
   const fetchSeekingUsers = async () => {
@@ -358,6 +361,51 @@ const approvalTextColorMap: Record<string, string> = {
   Approved: "text-emerald-700",
   Rejected: "text-red-700",
 };
+
+const evaluations = [
+  {
+    id: 1,
+    name: "Senthil Nanthan",
+    date: "Jan 18, 2026",
+    totalScore: 260,
+    flagged: true,
+    reason: "Missing one documents",
+    scores: [
+      { label: "Integrity", score: 70 },
+      { label: "Idea", score: 50 },
+      { label: "Efforts", score: 60 },
+      { label: "Outcomes", score: 80 },
+    ],
+  },
+  {
+    id: 2,
+    name: "Ravi Kumar",
+    date: "Jan 17, 2026",
+    totalScore: 240,
+    flagged: false,
+    reason: "",
+    scores: [
+      { label: "Integrity", score: 65 },
+      { label: "Idea", score: 55 },
+      { label: "Efforts", score: 55 },
+      { label: "Outcomes", score: 65 },
+    ],
+  },
+  {
+    id: 3,
+    name: "Vijay Kumar",
+    date: "Jan 17, 2026",
+    totalScore: 370,
+    flagged: false,
+    reason: "",
+    scores: [
+      { label: "Integrity", score: 65 },
+      { label: "Idea", score: 55 },
+      { label: "Efforts", score: 55 },
+      { label: "Outcomes", score: 65 },
+    ],
+  },
+];
 
 
 const description =
@@ -1174,94 +1222,184 @@ return (
       <h2 className="text-base font-semibold mb-6">
         Nomination Status Flow
       </h2>
+
+      {/* ================= LEVEL 1 ================= */}
       <div className="flex gap-4 relative">
+        {/* Timeline */}
         <div className="flex flex-col items-center">
           <div className="w-7 h-7 rounded-full bg-green-500 flex items-center justify-center">
             <Check size={16} className="text-white" />
           </div>
-          <div className="w-[2px] flex-1 bg-gray-300 mt-1"></div>
+          <div className="w-[2px] h-full bg-gray-300 mt-1"></div>
         </div>
+
+        {/* Content */}
         <div className="flex-1 pb-8">
-          <div className="flex justify-between items-center mb-3">
+          <div className="flex justify-between items-center mb-2">
             <p className="font-medium text-gray-900">
               Level 1 - Manager Approval
             </p>
             <button
-              onClick={() => setOpenApprove(true)}
-              className="px-4 py-1.5 rounded-lg text-sm bg-green-100 text-green-700 
-              hover:bg-green-200 transition">
-              Approved
-            </button>
+                onClick={() => setOpenApprove(true)}
+                className="px-4 py-1.5 rounded-lg text-sm bg-green-100 text-green-700 
+                hover:bg-green-200 transition">
+                Approved
+              </button>
           </div>
-          <div className="bg-gray-50 rounded-lg p-4 text-sm text-gray-700 space-y-1">
-            <div>
-              <span className="text-gray-500">Date:</span>{" "}
-              16/01/2025
+
+          <div className="bg-gray-50 rounded-lg p-4 text-sm text-gray-700 space-y-2">
+            <div className="flex gap-12">
+              <div>
+                <span className="text-gray-500">Name :</span>{" "}
+                <span className="font-medium">
+                  Kathiravan (SRMTech Manager)
+                </span>
+              </div>
+
+              <div>
+                <span className="text-gray-500">Approved Date :</span>{" "}
+                <span className="font-medium">16/01/2025</span>
+              </div>
             </div>
+
             <div>
-              <span className="text-gray-500">Comments:</span>
-            </div>
-            <div className="text-gray-900">
-              Excellent performance and dedication.
+              <span className="text-gray-500">Comments :</span>
+              <p className="font-medium mt-1">
+                Excellent performance and dedication.
+              </p>
             </div>
           </div>
         </div>
       </div>
+
+      {/* ================= LEVEL 2 ================= */}
       <div className="flex gap-4 relative">
         <div className="flex flex-col items-center">
           <div className="w-7 h-7 rounded-full bg-green-500 flex items-center justify-center">
             <Check size={16} className="text-white" />
           </div>
-          <div className="w-[2px] flex-1 bg-gray-300 mt-1"></div>
+          <div className="w-[2px] h-full bg-gray-300 mt-1"></div>
         </div>
+
         <div className="flex-1 pb-8">
-          <div className="flex justify-between items-center mb-3">
+          <div className="flex justify-between items-center mb-2">
             <p className="font-medium text-gray-900">
               Level 2 - Business Jury
             </p>
             <div className="flex gap-3">
               <button
                 onClick={() => setOpenEvaluation(true)}
-                className="px-4 py-2 rounded-lg border border-blue-500 text-blue-600 text-sm hover:bg-blue-50">
-                View Evaluations
+                className="px-4 py-1.5 rounded-lg border border-blue-500 text-blue-600 text-sm hover:bg-blue-50">
+                View Business Jury Evaluations
               </button>
               <button 
-               onClick={() => setOpenScore(true)}
-               className="px-6 py-2 rounded-lg border border-gray-300 text-gray-700 text-sm">
-                Score
+                onClick={() => setOpenScore(true)}
+                className="px-4 py-1.5 rounded-lg text-sm bg-green-100 text-green-700">
+                Approved
               </button>
             </div>
           </div>
-          <div className="bg-gray-50 rounded-lg p-4 flex items-center gap-10 text-sm">
-            <div>
-              <span className="text-gray-500">Total Score :</span>{" "}
-              <span className="font-medium">260/400</span>
+          <div className="bg-gray-50 rounded-lg p-4 text-sm text-gray-700 space-y-2">
+            <div className="flex gap-12">
+              <div>
+                <span className="text-gray-500">Name :</span>{" "}
+                <span className="font-medium">
+                  Saravanan (SRMAP)
+                </span>
+              </div>
+              <div>
+                <span className="text-gray-500">Approved Date :</span>{" "}
+                <span className="font-medium">26/01/2026</span>
+              </div>
+              <div>
+                <span className="text-gray-500">
+                  Total Jury Evaluations :
+                </span>{" "}
+                <span className="font-medium">3 / 10</span>
+              </div>
+              <div>
+                <span className="text-gray-500">
+                  Average Score :
+                </span>{" "}
+                <span className="font-medium">280 / 400</span>
+              </div>
             </div>
-            <div className="flex items-center gap-2">
-              <Flag size={18} className="text-red-400"/>
-              <span className="font-medium">Flag:</span> Yes
+            <div className="flex gap-12">
+              <div>
+                <span className="text-gray-500">Score :</span>{" "}
+                <span className="font-medium">380 / 400</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <Flag size={16} className="text-red-500" />
+                <span className="text-gray-500">Flag :</span>
+                <span className="font-medium">No</span>
+              </div>
+            </div>
+            <div>
+              <span className="text-gray-500">Comments :</span>
+              <p className="font-medium mt-1 leading-relaxed">
+                Excellent performance and dedication were consistently
+                demonstrated through a strong commitment to quality and
+                timely delivery. Your proactive approach and attention to
+                detail have made a meaningful impact on overall success.
+              </p>
             </div>
           </div>
         </div>
       </div>
+
+      {/* ================= LEVEL 3 ================= */}
       <div className="flex gap-4">
         <div className="flex flex-col items-center">
-          <div className="w-7 h-7 rounded-full border-2 border-gray-400 bg-white flex items-center justify-center">
-            <div className="w-3 h-3 rounded-full bg-gray-400"></div>
+          <div className="w-7 h-7 rounded-full bg-green-500 flex items-center justify-center">
+            <Check size={16} className="text-white" />
           </div>
         </div>
+
         <div className="flex-1">
-          <div className="flex justify-between items-center">
+          <div className="flex justify-between items-center mb-2">
             <p className="font-medium text-gray-900">
-              Level 3 - General Jury
+              Level 3 - Grand Jury
             </p>
-            <button className="px-6 py-2 rounded-lg border border-gray-300 text-gray-400 cursor-not-allowed">
-              Approve
-            </button>
+            <button 
+                onClick={() => setOpenScore(true)}
+                className="px-4 py-1.5 rounded-lg text-sm bg-green-100 text-green-700">
+                Approved
+              </button>
+          </div>
+
+          <div className="bg-gray-50 rounded-lg p-4 text-sm text-gray-700 space-y-2">
+            <div className="flex gap-12">
+              <div>
+                <span className="text-gray-500">Approved Date :</span>{" "}
+                <span className="font-medium">27/01/2026</span>
+              </div>
+
+              <div>
+                <span className="text-gray-500">Score :</span>{" "}
+                <span className="font-medium">380 / 400</span>
+              </div>
+
+              <div className="flex items-center gap-2">
+                <Flag size={16} className="text-red-500" />
+                <span className="text-gray-500">Flag :</span>
+                <span className="font-medium">No</span>
+              </div>
+            </div>
+
+            <div>
+              <span className="text-gray-500">Comments :</span>
+              <p className="font-medium mt-1 leading-relaxed">
+                Excellent performance and dedication were consistently
+                demonstrated through a strong commitment to quality and
+                timely delivery. Your proactive approach and attention to
+                detail have made a meaningful impact on overall success.
+              </p>
+            </div>
           </div>
         </div>
       </div>
-  </div>
+    </div>
     <div className="fixed bottom-0 left-0 w-full h-15 bg-white border-t border-gray-200 flex items-center pl-[260px] pr-6">
       <div className="flex justify-end space-x-4 ml-auto" >  
          <button onClick={handleBackward} className="flex items-center text-blue-600 bg-white border rounded-sm px-2 py-1 font-medium">
@@ -1317,7 +1455,124 @@ return (
           </div>
         </div>
       </div>
-      <div
+     <div
+      className={`fixed top-0 right-0 h-full w-[720px] bg-white shadow-2xl z-50
+      transform transition-transform duration-300
+      ${openEvaluation ? "translate-x-0" : "translate-x-full"}`}>
+      <div className="relative px-6 py-4 border-b border-gray-300">
+        <h2 className="text-[16px] font-semibold text-gray-900">
+          Level 2 - All Business Jury Overview
+        </h2>
+        <button
+         onClick={() => {
+          setOpenEvaluation(false);
+          setOpenCard(null); 
+        }}
+          className="absolute right-6 top-4">
+          <X size={20} />
+        </button>
+      </div>
+      <div className="px-6 py-6 space-y-4 overflow-y-auto h-[calc(100vh-70px)]">
+        <div className="grid grid-cols-3 gap-4">
+          <div className="border border-gray-300 rounded-lg p-4 text-center bg-green-50 text-green-700">
+            <div className="text-xl font-semibold">3</div>
+            <div className="text-sm">Total Evaluations</div>
+          </div>
+
+          <div className="border border-gray-300 rounded-lg p-4 text-center bg-blue-50 text-blue-700">
+            <div className="text-xl font-semibold">280</div>
+            <div className="text-sm">Average Score</div>
+          </div>
+
+          <div className="border border-gray-300 rounded-lg p-4 text-center bg-red-50 text-red-700">
+            <div className="text-xl font-semibold">1</div>
+            <div className="text-sm">Flagged</div>
+          </div>
+        </div>
+        {evaluations.map((e) => {
+          const expanded = openCard === e.id;
+          return (
+            <div
+              key={e.id}
+              onClick={() => setOpenCard(expanded ? null : e.id)}
+              className="border border-gray-300 rounded-lg cursor-pointer">
+              <div className="p-4 flex justify-between items-center">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-full themeColor flex items-center justify-center text-white">
+                    <User size={18} />
+                  </div>
+                  <div>
+                    <p className="font-medium text-gray-900">{e.name}</p>
+                    <p className="text-sm text-gray-500">
+                      Submitted: {e.date}
+                    </p>
+                  </div>
+                </div>
+                <div className="flex items-center gap-3">
+                  {e.flagged && (
+                    <Flag size={22} className="text-red-600 fill-red-600" />
+                  )}
+                  <div className="border border-gray-300 bg-green-50 text-green-700 px-4 py-2 rounded-md text-center min-w-[70px]">
+                    <div className="text-lg font-semibold">
+                      {e.totalScore}
+                    </div>
+                    <div className="text-xs">Score</div>
+                  </div>
+                </div>
+              </div>
+              {expanded && (
+                <div className="px-4 pb-4">
+                  <div className="border border-gray-300 rounded-md overflow-hidden mt-2">
+                    <table className="w-full text-sm">
+                      <thead className="bg-gray-50">
+                        <tr>
+                          <th className="px-4 py-2 text-left"></th>
+                          <th className="px-4 py-2 text-left">Score</th>
+                          <th className="px-4 py-2 text-left">Comments</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {e.scores.map((s, i) => (
+                          <tr
+                            key={i}
+                            className="border-t border-gray-300">
+                            <td className="px-4 py-2 font-medium">
+                              {s.label}
+                            </td>
+                            <td className="px-4 py-2">{s.score}</td>
+                            <td className="px-4 py-2 text-gray-600">
+                              Demonstrates exceptional leadership qualities
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+
+                  {e.flagged && (
+                    <>
+                      <div className="flex items-center gap-2 mt-3 text-sm">
+                        <Flag size={16} className="text-red-600" />
+                        <span className="font-medium">Flagged :</span>
+                        <input
+                          type="checkbox"
+                          checked
+                          readOnly
+                          className="w-4 h-4 accent-red-600"/>
+                      </div>
+                      <div className="mt-2 border border-gray-300 bg-red-50 rounded-md px-4 py-3 text-sm text-gray-700">
+                        {e.reason}
+                      </div>
+                    </>
+                  )}
+                </div>
+              )}
+            </div>
+          );
+        })}
+      </div>
+    </div>
+      {/* <div
         className={`fixed top-0 right-0 h-full w-[720px] bg-white shadow-2xl z-50
           transform transition-transform duration-300 ease-in-out
           ${openEvaluation ? "translate-x-0" : "translate-x-full"}
@@ -1411,7 +1666,7 @@ return (
             </button>
           </div>
         </div>
-      </div>
+      </div> */}
       <div
       className={`fixed top-0 right-0 h-full w-[650px] bg-white z-50 shadow-xl
        transform transition-transform duration-500 ease-in-out
@@ -1809,3 +2064,15 @@ return (
 };
  
 export default BusinessJuryDetail;
+const ScoreBox = ({
+  label,
+  value,
+}: {
+  label: string;
+  value: number;
+}) => (
+  <div className="border border-gray-300 rounded-md px-3 py-1 text-center min-w-[60px]">
+    <div className="text-sm font-semibold">{value}</div>
+    <div className="text-[10px] text-gray-500">{label}</div>
+  </div>
+);

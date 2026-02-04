@@ -34,7 +34,19 @@ const FeedComment: React.FC<CommentSectionProps> = ({
 
 console.log("Comments 2", comments);
   return (
-    <div className="mt-4 pt-4 border-t border-gray-200">
+    <div >
+        {/* Comments List */}
+      <div className="py-3">
+      {comments.map((c) => (
+       
+        <FeedNestedComment
+          key={c.NominationCommentsID}
+          comment={c}
+          postId={post.NominationID}
+          handleReply={handleReply}
+        />
+      ))}
+    </div>
       {/* Typing Box */}
       <div className="flex space-x-2">
         <div className="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center text-blue-600 font-semibold text-sm">
@@ -71,20 +83,7 @@ console.log("Comments 2", comments);
         </div>
       </div>
 
-      {/* Comments List */}
-
-
-      <div className="mt-3">
-      {comments.map((c) => (
-       
-        <FeedNestedComment
-          key={c.NominationCommentsID}
-          comment={c}
-          postId={post.NominationID}
-          handleReply={handleReply}
-        />
-      ))}
-    </div>
+    
     </div>
   );
 };

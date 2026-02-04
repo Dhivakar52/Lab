@@ -13,7 +13,9 @@ import {
   Shield,
   ClipboardList,
   UserPlus, ChevronLeft,
-  LogOut,X
+  LogOut,X,
+  Trophy,
+  TrophyIcon
 } from "lucide-react";
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import logo from '../assets/images/layout_logo.png';
@@ -40,17 +42,13 @@ const navigationItems: NavigationItem[] = [
   { icon: Bell, label: 'Notifications', path: '/notifications' },
   { icon: User, label: 'Self Nominations', path: '/self-nominations' },
   { icon: FileText, label: 'My Nominations', path: '/my-nominations' },
-   { icon: Settings, label: 'Grand Jury', path: '/grand-jury' },
-   { icon: Settings, label: 'Primary Business Jury', path: '/primary-business-jury' },
-      
-   { icon: Settings, label: 'Leader Board', path: '/leader-board' },
   { icon: ClipboardList, label: 'Referral Approval', path: '/referral-approval' },
   { icon: CircleCheckBig, label: 'Approvals', path: '/approvals' },
   { icon: Gavel, label: 'Business Jury', path: '/business-jury' },
-  { icon: Shield, label: 'President Unit', path: '/president-unit' },
-  { icon: Users, label: 'President Level', path: '/president-level' },
-  { icon: Award, label: 'Award Management', path: '/award-management' },
-   
+  { icon: Gavel, label: 'Primary Business Jury', path: '/president-unit' },
+  { icon: Gavel, label: 'Grand Jury', path: '/president-level' },
+  { icon: Users, label: 'Leader Board', path: '/leader-board' },
+  { icon: TrophyIcon, label: 'Award Management', path: '/award-management' },
   { icon: Settings, label: 'Admin Setting', path: '/admin-setting' },
  
   //{ icon: UserPlus, label: 'Other Nomination', path: '/other-nomination' },

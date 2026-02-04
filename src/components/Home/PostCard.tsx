@@ -7,6 +7,7 @@ import PostFeedModal from "./PostFeedModal";
 import FeedLikeComponent from "./FeedLikeComponent";
 import FeedLikePop from "./FeedLikePop";
 import FeedComment from "./FeedComment";
+import ReactionsModal from "./ReactionsModal";
 import ViewerModal from "./ViewerModal";
 import { data } from "react-router-dom";
 
@@ -580,7 +581,7 @@ const nestedComments = buildCommentTree(filteredFlat);
           return (
             <div
               key={index}
-              className="p-4 sm:p-6 bg-white border-b-2 border-b-gray-100 hover:shadow-md transition">
+              className="p-4 sm:p-4 bg-white border-b-2 border-b-gray-100 hover:shadow-md transition">
               <div className="flex space-x-3">
                 <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-blue-100 flex items-center justify-center text-blue-600 font-semibold">
                   {post.Nominee?.charAt(0).toUpperCase()}
@@ -592,12 +593,21 @@ const nestedComments = buildCommentTree(filteredFlat);
                         <h3 className="font-semibold text-gray-900 text-sm sm:text-base truncate">
                           {post.Nominee}
                         </h3>
-                          <span className="px-2 py-1 rounded-full text-xs bg-purple-100 text-purple-800 flex items-center">
+                        <span className="px-2 py-1 rounded-full text-xs bg-[#EDF4FF] text-[#213048] flex items-center">
+                          <Trophy size={16} />
+                          <span className="ms-1">{post.AwardCategory}</span>
+                        </span>
+                        <span className="px-2 py-1 rounded-full text-xs bg-[#EDF4FF] text-[#213048] flex items-center">
+                          <UsersRound size={16} />
+                          <span className="ms-1">{post.NominatedCount}</span>
+                        </span>
+
+                          {/* <span className="px-2 py-1 rounded-full text-xs bg-purple-100 text-purple-800 flex items-center">
                            <Trophy size={16}/>  <span className="ms-1"> {post.AwardCategory}</span>
                         </span>
                          <span className="px-2 py-1 rounded-full text-xs bg-blue-100 text-blue-800 flex items-center">
                            <UsersRound size={16}/>  <span className="ms-1"> {post.NominatedCount}</span>
-                        </span>
+                        </span> */}
                       </div>
                       <p className="text-xs sm:text-sm text-gray-600 mb-1">
                         {post.Tenant}
@@ -634,7 +644,7 @@ const nestedComments = buildCommentTree(filteredFlat);
                     </button>
                   )}
 
-                <div className="flex justify-between border-b-1 border-gray-200 mt-3 py-3">
+                <div className="flex justify-between border-b-1 border-gray-200 mt-1 py-1">
                   <span
                     className="text-sm font-medium cursor-pointer hover:text-blue-600"
                     onClick={(e) => {
@@ -646,7 +656,7 @@ const nestedComments = buildCommentTree(filteredFlat);
                     {/* {getLikeText(post.LikedBy, userId, username )} */}
                   </span>
                 </div>
-                  <div className="flex justify-between mt-3 pt-3">
+                  <div className="flex justify-between mt-1 pt-1">
                     <div className="flex items-center space-x-2">
                       <FeedLikeComponent
                         post={post}
@@ -840,167 +850,7 @@ const nestedComments = buildCommentTree(filteredFlat);
               </div>
             </div>
           )}
-          {reactionOpen && (
-            <div className="fixed inset-0 z-[9999] bg-black/40 flex items-center justify-center">
-              <div className="bg-white w-[520px] rounded-xl shadow-xl overflow-hidden">
-                <div className="px-6 pt-4 border-b">
-                  <div className="flex justify-between items-center mb-2">
-                    <h3 className="text-[15px] font-medium text-gray-800">
-                      Reactions
-                    </h3>
-                    <button onClick={() => setReactionOpen(false)}>
-                      <X size={18} className="text-gray-500" />
-                    </button>
-                  </div>
-                  <div className="flex gap-8 relative">
-                    <button
-                      onClick={() => setActiveTab("likes")}
-                      className="relative flex items-center gap-1 pb-3 text-sm">
-                      <Heart
-                        size={16}
-                        className={
-                          activeTab === "likes"
-                            ? "text-red-500 fill-red-500"
-                            : "text-gray-500"
-                        }/>
-                      <span>{likeList.length}</span>
-
-                      {activeTab === "likes" && (
-                        <div className="absolute left-0 right-0 -bottom-[1px] h-[2px] bg-green-600 rounded-full" />
-                      )}
-                    </button>
-                    <button
-                      onClick={() => setActiveTab("comments")}
-                      className="relative flex items-center gap-1 pb-3 text-sm">
-                      <MessageCircle
-                        size={16}
-                        className={
-                          activeTab === "comments"
-                            ? "text-blue-600"
-                            : "text-gray-500"
-                        } />
-                      <span>
-                        {
-                          comments.filter(
-                            c => c.NominationID === selectedPost?.NominationID
-                          ).length
-                        }
-                      </span>
-                      {activeTab === "comments" && (
-                        <div className="absolute left-0 right-0 -bottom-[1px] h-[2px] bg-green-600 rounded-full" />
-                      )}
-                    </button>
-                    <button
-                      onClick={() => setActiveTab("views")}
-                      className="relative flex items-center gap-1 pb-3 text-sm">
-                      <Eye
-                        size={16}
-                        className={
-                          activeTab === "views"
-                            ? "text-blue-600"
-                            : "text-gray-500"
-                        }/>
-                      <span>{viewerList.length}</span>
-                      {activeTab === "views" && (
-                        <div className="absolute left-0 right-0 -bottom-[1px] h-[2px] bg-green-600 rounded-full" />
-                      )}
-                    </button>
-                  </div>
-                </div>
-                <div className="max-h-[420px] overflow-y-auto">
-                  {activeTab === "likes" &&
-                    likeList.map((u: any, i: number) => (
-                      <div
-                        key={u.UserID ?? i}
-                        className="flex items-center gap-4 px-6 h-[64px]
-                                  border-b border-gray-100 last:border-b-0">
-                        <div className="relative">
-                          <div className="w-9 h-9 rounded-full themeColor
-                                          text-white flex items-center justify-center
-                                          text-sm font-semibold">
-                            {getInitial(u.UserName)}
-                          </div>
-                          <div className="absolute -bottom-1 -right-1
-                                          w-4 h-4 bg-white rounded-full
-                                          flex items-center justify-center shadow-sm">
-                            <Heart size={11} className="text-red-500" />
-                          </div>
-                        </div>
-                        <div>
-                          <div className="text-sm font-medium text-gray-800">
-                            {u.UserName}
-                          </div>
-                          <div className="text-xs text-gray-500">
-                            {u.Tenant}
-                          </div>
-                        </div>
-                      </div>
-                    ))}
-                  {activeTab === "comments" &&
-                    comments
-                      .filter(
-                        c => c.NominationID === selectedPost?.NominationID
-                      )
-                      .map((c: any) => (
-                        <div
-                          key={c.NominationCommentsID}
-                          className="px-6 py-4 border-b border-gray-100"
-                        >
-                          <div className="flex gap-3 items-center mb-1">
-                            <div className="relative">
-                              <div className="w-8 h-8 rounded-full themeColor
-                                text-white flex items-center justify-center text-xs font-semibold">
-                                {getInitial(c.CommentedBy)}
-                              </div>
-
-                              <div className="absolute -bottom-1 -right-1
-                                w-4 h-4 bg-white rounded-full
-                                flex items-center justify-center shadow-sm">
-                                <MessageCircle size={11} className="text-blue-600" />
-                              </div>
-                            </div>
-
-                            <span className="text-sm font-medium text-gray-800">
-                              {c.CommentedBy || "Unknown User"}
-                            </span>
-                          </div>
-                          <p className="ml-11 text-sm text-gray-700">
-                            {c.CommentsText}
-                          </p>
-                        </div>
-                  ))}
-                  {activeTab === "views" &&
-                    viewerList.map((v: any, i: number) => (
-                      <div
-                        key={v.UserID ?? i}
-                        className="flex items-center gap-4 px-6 h-[64px]
-                          border-b border-gray-100 last:border-b-0"
-                      >
-                        <div className="relative">
-                          <div
-                            className="w-9 h-9 rounded-full bg-teal-600
-                              text-white flex items-center justify-center
-                              text-sm font-semibold"
-                          >
-                            {getInitial(v.UserName || v.ViewedBy)}
-                          </div>
-
-                          <div className="absolute -bottom-1 -right-1
-                            w-4 h-4 bg-white rounded-full
-                            flex items-center justify-center shadow-sm">
-                            <Eye size={11} className="text-blue-600" />
-                          </div>
-                        </div>
-
-                        <div className="text-sm font-medium text-gray-800">
-                          {v.UserName || v.ViewedBy || "Unknown User"}
-                        </div>
-                      </div>
-                  ))}
-                </div>
-              </div>
-            </div>
-          )}
+          
 
  {/* View Modal */}
       {/* <ViewerModal
@@ -1025,6 +875,18 @@ const nestedComments = buildCommentTree(filteredFlat);
           likeList={likeList}
           likedPosts={likedPosts}
         />
+        <ReactionsModal
+          open={reactionOpen}
+          onClose={() => setReactionOpen(false)}
+          activeTab={activeTab}
+          setActiveTab={setActiveTab}
+          likeList={likeList}
+          comments={comments}
+          viewerList={viewerList}
+          selectedPost={selectedPost}
+          getInitial={getInitial}
+        />
+
     </div>
   );
 };

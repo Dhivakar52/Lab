@@ -2,15 +2,15 @@ import { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import axios from "axios";
 import { X, ArrowLeft } from "lucide-react";
-import StatusFlow from "../StatusFlow";
+import StatusFlow from "../JuryStatusFlow";
 import { useAuth } from "../ContextAPI/AuthContext";
 import * as Dialog from "@radix-ui/react-dialog";
 import { useLocation } from "react-router-dom";
 //import Swal from "sweetalert2";
 import { motion } from 'framer-motion';
-import { Flag, Edit } from "lucide-react";
+import { Flag, ChevronUp, ChevronDown ,User, Building2, Tag, 
+  CalendarDays, FileText, Mail, BadgeCheck, Check } from "lucide-react";
 
- 
 interface NominationDetailViewProps {
   isOpen: boolean;
   onClose: () => void;
@@ -30,7 +30,13 @@ type ApprovalFlowItem = {
   approvedAt:string;
   score:string;
 };
- 
+
+ const Icon = ({ children }: any) => (
+  <span className="text-gray-400 mr-2 flex items-center">
+    {children}
+  </span>
+);
+
 const NominationDetailView: React.FC<NominationDetailViewProps> = ({
  isOpen, onClose}) => {
   const { nominationId } = useParams<{ nominationId: string }>();
@@ -70,8 +76,68 @@ const NominationDetailView: React.FC<NominationDetailViewProps> = ({
   const [flagFiles, setFlagFiles] = useState<File[]>([]);
   const [flagPreview, setFlagPreview] = useState<string | null>(null);
   const [flagError, setFlagError] = useState("");
-  
-  
+  //home module//
+  const [seekingOpen, setSeekingOpen] = useState(false);
+  const [seekingUsers, setSeekingUsers] = useState<any[]>([]);
+  const [search, setSearch] = useState("");
+  const [openApprove, setOpenApprove] = useState(false);
+  const [openEvaluation, setOpenEvaluation] = useState(false);
+  const [openScore, setOpenScore] = useState(false);
+  const [score, setScore] = useState(70);
+  const [flag, setFlag] = useState(false);
+  const [selectedUsers, setSelectedUsers] = useState<number[]>([]);
+    const [popupType, setPopupType] = useState<
+    "approve" | "score" | "evaluation" | null
+  >(null);
+  const [expandedId, setExpandedId] = useState<number | null>(null);
+  const [openCard, setOpenCard] = useState<number | null>(null);
+
+
+  const closePopup = () => setPopupType(null);
+  const fetchSeekingUsers = async () => {
+  try {
+    const res = await axios.get(`${apiUrl}/api/users`, {
+      headers: {
+        Authorization: `Bearer ${authToken}`,
+      },
+    });
+
+    setSeekingUsers(res.data || []);
+  } catch (err) {
+    console.error("Seeking users load failed", err);
+  }
+};
+const sendSeekingUser = async () => {
+  if (selectedUsers.length === 0) {
+    alert("Select at least one user");
+    return;
+  }
+
+  try {
+    for (const id of selectedUsers) {
+      const payload = {
+        nominationID: data.NominationID,
+        seekingUserID: id,
+        active: true,
+        submittedBy: userId
+      };
+
+      await axios.post(`${apiUrl}/api/seeking`, payload, {
+        headers: {
+          Authorization: `Bearer ${authToken}`,
+        },
+      });
+    }
+
+    setSelectedUsers([]);
+    setSearch("");
+    setSeekingOpen(false);
+
+  } catch (err) {
+    alert("Save failed");
+  }
+};
+//end home module//
   const headerTitleMap: Record<string, string> = {
   "my-nominations": "My Nomination Details",
   "other-nominations": "Other Nomination Details",
@@ -119,7 +185,7 @@ const NominationDetailView: React.FC<NominationDetailViewProps> = ({
     try {
       const res = await axios.get(
       `${apiUrl}/api/nominations/${nominationId}`,
-      // `${apiUrl}/api/nominationDetails/${nominationId}`,
+    // `${apiUrl}/api/jurylevelnomination/${nominationId}/${userId}`, 
       {
         headers: {
           Authorization: `Bearer ${authToken}`,
@@ -295,6 +361,51 @@ const approvalTextColorMap: Record<string, string> = {
   Approved: "text-emerald-700",
   Rejected: "text-red-700",
 };
+
+const evaluations = [
+  {
+    id: 1,
+    name: "Senthil Nanthan",
+    date: "Jan 18, 2026",
+    totalScore: 260,
+    flagged: true,
+    reason: "Missing one documents",
+    scores: [
+      { label: "Integrity", score: 70 },
+      { label: "Idea", score: 50 },
+      { label: "Efforts", score: 60 },
+      { label: "Outcomes", score: 80 },
+    ],
+  },
+  {
+    id: 2,
+    name: "Ravi Kumar",
+    date: "Jan 17, 2026",
+    totalScore: 240,
+    flagged: false,
+    reason: "",
+    scores: [
+      { label: "Integrity", score: 65 },
+      { label: "Idea", score: 55 },
+      { label: "Efforts", score: 55 },
+      { label: "Outcomes", score: 65 },
+    ],
+  },
+  {
+    id: 3,
+    name: "Vijay Kumar",
+    date: "Jan 17, 2026",
+    totalScore: 370,
+    flagged: false,
+    reason: "",
+    scores: [
+      { label: "Integrity", score: 65 },
+      { label: "Idea", score: 55 },
+      { label: "Efforts", score: 55 },
+      { label: "Outcomes", score: 65 },
+    ],
+  },
+];
 
 
 const description =
@@ -775,9 +886,62 @@ const handleEdit = () => {
       navigate(`/my-nominations/add-nomination/${id}`);
     }  
 };
+const statusFlowData = [
+  {
+    level: 1,
+    title: "Manager Approval",
+    status: "Approved",
+    date: "16/01/2025",
+    comments: "Excellent performance and dedication.",
+    showApproveButton: false,
+    showScoreButton: false,
+    totalScore: null,
+    flag: null
+  },
+  {
+    level: 2,
+    title: "Business Jury",
+    status: "Approved",
+    totalScore: "260/400",
+    flag: "Yes",
+    showApproveButton: false,
+    showScoreButton: true
+  },
+  {
+    level: 3,
+    title: "General Jury",
+    status: "Pending",
+    showApproveButton: true,
+    showScoreButton: false
+  }
+];
+
+const approvalStatus = [
+  {
+    ApprovalType: "Manager",
+    Status: "Approved",
+    ApprovedAt: "16/01/2025",
+    ApprovalComments: "Excellent performance and dedication."
+  },
+  {
+    ApprovalType: "Business Jury",
+    Status: "Approved",
+    ApprovedAt: "18/01/2026",
+    ApprovalComments: "Demonstrates leadership qualities",
+    ApprovalScore: 260,
+    IsFlagged: true,
+    FlagReason: "Missing one document"
+  }
+];
+const levels = [
+  { key: "Manager", title: "Manager Approval" },
+  { key: "Business Jury", title: "Business Jury" },
+  { key: "General Jury", title: "General Jury" }
+];
 
 const needsScore = (type: string) =>
   SCORE_REQUIRED_TYPES.includes(type);
+// ✅ CUSTOM APPROVAL SUCCESS MODAL COMPONENT
 const ApprovalSuccessModal = () => {
   if (!successModalOpen || !data) return null;
  
@@ -847,253 +1011,123 @@ const ApprovalSuccessModal = () => {
       </motion.div>
     </div>
   );
-};
-
+}; 
 return (
-  <div>
-  <div className="bg-gray-100 flex flex-col p-6 pb-20">
-     <div className="overflow-x-auto bg-white shadow-md rounded-lg p-6">
-      <div className="w-full h-full px-1 py-1">
-        
-        <div className="grid grid-cols-5 gap-6 mb-4">
-          <div>
-            <div className="text-sm font-medium text-gray-900">Nominee</div>
-            <div className="text-sm text-gray-600">{data.Nominee}</div>
-          </div>
-          <div>
-            <div className="text-sm font-medium text-gray-900">Category</div>
-            <div className="text-sm text-gray-600">{data.AwardCategory}</div>
-          </div>
-          <div>
-            <div className="text-sm font-medium text-gray-900">Nominated By</div>
-            <div className="text-sm text-gray-600">{data.NominatedBy}</div>
-          </div>
-          <div>
-            <div className="text-sm font-medium text-gray-900">Tenant</div>
-            <div className="text-sm text-gray-600">{data.Tenant}</div>
-          </div>
-          <div>
-            <div className="text-sm font-medium text-gray-900">Department</div>
-            <div className="text-sm text-gray-600">{data.NomineeDepartment}</div>
-          </div>
+ <div className="bg-gray-100 p-6 pb-20">
+  <div className="bg-white rounded-xl border border-gray-200 shadow-sm p-6">
+    <div className="flex gap-6 items-start w-full">
+  <div
+    className="w-24 h-24 rounded-full border-4 border-emerald-500 flex items-center justify-center text-white font-bold text-5xl"
+    style={{
+      background: "linear-gradient(90deg, rgb(8, 128, 94) 16%, rgb(24, 97, 174) 100%)",
+    }}>
+    {data.Nominee?.charAt(0).toUpperCase()}
+  </div>
+  <div className="flex-1">
+    <div className="flex justify-between items-start mb-4">
+      <h2 className="text-lg font-semibold text-gray-900">
+        Nomination Details
+      </h2>
+      <div className="text-sm text-gray-600">
+        DOJ & Age in SRM :
+        <span className="ml-1 text-blue-600 font-medium">
+          01/2022, 4 Years
+        </span>
+      </div>
+    </div>
+    <div className="grid grid-cols-4 gap-x-10 gap-y-6 text-sm w-full">
+      <div>
+        <p className="text-gray-500">Nomination ID</p>
+        <div className="font-medium text-gray-900">{data.NominationID}</div>
+      </div>
+      <div>
+        <p className="text-gray-500">Nominee</p>
+        <div className="flex items-center font-medium text-gray-900">
+          <User size={16} className="text-gray-400 mr-2" />{data.Nominee}
         </div>
-        <div className="grid grid-cols-5 gap-6 mb-4">
-          <div>
-            <div className="text-sm font-medium text-gray-900">
-              <span className="relative inline-block">
-                Designation
-                {/* hyphen positioned absolutely and centered under the label */}
-                {(!data?.NomineeDesignation || data.NomineeDesignation.trim() === "") && (
-                  <span
-                    className="absolute left-1/2 -translate-x-1/2 text-gray-600"
-                    style={{ top: "110%" }}
-                    aria-hidden
-                  >
-                    —
-                  </span>
-                )}
-              </span>
-            </div>
-            <div className="text-sm text-gray-600 h-5">
-              {data?.NomineeDesignation && data.NomineeDesignation.trim() !== "" ? data.NomineeDesignation : <span className="invisible">—</span>}
-            </div>
-          </div>
- 
-          <div>
-            <div className="text-sm font-medium text-gray-900">Submission Date</div>
-            {/* <div className="text-sm text-gray-600">{data.SubmittedDate} */}
-            <div className="text-sm text-gray-600">{data?.SubmittedDate &&
+      </div>
+      <div>
+        <p className="text-gray-500">Entity</p>
+        <div className="flex items-center font-medium">
+          <Building2 size={16} className="text-gray-400 mr-2" />{data.Tenant}
+        </div>
+      </div>
+      <div>
+        <p className="text-gray-500">Category</p>
+        <div className="flex items-center font-medium">
+          <Tag size={16} className="text-gray-400 mr-2" />{data.AwardCategory}
+        </div>
+      </div>
+      <div>
+        <p className="text-gray-500">Nomination By</p>
+        <div className="flex items-center font-medium">
+          <User size={16} className="text-gray-400 mr-2" />{data.NominatedBy}
+        </div>
+      </div>
+      <div>
+        <p className="text-gray-500">Contest Type</p>
+        <div className="flex items-center font-medium">
+          <FileText size={16} className="text-gray-400 mr-2" />
+          Other Nomination
+        </div>
+      </div>
+      <div>
+        <p className="text-gray-500">Submission Date</p>
+        <div className="flex items-center font-medium">
+          <CalendarDays size={16} className="text-gray-400 mr-2" />{data?.SubmittedDate &&
             data.SubmittedDate.trim() !== "" ? data.SubmittedDate: "—"}
-            </div>
-          </div>
-          <div>
-            <div className="text-sm font-medium text-gray-900">Status</div>
-            <span
-              className={`inline-flex px-3 py-1 rounded-full text-xs font-medium mt-1 ${
-                data.Status === "Pending"
-                  ? "bg-orange-100 text-orange-800"
-                  : data.Status === "Approved"
-                  ? "bg-green-100 text-green-800"
-                  : data.Status === "Rejected"
-                  ? "bg-red-100 text-red-800"
-                  : data.Status === "Under Review"
-                  ? "bg-yellow-100 text-yellow-700"
-                  : "bg-gray-100 text-gray-700"
-              }`} >
-              {data.Status}
-            </span>
-          </div>
-          <div>
-            <div className="text-sm font-medium text-gray-900">Reporting To</div>
-            <div className="text-sm text-gray-600">{data.ManagerName}</div>
-          </div>
-          <div>
-            <div className="text-sm font-medium text-gray-900">Flag</div>
-              <div className="text-sm text-gray-600">
-                  <button
-                    onClick={(e) => { e.stopPropagation(); setFlagOpen1(data); }}
-                    className="p-1"
-                    title={data.FlagStatus === 1 ? "Click to UnFlag" : "Click to Flag"} >
-                    <Flag
-                      size={18}
-                      className={
-                        data.FlagStatus === 1
-                          ? "text-red-600 fill-red-600"
-                          : "text-gray-400 fill-gray-400"
-                      }
-                    />
-                  </button>
-             </div>         
-         </div>
         </div>
-        {flagOpen1 && (
-  <div className="mt-6 border border-red-300 bg-red-50 rounded-xl p-5">
-
-    <div className="flex justify-between items-center mb-3">
-      <h3 className="text-red-700 font-semibold text-sm flex items-center gap-2">
-        🚩 Flag Nomination
-      </h3>
-
-      <button
-        onClick={() => {
-          setFlagOpen1(false);
-          setFlagReason("");
-          setFlagFiles([]);
-          setFlagError("");
-        }}
-        className="text-gray-600">
-        <X size={18} />
-      </button>
-    </div>
-    <div className="flex gap-4 items-start mb-4">
-      <div className="flex-1">
-        <label className="text-sm font-medium">
-          Reason <span className="text-red-600">*</span>
-        </label>
-        <textarea
-          rows={3}
-          value={flagReason}
-          onChange={(e) => setFlagReason(e.target.value)}
-          className="w-full mt-1 p-2 border rounded text-sm"
-          placeholder="Enter reason..." />
-        {flagError && (
-          <p className="text-xs text-red-600 mt-1">{flagError}</p>
-        )}
       </div>
-      <div className="flex-1">
-        <label className="text-sm font-medium">
-          Upload Documents
-        </label>
-        <input
-          type="file"
-          multiple
-          onChange={handleFlagFileChange}
-          className="w-full mt-1 p-2 border rounded bg-white text-sm" />
-        {flagFiles.length > 0 && (
-          <div className="mt-1 text-sm text-gray-700 space-y-1">
-            {flagFiles.map((file, index) => (
-              <div key={index}>📎 {file.name}</div>
-            ))}
-          </div>
-        )}
+      <div>
+        <p className="text-gray-500">Status</p>
+        <span
+          className={`inline-flex items-center gap-2 mt-1 px-3 py-1 text-xs rounded border ${
+            data.Status === "Pending"
+              ? "bg-orange-100 text-orange-800 border-orange-300"
+              : data.Status === "Approved"
+              ? "bg-green-100 text-green-800 border-green-300"
+              : data.Status === "Rejected"
+              ? "bg-red-100 text-red-800 border-red-300"
+              : data.Status === "Under Review"
+              ? "bg-yellow-100 text-yellow-800 border-yellow-300"
+              : "bg-gray-100 text-gray-700 border-gray-300"
+          }`}>
+          {data.Status === "Under Review" && <BadgeCheck size={14} />}
+          {data.Status === "Under Review" ? "L2 – Under Review" : data.Status}
+        </span>
       </div>
-    </div>
-
-    <div className="flex justify-end gap-3">
-      <button
-        onClick={submitFlagWithAttachment}
-        className="px-4 py-2 bg-red-600 text-white rounded text-sm">
-        Submit Flag
-      </button>
+       <div>
+        <p className="text-gray-500">Manager Email Id</p>
+        <div className="flex items-center font-medium">
+          <Mail size={16} className="text-gray-400 mr-2" />{data.ManagerEmailID}
+        </div>
+      </div>
     </div>
   </div>
-)}
-         <div className="mb-4">
-              <div className="text-sm font-medium text-gray-900">Description</div>
-              <div className="text-sm text-gray-600">
-                {displayText}
-                {isTruncated && (
-                  <button
-                    onClick={() => setExpandedDescription(!expandedDescription)}
-                    className="ml-1 text-blue-600 underline text-sm" >
-                    {expandedDescription ? "Show less" : "See more"}
-                  </button>
-                )}
-              </div>
-          </div>
-        <div className="mb-4">
-          <StatusFlow steps={approvalFlow} />
-        </div>
-      <div className="grid grid-cols-12 gap-6 mb-6">
-        <div className="col-span-6 space-y-6">
-          <div>
-            <div className="text-sm font-medium text-gray-900 mb-2">
-              Referrals
-            </div>
-            {referrals.length ? (
-              <div className="border border-gray-300 overflow-hidden">
-                <table className="w-full text-xs border-collapse">
-                  <thead className="bg-gray-100">
-                    <tr>
-                        <th className="border border-gray-300 px-3 py-2 text-left">Name</th>
-                        <th className="border border-gray-300 px-3 py-2 text-left">Dept</th>
-                        <th className="border border-gray-300 px-3 py-2 text-left">Tenant</th>
-                        <th className="border border-gray-300 px-3 py-2 text-left">Status</th>
-                        <th className="border border-gray-300 px-3 py-2 text-left">Approved</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {visibleReferrals.map((ref, i) => (
-                      <tr key={i} className="hover:bg-gray-50">
-                        <td className="border border-gray-300 px-3 py-2 truncate">
-                          {ref.ReferralName}
-                        </td>
-                        <td className="border border-gray-300 px-3 py-2 truncate">
-                          {ref.DeptName}
-                        </td>
-                        <td className="border border-gray-300 px-3 py-2 truncate">
-                          {ref.TenantName}
-                        </td>
-                        <td className="border border-gray-300 px-3 py-2">
-                          <span
-                            className={`px-2 py-[2px] rounded-full text-[11px] font-medium
-                              ${
-                                ref.ReferralStatus === "Approved"
-                                  ? "bg-green-100 text-green-800"
-                                  : ref.ReferralStatus === "Rejected"
-                                  ? "bg-red-100 text-red-800"
-                                  : "bg-orange-100 text-orange-800"
-                              }`}>
-                            {ref.ReferralStatus}
-                          </span>
-                        </td>
-                        <td className="border border-gray-300 px-3 py-2 text-gray-600">
-                          {ref.ApprovedAt
-                            ? new Date(ref.ApprovedAt).toLocaleDateString("en-GB")
-                            : "—"}
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-                {referrals.length > 3 && (
-                  <div
-                  className="px-3 py-2 text-xs text-blue-600 cursor-pointer
-                          bg-gray-50 text-center border-t border-gray-300"
-                    onClick={toggleExpanded}>
-                    {expanded ? "Show less" : `+${referrals.length - 3} more`}
-                  </div>
-                )}
-              </div>
-            ) : (
-              <p className="text-gray-500 text-sm">No referral details</p>
-            )}
-          </div>
-          <div>
-            <div className="text-sm font-medium text-gray-900">
-              Supporting Documents
-            </div>
-            <div className="mt-2 space-y-2">
+</div>
+    <div className="border-b border-gray-200 mt-6" />
+    <div className="mt-5">
+      <p className="text-sm font-semibold text-gray-900 mb-1">
+        Description
+      </p>
+       <div className="text-sm text-gray-600">
+          {displayText}
+          {isTruncated && (
+            <button
+              onClick={() => setExpandedDescription(!expandedDescription)}
+              className="ml-1 text-blue-600 underline text-sm" >
+              {expandedDescription ? "Show less" : "See more"}
+            </button>
+         )}
+      </div>      
+    </div>
+    <div className="border-b border-gray-200 mt-5" />
+    <div className="mt-5">
+      <p className="text-sm font-semibold mb-3">
+        Supporting Documents
+      </p>
+       <div className="mt-2 flex flex-wrap gap-4">
+       {/* <div className="mt-2 space-y-2"> */}
               {data?.["Supporting Documents"]?.length ? (
                 data["Supporting Documents"].map(
                   (doc: SupportingDocument, i: number) => (
@@ -1111,11 +1145,8 @@ return (
                               Authorization: `Bearer ${authToken}`,
                             },
                           });
- 
                           const blobUrl = URL.createObjectURL(response.data);
- 
                           if (ext === "pdf") return window.open(blobUrl, "_blank");
- 
                           if (["xls", "xlsx", "doc", "docx", "csv"].includes(ext)) {
                             const link = document.createElement("a");
                             link.href = blobUrl;
@@ -1123,7 +1154,6 @@ return (
                             link.click();
                             return;
                           }
- 
                           if (["jpg", "jpeg", "png", "gif"].includes(ext)) {
                             setPreviewType(ext);
                             setPreviewFile(blobUrl);
@@ -1144,258 +1174,555 @@ return (
               ) : (
                 <p className="text-gray-500 text-sm">No documents uploaded</p>
               )}
-            </div>
-          </div>
-        </div>
-        <div className="col-span-6">
-          <div className="bg-white border border-gray-300 rounded-2xl shadow-sm h-full">
-            <div className="px-6 py-3 border-b border-gray-300 bg-gray-100 rounded-t-2xl">
-              <h3 className="text-sm font-semibold text-gray-800">
-                Comments
-              </h3>
-            </div>
-            <div className="divide-y divide-gray-300">
-              {(() => {
-                const approvedComments =
-                  data?.ApprovalStatus?.filter(
-                    (x: any) => x.Status === "Approved" || x.Status === "Rejected"
-                  ) || [];
-                if (!approvedComments.length) {
-                  return (
-                    <div className="px-6 py-8 text-center text-sm text-gray-500">
-                      No comments available
-                    </div>
-                  );
-                }
-                return ["Manager", "Business Jury", "General Jury", "President Jury"].map(
-                  (level) => {
-                    const item = approvedComments.find(
-                      (x: any) => x.ApprovalType === level
-                    );
-                    if (!item) return null;
-                    return (
-                      <div key={level} className="flex gap-4 px-6 py-2 items-start">
-                        {/* <div className="w-9 h-9 rounded-full bg-blue-600 flex items-center justify-center text-white text-sm font-bold">
-                          {item.ApprovalName?.charAt(0)?.toUpperCase() || level.charAt(0)}
-                        </div> */}
-                       <div className="w-9 h-9 rounded-full flex items-center justify-center text-white text-sm font-bold themeColor">
-                          {item.ApprovalName?.charAt(0)?.toUpperCase() || level?.charAt(0)?.toUpperCase()}
-                        </div>
-                        <div className="flex-1 flex justify-between gap-6">
-                          <div className="flex-1">
-                            <p className="text-sm font-semibold text-gray-900">
-                              {item.ApprovalName || level}
-                            </p>
-                            <span className=" inline-flex items-center gap-1 mt-1 px-3 py-[4px]
-                              text-[12px] rounded-full bg-blue-50 border border-blue-100 font-medium">
-                              <span className={approvalTextColorMap[item.Status] || "text-gray-600"}>
-                                {item.ApprovalFlow}
-                              </span>
-                              <span className="text-blue-600">
-                                {level}
-                              </span>
-                            </span>
-                            {/* <span className="inline-flex items-center gap-2 mt-1">
-                              <span
-                                className={`px-2 py-[2px] text-[11px] rounded-full font-medium
-                                  ${statusStyleMap[item.Status] || "bg-gray-100 text-gray-600"}`}>
-                                {item.ApprovalFlow}
-                              </span>
-                              <span className="px-2 py-[2px] text-[11px] rounded-full bg-blue-50 text-blue-600">
-                                {level}
-                              </span>
-                            </span> */}
-                            {/* <span className="inline-flex items-center gap-2 mt-1">
-                            <span className="px-2 py-[2px] text-[11px] rounded-full 
-                                            bg-emerald-100 text-emerald-700 font-medium">
-                              {item.ApprovalFlow}
-                            </span>
-                            <span className="px-2 py-[2px] text-[11px] rounded-full 
-                                            bg-blue-50 text-blue-600">
-                              {level}
-                            </span>
-                          </span> */}
-                            {/* <span className="inline-block mt-1 px-2 py-[2px] text-[11px] rounded-full bg-blue-50 text-blue-600">
-                                {item.ApprovalFlow } {level}
-                            </span> */}
-                            {item.ApprovalComments && (() => {
-                              const { text, truncated } = getCommentText(
-                                item.ApprovalComments,
-                                expandedComments[level]
-                              );
-                              return (
-                                <p className="mt-2 text-sm text-gray-600 leading-relaxed">
-                                  {text}
-                                  {truncated && (
-                                    <button
-                                      onClick={() => toggleComment(level)}
-                                      className="ml-1 text-blue-600 underline text-sm">
-                                      {expandedComments[level] ? "Show less" : "See more"}
-                                    </button>
-                                  )}
-                                </p>
-                              );
-                            })()}
-                            {/* {item.ApprovalComments && (
-                              <p className="mt-2 text-sm text-gray-600">
-                                {item.ApprovalComments}
-                              </p>
-                            )} */}
-                          </div>
-                          <div className="flex flex-col items-end gap-2">
-                            {item.ApprovedAt && (
-                              <p className="text-xs text-gray-400">
-                                {item.ApprovedAt}
-                              </p>
-                            )}
-                            {needsScore(level) && (
-                              <div className="min-w-[80px] px-3 py-2 bg-green-50 border border-green-200 rounded-lg text-center">
-                                <p className="text-[11px] text-green-700 font-medium">
-                                  Score
-                                </p>
-                                <p className="text-xl font-bold text-green-800">
-                                  {item.ApprovalScore ?? 0}
-                                </p>
-                              </div>
-                            )}
-                          </div>
-                        </div>
-                      </div>
-                    );
-                  }
-                );
-              })()}
-            </div>
-          </div>
-        </div>
       </div>
-{/* {flagOpen && (
-  <div className="mt-6 border border-red-300 bg-red-50 rounded-xl p-5">
-
-    <div className="flex justify-between items-center mb-3">
-      <h3 className="text-red-700 font-semibold text-sm flex items-center gap-2">
-        🚩 Flag Nomination
-      </h3>
-
-      <button
-        onClick={() => {
-          setFlagOpen(false);
-          setFlagReason("");
-          setFlagFiles([]);
-          setFlagError("");
-        }}
-        className="text-gray-600">
-        <X size={18} />
-      </button>
-    </div>
-    <div className="flex gap-4 items-start mb-4">
-      <div className="flex-1">
-        <label className="text-sm font-medium">
-          Reason <span className="text-red-600">*</span>
-        </label>
-        <textarea
-          rows={3}
-          value={flagReason}
-          onChange={(e) => setFlagReason(e.target.value)}
-          className="w-full mt-1 p-2 border rounded text-sm"
-          placeholder="Enter reason..." />
-        {flagError && (
-          <p className="text-xs text-red-600 mt-1">{flagError}</p>
-        )}
-      </div>
-      <div className="flex-1">
-        <label className="text-sm font-medium">
-          Upload Documents
-        </label>
-        <input
-          type="file"
-          multiple
-          onChange={handleFlagFileChange}
-          className="w-full mt-1 p-2 border rounded bg-white text-sm" />
-        {flagFiles.length > 0 && (
-          <div className="mt-1 text-sm text-gray-700 space-y-1">
-            {flagFiles.map((file, index) => (
-              <div key={index}>📎 {file.name}</div>
-            ))}
-          </div>
-        )}
-      </div>
-    </div>
-
-    <div className="flex justify-end gap-3">
-      <button
-        onClick={() => setFlagOpen(false)}
-        className="px-4 py-2 bg-gray-200 rounded text-sm">
-        Cancel
-      </button>
-      <button
-        onClick={submitFlagWithAttachment}
-        className="px-4 py-2 bg-red-600 text-white rounded text-sm">
-        Submit Flag
-      </button>
     </div>
   </div>
-)} */}
+  <div className="bg-white rounded-xl border border-gray-200 shadow-sm p-6 mt-6">
+    <h3 className="text-sm font-semibold text-gray-900 mb-4">
+      Referral Information
+    </h3>
+  {referrals.length ? (
+    <div className="overflow-hidden">
+      {/* <div className="overflow-hidden border border-gray-200 rounded-lg"> */}
+    <table className="w-full text-sm border-collapse">
+      <thead className="bg-gray-50">
+        <tr>
+          <th className="px-4 py-3 text-left">Nominee Name</th>
+          <th className="px-4 py-3 text-left">Tenant</th>
+          <th className="px-4 py-3 text-left">Department</th>
+        </tr>
+      </thead>
+
+      <tbody>
+        {visibleReferrals.map((ref, i) => (
+          <tr
+            key={i}
+            className="hover:bg-gray-50 border-b border-gray-200 last:border-b-0">
+            <td className="px-4 py-3">{ref.ReferralName}</td>
+            <td className="px-4 py-3">{ref.TenantName}</td>
+            <td className="px-4 py-3">{ref.DeptName}</td>
+          </tr>
+        ))}
+      </tbody>
+    </table>
+
+      {referrals.length > 3 && (
+        <div
+          className="px-3 py-2 text-xs text-blue-600 cursor-pointer bg-gray-50 text-center border-t border-gray-300"
+          onClick={toggleExpanded}>
+          {expanded ? "Show less" : `+${referrals.length - 3} more`}
+        </div>
+      )}
     </div>
-   </div>
-</div>
-    {/* <div className="bg-white border-t border-gray-200 px-6 py-4 shrink-0 sticky bottom-0 z-20 shadow-sm">
-         <div className="flex justify-end gap-3"> */}
+  ) : (
+    <p className="text-gray-500 text-sm">No referral details</p>
+  )}
+  </div>
+    <div className="bg-white rounded-xl border border-gray-200 shadow-sm p-6 mt-6">
+      <h2 className="text-base font-semibold mb-6">
+        Nomination Status Flow
+      </h2>
+
+      {/* ================= LEVEL 1 ================= */}
+      <div className="flex gap-4 relative">
+        {/* Timeline */}
+        <div className="flex flex-col items-center">
+          <div className="w-7 h-7 rounded-full bg-green-500 flex items-center justify-center">
+            <Check size={16} className="text-white" />
+          </div>
+          <div className="w-[2px] h-full bg-gray-300 mt-1"></div>
+        </div>
+
+        {/* Content */}
+        <div className="flex-1 pb-8">
+          <div className="flex justify-between items-center mb-2">
+            <p className="font-medium text-gray-900">
+              Level 1 - Manager Approval
+            </p>
+            <button
+                onClick={() => setOpenApprove(true)}
+                className="px-4 py-1.5 rounded-lg text-sm bg-green-100 text-green-700 
+                hover:bg-green-200 transition">
+                Approved
+              </button>
+          </div>
+
+          <div className="bg-gray-50 rounded-lg p-4 text-sm text-gray-700 space-y-2">
+            <div className="flex gap-12">
+              <div>
+                <span className="text-gray-500">Name :</span>{" "}
+                <span className="font-medium">
+                  Kathiravan (SRMTech Manager)
+                </span>
+              </div>
+
+              <div>
+                <span className="text-gray-500">Approved Date :</span>{" "}
+                <span className="font-medium">16/01/2025</span>
+              </div>
+            </div>
+
+            <div>
+              <span className="text-gray-500">Comments :</span>
+              <p className="font-medium mt-1">
+                Excellent performance and dedication.
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* ================= LEVEL 2 ================= */}
+      <div className="flex gap-4 relative">
+        <div className="flex flex-col items-center">
+          <div className="w-7 h-7 rounded-full bg-green-500 flex items-center justify-center">
+            <Check size={16} className="text-white" />
+          </div>
+          <div className="w-[2px] h-full bg-gray-300 mt-1"></div>
+        </div>
+
+        <div className="flex-1 pb-8">
+          <div className="flex justify-between items-center mb-2">
+            <p className="font-medium text-gray-900">
+              Level 2 - Business Jury
+            </p>
+            <div className="flex gap-3">
+              <button
+                onClick={() => setOpenEvaluation(true)}
+                className="px-4 py-1.5 rounded-lg border border-blue-500 text-blue-600 text-sm hover:bg-blue-50">
+                View Business Jury Evaluations
+              </button>
+              <button 
+                onClick={() => setOpenScore(true)}
+                className="px-4 py-1.5 rounded-lg text-sm bg-green-100 text-green-700">
+                Approved
+              </button>
+            </div>
+          </div>
+          <div className="bg-gray-50 rounded-lg p-4 text-sm text-gray-700 space-y-2">
+            <div className="flex gap-12">
+              <div>
+                <span className="text-gray-500">Name :</span>{" "}
+                <span className="font-medium">
+                  Saravanan (SRMAP)
+                </span>
+              </div>
+              <div>
+                <span className="text-gray-500">Approved Date :</span>{" "}
+                <span className="font-medium">26/01/2026</span>
+              </div>
+              <div>
+                <span className="text-gray-500">
+                  Total Jury Evaluations :
+                </span>{" "}
+                <span className="font-medium">3 / 10</span>
+              </div>
+              <div>
+                <span className="text-gray-500">
+                  Average Score :
+                </span>{" "}
+                <span className="font-medium">280 / 400</span>
+              </div>
+            </div>
+            <div className="flex gap-12">
+              <div>
+                <span className="text-gray-500">Score :</span>{" "}
+                <span className="font-medium">380 / 400</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <Flag size={16} className="text-red-500" />
+                <span className="text-gray-500">Flag :</span>
+                <span className="font-medium">No</span>
+              </div>
+            </div>
+            <div>
+              <span className="text-gray-500">Comments :</span>
+              <p className="font-medium mt-1 leading-relaxed">
+                Excellent performance and dedication were consistently
+                demonstrated through a strong commitment to quality and
+                timely delivery. Your proactive approach and attention to
+                detail have made a meaningful impact on overall success.
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* ================= LEVEL 3 ================= */}
+      <div className="flex gap-4">
+        <div className="flex flex-col items-center">
+          <div className="w-7 h-7 rounded-full bg-green-500 flex items-center justify-center">
+            <Check size={16} className="text-white" />
+          </div>
+        </div>
+
+        <div className="flex-1">
+          <div className="flex justify-between items-center mb-2">
+            <p className="font-medium text-gray-900">
+              Level 3 - Grand Jury
+            </p>
+            <button 
+                onClick={() => setOpenScore(true)}
+                className="px-4 py-1.5 rounded-lg text-sm bg-green-100 text-green-700">
+                Approved
+              </button>
+          </div>
+
+          <div className="bg-gray-50 rounded-lg p-4 text-sm text-gray-700 space-y-2">
+            <div className="flex gap-12">
+              <div>
+                <span className="text-gray-500">Approved Date :</span>{" "}
+                <span className="font-medium">27/01/2026</span>
+              </div>
+
+              <div>
+                <span className="text-gray-500">Score :</span>{" "}
+                <span className="font-medium">380 / 400</span>
+              </div>
+
+              <div className="flex items-center gap-2">
+                <Flag size={16} className="text-red-500" />
+                <span className="text-gray-500">Flag :</span>
+                <span className="font-medium">No</span>
+              </div>
+            </div>
+
+            <div>
+              <span className="text-gray-500">Comments :</span>
+              <p className="font-medium mt-1 leading-relaxed">
+                Excellent performance and dedication were consistently
+                demonstrated through a strong commitment to quality and
+                timely delivery. Your proactive approach and attention to
+                detail have made a meaningful impact on overall success.
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
     <div className="fixed bottom-0 left-0 w-full h-15 bg-white border-t border-gray-200 flex items-center pl-[260px] pr-6">
       <div className="flex justify-end space-x-4 ml-auto" >  
-        <button
-          onClick={() => setFlagOpen(true)}
-          className="px-4 py-2 bg-red-100 text-red-700 rounded-md border border-red-300">
-          🚩 Flag Nomination
-        </button>
-        
          <button onClick={handleBackward} className="flex items-center text-blue-600 bg-white border rounded-sm px-2 py-1 font-medium">
          <span className=""><ArrowLeft size={14}/></span> Back
           </button>
-        {showWithdrawButton && ( 
-          <button
-          onClick={handleEdit}
-          className="btn-theme-edit text-white rounded-sm px-2 py-1 hover:bg-blue-700 flex items-center"
-          > 
-          <span  className="edit-icon"><Edit size={14} /></span>Edit  
-          </button>
-        )}
-        {showWithdrawButton && (
-          
-          <button
-            onClick={() => setIsWithdrawDialogOpen(true)}
-                  className="px-4 py-2 btn-theme-reject">
-            Withdraw
-          </button>
-        )}
-        {/* { !showApproveReject && !hasRejectReferral &&( */}
-          {canRejectFinal && (
-              <button
-                onClick={() => openPopup("reject")}
-                    //className="px-4 py-2 bg-red-100 text-white-100 rounded-md shadow hover:bg-red-200 transition flex items-center"
-                  className="px-4 py-2 btn-theme-reject"
-              >
-                ✖ Reject Nomination
-              </button>
-            )}
-            {/* {!showApproveReject && !hasApprovedReferral && ( */}
-            { canApproveFinal &&(
-              <button
-                onClick={() => openPopup("approve")}
-                className="px-4 py-2 rounded-md shadow btn-theme"
-              >
-                ✔ Approve Nomination
-              </button>
-            )}
-         
-             {/* Show status if President already approved */}
-              {/* {isPresidentApproved && (
-                <div className="px-4 py-2 bg-blue-100 text-blue-800 rounded-md text-sm font-medium">
-                  ✅ Already approved by President Jury
-                </div>
-              )} */}
         </div>
       </div>
+      <div
+        className={`fixed top-0 right-0 h-full w-[680px] bg-white shadow-2xl z-50
+          transform transition-transform duration-300 ease-in-out
+          ${openApprove ? "translate-x-0" : "translate-x-full"}
+        `}>
+        <div className="flex justify-between items-center px-6 py-4 border-b border-gray-200">
+          <h2 className="text-[16px] font-semibold text-gray-900">
+            Level 2 - Manager Approval
+          </h2>
+          <button onClick={() => setOpenApprove(false)}>
+            <X size={20} />
+          </button>
+        </div>
+        <div className="px-6 py-6 text-sm text-gray-800">
+          <div className="mb-[18px]">
+            <label className="block mb-2 font-medium">
+              Status
+            </label>
+            <select
+              className="w-full h-[42px] px-3 border border-gray-300 rounded-[6px] bg-white focus:outline-none ">
+              <option>Approved</option>
+              <option>Rejected</option>
+            </select>
+          </div>
+          <div className="mb-[18px]">
+            <label className="block mb-2 font-medium">
+              Comments
+            </label>
+            <textarea rows={4} placeholder="Enter your comments"
+              className="w-full px-3 py-2 border border-gray-300 rounded-[6px] resize-none focus:outline-none"/>
+          </div>
+          <div className="flex items-center gap-2 mb-[12px]">
+            <Flag size={18} className="text-red-400" />
+            <span className="font-medium">Flag :</span>
+            <input type="checkbox" className="w-4 h-4 mt-[1px]" />
+          </div>
+          <textarea rows={3} placeholder="Flagged reason here"
+            className="w-full px-3 py-2 border border-red-300 bg-red-50 rounded-[6px] resize-none focus:outline-none"/>
+          <div className="flex justify-end gap-4 mt-6">
+            <button
+              onClick={() => setOpenApprove(false)} 
+              className="h-[42px] px-6 border border-gray-300 rounded-[6px] text-gray-700">
+              Cancel
+            </button>
+            <button className="h-[44px] px-8 rounded-md shadow btn-theme"> Submit </button>
+          </div>
+        </div>
+      </div>
+     <div
+      className={`fixed top-0 right-0 h-full w-[720px] bg-white shadow-2xl z-50
+      transform transition-transform duration-300
+      ${openEvaluation ? "translate-x-0" : "translate-x-full"}`}>
+      <div className="relative px-6 py-4 border-b border-gray-300">
+        <h2 className="text-[16px] font-semibold text-gray-900">
+          Level 2 - All Business Jury Overview
+        </h2>
+        <button
+         onClick={() => {
+          setOpenEvaluation(false);
+          setOpenCard(null); 
+        }}
+          className="absolute right-6 top-4">
+          <X size={20} />
+        </button>
+      </div>
+      <div className="px-6 py-6 space-y-4 overflow-y-auto h-[calc(100vh-70px)]">
+        <div className="grid grid-cols-3 gap-4">
+          <div className="border border-gray-300 rounded-lg p-4 text-center bg-green-50 text-green-700">
+            <div className="text-xl font-semibold">3</div>
+            <div className="text-sm">Total Evaluations</div>
+          </div>
+
+          <div className="border border-gray-300 rounded-lg p-4 text-center bg-blue-50 text-blue-700">
+            <div className="text-xl font-semibold">280</div>
+            <div className="text-sm">Average Score</div>
+          </div>
+
+          <div className="border border-gray-300 rounded-lg p-4 text-center bg-red-50 text-red-700">
+            <div className="text-xl font-semibold">1</div>
+            <div className="text-sm">Flagged</div>
+          </div>
+        </div>
+        {evaluations.map((e) => {
+          const expanded = openCard === e.id;
+          return (
+            <div
+              key={e.id}
+              onClick={() => setOpenCard(expanded ? null : e.id)}
+              className="border border-gray-300 rounded-lg cursor-pointer">
+              <div className="p-4 flex justify-between items-center">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-full themeColor flex items-center justify-center text-white">
+                    <User size={18} />
+                  </div>
+                  <div>
+                    <p className="font-medium text-gray-900">{e.name}</p>
+                    <p className="text-sm text-gray-500">
+                      Submitted: {e.date}
+                    </p>
+                  </div>
+                </div>
+                <div className="flex items-center gap-3">
+                  {e.flagged && (
+                    <Flag size={22} className="text-red-600 fill-red-600" />
+                  )}
+                  <div className="border border-gray-300 bg-green-50 text-green-700 px-4 py-2 rounded-md text-center min-w-[70px]">
+                    <div className="text-lg font-semibold">
+                      {e.totalScore}
+                    </div>
+                    <div className="text-xs">Score</div>
+                  </div>
+                </div>
+              </div>
+              {expanded && (
+                <div className="px-4 pb-4">
+                  <div className="border border-gray-300 rounded-md overflow-hidden mt-2">
+                    <table className="w-full text-sm">
+                      <thead className="bg-gray-50">
+                        <tr>
+                          <th className="px-4 py-2 text-left"></th>
+                          <th className="px-4 py-2 text-left">Score</th>
+                          <th className="px-4 py-2 text-left">Comments</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {e.scores.map((s, i) => (
+                          <tr
+                            key={i}
+                            className="border-t border-gray-300">
+                            <td className="px-4 py-2 font-medium">
+                              {s.label}
+                            </td>
+                            <td className="px-4 py-2">{s.score}</td>
+                            <td className="px-4 py-2 text-gray-600">
+                              Demonstrates exceptional leadership qualities
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+
+                  {e.flagged && (
+                    <>
+                      <div className="flex items-center gap-2 mt-3 text-sm">
+                        <Flag size={16} className="text-red-600" />
+                        <span className="font-medium">Flagged :</span>
+                        <input
+                          type="checkbox"
+                          checked
+                          readOnly
+                          className="w-4 h-4 accent-red-600"/>
+                      </div>
+                      <div className="mt-2 border border-gray-300 bg-red-50 rounded-md px-4 py-3 text-sm text-gray-700">
+                        {e.reason}
+                      </div>
+                    </>
+                  )}
+                </div>
+              )}
+            </div>
+          );
+        })}
+      </div>
+    </div>
+      {/* <div
+        className={`fixed top-0 right-0 h-full w-[720px] bg-white shadow-2xl z-50
+          transform transition-transform duration-300 ease-in-out
+          ${openEvaluation ? "translate-x-0" : "translate-x-full"}
+        `}>
+        <div className="relative px-6 py-4 border-b border-gray-200">
+          <h2 className="text-[16px] font-semibold text-gray-900">
+            Level 2 - All Business Jury Overview
+          </h2>
+          <button
+            onClick={() => setOpenEvaluation(false)}
+            className="absolute right-6 top-4">
+            <X size={20} />
+          </button>
+        </div>
+        <div className="px-6 py-6 overflow-y-auto h-[calc(100vh-70px)]">
+          <div className="border border-gray-300 rounded-lg p-5">
+            <div className="flex justify-between items-start mb-4">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-full themeColor flex items-center justify-center text-white">
+                  <User size={18} />
+                </div>
+                <div>
+                  <p className="font-medium text-gray-900">
+                    Senthil Nanthan
+                  </p>
+                  <p className="text-sm text-gray-500">
+                    Submitted: Jan 18, 2026
+                  </p>
+                </div>
+              </div>
+              <div className="flex items-center gap-3">
+                <div className="text-red-600 text-lg">
+                <Flag size={24} className="text-red-600 fill-red-600"/>
+                </div>
+                <div className="border border-gray-300 bg-green-50 text-green-700 px-4 py-2 rounded-md text-center min-w-[70px]">
+                  <div className="text-lg font-semibold">260</div>
+                  <div className="text-xs">Score</div>
+                </div>
+              </div>
+            </div>
+            <div className="border border-gray-300 rounded-md overflow-hidden mb-4">
+              <table className="w-full text-sm">
+                <thead className="bg-gray-50">
+                  <tr>
+                    <th className="text-left px-4 py-2 border-b border-gray-300"></th>
+                    <th className="text-left px-4 py-2 border-b border-gray-300">
+                      Score
+                    </th>
+                    <th className="text-left px-4 py-2 border-b border-gray-300">
+                      Comments
+                    </th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {[
+                    { label: "Integrity", score: 70 },
+                    { label: "Idea", score: 50 },
+                    { label: "Effors", score: 60 },
+                    { label: "OutComes", score: 80 },
+                  ].map((row, i) => (
+                    <tr key={i} className="border-b border-gray-200 last:border-b-0">
+                      <td className="px-4 py-3 font-medium">
+                        {row.label}
+                      </td>
+                      <td className="px-4 py-3">
+                        {row.score}
+                      </td>
+                      <td className="px-4 py-3 text-gray-700">
+                        Demonstrates exceptional leadership qualities
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+            <div className="flex items-center gap-2 text-sm mb-3">
+              <Flag size={18} className="text-red-400"/>
+              <span className="font-medium">Flagged :</span>
+              <input
+                type="checkbox" checked className="w-4 h-4 accent-red-600"/>
+            </div>
+            <div className="border border-gray-300 bg-red-50 rounded-md px-4 py-3 text-sm">
+              Missing one documents
+            </div>
+          </div>
+          <div className="flex justify-end mt-6">
+            <button
+              onClick={() => setOpenEvaluation(false)}
+              className="px-6 py-2 border border-gray-300 rounded-md">
+              Cancel
+            </button>
+          </div>
+        </div>
+      </div> */}
+      <div
+      className={`fixed top-0 right-0 h-full w-[650px] bg-white z-50 shadow-xl
+       transform transition-transform duration-500 ease-in-out
+        ${openScore ? "translate-x-0" : "translate-x-full"}`}>
+      <div className="flex justify-between items-center px-6 py-4 border-b border-gray-200">
+        <h2 className="text-lg font-semibold">
+          Level 2 - Business Jury
+        </h2>
+        <X
+          className="cursor-pointer text-gray-600"
+          onClick={() => setOpenScore(false)}/>
+      </div>
+      <div className="px-6 py-6 space-y-6 text-sm">
+        {[
+          { title: "Integrity", score: 70 },
+          { title: "Idea", score: 50 },
+          { title: "Efforts", score: 60 },
+          { title: "Outcome", score: 80 },
+        ].map((item, i) => (
+          <div key={i}>
+            <div className="flex items-center gap-6 mb-2">
+              <div className="flex items-center gap-1 font-medium">
+                {item.title}
+                <span className="text-gray-400 text-xs">ⓘ</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <span className="text-gray-500 text-sm">Score</span>
+                <input type="number" min={1} max={100}
+                  defaultValue={item.score}
+                  className="w-[90px] h-[36px] px-3 border border-gray-300 rounded-md text-sm outline-none"/>
+              </div>
+            </div>
+            {item.title !== "Outcome" && (
+              <div>
+                <label className="block text-gray-500 text-sm mb-1">
+                  Comments
+                </label>
+                <textarea
+                  rows={3}
+                  defaultValue="Maintained a high level of discipline in the environment with consistently excellent hygiene habits. This approach contributed to a clean, safe, and well-organized workplace."
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm resize-none outline-none" />
+              </div>
+            )}
+          </div>
+        ))}
+        <div className="flex justify-end gap-3 pt-6">
+           <button
+              onClick={() => setOpenScore(false)} 
+              className="h-[42px] px-6 border border-gray-300 rounded-[6px] text-gray-700">
+              Cancel
+            </button>
+            <button className="h-[44px] px-8 rounded-md shadow btn-theme"> Submit </button>
+        </div>
+      </div>
+    </div>
+
     {successMessage && (
       <div className="fixed top-5 right-5 z-[9999] bg-green-600 text-white px-5 py-3
       rounded-lg shadow-xl text-sm font-medium animate-slide-in">
@@ -1408,6 +1735,108 @@ return (
           {errorMessage}
         </div>
       )}
+      {popupType && (
+  <div className="fixed inset-0 bg-black/30 z-50">
+
+    <div className="fixed right-0 top-0 h-full w-[480px]
+      bg-white shadow-xl animate-slideIn">
+
+      <div className="flex justify-between items-center
+        p-5 border-b">
+
+        <h2 className="font-semibold text-lg capitalize">
+          {popupType.replace("-", " ")}
+        </h2>
+
+        <X className="cursor-pointer" onClick={closePopup} />
+      </div>
+
+      <div className="p-6 overflow-y-auto h-full">
+{popupType === "approve" && (
+  <>
+    <label>Status</label>
+    <select className="w-full border p-2 rounded mb-4">
+      <option>Approved</option>
+      <option>Rejected</option>
+    </select>
+
+    <label>Comments</label>
+    <textarea
+      className="w-full border p-2 rounded mb-4"
+      rows={4}
+    />
+
+    <label className="flex gap-2 items-center mb-2">
+      <input type="checkbox" /> Flag
+    </label>
+
+    <textarea
+      placeholder="Flag reason"
+      className="w-full border p-2 rounded bg-red-50"
+    />
+
+    <div className="flex justify-end gap-3 mt-6">
+      <button onClick={closePopup}>Cancel</button>
+      <button className="bg-green-600 text-white px-6 py-2 rounded">
+        Submit
+      </button>
+    </div>
+  </>
+)}
+{popupType === "score" && (
+  <>
+    {["Integrity", "Idea", "Efforts", "Outcome"].map(item => (
+      <div key={item} className="mb-4">
+        <p className="font-medium">{item}</p>
+        <input
+          type="number"
+          className="border w-full p-2 rounded mb-2"
+        />
+        <textarea
+          placeholder="Comments"
+          className="border w-full p-2 rounded"
+        />
+      </div>
+    ))}
+
+    <div className="flex justify-end mt-6">
+      <button
+        onClick={closePopup}
+        className="bg-green-600 text-white px-6 py-2 rounded"
+      >
+        Submit Score
+      </button>
+    </div>
+  </>
+)}
+{popupType === "evaluation" && (
+  <>
+    <table className="w-full border text-sm">
+      <thead className="bg-gray-100">
+        <tr>
+          <th className="p-2">Criteria</th>
+          <th>Score</th>
+          <th>Comments</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr><td>Integrity</td><td>70</td><td>Leadership skills</td></tr>
+        <tr><td>Idea</td><td>50</td><td>Creative ideas</td></tr>
+        <tr><td>Efforts</td><td>60</td><td>Good effort</td></tr>
+        <tr><td>Outcome</td><td>80</td><td>Excellent result</td></tr>
+      </tbody>
+    </table>
+
+    <div className="mt-4 p-3 border border-red-300 bg-red-50 rounded">
+      🚩 Missing one document
+    </div>
+  </>
+)}
+      </div>
+    </div>
+  </div>
+)}
+
     {/* Popup Modal */}
       {popupOpen && (
         <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/40 px-4">
@@ -1629,10 +2058,21 @@ return (
     </Dialog.Content>
   </Dialog.Portal>
 </Dialog.Root>
-</div>
-   
+</div>  
   );
  
 };
  
 export default NominationDetailView;
+const ScoreBox = ({
+  label,
+  value,
+}: {
+  label: string;
+  value: number;
+}) => (
+  <div className="border border-gray-300 rounded-md px-3 py-1 text-center min-w-[60px]">
+    <div className="text-sm font-semibold">{value}</div>
+    <div className="text-[10px] text-gray-500">{label}</div>
+  </div>
+);

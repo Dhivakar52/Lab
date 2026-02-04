@@ -595,6 +595,12 @@ const referralPayload = referrals.map(ref => ({
                     <User size={16} className="text-gray-400 mr-2" />{form.nomineeName}
                   </div>
                 </div>
+                 <div>
+                  <p className="text-gray-500">DOJ & Age in SRM</p>
+                  <div className="flex items-center font-medium">
+                  01/01/2022,4 Years
+                  </div>
+                </div>
                 <div>
                   <p className="text-gray-500">Department</p>
                   <div className="flex items-center font-medium">
