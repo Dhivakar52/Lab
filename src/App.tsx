@@ -39,8 +39,6 @@ import ApprovalDetailView from './components/ManagerPage/ApprovalDetailView.tsx'
 import OtherNomination from './components/NominationContent/OtherNomination.tsx';
 import PresidentLevelDetail from './components/PresidentLevel/PresidentLevelDetail.tsx';
 import BusinessJuryDetail from './components/Jury/BusinessJuryDetail.tsx';
-import Grand from './components/GrandJury/Grand.tsx';
-import PrimaryJury from './components/PrimaryBusiness/PrimaryJury.tsx';
 import Leader from './components/LeaderBoard/Leader.tsx';
 
 // -------------------------
@@ -62,9 +60,7 @@ const pageComponents: Record<string, React.ReactNode> = {
   'Testing': <Testing />,
   'Referral Approval': <ReferralComponent />,
   'Other Nomination':<OtherNomination/>,
-  'Grand Jury': <Grand/>,
-  'Primary Business Jury': <PrimaryJury/>,
-   'Leader Board': <Leader/>,
+  'Leader Board': <Leader/>,
 };
 
 

@@ -31,11 +31,11 @@ const FeedNestedComment: React.FC<FeedNestedCommentProps> = ({
 
 
   return (
-    <div className="mt-3 ml-4">
+    <div className="space-x-2">
 
       {/* Single Comment */}
-      <div className="flex items-start space-x-3 bg-white p-3 rounded-md border border-gray-200">
-        <div className="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center text-blue-600 font-semibold">
+      <div className="flex items-start space-x-3 bg-white py-1 rounded-md">
+        <div className="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center text-blue-600 font-semibold text-sm">
           {comment.CommentedBy?.charAt(0).toUpperCase()}
           
         </div>
@@ -176,7 +176,7 @@ const FeedNestedComment: React.FC<FeedNestedCommentProps> = ({
         </div>
       )} */}
       {openChildren && hasChildren && (
-  <div className="mt-2 ml-3 border-l-2 border-gray-300 pl-3">
+  <div className="mt-2 ml-3 pl-3">
     {comment.ChildComments.map((child,index) => (
       <FeedNestedComment
         // key={child.NominationCommentsID}

@@ -14,7 +14,7 @@ const TabsSection: React.FC<TabsProps> = ({ activeTab, setActiveTab, onFilterCli
         
         {/* Tabs */}
         <div className="flex space-x-6 sm:space-x-8 overflow-x-auto">
-          {["Feeds", "My Lists","My Business"].map((tab) => (
+          {["My Business", "My Lists","Feeds"].map((tab) => (
             <button
               key={tab}
               onClick={() => setActiveTab(tab as "Feeds" | "My Lists" |"My Business")}

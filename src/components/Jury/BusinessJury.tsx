@@ -135,48 +135,65 @@ const BusinessJury: React.FC = () => {
                  return <ColorBadge label={tenant} />;
                },
              },
-        { accessorKey: "CategoryName", header: "Category Name" },
-        { accessorKey: "NominatedBy", header: "Nominated By" },
-       // { accessorKey: "BusinessJuryScore", header: "Score"},
+        { accessorKey: "CategoryName", header: "Category" },
+        // { accessorKey: "NominatedBy", header: "Nominated By" },
          {
-          accessorKey: "BusinessJuryScore",
-          header: () => <div className="text-center">Score</div>,
-          cell: ({ getValue }) => (
-            <div className="text-center pr-4">
-              {getValue() as number}
+        accessorKey: "BusinessJuryScore",
+        header: () => (
+          <div className="text-end">Score(Out of 100)</div>
+        ),
+        cell: ({ getValue }) => {
+          const value = getValue() as number | null | undefined;
+          return (
+            <div className="flex justify-start pr-5">
+              <div
+                className="min-w-[60px] h-[28px] px-2 flex items-center
+                  text-left text-sm font-medium border border-gray-400 rounded-md text-gray-800">
+                {value ?? ""}
+              </div>
             </div>
-          ),
+          );
         },
-        {
-            accessorKey: "Status",
-            header: "Status",
-            cell: ({ row, getValue }) => {
-              const status = getValue() as string;
-              const isOpen =
-                expandedRow?.id === row.original.NominationID &&
-                expandedRow?.type === "status";
+      },
+      //   {
+      //     accessorKey: "BusinessJuryScore",
+      //     header: () => <div className="text-center">Score</div>,
+      //     cell: ({ getValue }) => (
+      //       <div className="text-center pr-4">
+      //         {getValue() as number}
+      //       </div>
+      //     ),
+      //   },
+      //   {
+      //       accessorKey: "Status",
+      //       header: "Status",
+      //       cell: ({ row, getValue }) => {
+      //         const status = getValue() as string;
+      //         const isOpen =
+      //           expandedRow?.id === row.original.NominationID &&
+      //           expandedRow?.type === "status";
 
-              const bgClass = levelColors[status] || "bg-gray-100 border-gray-300";
-              const textClass = levelTextColors[status] || "text-gray-700";
+      //         const bgClass = levelColors[status] || "bg-gray-100 border-gray-300";
+      //         const textClass = levelTextColors[status] || "text-gray-700";
 
-              return (
-                <div
-                  className={`inline-flex items-center border rounded overflow-hidden ${bgClass} ${textClass}`}>
-                  <button
-                    onClick={(e) =>{ e.stopPropagation(); handleStatusClick(row.original);}}
-                    className="px-3 py-1 text-sm font-medium flex-1 text-left">
-                    {status}
-                  </button>
-                  <span className="w-px self-stretch bg-current opacity-30" />
-                  <button
-                    onClick={(e) =>{ e.stopPropagation(); handleStatusClick(row.original);}}
-                    className="px-2 flex items-center justify-center" >
-                   {isOpen ? <ChevronUp size={18} /> : <ChevronDown size={18} />}
-                  </button>
-                </div>
-              );
-            },
-       },
+      //         return (
+      //           <div
+      //             className={`inline-flex items-center border rounded overflow-hidden ${bgClass} ${textClass}`}>
+      //             <button
+      //               onClick={(e) =>{ e.stopPropagation(); handleStatusClick(row.original);}}
+      //               className="px-3 py-1 text-sm font-medium flex-1 text-left">
+      //               {status}
+      //             </button>
+      //             <span className="w-px self-stretch bg-current opacity-30" />
+      //             <button
+      //               onClick={(e) =>{ e.stopPropagation(); handleStatusClick(row.original);}}
+      //               className="px-2 flex items-center justify-center" >
+      //              {isOpen ? <ChevronUp size={18} /> : <ChevronDown size={18} />}
+      //             </button>
+      //           </div>
+      //         );
+      //       },
+      //  },
        {
             header: "Flag",
             cell: ({ row }) => {
@@ -185,9 +202,9 @@ const BusinessJury: React.FC = () => {
               if (flagStatus < 0) return null;
               if (flagStatus === 1) {
                   return (
-                   <button
-                    onClick={(e) =>{ e.stopPropagation(); handleFlagClick(item);}}
-                    className="p-1" title="Flagged">
+                   <button>
+                    {/* // onClick={(e) =>{ e.stopPropagation(); handleFlagClick(item);}}
+                    // className="p-1" title="Flagged"> */}
                    <Flag
                     size={18} className="text-red-600 fill-red-600" /></button>
                 );
@@ -197,7 +214,7 @@ const BusinessJury: React.FC = () => {
                 );
               },
         },  
-    {
+        {
             header: "Actions",
             cell: ({ row }) => {
               const item = row.original;
@@ -210,8 +227,7 @@ const BusinessJury: React.FC = () => {
                 <button
                   onClick={() => handleDetailsView(row.original)}
                   className="p-2 rounded hover:bg-gray-100 transition"
-                   title="View Details"
-                >
+                   title="View Details">
                   <Menu size={18} className="text-blue-600" />
                 </button>
               );

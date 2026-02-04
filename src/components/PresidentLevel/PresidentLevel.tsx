@@ -110,61 +110,97 @@ const PresidentLevel: React.FC = () => {
       { accessorKey: "Nominee", header: "Nominee" },
       {
         accessorKey: "Tenant",
-        header: "Entity Name",
+        header: "Entity",
         cell: ({ getValue }) => (
           <ColorBadge label={getValue() as string} />
         ),
       },
       { accessorKey: "CategoryName", header: "Category" },
-      { accessorKey: "NominatedBy", header: "Nominated By" },
-       {
-            accessorKey: "ConsolidatedAvgScore",
-            header: () => <div className="text-end">Consolidated Avg Score</div>,
-            cell: ({ getValue }) => (
-              <div className="text-end pr-5">
-                {getValue() as number}
+      // { accessorKey: "NominatedBy", header: "Nominated By" },
+      {
+        accessorKey: "ConsolidatedAvgScore",
+        header: () => (
+          <div className="text-end">Consolidated Avg Score</div>
+        ),
+        cell: ({ getValue }) => {
+          const value = getValue() as number | null | undefined;
+          return (
+            <div className="flex justify-start pr-5">
+              <div
+                className="min-w-[60px] h-[28px] px-2 flex items-center
+                  text-left text-sm font-medium border border-gray-400 rounded-md text-gray-800">
+                {value ?? ""}
               </div>
-            ),
-          },
-        {
-          accessorKey: "PresidentScore",
-          header: () => <div className="text-end">President Score</div>,
-          cell: ({ getValue }) => (
-            <div className="text-end pr-3">
-              {getValue() as number}
             </div>
-          ),
+          );
         },
-        {
-            accessorKey: "Status",
-            header: "Status",
-            cell: ({ row, getValue }) => {
-              const status = getValue() as string;
-              const isOpen =
-                expandedRow?.id === row.original.NominationID &&
-                expandedRow?.type === "status";
+      },
+      {
+        accessorKey: "PresidentScore",
+        header: () => (
+          <div className="text-end">President Score</div>
+        ),
+        cell: ({ getValue }) => {
+          const value = getValue() as number | null | undefined;
+          return (
+            <div className="flex justify-start pr-3">
+              <div
+                className=" min-w-[60px] h-[28px] px-2 flex items-center
+                  text-left text-sm font-medium border border-gray-400 rounded-md text-gray-800">
+                {value ?? ""}
+              </div>
+            </div>
+          );
+        },
+      },
+      //  {
+      //       accessorKey: "ConsolidatedAvgScore",
+      //       header: () => <div className="text-end">Consolidated Avg Score</div>,
+      //       cell: ({ getValue }) => (
+      //         <div className="text-end pr-5">
+      //           {getValue() as number}
+      //         </div>
+      //       ),
+      //     },
+      //   {
+      //     accessorKey: "PresidentScore",
+      //     header: () => <div className="text-end">President Score</div>,
+      //     cell: ({ getValue }) => (
+      //       <div className="text-end pr-3">
+      //         {getValue() as number}
+      //       </div>
+      //     ),
+      //   },
+      //   {
+      //       accessorKey: "Status",
+      //       header: "Status",
+      //       cell: ({ row, getValue }) => {
+      //         const status = getValue() as string;
+      //         const isOpen =
+      //           expandedRow?.id === row.original.NominationID &&
+      //           expandedRow?.type === "status";
 
-              const bgClass = levelColors[status] || "bg-gray-100 border-gray-300";
-              const textClass = levelTextColors[status] || "text-gray-700";
+      //         const bgClass = levelColors[status] || "bg-gray-100 border-gray-300";
+      //         const textClass = levelTextColors[status] || "text-gray-700";
 
-              return (
-                <div
-                  className={`inline-flex items-center border rounded overflow-hidden ${bgClass} ${textClass}`}>
-                  <button
-                    onClick={(e) => { e.stopPropagation();handleStatusClick(row.original);}}
-                    className="px-3 py-1 text-sm font-medium flex-1 text-left">
-                    {status}
-                  </button>
-                  <span className="w-px self-stretch bg-current opacity-30" />
-                  <button
-                    onClick={(e) =>{ e.stopPropagation(); handleStatusClick(row.original);}}
-                    className="px-2 flex items-center justify-center" >
-                   {isOpen ? <ChevronUp size={18} /> : <ChevronDown size={18} />}
-                  </button>
-                </div>
-              );
-            },
-       },
+      //         return (
+      //           <div
+      //             className={`inline-flex items-center border rounded overflow-hidden ${bgClass} ${textClass}`}>
+      //             <button
+      //               onClick={(e) => { e.stopPropagation();handleStatusClick(row.original);}}
+      //               className="px-3 py-1 text-sm font-medium flex-1 text-left">
+      //               {status}
+      //             </button>
+      //             <span className="w-px self-stretch bg-current opacity-30" />
+      //             <button
+      //               onClick={(e) =>{ e.stopPropagation(); handleStatusClick(row.original);}}
+      //               className="px-2 flex items-center justify-center" >
+      //              {isOpen ? <ChevronUp size={18} /> : <ChevronDown size={18} />}
+      //             </button>
+      //           </div>
+      //         );
+      //       },
+      //  },
        {
             header: "Flag",
             cell: ({ row }) => {
@@ -173,9 +209,9 @@ const PresidentLevel: React.FC = () => {
               if (flagStatus < 0) return null;
               if (flagStatus === 1) {
                   return (
-                   <button
-                    onClick={(e) =>{ e.stopPropagation(); handleFlagClick(item);}}
-                    className="p-1" title="Flagged">
+                   <button>
+                    {/* onClick={(e) =>{ e.stopPropagation(); handleFlagClick(item);}}
+                    className="p-1" title="Flagged"> */}
                    <Flag
                     size={18} className="text-red-600 fill-red-600" /></button>
                 );
@@ -184,6 +220,28 @@ const PresidentLevel: React.FC = () => {
                   <span className="text-green-600 text-xl leading-none"  title="Not Flagged">✔</span>
                 );
               },
+        },
+
+      {
+          accessorKey: "FinalStatus",
+          header: () => <div className="text-center">Final Status</div>,
+          cell: ({ getValue }) => {
+            const value = getValue() as string;
+
+            return (
+              <div className="flex justify-center">
+                {value === "Winner" ? (
+                  <span className="inline-flex items-center gap-1 px-2 py-1">
+                    🏆 {value}
+                  </span>
+                ) : (
+                  <span className="text-sm text-gray-700">
+                    {value}
+                  </span>
+                )}
+              </div>
+            );
+          },
         },
         {
           header: "Actions",
@@ -225,7 +283,7 @@ const PresidentLevel: React.FC = () => {
       {/* 🔹 Header */}
       <div className="mb-4 flex justify-between items-center">
         <h2 className="text-xl font-semibold">
-          President Level Evaluations
+          President Evaluation
         </h2>
 
         <input

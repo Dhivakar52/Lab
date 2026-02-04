@@ -16,6 +16,8 @@ import {DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger
 import StatusFlow from "../CommonStatusFlow"; 
 import { levelColors, levelTextColors } from "../../statusColors.ts";
 import { useLocation } from "react-router-dom";
+import ProgressSidePanel from "../ProgressSidePanel";
+
 
 interface Nomination {
   TotalRowCount: number;
@@ -74,6 +76,8 @@ const apiUrl = import.meta.env.VITE_API_URL;
   const [tab, setTab] = useState<"my" | "others">("my");
   const [initialized, setInitialized] = useState(false);
   const tableWrapperRef = useRef<HTMLDivElement | null>(null);
+  const [isLevelPanelOpen, setIsLevelPanelOpen] = useState(false);
+  const [selectedLevelRow, setSelectedLevelRow] = useState<Nomination | null>(null);
 
   useEffect(() => {
     if (location.state?.tab) {
@@ -161,12 +165,12 @@ const apiUrl = import.meta.env.VITE_API_URL;
   }
   const columns = useMemo<ColumnDef<Nomination>[]>(
     () => [
-      { accessorKey: "NominationID", header: "Nomination ID" },
+      { accessorKey: "NominationID", header: "ID" },
       { accessorKey: "Nominee", header: "Nominee" },
       // { accessorKey: "Tenant", header: "Entity" },
       {
         accessorKey: "Tenant",
-        header: "Entity Name",
+        header: "Entity",
         cell: ({ getValue }) => {
           const tenant = getValue() as string;
           return <ColorBadge label={tenant} />;
@@ -175,35 +179,87 @@ const apiUrl = import.meta.env.VITE_API_URL;
       { accessorKey: "AwardCategory", header: "Category" },
       { accessorKey: "NominatedBy", header: "Nominated By" },
       {
-            accessorKey: "Status",
-            header: "Status",
-            cell: ({ row, getValue }) => {
-              const status = getValue() as string;
-              const isOpen = expandedRow === row.original.NominationID;
+        id: "Level",
+        header: "Level",
+        cell: ({ row }) => {
+          const levels = ["Level 1", "Level 2", "Level 3"];
+          const level = levels[row.index % levels.length];
 
-              const bgClass = levelColors[status] || "bg-gray-100 border-gray-300";
-              const textClass = levelTextColors[status] || "text-gray-700";
+          const levelStyles: Record<string, string> = {
+            "Level 1":
+              "bg-orange-50 text-orange-600 border border-orange-200 hover:bg-orange-100",
+            "Level 2":
+              "bg-purple-50 text-purple-600 border border-purple-200 hover:bg-purple-100",
+            "Level 3":
+              "bg-blue-50 text-blue-600 border border-blue-200 hover:bg-blue-100",
+          };
 
-              return (
-                <div
-                  className={`inline-flex items-center border rounded overflow-hidden ${bgClass} ${textClass}`}>
-                  <button
-                    onClick={(e) =>{ e.stopPropagation();
-                    handleStatusClick(row.original.NominationID)}}
-                    className="px-3 py-1 text-sm font-medium flex-1 text-left">
-                    {status}
-                  </button>
-                  <span className="w-px self-stretch bg-current opacity-30" />
-                  <button
-                    onClick={(e) =>{ e.stopPropagation();
-                    handleStatusClick(row.original.NominationID)}}
-                    className="px-2 flex items-center justify-center" >
-                   {isOpen ? <ChevronUp size={18} /> : <ChevronDown size={18} />}
-                  </button>
-                </div>
-              );
-            },
-       },        
+          return (
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                setSelectedLevelRow(row.original);
+                setIsLevelPanelOpen(true);
+              }}
+              className={`
+                w-20 h-8
+                text-xs font-semibold
+                rounded-md
+                flex items-center justify-center
+                ${levelStyles[level]}
+              `}>
+              {level}
+            </button>
+          );
+        },
+      },
+      {
+        accessorKey: "Status",
+        header: "Status",
+        cell: ({ getValue }) => {
+          const status = getValue() as string;
+
+          const bgClass = levelColors[status] || "bg-gray-100 border-gray-300";
+          const textClass = levelTextColors[status] || "text-gray-700";
+
+          return (
+            <span
+              className={`inline-flex items-center px-3 py-1 text-sm font-medium border rounded ${bgClass} ${textClass}`} >
+              {status}
+            </span>
+          );
+        },
+      },
+      // {
+      //       accessorKey: "Status",
+      //       header: "Status",
+      //       cell: ({ row, getValue }) => {
+      //         const status = getValue() as string;
+      //         const isOpen = expandedRow === row.original.NominationID;
+
+      //         const bgClass = levelColors[status] || "bg-gray-100 border-gray-300";
+      //         const textClass = levelTextColors[status] || "text-gray-700";
+
+      //         return (
+      //           <div
+      //             className={`inline-flex items-center border rounded overflow-hidden ${bgClass} ${textClass}`}>
+      //             <button
+      //               onClick={(e) =>{ e.stopPropagation();
+      //               handleStatusClick(row.original.NominationID)}}
+      //               className="px-3 py-1 text-sm font-medium flex-1 text-left">
+      //               {status}
+      //             </button>
+      //             <span className="w-px self-stretch bg-current opacity-30" />
+      //             <button
+      //               onClick={(e) =>{ e.stopPropagation();
+      //               handleStatusClick(row.original.NominationID)}}
+      //               className="px-2 flex items-center justify-center" >
+      //              {isOpen ? <ChevronUp size={18} /> : <ChevronDown size={18} />}
+      //             </button>
+      //           </div>
+      //         );
+      //       },
+      //  },        
      {
       header: "Actions",
       cell: ({ row }) => {
@@ -359,6 +415,13 @@ const apiUrl = import.meta.env.VITE_API_URL;
      </div>
     </div>
    </div>
+   <ProgressSidePanel
+      isOpen={isLevelPanelOpen}
+      onClose={() => {
+      setIsLevelPanelOpen(false);
+      setSelectedLevelRow(null);
+    }}
+        />
       {/* 🔍 Modal */}
       {/* {selectedNomination && (
         <NominationDetailsModal
