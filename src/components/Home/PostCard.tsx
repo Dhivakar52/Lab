@@ -565,18 +565,18 @@ const tempId = crypto.randomUUID();
         //  const filteredFlat = (comments || []).filter(c => c.NominationID === post.NominationID);
        
         const filteredFlat = (comments || [])
-  .filter(c => c.NominationID === post.NominationID)
-  // Remove duplicates by creating a Map
-  .reduce((acc: any[], current) => {
-    const existing = acc.find(item => 
-      item.NominationCommentsID === current.NominationCommentsID
-    );
-    if (!existing) {
-      acc.push(current);
-    }
-    return acc;
-  }, []);
-const nestedComments = buildCommentTree(filteredFlat);
+        .filter(c => c.NominationID === post.NominationID)
+        // Remove duplicates by creating a Map
+        .reduce((acc: any[], current) => {
+          const existing = acc.find(item => 
+            item.NominationCommentsID === current.NominationCommentsID
+          );
+          if (!existing) {
+            acc.push(current);
+          }
+          return acc;
+        }, []);
+      const nestedComments = buildCommentTree(filteredFlat);
 
           return (
             <div
@@ -684,19 +684,19 @@ const nestedComments = buildCommentTree(filteredFlat);
                     </div>
                     <div
                       className="flex items-center text-gray-500 text-sm cursor-pointer"
-                    onClick={async (e) => {
-                      e.preventDefault();
-                      e.stopPropagation();
-                    e.nativeEvent.stopImmediatePropagation();
-                      // if (!viewed[post.NominationID]) {
-                      //   await addView(post.NominationID);
-                      //   setViewed(prev => ({ ...prev, [post.NominationID]: true }));
-                      // }
+                        onClick={async (e) => {
+                          e.preventDefault();
+                          e.stopPropagation();
+                          e.nativeEvent.stopImmediatePropagation();
+                          // if (!viewed[post.NominationID]) {
+                          //   await addView(post.NominationID);
+                          //   setViewed(prev => ({ ...prev, [post.NominationID]: true }));
+                          // }
 
-                      await fetchViews(post.NominationID);
-                      setShowViewers(true) ;
-                      setSelectedPost(post);
-                    }} >
+                          await fetchViews(post.NominationID);
+                          setShowViewers(true) ;
+                          setSelectedPost(post);
+                        }} >
                   <div className="flex items-center mt-3 text-sm text-gray-500">
                     <span
                       className="cursor-pointer hover:text-blue-600"
@@ -705,11 +705,9 @@ const nestedComments = buildCommentTree(filteredFlat);
                         setLikeList(post.LikedBy || []);
                         setActiveTab("likes");
                         setReactionOpen(true);
-                      }}
-                    >
+                      }}>
                       {post.LikedBy?.length || 0} Likes
                     </span>
-
                     <span className="px-2 text-[18px] text-[#9CA3AF] leading-none">•</span>
 
                     {/* 💬 Comments */}
@@ -717,10 +715,10 @@ const nestedComments = buildCommentTree(filteredFlat);
                       className="cursor-pointer hover:text-blue-600"
                       onClick={() => {
                         setSelectedPost(post);
+                        setLikeList(post.LikedBy || []);
                         setActiveTab("comments");
                         setReactionOpen(true);
-                      }}
-                    >
+                      }}>
                       {post.Comments} Comments
                     </span>
 
@@ -732,15 +730,13 @@ const nestedComments = buildCommentTree(filteredFlat);
                       onClick={async () => {
                         await fetchViews(post.NominationID);
                         setSelectedPost(post);
+                        setLikeList(post.LikedBy || []);
                         setActiveTab("views");
                         setReactionOpen(true);
-                      }}
-                    >
+                      }}>
                       {viewsMap[post.NominationID] || 0} Views
                     </span>
-
                   </div>
-
                   {/* <span className="text-sm font-medium">
                     {post.Comments} Comments
                   </span>
@@ -850,8 +846,6 @@ const nestedComments = buildCommentTree(filteredFlat);
               </div>
             </div>
           )}
-          
-
  {/* View Modal */}
       {/* <ViewerModal
       item

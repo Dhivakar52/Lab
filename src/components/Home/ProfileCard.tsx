@@ -30,7 +30,7 @@ const ProfileCard: React.FC<ProfileCardProps> = ({ profile, userDetail }) => {
 
   const user = userDetail ? userDetail[0] : null; // user details from API
 
-  return (
+  return (<>
     <div className="bg-white rounded-lg shadow-sm overflow-hidden">
 
       {/* Card Top: User Info */}
@@ -62,107 +62,50 @@ const ProfileCard: React.FC<ProfileCardProps> = ({ profile, userDetail }) => {
         {profile.length > 0 ? (
           <Swiper
             slidesPerView={1}
-            spaceBetween={20}
-            keyboard={{ enabled: true }}
-            pagination={{ clickable: true }}
-            navigation={true}
+            spaceBetween={0}
+            centeredSlides={true}
+            pagination={{
+              clickable: true,
+              renderBullet: (index, className) => {
+                return `<span class="${className} custom-dot"></span>`;
+              },
+            }}
             autoplay={{
               delay: 3000,
               disableOnInteraction: false,
-              pauseOnMouseEnter: true,
             }}
-            modules={[Keyboard, Pagination, Autoplay, Navigation]}
-            className="mySwiper mt-4"
-          >
+            modules={[Pagination, Autoplay]}
+            className="mt-4 exactSwiper pb-8">
            {profile.map((cat: Feed, index) => (
-              <SwiperSlide key={index}>
-                <div className="p-4 bg-white rounded-xl border border-gray-200 shadow text-black my-3">
-                  <div className="flex items-center justify-center space-x-3 mb-3 whitespace-nowrap overflow-hidden">
-                    
-                     <span className="px-2 py-2 rounded-full text-xs bg-[#EDF4FF] text-[#213048] flex items-center">
-                      <Trophy size={16}/>  <span className="ms-1">{cat.AwardCategory || "-"}</span>
-                      </span>
-                    <span className="px-2 py-2 rounded-full text-xs bg-[#EDF4FF] text-[#213048] flex items-center">
-                    <UsersRound size={16}/>  <span className="ms-1"> {cat.NominatedCount || 0}</span>
-                         </span>
+             <SwiperSlide>
+              <div className="exact-card">
+
+                {/* TOP PILLS */}
+                <div className="pill-row">
+                  <div className="pill">
+                    <Trophy size={16} />
+                    <span>{cat.AwardCategory}</span>
                   </div>
 
-               {/* <div className="flex justify-center items-center gap-2  py-2">
-
-
-  <div
-    className="flex items-center gap-1 px-2 py-0.5
-               rounded-full border border-gray-300
-               text-xs font-medium text-gray-700
-               hover:bg-red-50 hover:border-red-300
-               transition cursor-pointer"
-  >
-    <Heart className="w-3.5 h-3.5 text-red-500" />
-    <span>{cat.Likes || 0} Likes</span>
-  </div>
-
-
-  <div
-    className="flex  items-center gap-1 px-2 py-0.5
-               rounded-full border border-gray-300
-               text-xs font-medium text-gray-700
-               hover:bg-blue-50 hover:border-blue-300
-               transition cursor-pointer"
-  >
-    <MessageCircle className="w-3.5 h-3.5 text-blue-500" />
-    <span>{cat.Comments || 0} Comments</span>
-  </div>
-
-
-  <span
-    className="flex items-center gap-1 px-2 py-0.5
-               rounded-full border border-gray-300
-               text-xs font-medium text-gray-700
-               hover:bg-gray-100 hover:border-gray-400
-               transition cursor-pointer"
-  >
-    <Eye className="w-3.5 h-3.5 text-gray-600" />
-    <span>{cat.Views || 0} Views</span>
-  </span>
-
-</div> */}
-
-
-
-<div className="flex flex-col sm:flex-row justify-center items-center gap-2 py-2">
-
-  {/* Likes */}
-  <div
-    className="w-full sm:w-auto
-               flex items-center justify-center gap-1 px-2 py-0.5
-               rounded-full border border-gray-300
-               text-xs font-medium text-gray-700
-               hover:bg-red-50 hover:border-red-300
-               transition cursor-pointer"
-  >
-    <Heart className="w-3.5 h-3.5 text-red-500" />
-    <span>{cat.Likes || 0} Likes</span>
-  </div>
-
-  {/* Comments */}
-  <div
-    className="w-full sm:w-auto
-               flex items-center justify-center gap-1 px-2 py-0.5
-               rounded-full border border-gray-300
-               text-xs font-medium text-gray-700
-               hover:bg-blue-50 hover:border-blue-300
-               transition cursor-pointer"
-  >
-    <MessageCircle className="w-3.5 h-3.5 text-blue-500" />
-    <span>{cat.Comments || 0} Comments</span>
-  </div>
-
-</div>
-
+                  <div className="pill">
+                    <UsersRound size={16} />
+                    <span>{cat.NominatedCount}</span>
+                  </div>
                 </div>
-              </SwiperSlide>
-            ))}
 
+                <div className="action-row">
+                  <div className="action-pill">
+                    <Heart className='text-red-500' size={14} />
+                    <span>{cat.Likes} Likes</span>
+                  </div>
+                  <div className="action-pill">
+                    <MessageCircle className='text-blue-500' size={14} />
+                    <span>{cat.Comments} Comments</span>
+                  </div>
+                </div>
+              </div>
+            </SwiperSlide>
+            ))}
           </Swiper>
         ) : (
           <p className="text-gray-500 text-sm mt-4">No nominations</p>
@@ -170,6 +113,72 @@ const ProfileCard: React.FC<ProfileCardProps> = ({ profile, userDetail }) => {
 
       </div>
     </div>
+          <style>{`
+.exact-card {
+  width: 100%;
+  background: #ffffff;
+  border-radius: 10px;        
+  border: 1px solid #e6e9ef;
+  padding: 16px;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.04); 
+}
+.pill-row {
+  display: flex;
+  justify-content: center;
+  gap: 12px;
+  margin-bottom: 14px;
+}
+.pill {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: #edf4ff;
+  color: #213048;
+  font-size: 12px;
+  padding: 5px 10px;    
+  border-radius: 999px;
+  font-weight: 500;
+}
+.action-row {
+  display: flex;
+  justify-content: center;
+  gap: 12px;
+}
+.action-pill {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  padding: 6px 12px;
+  border-radius: 8px;       
+  border: 1px solid #e5e7eb;
+  background: #ffffff;
+  color: #374151;
+}
+.exactSwiper .swiper-pagination {
+  bottom: 0;
+  position: relative;
+  margin-top: 12px;
+}
+.exact-card {
+  min-height: 110px;  
+}
+.custom-dot {
+  width: 8px;
+  height: 8px;
+  background: #d1d5db;   
+  border-radius: 999px;
+  display: inline-block;
+  margin: 0 4px;
+  transition: all 0.35s ease;
+}
+.swiper-pagination-bullet-active.custom-dot {
+  width: 26px;          
+  background: #16a34a;  
+}
+
+ `}</style>
+    </>
   );
 };
 
