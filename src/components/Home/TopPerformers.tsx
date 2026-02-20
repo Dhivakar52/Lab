@@ -10,8 +10,13 @@ interface Performer {
 }
 
 const TopPerformers: React.FC = () => {
-  const [performer, setPerformer] = useState<Performer[]>([]);
+  // const [performer, setPerformer] = useState<Performer[]>([]);
   const { authToken } = useAuth();
+  const [performers, setPerformers] = useState<Performer[]>([]);
+  const [currentPage, setCurrentPage] = useState(0);
+
+  const ITEMS_PER_PAGE = 3;
+
   const apiUrl = import.meta.env.VITE_API_URL;
 
   useEffect(() => {
@@ -23,13 +28,17 @@ const TopPerformers: React.FC = () => {
             Authorization: `Bearer ${authToken}`,
           },
         });
+        const topThree = res.data.sort(
+          (a: Performer, b: Performer) => b.Likes - a.Likes
+        );
+        setPerformers(topThree);
 
-        const topThree = res.data
-          .sort((a: Performer, b: Performer) => b.Likes - a.Likes)
-          .slice(0, 3);
+        // const topThree = res.data
+        //   .sort((a: Performer, b: Performer) => b.Likes - a.Likes)
+        //   .slice(0, 3);
 
-        setPerformer(topThree);
-        // console.log(" Top 3 Performers:", topThree);
+        // setPerformer(topThree);
+        console.log(" Top 3 Performers:", topThree);
       } catch (err) {
         console.error("Error fetching performers:", err);
       }
@@ -37,37 +46,52 @@ const TopPerformers: React.FC = () => {
 
     fetchUser();
   }, [authToken, apiUrl]);
+  const totalPages = Math.ceil(performers.length / ITEMS_PER_PAGE);
+
+  const currentPerformers = performers.slice(
+    currentPage * ITEMS_PER_PAGE,
+    currentPage * ITEMS_PER_PAGE + ITEMS_PER_PAGE
+  );
 
   return (
-    <div className="bg-white rounded-lg shadow-sm p-4 sm:p-6">
-      <h3 className="font-semibold text-gray-900 mb-4 text-base sm:text-lg">
-        Top 3 Performers in Each Category
-      </h3>
+      <div className="bg-white rounded-xl shadow-sm p-6">
+        <h3 className="font-semibold text-gray-900 mb-4 text-lg">
+          Top 3 Performers in Each Category
+        </h3>
 
-      <div className="mb-6">
-        <h4 className="font-medium text-gray-800 text-sm mb-3">Top Performers</h4>
-        <div className="space-y-2">
-          {performer.length === 0 ? (
-            <p className="text-gray-500 text-sm">Loading...</p>
-          ) : (
-            performer.map((person , index) => (
-              <div
-                key={index}
-                className="flex justify-between items-center"
-              >
-                <span className="text-blue-600 text-sm font-medium">
-                  {person.Name.trim()}
-                </span>
-                <span className="text-blue-600 font-semibold">
-                  {person.Likes} Likes
-                </span>
-              </div>
-            ))
-          )}
+        <h4 className="font-semibold text-gray-900 mb-4">
+          Customer Focus
+        </h4>
+
+        <div className="space-y-3 min-h-[120px]">
+          {currentPerformers.map((person, index) => (
+            <div
+              key={index}
+              className="flex justify-between items-center">
+              <span className="text-gray-700 text-sm font-medium">
+                {person.Name.trim()}
+              </span>
+              <span className="text-blue-600 font-semibold text-sm">
+                {person.Likes} Likes
+              </span>
+            </div>
+          ))}
+        </div>
+        <div className="flex justify-center gap-2 mt-6">
+          {Array.from({ length: totalPages }).map((_, i) => (
+            <span
+              key={i}
+              onClick={() => setCurrentPage(i)}
+              className={`h-2 w-2 rounded-full cursor-pointer transition-all
+                ${i === currentPage
+                  ? "bg-green-700 w-6"
+                  : "bg-gray-300"}
+              `}/>
+          ))}
         </div>
       </div>
-    </div>
-  );
+);
+
 };
 
 export default TopPerformers;

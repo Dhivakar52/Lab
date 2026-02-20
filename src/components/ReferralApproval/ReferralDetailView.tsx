@@ -125,10 +125,8 @@ const ReferralDetailView: React.FC = () => {
   return (
     
     <div className="bg-gray-50 min-h-screen">
-     
       <div className="bg-white rounded-lg shadow-lm border border-gray-200  mt-3">
         <h1 className="text-2xl font-semibold mb-4 px-6 pt-2">Referral Details</h1>
-        
         <div className="space-y-5 px-6">
           {/* Row 1 */}
           <div className="grid grid-cols-4 gap-4">
@@ -149,7 +147,6 @@ const ReferralDetailView: React.FC = () => {
               <div className="text-gray-700">{data.Department}</div>
             </div>
           </div>
-
           {/* Row 2 */}
           <div className="grid grid-cols-4 gap-4">
             <div>
@@ -170,12 +167,11 @@ const ReferralDetailView: React.FC = () => {
               <div className="text-lm font-medium text-gray-900">Reporting To</div>
               <div className="text-lm text-gray-600">{data.ManagerName}</div>
             </div>
-           
           </div>
           <div className="grid grid-cols-1 gap-4">
-                <div className="space-y-1">
-                  <div className="text-sm font-medium text-gray-900"></div>
-                  <StatusFlow steps={approvalFlow} />
+             <div className="space-y-1">
+              <div className="text-sm font-medium text-gray-900"></div>
+                  {/* <StatusFlow steps={approvalFlow} /> */}
                 </div>
               </div>
           {/* Row 3 */}
@@ -198,8 +194,7 @@ const ReferralDetailView: React.FC = () => {
                     className={`px-3 py-1 text-xs border rounded-full font-semibold ${
                       statusColors[ref.ReferralStatus] ??
                       statusColors.Default
-                    }`}
-                  >
+                    }`} >
                     {ref.ReferralStatus}
                   </span>
                     </p>
@@ -210,16 +205,12 @@ const ReferralDetailView: React.FC = () => {
               )}
             </div>
           </div>
-           
           </div>
-
-         
           {/* Description */}
           <div>
             <div className="text-lm font-medium text-gray-900">Description</div>
             <div className="text-lm text-gray-600">{data.Descriptions?.trim() || "No description provided"}</div>
           </div>
-
           {/* Supporting Documents */}
           <div>
             <div className="text-lm font-medium text-gray-900">Supporting Documents</div>
@@ -231,8 +222,7 @@ const ReferralDetailView: React.FC = () => {
                     href={doc.FilePath}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="flex items-center gap-2 text-blue-600 hover:underline"
-                  >
+                    className="flex items-center gap-2 text-blue-600 hover:underline">
                     <FileText className="w-5 h-5 text-blue-600" />
                     {doc.OriginalFileName}
                   </a>
@@ -257,40 +247,31 @@ const ReferralDetailView: React.FC = () => {
               </div>
             </div> */}
         </div>
-
-       
         {/* Approve / Reject Buttons */}
          {/* <div className=" px-6 py-4 flex justify-end space-x-3 mt-6 sticky bottom-0 bg-white  z-50"> */}
           <div className="bg-white border-t border-gray-200 px-6 py-4 shrink-0 sticky bottom-0 flex justify-end z-20 shadow-sm">
-          
           {/* <div className="px-6 py-4  flex justify-end space-x-3 mt-6"> */}
              <button
           onClick={handleBackward}
-          className="flex items-center me-3 text-blue-600 bg-white border-gray-100 rounded-sm px-2 py-1 font-medium"
-        >
+          className="flex items-center me-3 text-blue-600 bg-white border-gray-100 rounded-sm px-2 py-1 font-medium">
           <span className="me-2"><ArrowLeft size={14}/></span> Back
         </button>
-
             {data.status !== "Rejected" && data.BusinessJuryStatus !== "Approved"&& (
               <button
                 onClick={() => openPanel("reject")}
-                className="px-4 py-2 mx-3 bg-red-600 text-white rounded-md shadow hover:bg-red-700 transition flex items-center"
-              >
+                className="px-4 py-2 mx-3 bg-red-600 text-white rounded-md shadow hover:bg-red-700 transition flex items-center">
                 ✖ Reject Nomination
               </button>
             )}
             {data.status !== "Approved" && data.BusinessJuryStatus !== "Rejected"&& (
               <button
                 onClick={() => openPanel("approve")}
-                className="px-4 py-2 bg-green-600 text-white rounded-md shadow hover:bg-green-700 transition flex items-center"
-              >
+                className="px-4 py-2 bg-green-600 text-white rounded-md shadow hover:bg-green-700 transition flex items-center">
                 ✔ Approve Nomination
               </button>
             )}
           </div>
-
       </div>
-
       {/* Side Panel */}
       <ReferralReasonPanel
         isOpen={isPanelOpen}
@@ -308,8 +289,7 @@ const ReferralDetailView: React.FC = () => {
           onReject={async () => {
             await handleApproveReject("reject");
             navigate("/referral-approval");   // Redirect after rejection
-          }}
-      />
+          }}/>
     </div>
   );
 };

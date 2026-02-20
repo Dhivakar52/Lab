@@ -38,12 +38,11 @@ const ReactionsModal: React.FC<Props> = ({
   getInitial
 }) => {
   if (!open) return null;
-
   return (
            <div className="fixed inset-0 z-[9999] bg-black/40 flex items-center justify-center">
               <div className="bg-white w-[520px] rounded-xl shadow-xl overflow-hidden">
                 <div className="px-6 pt-4 border-b">
-                  <div className="flex justify-between items-center mb-2">
+                  <div className="flex justify-between items-center mb-4">
                     <h3 className="text-[15px] font-medium text-gray-800">
                       Reactions
                     </h3>
@@ -107,7 +106,12 @@ const ReactionsModal: React.FC<Props> = ({
                   </div>
                 </div>
                 <div className="max-h-[420px] overflow-y-auto">
-                  {activeTab === "likes" &&
+                  {activeTab === "likes" &&(
+                  likeList.length === 0 ? (
+                    <div className="text-center py-10 text-sm text-gray-500">
+                      No likes yet 
+                    </div>
+                    ) : (
                     likeList.map((u: any, i: number) => (
                       <div
                         key={u.UserID ?? i}
@@ -134,8 +138,14 @@ const ReactionsModal: React.FC<Props> = ({
                           </div>
                         </div>
                       </div>
-                    ))}
-                  {activeTab === "comments" &&
+                    ))))}
+                  {activeTab === "comments" && (
+                     comments.filter( c => c.NominationID === selectedPost?.NominationID
+                      ).length === 0 ? (
+                      <div className="text-center py-10 text-sm text-gray-500">
+                        No comments yet 
+                      </div>
+                      ) : (
                     comments
                       .filter(
                         c => c.NominationID === selectedPost?.NominationID
@@ -164,8 +174,13 @@ const ReactionsModal: React.FC<Props> = ({
                             {c.CommentsText}
                           </p>
                         </div>
-                  ))}
-                  {activeTab === "views" &&
+                  ))))}
+                  {activeTab === "views" && (
+                    viewerList.length === 0 ? (
+                      <div className="text-center py-10 text-sm text-gray-500">
+                        No views yet 👁
+                      </div>
+                    ) : (
                     viewerList.map((v: any, i: number) => (
                       <div
                         key={v.UserID ?? i}
@@ -190,7 +205,7 @@ const ReactionsModal: React.FC<Props> = ({
                           {v.UserName || v.ViewedBy || "Unknown User"}
                         </div>
                       </div>
-                  ))}
+                  ))))}
                 </div>
               </div>
             </div>

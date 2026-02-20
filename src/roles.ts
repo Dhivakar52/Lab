@@ -9,12 +9,11 @@ export const USER_ROLES = {
 
 export type UserRole = typeof USER_ROLES[keyof typeof USER_ROLES];
 
-
 export const ROLE_PAGES: Record<UserRole, string[]> = {
-  user: ['Home', 'Notifications', 'Self Nominations','Other Nomination', 'My Nominations','Add Nomination','Testing','Grand Jury','Primary Business Jury','Leader Board','Referral Approval'],
-  manager: ['Home', 'Notifications', 'Self Nominations','Other Nomination', 'My Nominations', 'Approvals','Add Nomination','Testing', 'Grand Jury','Primary Business Jury','Leader Board','Referral Approval'],
-  jury: ['Home', 'Notifications', 'Self Nominations', 'Other Nomination','My Nominations','Add Nomination', 'Approvals', 'Business Jury', 'Grand Jury','Primary Business Jury','Leader Board'],
-  presidentUnit: ['Home', 'Notifications', 'Self Nominations','Other Nomination', 'My Nominations','Add Nomination', 'Approvals', 'President Unit', 'Grand Jury','Primary Business Jury','Leader Board'],
+  user: ['Home', 'Notifications', 'Self Nominations','Other Nomination', 'My Nominations','Add Nomination','Testing','Referral Approval'],
+  manager: ['Home', 'Notifications', 'Self Nominations','Other Nomination', 'My Nominations', 'Approvals','Add Nomination','Testing', 'Referral Approval'],
+  jury: ['Home', 'Notifications', 'Self Nominations', 'Other Nomination','My Nominations','Add Nomination', 'Approvals', 'Business Jury'],
+  presidentUnit: ['Home', 'Notifications', 'Self Nominations','Other Nomination', 'My Nominations','Add Nomination', 'Approvals', 'President Unit'],
   presidentLevel: ['President Level'],
   admin: 
   ['Home', 'Notifications',
@@ -22,6 +21,5 @@ export const ROLE_PAGES: Record<UserRole, string[]> = {
      'My Nominations','Referral Approval', 'Approvals', 
      'Business Jury', 'President Unit', 
      'President Level','Award Management',
-     'Grand Jury','Primary Business Jury','Leader Board',
-     'Admin Setting'],
+     'Leader Board','Admin Setting'],
 };

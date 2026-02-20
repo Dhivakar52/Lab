@@ -40,6 +40,7 @@ interface ApprovalData {
   ApprovalComments?: string;
   ManagerName: string;
   Descriptions: string;
+  Levels:string;
   "Referrals ID": {
     Email: string;
     TenantName: string;
@@ -53,9 +54,15 @@ interface ApprovalData {
     FilePath: string;
   }[];
   BusinessJuryStatus: string;
-   "ApprovalStatus": {
+  "ApprovalStatus": {
+  NominationID: number;
   Status: string;
   ApprovalType: string;
+  ApprovalFlow:string;
+  ApprovalComments:string;
+  ApprovalName:string;
+  ApprovalScore:string;
+  ApprovedAt:string;
   }[];
 }
 
@@ -252,53 +259,48 @@ const ApprovalTable: React.FC = () => {
       // { accessorKey: "AwardCategory", header: "AwardCategory" },
     { accessorKey: "SubmittedDate", header: "Submitted Date" },
     {
-      id: "Level",
-      header: "Level",
-      cell: ({ row }) => {
-        const levels = ["Level 1", "Level 2", "Level 3"];
-        const level = levels[row.index % levels.length];
-
-        const levelStyles: Record<string, string> = {
-          "Level 1":
-            "bg-orange-50 text-orange-600 border border-orange-200 hover:bg-orange-100",
-          "Level 2":
-            "bg-purple-50 text-purple-600 border border-purple-200 hover:bg-purple-100",
-          "Level 3":
-            "bg-blue-50 text-blue-600 border border-blue-200 hover:bg-blue-100",
-        };
-
-        return (
-          <button
-            onClick={(e) => {
-              e.stopPropagation();
-              setSelectedLevelRow(row.original);
-              setIsLevelPanelOpen(true);
-            }}
-            className={`
-              w-20 h-8
-              text-xs font-semibold
-              rounded-md
-              flex items-center justify-center
-              ${levelStyles[level]}
-            `}>
-            {level}
-          </button>
-        );
+        id: "Levels",
+        header: "Level",
+        cell: ({ row }) => {
+          const level = row.original.Levels; 
+          const levelStyles: Record<string, string> = {
+            "Level-1":
+              "bg-orange-50 text-orange-600 border border-orange-200 hover:bg-orange-100",
+            "Level-2":
+              "bg-purple-50 text-purple-600 border border-purple-200 hover:bg-purple-100",
+            "Level-3":
+              "bg-blue-50 text-blue-600 border border-blue-200 hover:bg-blue-100",
+          };
+          return (
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                setSelectedLevelRow(row.original);
+                setIsLevelPanelOpen(true);
+              }}
+              className={`w-20 h-8 text-xs font-semibold rounded-md flex items-center justify-center
+                ${levelStyles[level] || "bg-gray-100 text-gray-600 border"}
+              `}>
+              {level?.replace("-", " ")}
+            </button>
+          );
+        },
       },
-    },
     {
         accessorKey: "Status",
         header: "Status",
         cell: ({ getValue }) => {
           const status = getValue() as string;
-
-          const bgClass = levelColors[status] || "bg-gray-100 border-gray-300";
-          const textClass = levelTextColors[status] || "text-gray-700";
+          const cleanStatus = status?.includes("-")
+            ? status.substring(status.indexOf("-") + 1).trim()
+            : status?.trim();
+          const bgClass = levelColors[cleanStatus] || "bg-gray-100 border-gray-300";
+          const textClass = levelTextColors[cleanStatus] || "text-gray-700";
 
           return (
             <span
               className={`inline-flex items-center px-3 py-1 text-sm font-medium border rounded ${bgClass} ${textClass}`} >
-              {status}
+              {cleanStatus}
             </span>
           );
         },
@@ -619,6 +621,7 @@ const ApprovalTable: React.FC = () => {
       />
       <ProgressSidePanel
           isOpen={isLevelPanelOpen}
+          data={selectedLevelRow}
           onClose={() => {
             setIsLevelPanelOpen(false);
             setSelectedLevelRow(null);

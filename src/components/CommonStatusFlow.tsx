@@ -1,7 +1,6 @@
 import React from "react";
 import { ArrowRight } from "lucide-react";
 import { Clock } from "lucide-react";
-import { levelColors, levelTextColors } from "../statusColors.ts";
 
 type Step = {
   type: string;

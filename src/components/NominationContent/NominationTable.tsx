@@ -34,7 +34,9 @@ interface Nomination {
   SelfNomination: string;
   NominationFile: string | null;
   ManagerEmailID:string;
-  Status: "Pending" | "Approved" | "Rejected" | "Under Review";
+  Levels:string;
+  Status: string;
+  // Status: "Pending" | "Approved" | "Rejected" | "Under Review";
   "Referrals ID": {
     Email: string;
     TenantName: string;
@@ -50,6 +52,7 @@ interface Nomination {
     FilePath: string;
   }[];
   "ApprovalStatus": {
+  NominationID: number;
   Status: string;
   ApprovalType: string;
   ApprovalFlow:string;
@@ -128,6 +131,12 @@ const apiUrl = import.meta.env.VITE_API_URL;
     }
     setExpandedRow(null);
   };
+  const getCleanStatus = (status?: string) => {
+    if (!status) return "";
+    const parts = status.split("-");
+    return parts.length > 1 ? parts[1].trim() : status.trim();
+  };
+
   useEffect(() => {
   const handleClickOutside = (event: MouseEvent) => {
     if (!tableWrapperRef.current) return;
@@ -179,21 +188,18 @@ const apiUrl = import.meta.env.VITE_API_URL;
       { accessorKey: "AwardCategory", header: "Category" },
       { accessorKey: "NominatedBy", header: "Nominated By" },
       {
-        id: "Level",
+        id: "Levels",
         header: "Level",
         cell: ({ row }) => {
-          const levels = ["Level 1", "Level 2", "Level 3"];
-          const level = levels[row.index % levels.length];
-
+          const level = row.original.Levels; 
           const levelStyles: Record<string, string> = {
-            "Level 1":
+            "Level-1":
               "bg-orange-50 text-orange-600 border border-orange-200 hover:bg-orange-100",
-            "Level 2":
+            "Level-2":
               "bg-purple-50 text-purple-600 border border-purple-200 hover:bg-purple-100",
-            "Level 3":
+            "Level-3":
               "bg-blue-50 text-blue-600 border border-blue-200 hover:bg-blue-100",
           };
-
           return (
             <button
               onClick={(e) => {
@@ -206,9 +212,9 @@ const apiUrl = import.meta.env.VITE_API_URL;
                 text-xs font-semibold
                 rounded-md
                 flex items-center justify-center
-                ${levelStyles[level]}
+                ${levelStyles[level] || "bg-gray-100 text-gray-600 border"}
               `}>
-              {level}
+              {level?.replace("-", " ")}
             </button>
           );
         },
@@ -218,14 +224,17 @@ const apiUrl = import.meta.env.VITE_API_URL;
         header: "Status",
         cell: ({ getValue }) => {
           const status = getValue() as string;
+          const cleanStatus = status?.includes("-")
+            ? status.substring(status.indexOf("-") + 1).trim()
+            : status?.trim();
 
-          const bgClass = levelColors[status] || "bg-gray-100 border-gray-300";
-          const textClass = levelTextColors[status] || "text-gray-700";
+          const bgClass = levelColors[cleanStatus] || "bg-gray-100 border-gray-300";
+          const textClass = levelTextColors[cleanStatus] || "text-gray-700";
 
           return (
             <span
               className={`inline-flex items-center px-3 py-1 text-sm font-medium border rounded ${bgClass} ${textClass}`} >
-              {status}
+              {cleanStatus}
             </span>
           );
         },
@@ -417,6 +426,7 @@ const apiUrl = import.meta.env.VITE_API_URL;
    </div>
    <ProgressSidePanel
       isOpen={isLevelPanelOpen}
+      data={selectedLevelRow}
       onClose={() => {
       setIsLevelPanelOpen(false);
       setSelectedLevelRow(null);
