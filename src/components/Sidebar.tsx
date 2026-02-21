@@ -29,27 +29,27 @@ interface SidebarProps {
   onToggle: () => void;
   onMobileClose: () => void;
 }
-
 interface NavigationItem {
   icon: React.ElementType;
   label: string;
   path: string;
   roles?: UserRole[];
+  pageKey: string;  
 }
 
 const navigationItems: NavigationItem[] = [
-  { icon: Home, label: 'Home', path: '/home' },
-  { icon: Bell, label: 'Notifications', path: '/notifications' },
-  { icon: User, label: 'Self Nominations', path: '/self-nominations' },
-  { icon: FileText, label: 'My Nominations', path: '/my-nominations' },
-  { icon: ClipboardList, label: 'Referral Approval', path: '/referral-approval' },
-  { icon: CircleCheckBig, label: 'Approvals', path: '/approvals' },
-  { icon: Gavel, label: 'Business Jury', path: '/business-jury' },
-  { icon: Gavel, label: 'Primary Business Jury', path: '/president-unit' },
-  { icon: Gavel, label: 'Grand Jury', path: '/president-level' },
-  { icon: Users, label: 'Leader Board', path: '/leader-board' },
-  { icon: TrophyIcon, label: 'Award Management', path: '/award-management' },
-  { icon: Settings, label: 'Admin Setting', path: '/admin-setting' },
+  { icon: Home, label: 'Home', path: '/home', pageKey: 'Home' },
+  { icon: Bell, label: 'Notifications', path: '/notifications', pageKey:'Notifications' },
+  { icon: User, label: 'Self Nominations', path: '/self-nominations',pageKey:'Self Nominations' },
+  { icon: FileText, label: 'My Nominations', path: '/my-nominations',pageKey:'My Nominations' },
+  { icon: ClipboardList, label: 'Referral Approval', path: '/referral-approval',pageKey:'Referral Approval' },
+  { icon: CircleCheckBig, label: 'Approvals', path: '/approvals',pageKey:'Approvals' },
+  { icon: Gavel, label: 'Business Jury', path: '/business-jury' ,pageKey:'Business Jury'},
+  { icon: Gavel, label: 'Primary Business Jury', path: '/president-unit',pageKey:'President Unit' },
+  { icon: Gavel, label: 'Grand Jury', path: '/president-level',pageKey:'President Level' },
+  { icon: Users, label: 'Leader Board', path: '/leader-board' ,pageKey:'Leader Board'},
+  { icon: TrophyIcon, label: 'Award Management', path: '/award-management',pageKey:'Award Management' },
+  { icon: Settings, label: 'Admin Setting', path: '/admin-setting',pageKey:'Admin Setting' },
  
   //{ icon: UserPlus, label: 'Other Nomination', path: '/other-nomination' },
 ];
@@ -79,10 +79,12 @@ const allowedPages = userRole ? ROLE_PAGES[userRole] : [];
     color: 'white',
   };
 
-  const filteredNavItems = navigationItems.filter(item =>
-  allowedPages.some(page => page.trim() === item.label.trim())
+//   const filteredNavItems = navigationItems.filter(item =>
+//   allowedPages.some(page => page.trim() === item.label.trim())
+// );
+const filteredNavItems = navigationItems.filter(item =>
+  allowedPages.includes(item.pageKey)
 );
-
   return (
     <>
       {isMobileOpen && <div className="fixed inset-0 bg-black/50 z-20 lg:hidden" onClick={onMobileClose} />}

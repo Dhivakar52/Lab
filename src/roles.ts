@@ -8,7 +8,6 @@ export const USER_ROLES = {
 } as const;
 
 export type UserRole = typeof USER_ROLES[keyof typeof USER_ROLES];
-
 export const ROLE_PAGES: Record<UserRole, string[]> = {
   user: ['Home', 'Notifications', 'Self Nominations','Other Nomination', 'My Nominations','Add Nomination','Testing','Referral Approval'],
   manager: ['Home', 'Notifications', 'Self Nominations','Other Nomination', 'My Nominations', 'Approvals','Add Nomination','Testing', 'Referral Approval'],
