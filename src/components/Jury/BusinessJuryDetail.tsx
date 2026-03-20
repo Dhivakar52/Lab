@@ -1,15 +1,17 @@
-import { useEffect, useState } from "react";
+import * as Label from "@radix-ui/react-label";
+import { useEffect, useState, useRef } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import axios from "axios";
-import { X, ArrowLeft } from "lucide-react";
-import StatusFlow from "../JuryStatusFlow";
+import { Edit, X, ArrowLeft } from "lucide-react";
 import { useAuth } from "../ContextAPI/AuthContext";
 import * as Dialog from "@radix-ui/react-dialog";
 import { useLocation } from "react-router-dom";
 //import Swal from "sweetalert2";
 import { motion } from 'framer-motion';
-import { Flag, ChevronUp, ChevronDown ,User, Building2, Tag, 
+import { Flag ,User, Building2, Tag, 
   CalendarDays, FileText, Mail, BadgeCheck, Check } from "lucide-react";
+import type { FormState } from "../../dataTypes/nomination";
+import { levelColors, levelTextColors } from "../../statusColors.ts";
 
 interface BusinessJuryDetailProps {
   isOpen: boolean;
@@ -30,13 +32,45 @@ type ApprovalFlowItem = {
   approvedAt:string;
   score:string;
 };
-
- const Icon = ({ children }: any) => (
-  <span className="text-gray-400 mr-2 flex items-center">
-    {children}
-  </span>
-);
-
+type PopupErrors = {
+  score: Record<number, string>;
+  comment: Record<number, string>;
+  comments: string;
+  flagComment: string;
+};
+type ScoreItem = {
+  weightId: number;
+  title: string;
+  score: number | "";
+  comment: string;
+};
+type JuryAttribute = {
+  AttributeName: string;
+  Score: number;
+  Comments?: string;
+};
+type JuryItem = {
+  Juryname: string;
+  SubmittedDate: string;
+  Score: number;
+  Flag: number;
+  Attributes: JuryAttribute[];
+  FlagReason: string;
+};
+interface ApprovalItem {
+  ApprovalFlow: string;
+  ApprovalType: string;
+  ApprovalName: string;
+  Status: string;
+  ApprovalComments: string;
+  ApprovedAt: string;
+  ApprovalScore: number;
+  Flagdetails?: string;
+  EvaluatedJuries?: number;
+  TotalEvalutions?: number;
+  TotalFlagCount?: number;
+  JuryMember?: string;
+}
 const BusinessJuryDetail: React.FC<BusinessJuryDetailProps> = ({
  isOpen, onClose}) => {
   const { nominationId } = useParams<{ nominationId: string }>();
@@ -48,6 +82,7 @@ const BusinessJuryDetail: React.FC<BusinessJuryDetailProps> = ({
   const [errorMessage, setErrorMessage] = useState("");
   const [data, setData] = useState<any>(null);
   const [referrals, setReferrals] = useState<any[]>([]);
+  //const [documents, setDocuments] = useState<DocumentItem[]>([]);
   const [documents, setDocuments] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [expanded, setExpanded] = useState(false);
@@ -67,7 +102,21 @@ const BusinessJuryDetail: React.FC<BusinessJuryDetailProps> = ({
   const [actionType, setActionType] = useState<"approve" | "reject" | null>(null);
   const [popupScore, setPopupScore] = useState("");
   const [popupComments, setPopupComments] = useState("");
-  const [popupErrors, setPopupErrors] = useState({ score: "", comments: "" });
+  const DEFAULT_SCORE_ITEMS: ScoreItem[] = [
+  { weightId: 1, title: "Integrity", score: "", comment: "" },
+  { weightId: 2, title: "Idea", score: "", comment: "" },
+  { weightId: 3, title: "Efforts", score: "", comment: "" },
+  { weightId: 4, title: "Outcome", score: "", comment: "" }
+];
+  const [scores, setScores] = useState<ScoreItem[]>(DEFAULT_SCORE_ITEMS);
+  // const [popupErrors, setPopupErrors] = useState<PopupErrors>({scores: {}, comments: "", flagComment: ""});
+ const [popupErrors, setPopupErrors] = useState<PopupErrors>({
+  score: {},
+  comment: {},
+  comments: "",
+  flagComment: ""
+});
+  // const [popupErrors, setPopupErrors] = useState({ score: {}, comments: "" ,flagComment: ""});
   const [successModalOpen, setSuccessModalOpen] = useState(false);
   const [IsSelf, setIsSelf] = useState<boolean | null>(null);
   const [flagOpen, setFlagOpen] = useState(false);
@@ -77,121 +126,67 @@ const BusinessJuryDetail: React.FC<BusinessJuryDetailProps> = ({
   const [flagPreview, setFlagPreview] = useState<string | null>(null);
   const [flagError, setFlagError] = useState("");
   //home module//
-  const [seekingOpen, setSeekingOpen] = useState(false);
-  const [seekingUsers, setSeekingUsers] = useState<any[]>([]);
-  const [search, setSearch] = useState("");
   const [openApprove, setOpenApprove] = useState(false);
   const [openEvaluation, setOpenEvaluation] = useState(false);
   const [openScore, setOpenScore] = useState(false);
-  const [score, setScore] = useState(70);
-  const [flag, setFlag] = useState(false);
-  const [selectedUsers, setSelectedUsers] = useState<number[]>([]);
     const [popupType, setPopupType] = useState<
     "approve" | "score" | "evaluation" | null
   >(null);
-  const [expandedId, setExpandedId] = useState<number | null>(null);
   const [openCard, setOpenCard] = useState<number | null>(null);
+  const fileInputRef = useRef<HTMLInputElement | null>(null);
+  const [fileError, setFileError] = useState("");
+  const [existingDocs, setExistingDocs] = useState<any[]>([]);
+  const [isFlagged, setIsFlagged] = useState(false);
+  const [flagComment, setFlagComment] = useState("");
+  const [status, setStatus] = useState<"Approved" | "Rejected">("Approved");
+  const [evaluationData, setEvaluationData] = useState<any>(null);
+  //const [scores, setScores] = useState<any[]>([]);
 
-
+  const textareaRef = useRef<HTMLTextAreaElement | null>(null);
+  const [activeLevel, setActiveLevel] = useState<"Level-2" | "Level-3" | null>(null);
   const closePopup = () => setPopupType(null);
-  const fetchSeekingUsers = async () => {
-  try {
-    const res = await axios.get(`${apiUrl}/api/users`, {
-      headers: {
-        Authorization: `Bearer ${authToken}`,
-      },
+  const [form, setForm] = useState<FormState>({
+      title: "",
+      nomineeName:"",
+      department: "",
+      email: "",
+      nomineeData:"",
+      mobile: "",
+      managerEmail: "",
+      contestType: "",
+      description: "",
+      files: [], 
+      file: null as File | null,
     });
 
-    setSeekingUsers(res.data || []);
-  } catch (err) {
-    console.error("Seeking users load failed", err);
-  }
-};
-const sendSeekingUser = async () => {
-  if (selectedUsers.length === 0) {
-    alert("Select at least one user");
-    return;
-  }
-
-  try {
-    for (const id of selectedUsers) {
-      const payload = {
-        nominationID: data.NominationID,
-        seekingUserID: id,
-        active: true,
-        submittedBy: userId
-      };
-
-      await axios.post(`${apiUrl}/api/seeking`, payload, {
-        headers: {
-          Authorization: `Bearer ${authToken}`,
-        },
-      });
-    }
-
-    setSelectedUsers([]);
-    setSearch("");
-    setSeekingOpen(false);
-
-  } catch (err) {
-    alert("Save failed");
-  }
-};
-//end home module//
-  const headerTitleMap: Record<string, string> = {
-  "my-nominations": "My Nomination Details",
-  "other-nominations": "Other Nomination Details",
-  "referral-approval": "Referral Approval Details",
-  "approvals": "Manager Approval Details",
-  "business-jury": "Business Jury Review",
-  "president-level": "President Jury Review",
-  "president-unit": "President Unit Review"
-  };
- 
-  const headerTitle =
-  headerTitleMap[from] || "Nomination Details";
- 
+  useEffect(() => {
+      if (isFlagged) {
+        textareaRef.current?.focus();
+      }
+    }, [isFlagged]);
+    
   const toggleExpanded = () => setExpanded(!expanded);
     useEffect(() => {
       if (isOpen) {
       setExpanded(false);
       setExpandedDescription(false);
       }
-    }, [isOpen]);
-  const MAX_COMMENT_LENGTH = 100;
- 
-  const toggleComment = (key: string) => {
-    setExpandedComments(prev => ({
-      ...prev,
-      [key]: !prev[key],
-    }));
-  };
- 
-  const getCommentText = (text?: string, expanded?: boolean) => {
-    if (!text) return { text: "", truncated: false };
- 
-    if (text.length <= MAX_COMMENT_LENGTH) {
-      return { text, truncated: false };
-    }
-    return {
-      text: expanded ? text : text.slice(0, MAX_COMMENT_LENGTH) + "...",
-      truncated: true,
-    };
-  };
- 
+    }, [isOpen]); 
   const apiUrl = import.meta.env.VITE_API_URL;
  
   const fetchNominationDetails = async () => {
     try {
+      debugger;
       const res = await axios.get(
-      `${apiUrl}/api/nominations/${nominationId}`,
-    // `${apiUrl}/api/jurylevelnomination/${nominationId}/${userId}`, 
+      // `${apiUrl}/api/nominations/${nominationId}`,
+    `${apiUrl}/api/jurylevelnomination/${nominationId}/${userId}`, 
       {
         headers: {
           Authorization: `Bearer ${authToken}`,
         },
       }
     );
+    debugger;
       const result = Array.isArray(res.data)
         ? res.data[0] : res.data;
  
@@ -289,37 +284,6 @@ const sendSeekingUser = async () => {
       return "https://img.icons8.com/color/48/file.png";
   }
 };
- 
-  const handleBackward1= () => {
-
- if (from === "nominations") {
-    navigate("/my-nominations", {
-      state: { tab: tab || "my" },
-    });
-    return;
-  }
-  // if (from === "my-nominations") {
-  //   navigate("/my-nominations");
-  // }
-  // else if (from === "other-nominations") {
-  //   navigate("/my-nominations", { state: { tab: tab || "form" } });
-  // }
-  else if (from === "referral-approval") {
-    navigate("/referral-approval");
-  }
-  else if (from === "approvals") {
-    navigate("/approvals");
-  }
-  else if (from === "president-level") {
-    navigate("/president-level");
-  }
-  else if (from === "president-unit") {
-    navigate("/president-unit");
-  }
-  else if (from === "business-jury") {
-    navigate("/business-jury");
-  }
-};
 const handleBackward = () => {
 
   if (from === "nominations") {
@@ -353,61 +317,27 @@ const handleBackward = () => {
       navigate(-1); 
   }
 };
-const statusStyleMap: Record<string, string> = {
-  Approved: "bg-emerald-100 text-emerald-700",
-  Rejected: "bg-red-100 text-red-700",
+const openPreview = (file: Blob, ext: string) => {
+  const blobUrl = URL.createObjectURL(file);
+  setPreviewType(ext);
+  setPreviewFile(blobUrl);
+  setPreviewOpen(true);
 };
-const approvalTextColorMap: Record<string, string> = {
-  Approved: "text-emerald-700",
-  Rejected: "text-red-700",
-};
+const allDocuments = [
+  ...existingDocs
+    .filter(doc => !doc.isDeleted)
+    .map(doc => ({
+      source: "api",
+      originalFileName: doc.originalFileName,
+      fileNameGUID: doc.fileNameGUID,
+    })),
 
-const evaluations = [
-  {
-    id: 1,
-    name: "Senthil Nanthan",
-    date: "Jan 18, 2026",
-    totalScore: 260,
-    flagged: true,
-    reason: "Missing one documents",
-    scores: [
-      { label: "Integrity", score: 70 },
-      { label: "Idea", score: 50 },
-      { label: "Efforts", score: 60 },
-      { label: "Outcomes", score: 80 },
-    ],
-  },
-  {
-    id: 2,
-    name: "Ravi Kumar",
-    date: "Jan 17, 2026",
-    totalScore: 240,
-    flagged: false,
-    reason: "",
-    scores: [
-      { label: "Integrity", score: 65 },
-      { label: "Idea", score: 55 },
-      { label: "Efforts", score: 55 },
-      { label: "Outcomes", score: 65 },
-    ],
-  },
-  {
-    id: 3,
-    name: "Vijay Kumar",
-    date: "Jan 17, 2026",
-    totalScore: 370,
-    flagged: false,
-    reason: "",
-    scores: [
-      { label: "Integrity", score: 65 },
-      { label: "Idea", score: 55 },
-      { label: "Efforts", score: 55 },
-      { label: "Outcomes", score: 65 },
-    ],
-  },
+  ...form.files.map(file => ({
+    source: "local",
+    originalFileName: file.name,
+    file,
+  })),
 ];
-
-
 const description =
   data?.Descriptions && data.Descriptions.trim() !== ""
     ? data.Descriptions.trim()
@@ -428,7 +358,58 @@ const description =
     score:a.ApprovalScore,
   })
 );
- 
+const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const selectedFiles = Array.from(e.target.files || []);
+  setFileError("");
+  if (!selectedFiles.length) return;
+  if (fileInputRef.current) {
+    fileInputRef.current.value = "";
+  }
+    for (const file of selectedFiles) {
+
+    const isDuplicate = form.files.some(
+      (f) => f.name === file.name && f.size === file.size
+    );
+
+    if (isDuplicate) {
+      setFileError(`"${file.name}" already added.`);
+      return;
+    }
+
+    if (file.size > 2 * 1024 * 1024) {
+      setFileError(`"${file.name}" exceeds 2 MB limit.`);
+      return;
+    }
+  }
+
+  if (form.files.length + selectedFiles.length > 5) {
+    setFileError("Maximum 5 files allowed.");
+    return;
+  }
+
+  // Add the files
+  setForm((prev) => ({
+    ...prev,
+    files: [...prev.files, ...selectedFiles],
+  }));
+};
+
+const uploadFilesToServer = async (files: File[]) => {
+  const formData = new FormData();
+
+  files.forEach((file) => {
+    formData.append("files", file);
+  });
+
+  const res = await axios.post(`${apiUrl}/api/upload`, formData, {
+    headers: {
+      "Content-Type": "multipart/form-data",
+      Authorization: `Bearer ${authToken}`,
+    },
+  });
+
+  return res.data; // backend returns uploaded file info
+};
 const hasFinalStatus: boolean = approvalFlow.some(
   (s: ApprovalFlowItem) =>
     s.status === "Approved" || s.status === "Rejected"
@@ -460,18 +441,12 @@ const approvalMap = (data?.ApprovalStatus || []).reduce(
   {}
 );
  
-// const referral = approvalMap["Referral"];
-// const manager = approvalMap["Manager"];
-// const business = approvalMap["Business Jury"];
-// const generalJury = approvalMap["General Jury"];
-// const president = approvalMap["President Jury"];
  
 const levelOrder = [
   // "Referral",
   "Manager",
   "Business Jury",
-  "General Jury",
-  "President Jury",
+  "Grand Jury",
 ];
 const getCurrentApprovalType = () => {
   switch (from) {
@@ -482,7 +457,7 @@ const getCurrentApprovalType = () => {
     case "business-jury":
       return "Business Jury";
     case "president-unit":
-      return "General Jury";
+      return "Grand Jury";
     case "president-level":
       return "President Jury";
     default:
@@ -601,7 +576,6 @@ const canRejectReferral =
 const canApproveFinal = isReferralPage ? canApproveReferral : canApprove;
 const canRejectFinal  = isReferralPage ? canRejectReferral  : canReject;
  
- 
 const buildEvaluationPayload = (approve: boolean) => {
   const ctx = getEvaluationContext();
   if (!ctx) return null;
@@ -671,56 +645,90 @@ const buildEvaluationPayload = (approve: boolean) => {
       return null;
   }
 };
-const approvedComments =
-  ["Manager", "Business Jury", "General Jury", "President Jury"]
-    .map(level =>
-      data?.ApprovalStatus?.find(
-        (x: any) => x.ApprovalType === level && x.Status === "Approved"
-      )
-    )
-    .filter(Boolean);
- 
-const openPopup = (type: "approve" | "reject") => {
-    setActionType(type);
-    setPopupErrors({ score: "", comments: "" });
-    setPopupOpen(true);
-  };
- 
   const validatePopup = () => {
-    const errs = { score: "", comments: "" };
+    const errs = {
+      score: {},
+      comments: "",
+      flagComment: ""
+    };
+
     let ok = true;
-   if (showScore) {
-    if (!popupScore.trim()) {
-      errs.score = "Score is required!";
-      ok = false;
-    } else {
-      if (!/^\d+$/.test(popupScore.trim())) {
-        errs.score = "Score must be numeric!";
-        ok = false;
-      } else {
-        const n = Number(popupScore.trim());
-        if (n < 1 || n > 100) {
-          errs.score = "Score must be between 1 and 100!";
-          ok = false;
-        }
-      }
-    }
-  }
- 
-    if (!popupComments.trim()) {
+  //   scores.forEach((item, i) => {
+  //   if (!item.score && item.score !== 0) {
+  //     errs.scores[i] = "Score required";
+  //     ok = false;
+  //   } else if (item.score < 1 || item.score > 100) {
+  //     errs.scores[i] = "Score must be 1–100";
+  //     ok = false;
+  //   }
+  //   if (!item.comment?.trim()) {
+  //     errs.scores[i] = "Comment required";
+  //     ok = false;
+  //   }
+  // });
+    if (!popupComments?.trim()) {
       errs.comments = "Comments are required!";
       ok = false;
     } else if (popupComments.trim().length > 500) {
       errs.comments = "Comments cannot exceed 500 characters!";
       ok = false;
     }
- 
-    setPopupErrors(errs);
+    if (isFlagged && !flagComment?.trim()) {
+      errs.flagComment = "Flag reason required";
+      ok = false;
+    }
+
+    //setPopupErrors(errs);
     return ok;
   };
- 
- 
- 
+  const validateEvaluation = (mode: "manager" | "jury") => {
+  const errs: PopupErrors = {
+    score: {},
+    comment: {},
+    comments: "",
+    flagComment: ""
+  };
+
+  let ok = true;
+
+  if (mode === "jury") {
+    scores.forEach((item, i) => {
+      if (item.score === "" || item.score === null) {
+        errs.score[i] = "Score required";
+        ok = false;
+      } 
+      else if (Number(item.score) < 1 || Number(item.score) > 100) {
+        errs.score[i] = "Score must be 1–100";
+        ok = false;
+      }
+
+      if (!item.comment?.trim()) {
+        errs.comment[i] = "Comment required";
+        ok = false;
+      }
+    });
+  }
+
+  if (mode === "manager") {
+    if (!popupComments?.trim()) {
+      errs.comments = "Comments are required!";
+      ok = false;
+    }
+    else if (popupComments.trim().length > 500) {
+      errs.comments = "Max 500 characters allowed";
+      ok = false;
+    }
+  }
+
+  if (isFlagged && !flagComment.trim()) {
+    errs.flagComment = "Flag reason required";
+    ok = false;
+  }
+
+  setPopupErrors(errs);
+  return ok;
+};
+
   const submitFromPopup = async (approve: boolean) => {
     if (loading || !data || !validatePopup()) return;
  
@@ -756,11 +764,7 @@ const openPopup = (type: "approve" | "reject") => {
     }
   };
  
- 
-const handlePopupClose = () => {
-  setPopupOpen(false);
-  fetchNominationDetails();
-};
+
 const handleSuccessClose = () => {
     setSuccessModalOpen(false);
     fetchNominationDetails();
@@ -839,13 +843,6 @@ const handleSuccessClose = () => {
  
    const returnVal = res.data?.nominationID ?? res.data;
    console.log("return",returnVal)
-    // if (returnVal === 0 || returnVal === -1) {
-    //  setIsWithdrawDialogOpen(false);
-    //   setErrorMessage("Failed to withdraw nomination. Please try again.");
-    //   setTimeout(() => setErrorMessage(""), 3000);
-    //   return;
-    // }
- 
     setIsWithdrawDialogOpen(false);
     setSuccessMessage("Nomination Withdrawn Successfully!");
  
@@ -867,16 +864,8 @@ const showScore =
   );
 const SCORE_REQUIRED_TYPES = [
   "Business Jury",
-  "General Jury",
-  "President Jury"
+  "Grand Jury",
 ];
-// const needsScore = (type: string) => {
-//   return (
-//     type === "Business Jury" ||
-//     type === "General Jury" ||
-//     type === "President Jury"
-//   );
-// };
 
 const handleEdit = () => {
   const id = location.pathname.split("/").pop();  
@@ -886,142 +875,246 @@ const handleEdit = () => {
       navigate(`/my-nominations/add-nomination/${id}`);
     }  
 };
-const statusFlowData = [
-  {
-    level: 1,
-    title: "Manager Approval",
-    status: "Approved",
-    date: "16/01/2025",
-    comments: "Excellent performance and dedication.",
-    showApproveButton: false,
-    showScoreButton: false,
-    totalScore: null,
-    flag: null
-  },
-  {
-    level: 2,
-    title: "Business Jury",
-    status: "Approved",
-    totalScore: "260/400",
-    flag: "Yes",
-    showApproveButton: false,
-    showScoreButton: true
-  },
-  {
-    level: 3,
-    title: "General Jury",
-    status: "Pending",
-    showApproveButton: true,
-    showScoreButton: false
-  }
-];
+// const approvalData = approvalResponse.ApprovalStatus;
+const approvalData = data?.ApprovalStatus || [];
+const level1 = approvalData?.find((l: ApprovalItem) => l.ApprovalFlow === "Level-1");
+const level2 = approvalData?.find((l: ApprovalItem) => l.ApprovalFlow === "Level-2");
+const level3 = approvalData?.find((l: ApprovalItem) => l.ApprovalFlow === "Level-3");
 
-const approvalStatus = [
-  {
-    ApprovalType: "Manager",
-    Status: "Approved",
-    ApprovedAt: "16/01/2025",
-    ApprovalComments: "Excellent performance and dedication."
-  },
-  {
-    ApprovalType: "Business Jury",
-    Status: "Approved",
-    ApprovedAt: "18/01/2026",
-    ApprovalComments: "Demonstrates leadership qualities",
-    ApprovalScore: 260,
-    IsFlagged: true,
-    FlagReason: "Missing one document"
-  }
-];
-const levels = [
-  { key: "Manager", title: "Manager Approval" },
-  { key: "Business Jury", title: "Business Jury" },
-  { key: "General Jury", title: "General Jury" }
-];
+const showLevel2 = level1?.Status === "Approved";
+const showLevel3 = level2?.Status === "Approved";
+const flagDetails = level1?.Flagdetails
+  ? JSON.parse(level1.Flagdetails)
+  : [];
 
+const flagData = flagDetails?.[0]; 
+const selectedLevel =
+  activeLevel === "Level-2"
+    ? level2
+    : activeLevel === "Level-3"
+    ? level3
+    : null;
+const getBusinessJuryEvaluations = () => {
+  const bj = approvalData.find(
+    (a: any) => a.ApprovalType === "Business Jury"
+  );
+
+  if (!bj || !bj.JuryMember) return [];
+
+  try {
+    return JSON.parse(bj.JuryMember);
+  } catch {
+    return [];
+  }
+};
+const attributeData = level2;
+debugger;
+const handleManagerApprove = () => {
+  if (!level1) return;
+
+  setStatus(level1.Status === "Rejected" ? "Rejected" : "Approved");
+  setPopupComments(level1.ApprovalComments || "");
+
+  let flagData = null;
+  try {
+    const parsed = level1.Flagdetails ? JSON.parse(level1.Flagdetails) : [];
+    flagData = parsed?.[0];
+  } catch {
+    flagData = null;
+  }
+  const isFlag = Number(flagData?.Flag) === 1;
+  setIsFlagged(isFlag);
+
+  setFlagComment(flagData?.FlagReason || "");
+
+  if (flagData?.FlagAttachment?.length) {
+    const mappedDocs = flagData.FlagAttachment.map((file: any) => ({
+      source: "api",
+      fileNameGUID: file.AttachmentsID,
+      originalFileName: file.OriginalAttachmentName,
+      fileType: file.AttachmentFileType
+    }));
+
+    setExistingDocs(mappedDocs);
+  } else {
+    setExistingDocs([]);
+  }
+  setOpenApprove(true);
+};
+const juryList: JuryItem[] = getBusinessJuryEvaluations().map((j: any) => ({
+  Juryname: j.JuryMemberName,
+  SubmittedDate: "-",
+  Score: j.AttributeAvg?.[0]?.TotalScore || 0,
+  Flag: j.FlagDetails?.length > 0 ? 1 : 0,
+  Attributes: j.AttributeScore || [],
+  FlagReason: j.FlagDetails?.[0]?.FlagReason || ""
+}));
 const needsScore = (type: string) =>
   SCORE_REQUIRED_TYPES.includes(type);
-// ✅ CUSTOM APPROVAL SUCCESS MODAL COMPONENT
-const ApprovalSuccessModal = () => {
-  if (!successModalOpen || !data) return null;
- 
-  const isApprove = actionType === "approve";
- 
-  const iconBg = isApprove ? "from-emerald-400 to-teal-600" : "from-red-400 to-rose-600";
-  const titleText = isApprove ? "Nomination Approved!" : "Nomination Rejected!";
-  const iconSymbol = isApprove ? "✓" : "✖";
-  const buttonBg = isApprove
-    ? "bg-gradient-to-r from-emerald-500 to-teal-600 hover:shadow-xl"
-    : "bg-gradient-to-r from-red-500 to-rose-600 hover:shadow-xl";
 
-  
-  return (
-    <div
-      className="fixed inset-0 z-[1000] bg-black/45 flex items-center justify-center p-4"
-      onClick={handleSuccessClose}
-    >
-      <motion.div
-        initial={{ scale: 0.8, opacity: 0 }}
-        animate={{ scale: 1, opacity: 1 }}
-        transition={{ duration: 0.25 }}
-        className="bg-white w-full max-w-md p-8 rounded-2xl text-center shadow-2xl relative font-['Roboto'] max-h-[90vh] overflow-y-auto"
-        onClick={(e) => e.stopPropagation()}
-      >
-   
-  {/* Icon */}
-  <div
-  className={`w-20 h-20 mx-auto mb-6 rounded-full bg-gradient-to-r ${iconBg} text-white text-4xl font-black flex items-center justify-center shadow-2xl ring-4 ring-white/50`}
->
-  {iconSymbol}
-</div>
- 
- 
-  {/* Title */}
-  <h2 className="text-2xl font-bold text-gray-900 mb-3">{titleText}</h2>
- 
-  {/* Message */}
-  <p className="text-gray-700 text-sm leading-relaxed mb-4">
-    You have successfully {isApprove ? "approved" : "rejected"} the nomination for{" "}
-   
-  </p>
-  <p className="text-gray-700 text-sm leading-relaxed mb-4">
-   
-    <strong className="text-gray-900 font-semibold">{data.Nominee}</strong>.
-  </p>
- 
-  {/* Meta Info */}
-<div className="text-xs text-gray-500 bg-gray-50 mb-6">
-  Category: <span className="font-bold text-emerald-400">{data.AwardCategory}</span>
-</div>
- 
- 
-   {/* Action Buttons */}
-        <div className="flex gap-3 justify-center">
-       
-          <button
-            className="px-6 py-3 border-2 border-gray-200 text-gray-700 font-semibold rounded-xl hover:bg-gray-50 hover:border-gray-300 transition-all duration-200 min-w-[100px]"
-            onClick={handleSuccessClose}
-          >
-            Close
-          </button>
-        </div>
- 
- 
-     
-      </motion.div>
-    </div>
+const buildManagerPayload = () => ({
+  NominationID: data.NominationID,
+  IsManagerApproved: status?.trim() === "Approved" ? true : false,
+  ApprovalComments: popupComments,
+  UpdatedBy: userId,
+  IsFlag: isFlagged,
+  FlagReason: isFlagged ? flagComment : null,
+
+});
+
+const submitManagerApproval = async () => {
+  console.log("CLICKED SUBMIT");
+if (!validateEvaluation("manager")) return;
+  // const isValid = validatePopup();
+  // console.log("VALID ?", isValid);
+
+  // if (loading || !isValid) return;
+
+  const payload = buildManagerPayload();
+  console.log("PAYLOAD 👉", payload);
+
+  try {
+    setLoading(true);
+
+    await axios.put(
+      `${apiUrl}/api/evaluation/0/${data.NominationID}`,
+      payload,
+      {
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${authToken}`,
+        },
+      }
+    );
+
+    setSuccessModalOpen(true);
+    setOpenApprove(false);
+    closeApproveDrawer();
+  } catch (err) {
+    console.error("❌ SAVE ERROR:", err);
+    setErrorMessage("Action failed. Please try again.");
+  } finally {
+    setLoading(false);
+  }
+};
+const getCleanStatus = (status?: string) => {
+  if (!status) return "";
+  const dashIndex = status.indexOf("-");
+  return dashIndex >= 0
+    ? status.substring(dashIndex + 1).trim()
+    : status.trim();
+};
+const mainStatus = getCleanStatus(data.Status);
+
+const resetApproveDrawer = () => {
+  setScores(structuredClone(DEFAULT_SCORE_ITEMS));
+  setPopupComments("");
+  setIsFlagged(false);
+  setFlagComment("");
+  setExistingDocs([]);
+  setPopupErrors({
+    score: {},
+    comment:{},
+    comments: "",
+    flagComment: ""
+  });
+};
+
+const closeApproveDrawer = () => {
+  resetApproveDrawer();
+  setOpenApprove(false);
+};
+const openDrawer = () => {
+  setScores(JSON.parse(JSON.stringify(DEFAULT_SCORE_ITEMS)));
+  setIsFlagged(false);
+  setFlagComment("");
+  //setPopupErrors({});
+  setOpenScore(true);
+};
+
+const openEvaluationDrawer = (row: any) => {
+  setEvaluationData(row);
+
+  if (row.scores) {
+    const parsed = typeof row.scores === "string" ? JSON.parse(row.scores) : row.scores;
+
+    const mapped = parsed.map((s: any) => ({
+      weightId: s.WeightID,
+      title: s.WeightName,
+      score: s.Score,
+      comment: s.Comment || ""
+    }));
+
+    setScores(mapped);
+  }
+
+  setIsFlagged(row.normaljuryflag === "1");
+  setFlagComment(row.normaljuryflagreason || "");
+
+  setExistingDocs(row.supportingDocuments || []);
+  setOpenScore(true);
+};
+const buildDocumentPayload = () => {
+  return [
+    ...existingDocs.map(d => ({
+      fileNameGUID: d.fileNameGUID,
+      isDeleted: d.isDeleted || false,
+      isNew: false
+    })),
+    ...form.files.map(f => ({
+      file: f,
+      isNew: true
+    }))
+  ];
+};
+const handleCloseDrawer = () => {
+  setOpenScore(false);
+  resetApproveDrawer();
+};
+const handleSubmitEvaluation = async () => {
+  if (!validateEvaluation("jury")) return;
+
+  const payload = {
+    NominationID: data.NominationID,
+    UpdatedBy: userId,
+    IsFlag: isFlagged,
+    FlagReason: flagComment,
+    Scores: scores.map(s => ({
+      Criteria: s.title,     
+      Score: Number(s.score),
+      Comments: s.comment
+    })),
+
+    Documents: buildDocumentPayload()
+  };
+
+  await axios.put(
+    `${apiUrl}/api/evaluation/${data.NominationID}`,
+    payload,
+    { headers: { Authorization: `Bearer ${authToken}` } }
   );
-}; 
+
+  handleCloseDrawer();
+};
+
 return (
  <div className="bg-gray-100 p-6 pb-20">
   <div className="bg-white rounded-xl border border-gray-200 shadow-sm p-6">
     <div className="flex gap-6 items-start w-full">
-  <div
-    className="w-24 h-24 rounded-full border-4 border-emerald-500 flex items-center justify-center text-white font-bold text-5xl"
-    style={{
-      background: "linear-gradient(90deg, rgb(8, 128, 94) 16%, rgb(24, 97, 174) 100%)",
-    }}>
-    {data.Nominee?.charAt(0).toUpperCase()}
+     <div className="flex flex-col items-start gap-3">
+      {/* <button onClick={handleBackward}
+        className="flex items-center text-blue-600 bg-white border rounded-sm px-2 py-1 font-medium">
+        <ArrowLeft size={14} />
+        <span className="ml-1">Back</span>
+      </button> */}
+      <div
+        className="w-24 h-24 mt-2 rounded-full border-4 border-emerald-500
+                  flex items-center justify-center text-white font-bold text-5xl"
+        style={{
+          background:
+            "linear-gradient(90deg, rgb(8, 128, 94) 16%, rgb(24, 97, 174) 100%)",}}>
+        {data.Nominee?.charAt(0).toUpperCase()}
+    </div>
   </div>
   <div className="flex-1">
     <div className="flex justify-between items-start mb-4">
@@ -1030,8 +1123,7 @@ return (
       </h2>
       <div className="text-sm text-gray-600">
         DOJ & Age in SRM :
-        <span className="ml-1 text-blue-600 font-medium">
-          01/2022, 4 Years
+        <span className="ml-1 text-blue-600 font-medium">{data.DOJ}
         </span>
       </div>
     </div>
@@ -1067,8 +1159,7 @@ return (
       <div>
         <p className="text-gray-500">Contest Type</p>
         <div className="flex items-center font-medium">
-          <FileText size={16} className="text-gray-400 mr-2" />
-          Other Nomination
+          <FileText size={16} className="text-gray-400 mr-2" />{data.ContestType}
         </div>
       </div>
       <div>
@@ -1084,29 +1175,30 @@ return (
           className={`inline-flex items-center gap-2 mt-1 px-3 py-1 text-xs rounded border ${
             data.Status === "Pending"
               ? "bg-orange-100 text-orange-800 border-orange-300"
-              : data.Status === "Approved"
+              : mainStatus === "Approved"
               ? "bg-green-100 text-green-800 border-green-300"
-              : data.Status === "Rejected"
+              : mainStatus === "Rejected"
               ? "bg-red-100 text-red-800 border-red-300"
-              : data.Status === "Under Review"
+              : mainStatus === "Under Review"
               ? "bg-yellow-100 text-yellow-800 border-yellow-300"
               : "bg-gray-100 text-gray-700 border-gray-300"
           }`}>
-          {data.Status === "Under Review" && <BadgeCheck size={14} />}
-          {data.Status === "Under Review" ? "L2 – Under Review" : data.Status}
+          {<BadgeCheck size={14} />}
+          {/* {data.Status === "Under Review" && <BadgeCheck size={14} />} */}
+          {data.Status}
         </span>
       </div>
        <div>
         <p className="text-gray-500">Manager Email Id</p>
         <div className="flex items-center font-medium">
-          <Mail size={16} className="text-gray-400 mr-2" />{data.ManagerEmailID}
+          <Mail size={16} className="text-gray-400 mr-2" />{data.ManagerEmail}
         </div>
       </div>
     </div>
   </div>
 </div>
-    <div className="border-b border-gray-200 mt-6" />
-    <div className="mt-5">
+<div className="border-b border-gray-200 mt-6" />
+  <div className="mt-5">
       <p className="text-sm font-semibold text-gray-900 mb-1">
         Description
       </p>
@@ -1124,7 +1216,7 @@ return (
     <div className="border-b border-gray-200 mt-5" />
     <div className="mt-5">
       <p className="text-sm font-semibold mb-3">
-        Supporting Documents
+        Supportings Documents
       </p>
        <div className="mt-2 flex flex-wrap gap-4">
        {/* <div className="mt-2 space-y-2"> */}
@@ -1190,6 +1282,7 @@ return (
           <th className="px-4 py-3 text-left">Nominee Name</th>
           <th className="px-4 py-3 text-left">Tenant</th>
           <th className="px-4 py-3 text-left">Department</th>
+          <th className="px-4 py-3 text-left">Email ID</th>
         </tr>
       </thead>
 
@@ -1201,6 +1294,7 @@ return (
             <td className="px-4 py-3">{ref.ReferralName}</td>
             <td className="px-4 py-3">{ref.TenantName}</td>
             <td className="px-4 py-3">{ref.DeptName}</td>
+            <td className="px-4 py-3">{ref.Email}</td>
           </tr>
         ))}
       </tbody>
@@ -1222,201 +1316,255 @@ return (
       <h2 className="text-base font-semibold mb-6">
         Nomination Status Flow
       </h2>
-
       {/* ================= LEVEL 1 ================= */}
-      <div className="flex gap-4 relative">
-        {/* Timeline */}
-        <div className="flex flex-col items-center">
-          <div className="w-7 h-7 rounded-full bg-green-500 flex items-center justify-center">
-            <Check size={16} className="text-white" />
-          </div>
-          <div className="w-[2px] h-full bg-gray-300 mt-1"></div>
-        </div>
-
-        {/* Content */}
-        <div className="flex-1 pb-8">
-          <div className="flex justify-between items-center mb-2">
-            <p className="font-medium text-gray-900">
-              Level 1 - Manager Approval
-            </p>
-            <button
-                onClick={() => setOpenApprove(true)}
-                className="px-4 py-1.5 rounded-lg text-sm bg-green-100 text-green-700 
-                hover:bg-green-200 transition">
-                Approved
-              </button>
-          </div>
-
-          <div className="bg-gray-50 rounded-lg p-4 text-sm text-gray-700 space-y-2">
-            <div className="flex gap-12">
-              <div>
-                <span className="text-gray-500">Name :</span>{" "}
-                <span className="font-medium">
-                  Kathiravan (SRMTech Manager)
-                </span>
-              </div>
-
-              <div>
-                <span className="text-gray-500">Approved Date :</span>{" "}
-                <span className="font-medium">16/01/2025</span>
-              </div>
+      {level1 && (
+        <div className="flex gap-4 relative">
+          <div className="flex flex-col items-center">
+            <div className="w-7 h-7 rounded-full bg-green-500 flex items-center justify-center">
+              <Check size={16} className="text-white" />
             </div>
-
-            <div>
-              <span className="text-gray-500">Comments :</span>
-              <p className="font-medium mt-1">
-                Excellent performance and dedication.
+            <div className="w-[2px] h-full bg-gray-300 mt-1"></div>
+          </div>
+          <div className="flex-1 pb-8">
+            <div className="flex justify-between items-center mb-2">
+              <p className="font-medium text-gray-900">
+                {approvalData[0].ApprovalFlow} - {approvalData[0].ApprovalType}
               </p>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* ================= LEVEL 2 ================= */}
-      <div className="flex gap-4 relative">
-        <div className="flex flex-col items-center">
-          <div className="w-7 h-7 rounded-full bg-green-500 flex items-center justify-center">
-            <Check size={16} className="text-white" />
-          </div>
-          <div className="w-[2px] h-full bg-gray-300 mt-1"></div>
-        </div>
-
-        <div className="flex-1 pb-8">
-          <div className="flex justify-between items-center mb-2">
-            <p className="font-medium text-gray-900">
-              Level 2 - Business Jury
-            </p>
-            <div className="flex gap-3">
               <button
-                onClick={() => setOpenEvaluation(true)}
-                className="px-4 py-1.5 rounded-lg border border-blue-500 text-blue-600 text-sm hover:bg-blue-50">
-                View Business Jury Evaluations
-              </button>
-              <button 
-                onClick={() => setOpenScore(true)}
-                className="px-4 py-1.5 rounded-lg text-sm bg-green-100 text-green-700">
-                Approved
+                // onClick={() => setOpenApprove(true)}
+                onClick={handleManagerApprove}
+                className="px-4 py-1.5 rounded-lg text-sm bg-green-100 text-green-700 hover:bg-green-200 transition">
+                {level1.Status}
               </button>
             </div>
-          </div>
-          <div className="bg-gray-50 rounded-lg p-4 text-sm text-gray-700 space-y-2">
-            <div className="flex gap-12">
-              <div>
-                <span className="text-gray-500">Name :</span>{" "}
-                <span className="font-medium">
-                  Saravanan (SRMAP)
-                </span>
+            <div className="bg-gray-50 rounded-lg p-4 text-sm text-gray-700 space-y-2">
+              <div className="flex gap-12">
+                <div>
+                  <span className="text-gray-500">Name :</span>{" "}
+                  <span className="font-medium">
+                    {approvalData[0].ApprovalName} ({approvalData[0].ApprovalDepartment})
+                  </span>
+                </div>
+                <div>
+                  <span className="text-gray-500">Approved Date :</span>{" "}
+                  <span className="font-medium">{approvalData[0].ApprovedAt}</span>
+                </div>
+                {Number(flagData?.Flag) === 1 && (
+                  <div className="flex items-start gap-2">
+                    <span className="text-gray-500">Flag :</span>
+                    <div>
+                      <div className="flex items-center gap-2">
+                        <Flag size={16} className="text-red-600 fill-red-600" />
+                      </div>
+                    </div>
+                  </div>
+                )}
+                <div>
+                  <span className="text-gray-500">Reason :</span>{" "}
+                  <span className="font-medium text-gray-600">
+                  {flagData?.FlagReason || "No reason"}
+                  </span>
+                </div>
+                <div>
+                </div>
               </div>
               <div>
-                <span className="text-gray-500">Approved Date :</span>{" "}
-                <span className="font-medium">26/01/2026</span>
+                <span className="text-gray-500">Comments :</span>
+                <p className="font-medium mt-1">
+                  {approvalData[0].ApprovalComments}
+                </p>
               </div>
-              <div>
-                <span className="text-gray-500">
-                  Total Jury Evaluations :
-                </span>{" "}
-                <span className="font-medium">3 / 10</span>
-              </div>
-              <div>
-                <span className="text-gray-500">
-                  Average Score :
-                </span>{" "}
-                <span className="font-medium">280 / 400</span>
-              </div>
-            </div>
-            <div className="flex gap-12">
-              <div>
-                <span className="text-gray-500">Score :</span>{" "}
-                <span className="font-medium">380 / 400</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <Flag size={16} className="text-red-500" />
-                <span className="text-gray-500">Flag :</span>
-                <span className="font-medium">No</span>
-              </div>
-            </div>
-            <div>
-              <span className="text-gray-500">Comments :</span>
-              <p className="font-medium mt-1 leading-relaxed">
-                Excellent performance and dedication were consistently
-                demonstrated through a strong commitment to quality and
-                timely delivery. Your proactive approach and attention to
-                detail have made a meaningful impact on overall success.
-              </p>
+              {/* Attachments */}
+              {Number(flagData?.Flag) === 1 &&
+                flagData?.FlagAttachment?.length > 0 && (
+                  <div className="mt-3">
+                    <span className="text-gray-500">Attachments :</span>
+                    <div className="flex flex-wrap gap-2 mt-1">
+                      {flagData.FlagAttachment.map((file: any, i: number) => (
+                        <div
+                          key={i}
+                          className="text-blue-600 text-sm underline cursor-pointer">
+                          {file.OriginalAttachmentName}.{file.AttachmentFileType}
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+              )}
             </div>
           </div>
         </div>
-      </div>
-
+      )}
+      {/* ================= LEVEL 2 ================= */}
+      {showLevel2 && level2 && (
+        <div className="flex gap-4 relative">
+          <div className="flex flex-col items-center">
+            <div className="w-7 h-7 rounded-full bg-green-500 flex items-center justify-center">
+              <Check size={16} className="text-white" />
+            </div>
+            <div className="w-[2px] h-full bg-gray-300 mt-1"></div>
+          </div>
+          <div className="flex-1 pb-8">
+            <div className="flex justify-between items-center mb-2">
+              <p className="font-medium text-gray-900">
+                {approvalData[1].ApprovalFlow} - {approvalData[1].ApprovalType}
+              </p>
+              <div className="flex gap-3">
+                {approvalData[1].Status === "Approved" && (
+                  <button
+                    onClick={() => setOpenEvaluation(true)}
+                    className="px-4 py-1.5 rounded-lg border border-blue-500 text-blue-600 text-sm hover:bg-blue-50">
+                    View Business Jury Evaluations
+                  </button>
+                )}
+                <button
+                  // onClick={() => setOpenScore(true)}
+                  onClick={() => {
+                    setActiveLevel("Level-2");
+                    setOpenScore(true);
+                  }}
+                  className={`px-4 py-1.5 rounded-lg text-sm border 
+                  ${levelColors[approvalData[1].Status] || "bg-gray-50 border-gray-300"} 
+                  ${levelTextColors[approvalData[1].Status] || "text-gray-700"}`}>
+                  {approvalData[1].Status}
+                </button>
+              </div>
+            </div>
+            <div className="bg-gray-50 rounded-lg p-4 text-sm text-gray-700 space-y-2">
+              <div className="flex gap-12">
+                <div>
+                  <span className="text-gray-500">Name :</span>{" "}
+                  <span className="font-medium">
+                    {approvalData[1].ApprovalName} ({approvalData[1].ApprovalDepartment})
+                  </span>
+                </div>
+                <div>
+                  <span className="text-gray-500">Approved Date :</span>{" "}
+                  <span className="font-medium">{approvalData[1].ApprovedAt}</span>
+                </div>
+                <div>
+                  <span className="text-gray-500">Total Jury Evaluations :</span>{" "}
+                  <span className="font-medium">
+                    {approvalData[1].TotalEvalutions}
+                  </span>
+                </div>
+                <div>
+                  <span className="text-gray-500">Evaluated Juries :</span>{" "}
+                  <span className="font-medium">
+                    {approvalData[1].EvaluatedJuries}
+                  </span>
+                </div>
+                <div>
+                  <span className="text-gray-500">Average Score :</span>{" "}
+                  <span className="font-medium">
+                    {approvalData[1].AverageScore}
+                  </span>
+                </div>
+                 <div>
+                  <span className="text-gray-500">Total Flag :</span>{" "}
+                  <span className="font-medium">
+                    {approvalData[1].TotalFlagCount}
+                  </span>
+                </div>
+              </div>
+              <div className="flex gap-12">
+                <div>
+                  <span className="text-gray-500">Score :</span>{" "}
+                  <span className="font-medium">{approvalData[1].ApprovalScore}</span>
+                </div>
+              </div>
+              <div>
+                <span className="text-gray-500">Comments :</span>
+                <p className="font-medium mt-1 leading-relaxed">
+                  {approvalData[1].ApprovalComments}
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
       {/* ================= LEVEL 3 ================= */}
-      <div className="flex gap-4">
-        <div className="flex flex-col items-center">
-          <div className="w-7 h-7 rounded-full bg-green-500 flex items-center justify-center">
-            <Check size={16} className="text-white" />
-          </div>
-        </div>
-
-        <div className="flex-1">
-          <div className="flex justify-between items-center mb-2">
-            <p className="font-medium text-gray-900">
-              Level 3 - Grand Jury
-            </p>
-            <button 
-                onClick={() => setOpenScore(true)}
-                className="px-4 py-1.5 rounded-lg text-sm bg-green-100 text-green-700">
-                Approved
-              </button>
-          </div>
-
-          <div className="bg-gray-50 rounded-lg p-4 text-sm text-gray-700 space-y-2">
-            <div className="flex gap-12">
-              <div>
-                <span className="text-gray-500">Approved Date :</span>{" "}
-                <span className="font-medium">27/01/2026</span>
-              </div>
-
-              <div>
-                <span className="text-gray-500">Score :</span>{" "}
-                <span className="font-medium">380 / 400</span>
-              </div>
-
-              <div className="flex items-center gap-2">
-                <Flag size={16} className="text-red-500" />
-                <span className="text-gray-500">Flag :</span>
-                <span className="font-medium">No</span>
-              </div>
+      {showLevel3 && level3 && (
+        <div className="flex gap-4">
+          <div className="flex flex-col items-center">
+            <div className="w-7 h-7 rounded-full bg-green-500 flex items-center justify-center">
+              <Check size={16} className="text-white" />
             </div>
-
-            <div>
-              <span className="text-gray-500">Comments :</span>
-              <p className="font-medium mt-1 leading-relaxed">
-                Excellent performance and dedication were consistently
-                demonstrated through a strong commitment to quality and
-                timely delivery. Your proactive approach and attention to
-                detail have made a meaningful impact on overall success.
+          </div>
+          <div className="flex-1">
+            <div className="flex justify-between items-center mb-2">
+              <p className="font-medium text-gray-900">
+                {approvalData[2].ApprovalFlow} - {approvalData[2].ApprovalType}
               </p>
+              <button
+                // onClick={() => setOpenScore(true)}
+                onClick={() => {
+                  setActiveLevel("Level-3");
+                  setOpenScore(true);
+                }}
+                className={`px-4 py-1.5 rounded-lg text-sm border 
+                  ${levelColors[approvalData[2].Status] || "bg-gray-50 border-gray-300"} 
+                  ${levelTextColors[approvalData[2].Status] || "text-gray-700"}`}>
+                {approvalData[2].Status}
+              </button>
+            </div>
+            <div className="bg-gray-50 rounded-lg p-4 text-sm text-gray-700 space-y-2">
+              <div className="flex gap-12">
+                <div>
+                  <span className="text-gray-500">Name :</span>{" "}
+                  <span className="font-medium">
+                    {approvalData[2].ApprovalName} ({approvalData[2].ApprovalDepartment})
+                  </span>
+                </div>
+                <div>
+                  <span className="text-gray-500">Approved Date :</span>{" "}
+                  <span className="font-medium">{approvalData[2].ApprovedAt}</span>
+                </div>
+                <div>
+                  <span className="text-gray-500">Score :</span>{" "}
+                  <span className="font-medium">{approvalData[2].ApprovalScore}</span>
+                </div>
+              </div>
+              <div>
+                <span className="text-gray-500">Comments :</span>
+                <p className="font-medium mt-1 leading-relaxed">
+                  {approvalData[2].ApprovalComments}
+                </p>
+              </div>
             </div>
           </div>
         </div>
-      </div>
+      )}
     </div>
     <div className="fixed bottom-0 left-0 w-full h-15 bg-white border-t border-gray-200 flex items-center pl-[260px] pr-6">
       <div className="flex justify-end space-x-4 ml-auto" >  
          <button onClick={handleBackward} className="flex items-center text-blue-600 bg-white border rounded-sm px-2 py-1 font-medium">
          <span className=""><ArrowLeft size={14}/></span> Back
           </button>
+          {showWithdrawButton && ( 
+          <button
+          onClick={handleEdit}
+          className="btn-theme-edit text-white rounded-sm px-2 py-1 hover:bg-blue-700 flex items-center"> 
+          <span  className="edit-icon"><Edit size={14} /></span>Edit  
+          </button>
+        )}
+        {showWithdrawButton && (
+          <button
+            onClick={() => setIsWithdrawDialogOpen(true)}
+                  className="px-4 py-2 btn-theme-reject">
+            Withdraw
+          </button>
+        )}
         </div>
-      </div>
-      <div
-        className={`fixed top-0 right-0 h-full w-[680px] bg-white shadow-2xl z-50
+    </div>
+      <div className={`fixed top-0 right-0 h-full w-[680px] bg-white shadow-2xl z-50
           transform transition-transform duration-300 ease-in-out
           ${openApprove ? "translate-x-0" : "translate-x-full"}
         `}>
         <div className="flex justify-between items-center px-6 py-4 border-b border-gray-200">
           <h2 className="text-[16px] font-semibold text-gray-900">
-            Level 2 - Manager Approval
+            Level 1 - Manager Approval
           </h2>
-          <button onClick={() => setOpenApprove(false)}>
+          <button onClick={closeApproveDrawer}>
             <X size={20} />
           </button>
         </div>
@@ -1425,33 +1573,188 @@ return (
             <label className="block mb-2 font-medium">
               Status
             </label>
-            <select
+            <select value={status}
+              onChange={(e) => setStatus(e.target.value as "Approved" | "Rejected")}
+              className="w-full h-[42px] px-3 border border-gray-300 rounded-[6px]">
+              <option value="Approved">Approved</option>
+              <option value="Rejected">Rejected</option>
+            </select>
+            {/* <select
               className="w-full h-[42px] px-3 border border-gray-300 rounded-[6px] bg-white focus:outline-none ">
               <option>Approved</option>
               <option>Rejected</option>
-            </select>
+            </select> */}
           </div>
           <div className="mb-[18px]">
             <label className="block mb-2 font-medium">
               Comments
             </label>
-            <textarea rows={4} placeholder="Enter your comments"
-              className="w-full px-3 py-2 border border-gray-300 rounded-[6px] resize-none focus:outline-none"/>
+            <textarea rows={3} value={popupComments}
+              onChange={(e) => {
+                const value = e.target.value;
+                setPopupComments(value);
+                if (value.trim()) {
+                  setPopupErrors(prev => ({
+                    ...prev,
+                    comments: ""
+                  }));
+                }
+              }}
+              placeholder="Enter your comments"
+              className={`w-full px-3 py-2 border rounded-[6px]
+                ${popupErrors.comments ? "border-red-500" : "border-gray-300"}`}/>
+            {popupErrors.comments && (
+              <p className="text-red-600 text-xs mt-1">{popupErrors.comments}</p>
+            )}
+
+            {/* <textarea rows={3} placeholder="Enter your comments"
+              className="w-full px-3 py-2 border border-gray-300 rounded-[6px] resize-none focus:outline-none"/> */}
           </div>
           <div className="flex items-center gap-2 mb-[12px]">
-            <Flag size={18} className="text-red-400" />
+            <Flag size={18} className={isFlagged ? "text-red-600" : "text-gray-400"}/>
             <span className="font-medium">Flag :</span>
-            <input type="checkbox" className="w-4 h-4 mt-[1px]" />
+            <input type="checkbox" checked={isFlagged}
+              onChange={(e) => {
+                const checked = e.target.checked;
+                setIsFlagged(checked);
+                if (checked) {
+                  setTimeout(() => textareaRef.current?.focus(), 100);
+                } else {
+                  setFlagComment("");
+                  setPopupErrors(prev => ({ ...prev, flagComment: "" }));
+                }
+              }}
+              className="w-4 h-4 mt-[1px] accent-red-600 cursor-pointer"/>
           </div>
-          <textarea rows={3} placeholder="Flagged reason here"
-            className="w-full px-3 py-2 border border-red-300 bg-red-50 rounded-[6px] resize-none focus:outline-none"/>
+            <textarea ref={textareaRef} rows={3} value={flagComment}
+              onChange={(e) => {
+                const value = e.target.value;
+                setFlagComment(value);
+                if (value.trim()) {
+                  setPopupErrors(prev => ({ ...prev, flagComment: "" }));
+                }
+              }}
+              disabled={!isFlagged}
+              placeholder="Flagged reason here"
+              className={`w-full px-3 py-2 rounded-[6px]
+                ${isFlagged
+                  ? "border border-red-300 bg-red-50"
+                  : "border border-gray-200 bg-gray-100 cursor-not-allowed"}`}/>
+            {popupErrors.flagComment && (
+              <p className="text-red-600 text-xs mt-1">
+                {popupErrors.flagComment}
+              </p>
+            )}
+
+          <div className="mt-4">
+              <Label.Root className="block text-sm font-medium">
+                Supporting Documents 
+                <span className="text-red-500">(Maximum 5 files allowed & File must be below 2 MB)</span>
+              </Label.Root>
+              <label
+                htmlFor="fileUpload"
+                className="inline-block bg-gray-100 text-gray-700 border border-gray-300 px-6 py-2 rounded cursor-pointer mt-2 hover:bg-gray-200">
+                Choose File
+              </label>
+              <input
+                id="fileUpload"
+                ref={fileInputRef}
+                type="file"
+                multiple
+                onChange={handleFileUpload}
+                className="hidden" />
+              {fileError && <p className="text-red-500 text-sm mt-1">{fileError}</p>}
+            </div>         
+          <div className="mt-3 flex flex-wrap gap-2">
+              {allDocuments.map((doc: any, index: number) => (
+                <div
+                  key={doc.source === "api" ? doc.fileNameGUID : index}
+                  className="flex items-center gap-2 bg-gray-100 px-3 py-1 rounded-lg shadow-sm border relative">
+                  {/* File Name */}
+                  <span
+                    className="text-sm truncate max-w-[180px] cursor-pointer text-blue-600 hover:underline"
+                    onClick={async () => {
+                      const fileName = doc.originalFileName;
+                      const ext = fileName.split(".").pop()?.toLowerCase() || "";
+
+                      if (doc.source === "api") {
+                        try {
+                          const response = await axios.get(
+                            `${apiUrl}/api/download?fileName=${doc.fileNameGUID}`,
+                            {
+                              responseType: "blob",
+                              headers: { Authorization: `Bearer ${authToken}` },
+                            }
+                          );
+                          const blobUrl = URL.createObjectURL(response.data);
+                          if (["jpg", "jpeg", "png", "gif"].includes(ext)) {
+                            openPreview(response.data, ext);
+                          } 
+                          else if (ext === "pdf") {
+                            const pdfBlob = new Blob([response.data], { type: "application/pdf" });
+                            const pdfUrl = URL.createObjectURL(pdfBlob);
+                            window.open(pdfUrl, "_blank");
+                          }
+                          // else if (ext === "pdf") {
+                          //   window.open(blobUrl, "_blank");  
+                          // }
+                          else {
+                            const link = document.createElement("a");
+                            link.href = URL.createObjectURL(response.data);
+                            link.download = fileName;
+                            link.click();
+                          }
+                        } catch {
+                          alert("File not found");
+                        }
+                      }
+
+                      else {
+                        const file = doc.file;
+                        if (!(file instanceof File)) return;
+
+                        if (["jpg", "jpeg", "png", "gif"].includes(ext)) {
+                          openPreview(file, ext);
+                        } 
+                         else if (ext === "pdf") {
+                          const pdfBlob = new Blob([file], { type: "application/pdf" });
+                          const pdfUrl = URL.createObjectURL(pdfBlob);
+                          window.open(pdfUrl, "_blank");    
+                          }
+                          else {
+                          const link = document.createElement("a");
+                          link.href = URL.createObjectURL(file);
+                          link.download = file.name;
+                          link.click();
+                        }
+                      }
+                    }}>
+                    {doc.originalFileName || doc.name}
+                  </span>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      if (doc.source === "api") {
+                        setExistingDocs(prev => prev.map(d => d.fileNameGUID === doc.fileNameGUID ? { ...d, isDeleted: true } : d));
+                      } else {
+                        setForm(prev => ({ ...prev, files: prev.files.filter((_, i) => i !== index) }));
+                      }
+                    }}
+                    className="text-red-500 hover:text-red-700 font-bold text-lg leading-none">
+                    ×
+                  </button>
+                </div>
+              ))}
+            </div>           
           <div className="flex justify-end gap-4 mt-6">
             <button
-              onClick={() => setOpenApprove(false)} 
+              onClick={closeApproveDrawer} 
               className="h-[42px] px-6 border border-gray-300 rounded-[6px] text-gray-700">
               Cancel
             </button>
-            <button className="h-[44px] px-8 rounded-md shadow btn-theme"> Submit </button>
+            <button onClick={submitManagerApproval}
+              className="h-[44px] px-8 rounded-md shadow btn-theme">Submit
+            </button>
           </div>
         </div>
       </div>
@@ -1475,26 +1778,30 @@ return (
       <div className="px-6 py-6 space-y-4 overflow-y-auto h-[calc(100vh-70px)]">
         <div className="grid grid-cols-3 gap-4">
           <div className="border border-gray-300 rounded-lg p-4 text-center bg-green-50 text-green-700">
-            <div className="text-xl font-semibold">3</div>
+            <div className="text-xl font-semibold">
+              {attributeData?.TotalEvalutions || 0}
+            </div>
             <div className="text-sm">Total Evaluations</div>
           </div>
-
           <div className="border border-gray-300 rounded-lg p-4 text-center bg-blue-50 text-blue-700">
-            <div className="text-xl font-semibold">280</div>
+            <div className="text-xl font-semibold">
+              {attributeData?.AverageScore || 0}
+            </div>
             <div className="text-sm">Average Score</div>
           </div>
-
           <div className="border border-gray-300 rounded-lg p-4 text-center bg-red-50 text-red-700">
-            <div className="text-xl font-semibold">1</div>
+            <div className="text-xl font-semibold">
+              {attributeData?.TotalFlagCount || 0}
+            </div>
             <div className="text-sm">Flagged</div>
           </div>
         </div>
-        {evaluations.map((e) => {
-          const expanded = openCard === e.id;
+        {juryList.map((e: any, index: number) => {
+          const expanded = openCard === index;
           return (
             <div
-              key={e.id}
-              onClick={() => setOpenCard(expanded ? null : e.id)}
+             key={index}
+             onClick={() => setOpenCard(prev => (prev === index ? null : index))}
               className="border border-gray-300 rounded-lg cursor-pointer">
               <div className="p-4 flex justify-between items-center">
                 <div className="flex items-center gap-3">
@@ -1502,19 +1809,19 @@ return (
                     <User size={18} />
                   </div>
                   <div>
-                    <p className="font-medium text-gray-900">{e.name}</p>
+                    <p className="font-medium text-gray-900">{e.Juryname}</p>
                     <p className="text-sm text-gray-500">
-                      Submitted: {e.date}
+                      Submitted: {e.SubmittedDate}
                     </p>
                   </div>
                 </div>
                 <div className="flex items-center gap-3">
-                  {e.flagged && (
+                  {e.Flag == 1 && (
                     <Flag size={22} className="text-red-600 fill-red-600" />
                   )}
                   <div className="border border-gray-300 bg-green-50 text-green-700 px-4 py-2 rounded-md text-center min-w-[70px]">
                     <div className="text-lg font-semibold">
-                      {e.totalScore}
+                      {e.Score}
                     </div>
                     <div className="text-xs">Score</div>
                   </div>
@@ -1532,24 +1839,23 @@ return (
                         </tr>
                       </thead>
                       <tbody>
-                        {e.scores.map((s, i) => (
+                        {e.Attributes?.map((s: any, i: number) => (
                           <tr
                             key={i}
                             className="border-t border-gray-300">
                             <td className="px-4 py-2 font-medium">
-                              {s.label}
+                              {s.AttributeName}
                             </td>
-                            <td className="px-4 py-2">{s.score}</td>
+                            <td className="px-4 py-2">{s.Score}</td>
                             <td className="px-4 py-2 text-gray-600">
-                              Demonstrates exceptional leadership qualities
+                               {s.Comments || "-"}
                             </td>
                           </tr>
                         ))}
                       </tbody>
                     </table>
                   </div>
-
-                  {e.flagged && (
+                  {e.Flag === 1 && (
                     <>
                       <div className="flex items-center gap-2 mt-3 text-sm">
                         <Flag size={16} className="text-red-600" />
@@ -1561,7 +1867,7 @@ return (
                           className="w-4 h-4 accent-red-600"/>
                       </div>
                       <div className="mt-2 border border-gray-300 bg-red-50 rounded-md px-4 py-3 text-sm text-gray-700">
-                        {e.reason}
+                        {e.FlagReason || "No reason provided"}
                       </div>
                     </>
                   )}
@@ -1571,121 +1877,22 @@ return (
           );
         })}
       </div>
-    </div>
-      {/* <div
-        className={`fixed top-0 right-0 h-full w-[720px] bg-white shadow-2xl z-50
-          transform transition-transform duration-300 ease-in-out
-          ${openEvaluation ? "translate-x-0" : "translate-x-full"}
-        `}>
-        <div className="relative px-6 py-4 border-b border-gray-200">
-          <h2 className="text-[16px] font-semibold text-gray-900">
-            Level 2 - All Business Jury Overview
-          </h2>
-          <button
-            onClick={() => setOpenEvaluation(false)}
-            className="absolute right-6 top-4">
-            <X size={20} />
-          </button>
-        </div>
-        <div className="px-6 py-6 overflow-y-auto h-[calc(100vh-70px)]">
-          <div className="border border-gray-300 rounded-lg p-5">
-            <div className="flex justify-between items-start mb-4">
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-full themeColor flex items-center justify-center text-white">
-                  <User size={18} />
-                </div>
-                <div>
-                  <p className="font-medium text-gray-900">
-                    Senthil Nanthan
-                  </p>
-                  <p className="text-sm text-gray-500">
-                    Submitted: Jan 18, 2026
-                  </p>
-                </div>
-              </div>
-              <div className="flex items-center gap-3">
-                <div className="text-red-600 text-lg">
-                <Flag size={24} className="text-red-600 fill-red-600"/>
-                </div>
-                <div className="border border-gray-300 bg-green-50 text-green-700 px-4 py-2 rounded-md text-center min-w-[70px]">
-                  <div className="text-lg font-semibold">260</div>
-                  <div className="text-xs">Score</div>
-                </div>
-              </div>
-            </div>
-            <div className="border border-gray-300 rounded-md overflow-hidden mb-4">
-              <table className="w-full text-sm">
-                <thead className="bg-gray-50">
-                  <tr>
-                    <th className="text-left px-4 py-2 border-b border-gray-300"></th>
-                    <th className="text-left px-4 py-2 border-b border-gray-300">
-                      Score
-                    </th>
-                    <th className="text-left px-4 py-2 border-b border-gray-300">
-                      Comments
-                    </th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {[
-                    { label: "Integrity", score: 70 },
-                    { label: "Idea", score: 50 },
-                    { label: "Effors", score: 60 },
-                    { label: "OutComes", score: 80 },
-                  ].map((row, i) => (
-                    <tr key={i} className="border-b border-gray-200 last:border-b-0">
-                      <td className="px-4 py-3 font-medium">
-                        {row.label}
-                      </td>
-                      <td className="px-4 py-3">
-                        {row.score}
-                      </td>
-                      <td className="px-4 py-3 text-gray-700">
-                        Demonstrates exceptional leadership qualities
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-            <div className="flex items-center gap-2 text-sm mb-3">
-              <Flag size={18} className="text-red-400"/>
-              <span className="font-medium">Flagged :</span>
-              <input
-                type="checkbox" checked className="w-4 h-4 accent-red-600"/>
-            </div>
-            <div className="border border-gray-300 bg-red-50 rounded-md px-4 py-3 text-sm">
-              Missing one documents
-            </div>
-          </div>
-          <div className="flex justify-end mt-6">
-            <button
-              onClick={() => setOpenEvaluation(false)}
-              className="px-6 py-2 border border-gray-300 rounded-md">
-              Cancel
-            </button>
-          </div>
-        </div>
-      </div> */}
-      <div
-      className={`fixed top-0 right-0 h-full w-[650px] bg-white z-50 shadow-xl
-       transform transition-transform duration-500 ease-in-out
-        ${openScore ? "translate-x-0" : "translate-x-full"}`}>
+    </div>   
+    <div className={`fixed top-0 right-0 h-screen w-[650px] bg-white z-50 shadow-xl
+        transform transition-transform duration-500 ease-in-out
+        ${openScore ? "translate-x-0" : "translate-x-full"}
+        flex flex-col`}>
       <div className="flex justify-between items-center px-6 py-4 border-b border-gray-200">
         <h2 className="text-lg font-semibold">
           Level 2 - Business Jury
         </h2>
         <X
           className="cursor-pointer text-gray-600"
-          onClick={() => setOpenScore(false)}/>
+          onClick={handleCloseDrawer}/>
       </div>
-      <div className="px-6 py-6 space-y-6 text-sm">
-        {[
-          { title: "Integrity", score: 70 },
-          { title: "Idea", score: 50 },
-          { title: "Efforts", score: 60 },
-          { title: "Outcome", score: 80 },
-        ].map((item, i) => (
+      {/* <div className="px-6 py-6 space-y-6 text-sm"> */}
+      <div className="flex-1 overflow-y-auto px-6 py-6 space-y-6 text-sm">
+        {scores.map((item, i) => (
           <div key={i}>
             <div className="flex items-center gap-6 mb-2">
               <div className="flex items-center gap-1 font-medium">
@@ -1694,151 +1901,206 @@ return (
               </div>
               <div className="flex items-center gap-2">
                 <span className="text-gray-500 text-sm">Score</span>
-                <input type="number" min={1} max={100}
-                  defaultValue={item.score}
-                  className="w-[90px] h-[36px] px-3 border border-gray-300 rounded-md text-sm outline-none"/>
+                <input type="number" min={1} max={100} value={item.score}
+                  onChange={(e) => {
+                    const val = Number(e.target.value);
+                    setScores(prev =>
+                      prev.map((s, idx) =>
+                        idx === i ? { ...s, score: val } : s
+                      )
+                    );
+                  }}
+              className={`w-[90px] h-[36px] px-3 border rounded-md text-sm outline-none
+              ${popupErrors.score[i] ? "border-red-500" : "border-gray-300"}`}/>
               </div>
+              {popupErrors.score[i] && (
+                <p className="text-red-600 text-xs mt-1">
+                  {popupErrors.score[i]}
+                </p>
+              )}
             </div>
-            {item.title !== "Outcome" && (
-              <div>
-                <label className="block text-gray-500 text-sm mb-1">
+             <label className="block text-gray-500 text-sm mb-1">
                   Comments
-                </label>
-                <textarea
-                  rows={3}
-                  defaultValue="Maintained a high level of discipline in the environment with consistently excellent hygiene habits. This approach contributed to a clean, safe, and well-organized workplace."
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm resize-none outline-none" />
-              </div>
-            )}
+             </label>
+            <textarea rows={3} value={item.comment}
+              onChange={(e) => {
+                const val = e.target.value;
+                setScores(prev =>
+                  prev.map((s, idx) =>
+                    idx === i ? { ...s, comment: val } : s
+                  )
+                );
+              }}
+              className={`w-full px-3 py-2 border rounded-md text-sm resize-none outline-none
+                ${popupErrors.comment[i] ? "border-red-500" : "border-gray-300"}`}/>
+
+              {popupErrors.comment[i] && (
+                <p className="text-red-600 text-xs mt-1">
+                  {popupErrors.comment[i]}
+                </p>
+              )}        
           </div>
-        ))}
+         ))}
+          <div className="flex items-center gap-2 mb-[12px]">
+            <Flag size={18} className={isFlagged ? "text-red-600" : "text-gray-400"}/>
+            <span className="font-medium">Flag :</span>
+            <input type="checkbox" checked={isFlagged}
+              onChange={(e) => {
+                const checked = e.target.checked;
+                setIsFlagged(checked);
+                if (checked) {
+                  setTimeout(() => textareaRef.current?.focus(), 100);
+                } else {
+                  setFlagComment("");
+                  setPopupErrors(prev => ({ ...prev, flagComment: "" }));
+                }
+              }}
+              className="w-4 h-4 mt-[1px] accent-red-600 cursor-pointer"/>
+          </div>
+            <textarea ref={textareaRef} rows={3} value={flagComment}
+              onChange={(e) => {
+                const value = e.target.value;
+                setFlagComment(value);
+                if (value.trim()) {
+                  setPopupErrors(prev => ({ ...prev, flagComment: "" }));
+                }
+              }}
+              disabled={!isFlagged}
+              placeholder="Flagged reason here"
+              className={`w-full px-3 py-2 rounded-[6px]
+                ${isFlagged
+                  ? "border border-red-300 bg-red-50"
+                  : "border border-gray-200 bg-gray-100 cursor-not-allowed"}`}/>
+            {popupErrors.flagComment && (
+              <p className="text-red-600 text-xs mt-1">
+                {popupErrors.flagComment}
+              </p>
+            )}
+         <div className="mt-4">
+              <Label.Root className="block text-sm font-medium">
+                Supporting Documents 
+                <span className="text-red-500">(Maximum 5 files allowed & File must be below 2 MB)</span>
+              </Label.Root>
+              <label
+                htmlFor="fileUpload"
+                className="inline-block bg-gray-100 text-gray-700 border border-gray-300 px-6 py-2 rounded cursor-pointer mt-2 hover:bg-gray-200">
+                Choose File
+              </label>
+              <input
+                id="fileUpload"
+                ref={fileInputRef}
+                type="file"
+                multiple
+                onChange={handleFileUpload}
+                className="hidden" />
+              {fileError && <p className="text-red-500 text-sm mt-1">{fileError}</p>}
+            </div>         
+            <div className="mt-3 flex flex-wrap gap-2">
+              {allDocuments.map((doc: any, index: number) => (
+                <div
+                  key={doc.source === "api" ? doc.fileNameGUID : index}
+                  className="flex items-center gap-2 bg-gray-100 px-3 py-1 rounded-lg shadow-sm border relative">
+                  {/* File Name */}
+                  <span
+                    className="text-sm truncate max-w-[180px] cursor-pointer text-blue-600 hover:underline"
+                    onClick={async () => {
+                      const fileName = doc.originalFileName;
+                      const ext = fileName.split(".").pop()?.toLowerCase() || "";
+
+                      if (doc.source === "api") {
+                        try {
+                          const response = await axios.get(
+                            `${apiUrl}/api/download?fileName=${doc.fileNameGUID}`,
+                            {
+                              responseType: "blob",
+                              headers: { Authorization: `Bearer ${authToken}` },
+                            }
+                          );
+                          const blobUrl = URL.createObjectURL(response.data);
+                          if (["jpg", "jpeg", "png", "gif"].includes(ext)) {
+                            openPreview(response.data, ext);
+                          } 
+                          else if (ext === "pdf") {
+                            const pdfBlob = new Blob([response.data], { type: "application/pdf" });
+                            const pdfUrl = URL.createObjectURL(pdfBlob);
+                            window.open(pdfUrl, "_blank");
+                          }
+                          // else if (ext === "pdf") {
+                          //   window.open(blobUrl, "_blank");  
+                          // }
+                          else {
+                            const link = document.createElement("a");
+                            link.href = URL.createObjectURL(response.data);
+                            link.download = fileName;
+                            link.click();
+                          }
+                        } catch {
+                          alert("File not found");
+                        }
+                      }
+
+                      else {
+                        const file = doc.file;
+                        if (!(file instanceof File)) return;
+
+                        if (["jpg", "jpeg", "png", "gif"].includes(ext)) {
+                          openPreview(file, ext);
+                        } 
+                         else if (ext === "pdf") {
+                          const pdfBlob = new Blob([file], { type: "application/pdf" });
+                          const pdfUrl = URL.createObjectURL(pdfBlob);
+                          window.open(pdfUrl, "_blank");    
+                          }
+                          else {
+                          const link = document.createElement("a");
+                          link.href = URL.createObjectURL(file);
+                          link.download = file.name;
+                          link.click();
+                        }
+                      }
+                    }}>
+                    {doc.originalFileName || doc.name}
+                  </span>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      if (doc.source === "api") {
+                        setExistingDocs(prev => prev.map(d => d.fileNameGUID === doc.fileNameGUID ? { ...d, isDeleted: true } : d));
+                      } else {
+                        setForm(prev => ({ ...prev, files: prev.files.filter((_, i) => i !== index) }));
+                      }
+                    }}
+                    className="text-red-500 hover:text-red-700 font-bold text-lg leading-none">
+                    ×
+                  </button>
+                </div>
+              ))}
+            </div>     
         <div className="flex justify-end gap-3 pt-6">
            <button
-              onClick={() => setOpenScore(false)} 
+              onClick={handleCloseDrawer} 
               className="h-[42px] px-6 border border-gray-300 rounded-[6px] text-gray-700">
               Cancel
             </button>
-            <button className="h-[44px] px-8 rounded-md shadow btn-theme"> Submit </button>
+            <button  onClick={handleSubmitEvaluation}
+             className="h-[44px] px-8 rounded-md shadow btn-theme"> Submit </button>
         </div>
       </div>
     </div>
-
     {successMessage && (
       <div className="fixed top-5 right-5 z-[9999] bg-green-600 text-white px-5 py-3
       rounded-lg shadow-xl text-sm font-medium animate-slide-in">
       {successMessage}
         </div>
-      )}
-      {errorMessage && (
-        <div className="fixed top-5 right-5 z-[9999] bg-red-600 text-white px-5 py-3
+    )}
+    {errorMessage && (
+      <div className="fixed top-5 right-5 z-[9999] bg-red-600 text-white px-5 py-3
         rounded-lg shadow-xl text-sm font-medium animate-slide-in">
-          {errorMessage}
-        </div>
-      )}
-      {popupType && (
-  <div className="fixed inset-0 bg-black/30 z-50">
-
-    <div className="fixed right-0 top-0 h-full w-[480px]
-      bg-white shadow-xl animate-slideIn">
-
-      <div className="flex justify-between items-center
-        p-5 border-b">
-
-        <h2 className="font-semibold text-lg capitalize">
-          {popupType.replace("-", " ")}
-        </h2>
-
-        <X className="cursor-pointer" onClick={closePopup} />
+        {errorMessage}
       </div>
-
-      <div className="p-6 overflow-y-auto h-full">
-{popupType === "approve" && (
-  <>
-    <label>Status</label>
-    <select className="w-full border p-2 rounded mb-4">
-      <option>Approved</option>
-      <option>Rejected</option>
-    </select>
-
-    <label>Comments</label>
-    <textarea
-      className="w-full border p-2 rounded mb-4"
-      rows={4}
-    />
-
-    <label className="flex gap-2 items-center mb-2">
-      <input type="checkbox" /> Flag
-    </label>
-
-    <textarea
-      placeholder="Flag reason"
-      className="w-full border p-2 rounded bg-red-50"
-    />
-
-    <div className="flex justify-end gap-3 mt-6">
-      <button onClick={closePopup}>Cancel</button>
-      <button className="bg-green-600 text-white px-6 py-2 rounded">
-        Submit
-      </button>
-    </div>
-  </>
-)}
-{popupType === "score" && (
-  <>
-    {["Integrity", "Idea", "Efforts", "Outcome"].map(item => (
-      <div key={item} className="mb-4">
-        <p className="font-medium">{item}</p>
-        <input
-          type="number"
-          className="border w-full p-2 rounded mb-2"
-        />
-        <textarea
-          placeholder="Comments"
-          className="border w-full p-2 rounded"
-        />
-      </div>
-    ))}
-
-    <div className="flex justify-end mt-6">
-      <button
-        onClick={closePopup}
-        className="bg-green-600 text-white px-6 py-2 rounded"
-      >
-        Submit Score
-      </button>
-    </div>
-  </>
-)}
-{popupType === "evaluation" && (
-  <>
-    <table className="w-full border text-sm">
-      <thead className="bg-gray-100">
-        <tr>
-          <th className="p-2">Criteria</th>
-          <th>Score</th>
-          <th>Comments</th>
-        </tr>
-      </thead>
-      <tbody>
-        <tr><td>Integrity</td><td>70</td><td>Leadership skills</td></tr>
-        <tr><td>Idea</td><td>50</td><td>Creative ideas</td></tr>
-        <tr><td>Efforts</td><td>60</td><td>Good effort</td></tr>
-        <tr><td>Outcome</td><td>80</td><td>Excellent result</td></tr>
-      </tbody>
-    </table>
-
-    <div className="mt-4 p-3 border border-red-300 bg-red-50 rounded">
-      🚩 Missing one document
-    </div>
-  </>
-)}
-      </div>
-    </div>
-  </div>
-)}
-
+    )}
     {/* Popup Modal */}
-      {popupOpen && (
+     {popupOpen && (
         <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/40 px-4">
           <div className="bg-white w-full max-w-xl p-6 rounded-lg shadow-lg">
             <div className="flex items-center justify-between mb-4">
@@ -1860,7 +2122,7 @@ return (
                 <input
                   type="text"
                   maxLength={3}
-                  className={`w-full mt-1 p-2 pr-10 border rounded text-sm ${popupErrors.score ? "border-red-500" : "border-gray-300"}`}
+                  // className={`w-full mt-1 p-2 pr-10 border rounded text-sm ${popupErrors.score ? "border-red-500" : "border-gray-300"}`}
                   value={popupScore}
                   onChange={(e) => {
                     const v = e.target.value;
@@ -1882,7 +2144,7 @@ return (
                   {popupScore ? popupScore : "1"}/100
                 </div>
               </div>
-              {popupErrors.score && <p className="text-red-600 text-xs mt-1">{popupErrors.score}</p>}
+              {/* {popupErrors.score && <p className="text-red-600 text-xs mt-1">{popupErrors.score}</p>} */}
             </div>
           )}
             <div className="mt-4">
@@ -1919,149 +2181,146 @@ return (
           </div>
         </div>
       )}
-         {flagOpen && (
-  <div className="fixed inset-0 z-[9999] bg-black/40 flex items-center justify-center">
-    <div className="bg-white w-full max-w-lg rounded-xl shadow-xl p-6">
+      {flagOpen && (
+        <div className="fixed inset-0 z-[9999] bg-black/40 flex items-center justify-center">
+          <div className="bg-white w-full max-w-lg rounded-xl shadow-xl p-6">
 
-      <div className="flex justify-between items-center mb-4">
-        <h3 className="text-lg font-semibold text-red-600">
-          🚩 Flag Nomination
-        </h3>
-        <button onClick={() => setFlagOpen(false)}>
-          <X />
+            <div className="flex justify-between items-center mb-4">
+              <h3 className="text-lg font-semibold text-red-600">
+                🚩 Flag Nomination
+              </h3>
+              <button onClick={() => setFlagOpen(false)}>
+                <X />
+              </button>
+            </div>
+
+      <div className="mb-4">
+        <label className="text-sm font-medium">
+          Reason <span className="text-red-500">*</span>
+        </label>
+
+        <textarea
+          rows={3}
+          value={flagReason}
+          onChange={(e) => setFlagReason(e.target.value)}
+          className="w-full mt-1 p-2 border rounded text-sm"
+          placeholder="Enter reason..."
+        />
+      </div>
+
+      <div className="mb-4">
+        <label className="text-sm font-medium">
+          Upload Supporting Documents
+        </label>
+
+        <input
+          type="file"
+          multiple
+          onChange={handleFlagFileChange}
+          className="w-full mt-1 border p-2 rounded text-sm"
+        />
+      </div>
+
+      {flagFiles.length > 0 && (
+        <div className="mt-2 space-y-1 text-sm text-gray-700">
+          {flagFiles.map((file, index) => (
+            <div key={index} className="flex items-center gap-2">
+              📄 {file.name}
+            </div>
+          ))}
+        </div>
+      )}
+
+      {flagError && (
+        <p className="text-red-600 text-sm mt-2">{flagError}</p>
+      )}
+
+      <div className="flex justify-end gap-3 mt-6">
+        <button
+          className="px-4 py-2 bg-gray-200 rounded"
+          onClick={() => setFlagOpen(false)}
+        >
+          Cancel
+        </button>
+
+        <button
+          onClick={submitFlagWithAttachment}
+          className="px-4 py-2 btn-theme-reject"
+        >
+          Submit Flag
         </button>
       </div>
 
-<div className="mb-4">
-  <label className="text-sm font-medium">
-    Reason <span className="text-red-500">*</span>
-  </label>
-
-  <textarea
-    rows={3}
-    value={flagReason}
-    onChange={(e) => setFlagReason(e.target.value)}
-    className="w-full mt-1 p-2 border rounded text-sm"
-    placeholder="Enter reason..."
-  />
-</div>
-
-<div className="mb-4">
-  <label className="text-sm font-medium">
-    Upload Supporting Documents
-  </label>
-
-  <input
-    type="file"
-    multiple
-    onChange={handleFlagFileChange}
-    className="w-full mt-1 border p-2 rounded text-sm"
-  />
-</div>
-
-{flagFiles.length > 0 && (
-  <div className="mt-2 space-y-1 text-sm text-gray-700">
-    {flagFiles.map((file, index) => (
-      <div key={index} className="flex items-center gap-2">
-        📄 {file.name}
-      </div>
-    ))}
-  </div>
-)}
-
-{flagError && (
-  <p className="text-red-600 text-sm mt-2">{flagError}</p>
-)}
-
-<div className="flex justify-end gap-3 mt-6">
-  <button
-    className="px-4 py-2 bg-gray-200 rounded"
-    onClick={() => setFlagOpen(false)}
-  >
-    Cancel
-  </button>
-
-  <button
-    onClick={submitFlagWithAttachment}
-    className="px-4 py-2 btn-theme-reject"
-  >
-    Submit Flag
-  </button>
-</div>
-
-    </div>
-  </div>
-)}
+          </div>
+        </div>
+      )}
 
         {/* ✅ SUCCESS MODAL - NEW CUSTOM DESIGN */}
-      <ApprovalSuccessModal />
 {/* ================= Withdraw Confirmation Dialog ================= */}
-<Dialog.Root
-  open={isWithdrawDialogOpen}
-  onOpenChange={setIsWithdrawDialogOpen}
->
-  <Dialog.Portal>
-    <Dialog.Overlay className="fixed inset-0 bg-black/30 z-50" />
-    <Dialog.Content className="fixed top-1/2 left-1/2 z-50 w-[90%] max-w-sm
-      -translate-x-1/2 -translate-y-1/2 bg-white p-6 rounded-lg shadow-lg">
- 
-      <Dialog.Title className="text-center text-lg font-semibold text-gray-900">
-        Are you sure you want to withdraw this nomination?
-      </Dialog.Title>
- 
-      <div className="mt-6 flex justify-center gap-4">
-        <button
-          onClick={() => setIsWithdrawDialogOpen(false)}
-          className="px-4 py-2 text-sm rounded-md border border-gray-300 hover:bg-gray-100">
-          No
-        </button>
-        <button
-          onClick={handleWithdraw}
-          className="px-4 py-2 btn-theme">
-          Yes
-        </button>
-      </div>
-    </Dialog.Content>
-  </Dialog.Portal>
-</Dialog.Root>
- 
+      <Dialog.Root
+        open={isWithdrawDialogOpen}
+        onOpenChange={setIsWithdrawDialogOpen}>
+        <Dialog.Portal>
+          <Dialog.Overlay className="fixed inset-0 bg-black/30 z-50" />
+          <Dialog.Content className="fixed top-1/2 left-1/2 z-50 w-[90%] max-w-sm
+            -translate-x-1/2 -translate-y-1/2 bg-white p-6 rounded-lg shadow-lg">
+      
+            <Dialog.Title className="text-center text-lg font-semibold text-gray-900">
+              Are you sure you want to withdraw this nomination?
+            </Dialog.Title>
+      
+            <div className="mt-6 flex justify-center gap-4">
+              <button
+                onClick={() => setIsWithdrawDialogOpen(false)}
+                className="px-4 py-2 text-sm rounded-md border border-gray-300 hover:bg-gray-100">
+                No
+              </button>
+              <button
+                onClick={handleWithdraw}
+                className="px-4 py-2 btn-theme">
+                Yes
+              </button>
+            </div>
+          </Dialog.Content>
+        </Dialog.Portal>
+      </Dialog.Root>
+      
 {/* ================= Document Preview Dialog ================= */}
-<Dialog.Root
-  open={previewOpen}
-  onOpenChange={setPreviewOpen}
->
-  <Dialog.Portal>
-    <Dialog.Overlay className="fixed inset-0 bg-black/40 z-50" />
- 
-    <Dialog.Content className="fixed top-1/2 left-1/2 z-50 w-[90%] h-[80%] max-w-3xl
-      -translate-x-1/2 -translate-y-1/2 bg-white p-4 rounded-lg shadow-xl overflow-hidden">
- 
-      <div className="flex justify-between items-center mb-3">
-        <h2 className="text-lg font-semibold">Document Preview</h2>
-        <button
-          className="p-1 hover:bg-gray-200 rounded"
-          onClick={() => setPreviewOpen(false)}
-        >
-          <X size={20} />
-        </button>
-      </div>
- 
-      <div className="w-full h-full border rounded overflow-auto flex justify-center items-center bg-gray-50">
-        {["jpg", "jpeg", "png", "gif"].includes(previewType || "") && (
-          <img
-            src={previewFile!}
-            alt="Preview"
-            className="max-h-full max-w-full object-contain"
-          />
-        )}
-      </div>
-    </Dialog.Content>
-  </Dialog.Portal>
-</Dialog.Root>
-</div>  
-  );
- 
-};
+      <Dialog.Root
+        open={previewOpen}
+        onOpenChange={setPreviewOpen}>
+        <Dialog.Portal>
+          <Dialog.Overlay className="fixed inset-0 bg-black/40 z-50" />
+      
+          <Dialog.Content className="fixed top-1/2 left-1/2 z-50 w-[90%] h-[80%] max-w-3xl
+            -translate-x-1/2 -translate-y-1/2 bg-white p-4 rounded-lg shadow-xl overflow-hidden">
+      
+            <div className="flex justify-between items-center mb-3">
+              <h2 className="text-lg font-semibold">Document Preview</h2>
+              <button
+                className="p-1 hover:bg-gray-200 rounded"
+                onClick={() => setPreviewOpen(false)}
+              >
+                <X size={20} />
+              </button>
+            </div>
+      
+            <div className="w-full h-full border rounded overflow-auto flex justify-center items-center bg-gray-50">
+              {["jpg", "jpeg", "png", "gif"].includes(previewType || "") && (
+                <img
+                  src={previewFile!}
+                  alt="Preview"
+                  className="max-h-full max-w-full object-contain"
+                />
+              )}
+            </div>
+          </Dialog.Content>
+        </Dialog.Portal>
+      </Dialog.Root>
+  </div>  
+    );
+  
+  };
  
 export default BusinessJuryDetail;
 const ScoreBox = ({
