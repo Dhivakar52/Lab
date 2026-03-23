@@ -7,7 +7,6 @@ import { useAuth } from "../ContextAPI/AuthContext";
 import * as Dialog from "@radix-ui/react-dialog";
 import { useLocation } from "react-router-dom";
 //import Swal from "sweetalert2";
-import { motion } from 'framer-motion';
 import { Flag ,User, Building2, Tag, 
   CalendarDays, FileText, Mail, BadgeCheck, Check } from "lucide-react";
 import type { FormState } from "../../dataTypes/nomination";
@@ -89,14 +88,12 @@ const BusinessJuryDetail: React.FC<BusinessJuryDetailProps> = ({
   const [successMessage, setSuccessMessage] = useState("");
   const [isWithdrawDialogOpen, setIsWithdrawDialogOpen] = useState(false);
   const [expandedDescription, setExpandedDescription] = useState(false);
-  const [expandedComments, setExpandedComments] = useState<Record<string, boolean>>({});
   const visibleReferrals = expanded ? referrals : referrals.slice(0, 3);
   const [businessJuryDetails, setBusinessJury] = useState<any>(null);
   const [generalJuryDetails, setPresidentLevel] = useState<any>(null);
   const [presidentJuryDetails, setPresidentJury] = useState<any>(null);
   const location = useLocation();
   const from = location.state?.from;
-  const tab = location.state?.tab;
   const withdrawAllowedFrom = ["nominations"];
   const [popupOpen, setPopupOpen] = useState(false);
   const [actionType, setActionType] = useState<"approve" | "reject" | null>(null);
@@ -158,7 +155,14 @@ const BusinessJuryDetail: React.FC<BusinessJuryDetailProps> = ({
       files: [], 
       file: null as File | null,
     });
-
+  const safeParse = (value: any) => {
+    try {
+      if (!value || value === " " || value === "") return [];
+      return JSON.parse(value);
+    } catch {
+      return [];
+    }
+  };
   useEffect(() => {
       if (isFlagged) {
         textareaRef.current?.focus();
@@ -875,6 +879,7 @@ const handleEdit = () => {
       navigate(`/my-nominations/add-nomination/${id}`);
     }  
 };
+
 // const approvalData = approvalResponse.ApprovalStatus;
 const approvalData = data?.ApprovalStatus || [];
 const level1 = approvalData?.find((l: ApprovalItem) => l.ApprovalFlow === "Level-1");
@@ -883,10 +888,10 @@ const level3 = approvalData?.find((l: ApprovalItem) => l.ApprovalFlow === "Level
 
 const showLevel2 = level1?.Status === "Approved";
 const showLevel3 = level2?.Status === "Approved";
-const flagDetails = level1?.Flagdetails
-  ? JSON.parse(level1.Flagdetails)
-  : [];
-
+// const flagDetails = level1?.Flagdetails
+//   ? JSON.parse(level1.Flagdetails)
+//   : [];
+const flagDetails =safeParse(level1?.Flagdetails);
 const flagData = flagDetails?.[0]; 
 const selectedLevel =
   activeLevel === "Level-2"
@@ -907,6 +912,8 @@ const getBusinessJuryEvaluations = () => {
     return [];
   }
 };
+const avgScoreData = safeParse(level2?.JuryMemberAvgScore);
+const avgScore = avgScoreData?.[0]?.JuryMemberAvgScore || 0;
 const attributeData = level2;
 debugger;
 const handleManagerApprove = () => {
@@ -1331,11 +1338,12 @@ return (
                 {approvalData[0].ApprovalFlow} - {approvalData[0].ApprovalType}
               </p>
               <button
-                // onClick={() => setOpenApprove(true)}
-                onClick={handleManagerApprove}
-                className="px-4 py-1.5 rounded-lg text-sm bg-green-100 text-green-700 hover:bg-green-200 transition">
-                {level1.Status}
-              </button>
+                  onClick={handleManagerApprove}
+                  className={`px-4 py-1.5 rounded-lg text-sm border 
+                  ${levelColors[level1.Status] || "bg-gray-50 border-gray-300"} 
+                  ${levelTextColors[level1.Status] || "text-gray-700"}`}>
+                  {level1.Status}
+                </button>
             </div>
             <div className="bg-gray-50 rounded-lg p-4 text-sm text-gray-700 space-y-2">
               <div className="flex gap-12">
@@ -1362,7 +1370,7 @@ return (
                 <div>
                   <span className="text-gray-500">Reason :</span>{" "}
                   <span className="font-medium text-gray-600">
-                  {flagData?.FlagReason || "No reason"}
+                  {flagData?.FlagReason || ""}
                   </span>
                 </div>
                 <div>
@@ -1447,16 +1455,16 @@ return (
                     {approvalData[1].TotalEvalutions}
                   </span>
                 </div>
-                <div>
+                {/* <div>
                   <span className="text-gray-500">Evaluated Juries :</span>{" "}
                   <span className="font-medium">
                     {approvalData[1].EvaluatedJuries}
                   </span>
-                </div>
+                </div> */}
                 <div>
                   <span className="text-gray-500">Average Score :</span>{" "}
                   <span className="font-medium">
-                    {approvalData[1].AverageScore}
+                    {avgScore}
                   </span>
                 </div>
                  <div>
@@ -1778,22 +1786,22 @@ return (
       <div className="px-6 py-6 space-y-4 overflow-y-auto h-[calc(100vh-70px)]">
         <div className="grid grid-cols-3 gap-4">
           <div className="border border-gray-300 rounded-lg p-4 text-center bg-green-50 text-green-700">
+           <div className="text-sm">Total Evaluations</div>
             <div className="text-xl font-semibold">
               {attributeData?.TotalEvalutions || 0}
             </div>
-            <div className="text-sm">Total Evaluations</div>
           </div>
           <div className="border border-gray-300 rounded-lg p-4 text-center bg-blue-50 text-blue-700">
+           <div className="text-sm">Average Score</div>
             <div className="text-xl font-semibold">
-              {attributeData?.AverageScore || 0}
+             {avgScore || 0}
             </div>
-            <div className="text-sm">Average Score</div>
           </div>
           <div className="border border-gray-300 rounded-lg p-4 text-center bg-red-50 text-red-700">
+           <div className="text-sm">Flagged</div>
             <div className="text-xl font-semibold">
               {attributeData?.TotalFlagCount || 0}
             </div>
-            <div className="text-sm">Flagged</div>
           </div>
         </div>
         {juryList.map((e: any, index: number) => {

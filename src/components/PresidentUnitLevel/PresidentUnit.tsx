@@ -210,28 +210,25 @@ const PresidentUnit: React.FC = () => {
                 );
               },
         },          
-      {
-          header: "Actions",
-          cell: ({ row }) => {
-            const item = row.original;
-
-            const handleDetailsView = () => {
-              navigate(`/nomination-detail/${item.NominationID}`, {
-                state: { from: "president-unit" },
-              });
-            };
-
-            return (
-              <button
-                onClick={handleDetailsView}
-                className="p-2 rounded hover:bg-gray-100 transition"
-                title="View Details"
-              >
-                <Menu size={18} className="text-blue-600" />
-              </button>
-            );
-          },
-        },   
+        {
+            header: "Actions",
+            cell: ({ row }) => {
+              const item = row.original;
+              const handleDetailsView = (item: GeneralJury) => {
+            navigate(`/businessjury-detail/${item.NominationID}`, {
+              state: { from: "president-unit" }
+            });
+          };
+              return (
+                <button
+                  onClick={() => handleDetailsView(row.original)}
+                  className="p-2 rounded hover:bg-gray-100 transition"
+                   title="View Details">
+                  <Menu size={18} className="text-blue-600" />
+                </button>
+              );
+            },
+          }, 
     ],[navigate,expandedRow]);
 
   const table = useReactTable({
