@@ -60,6 +60,8 @@ const NotificationTable: React.FC<NotificationTableProps> = ({
   const { userId, authToken } = useAuth();
   const [isPanelOpen, setIsPanelOpen] = useState(false);
   const [selectedNominee, setSelectedNominee] = useState<Notification | null>(null);
+  
+     const [totalCount, setTotalCount] = useState(0); 
 
   useEffect(() => {
     const fetchNotifications = async () => {
@@ -69,7 +71,8 @@ const NotificationTable: React.FC<NotificationTableProps> = ({
         const res = await axios.get(`${apiUrl}/api/notificationlog/${userId}`, {
           headers: { Authorization: `Bearer ${authToken}` },
         });
-
+         //setTotalCount(res.data[0]?.TotalCount || 0);
+        setTotalCount(res.data.length);
         setData(res.data);
       } catch (err) {
         console.error("❌ Error fetching notifications:", err);
@@ -188,7 +191,7 @@ const NotificationTable: React.FC<NotificationTableProps> = ({
             </div>
 
             {/* Your existing Pagination component */}
-            <Pagination table={table} />
+            <Pagination  table={table}  totalCount={ globalFilter  ? table.getFilteredRowModel().rows.length : totalCount }  />
           </div>
 
           {/* Side Panel */}
