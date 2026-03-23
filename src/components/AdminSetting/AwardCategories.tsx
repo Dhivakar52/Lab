@@ -37,6 +37,7 @@ const AwardCategories: React.FC = () => {
   const [description, setDescription] = useState("");
    const [categoryCode, setcategoryCode] = useState("");
   const [editCategoryId, setEditCategoryId] = useState<number | null>(null);
+  const [totalCount, setTotalCount] = useState(0); 
 
   useEffect(() => {
     const fetchCategories = async () => {
@@ -50,6 +51,8 @@ const AwardCategories: React.FC = () => {
       CategoryName: category.CategoryName,
       Description: category.Description,
     }));
+    //setTotalCount(res.data[0]?.TotalCount || 0);
+        setTotalCount(res.data.length);
     setData(categories); 
       
       } catch (err) {
@@ -336,7 +339,7 @@ const handleDelete = async (category: Category) => {
               )}
             </tbody>
           </table>
-            <Pagination table={table} />
+           <Pagination  table={table}  totalCount={ globalFilter  ? table.getFilteredRowModel().rows.length : totalCount }  />
         </div>
 
       

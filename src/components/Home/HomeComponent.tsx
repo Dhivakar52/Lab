@@ -31,6 +31,7 @@ const HomeComponent: React.FC = () => {
   const [showDropdown, setShowDropdown] = useState(false);
   const [userDetail, setUserDetail] = useState<any>(null);
   const apiUrl = import.meta.env.VITE_API_URL;
+  const [businessLoading, setBusinessLoading] = useState(false);
 
 
   const [feedsState, feedsDispatch] = useReducer(filterReducer, initialFilterState);
@@ -58,6 +59,11 @@ const HomeComponent: React.FC = () => {
       setShowDropdown(false);
     }
   }, []);
+  const Loader = () => (
+  <div className="flex justify-center items-center h-[300px]">
+    <div className="h-10 w-10 border-4 border-gray-300 border-t-blue-600 rounded-full animate-spin"></div>
+  </div>
+);
 
   useEffect(() => {
     const fetchFeeds = async () => {
@@ -82,17 +88,17 @@ const HomeComponent: React.FC = () => {
         console.log("profileDetails", fetchUserDetail.data);
 
        
-       const businesstenant = await axios.get(
-          `${apiUrl}/api/nominationfeeds?searchText=${tenantname}`,
-          {
-            headers: {
-              "Content-Type": "application/json",
-              Authorization: `Bearer ${authToken}`,
-            },
-          }
-        );
+      //  const businesstenant = await axios.get(
+      //     `${apiUrl}/api/nominationfeeds?searchText=${tenantname}`,
+      //     {
+      //       headers: {
+      //         "Content-Type": "application/json",
+      //         Authorization: `Bearer ${authToken}`,
+      //       },
+      //     }
+      //   );
 
-        setBusiness(businesstenant.data);
+        //setBusiness(businesstenant.data);
 
         
 
@@ -108,7 +114,7 @@ const HomeComponent: React.FC = () => {
         setPosts(res.data);
         setProfile(filtered);
         
-        const listCard = await axios.get(`${apiUrl}/api/nomiantionmylist`, {
+        const listCard = await axios.get(`${apiUrl}/api/nomiantionmylist/${userId}`, {
           headers: {
             "Content-Type": "application/json",
             Authorization: `Bearer ${authToken}`,
@@ -125,6 +131,34 @@ const HomeComponent: React.FC = () => {
 
     fetchFeeds();
   }, [authToken, apiUrl, userId,tenantname]);
+
+  //LOAD BUSINESS DATA 
+  useEffect(() => {
+    if (activeTab !== "My Business" || business.length > 0) return;
+
+    const fetchBusiness = async () => {
+      try {
+        setBusinessLoading(true);
+        const res = await axios.get(
+          `${apiUrl}/api/nominationfeeds?searchText=${tenantname}`,
+          {
+            headers: {
+              Authorization: `Bearer ${authToken}`,
+            },
+          }
+        );
+        setBusiness(res.data);
+        //console.log(res.data,"dd")
+      } catch (err) {
+        console.error("❌ Business load error:", err);
+      }
+      finally {
+      setBusinessLoading(false); 
+    }
+    };
+
+    fetchBusiness();
+  }, [activeTab, tenantname, authToken, apiUrl, business.length]);
 
   const filteredPosts = useMemo(() => {
     let data = [...posts];
@@ -231,8 +265,8 @@ const HomeComponent: React.FC = () => {
       return { ...listsState, dispatch: listsDispatch };
     return { ...businessState, dispatch: businessDispatch };
 
-    //  if (activeTab === "My Business")
-    //   return { ...businessState, dispatch: businessDispatch };
+      // if (activeTab === "My Business")
+      // return { ...businessState, dispatch: businessDispatch };
   };
 
   return (
@@ -341,18 +375,23 @@ const HomeComponent: React.FC = () => {
                     )
                   )}
 
-                  
-                  {/* {activeTab === "My Business" && (
-                    <div className="overflow-y-auto h-[550px] min-h-screen">
-                      <BusinessCard />
+                 
+
+                {activeTab === "My Business" && (
+                    businessLoading ? (
+                      <Loader />
+                    ) : (
+                      <div className="overflow-y-auto h-[550px] min-h-screen">
+                    <BusinessCard
+                        business={filteredBusiness}
+                        setBusiness={setBusiness}
+                      />
                     </div>
-                  )} */}
-                 {activeTab === "My Business" && (
-                  <BusinessCard
-                    business={filteredBusiness}
-                    setBusiness={setBusiness}
-                  />
-                )}
+                 
+                     
+                    )
+                  )}
+
 
 
                                   

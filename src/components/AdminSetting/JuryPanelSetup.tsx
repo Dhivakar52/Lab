@@ -37,6 +37,7 @@ const JuryPanelSetup: React.FC = () => {
   const [isPanelOpen, setIsPanelOpen] = useState(false);
   const [actionOpen, setActionOpen] = useState<number | null>(null);
 const [selectedMember, setSelectedMember] = useState<JuryMember | null>(null);
+ const [totalCount, setTotalCount] = useState(0); 
 
 const [isEditMode, setIsEditMode] = useState(false);
 
@@ -71,9 +72,10 @@ const [isEditMode, setIsEditMode] = useState(false);
           RoleID:item.RoleID,
         }));
 
-      setData(juryPanelData);
+      
 
-
+       // setTotalCount(res.data[0]?.TotalCount || 0);
+        setTotalCount(juryPanelData.length);
         setData(juryPanelData);
       } catch (err) {
         console.error("Error fetching jury panel list", err);
@@ -263,7 +265,7 @@ const [isEditMode, setIsEditMode] = useState(false);
               )}
             </tbody>
           </table>
-           <Pagination table={table} />
+         <Pagination  table={table}  totalCount={ globalFilter  ? table.getFilteredRowModel().rows.length : totalCount }  />
         </div>
       </div>
 

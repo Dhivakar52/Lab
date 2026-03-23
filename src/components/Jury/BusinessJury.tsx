@@ -70,6 +70,7 @@ const BusinessJury: React.FC = () => {
   const [flagReason, setFlagReason] = useState<Record<number, string>>({});
   const [expandedRow, setExpandedRow] = useState<ExpandedRow>(null);
   const tableWrapperRef = useRef<HTMLDivElement | null>(null);
+   const [totalCount, setTotalCount] = useState(0); 
   
   const navigate = useNavigate();
   
@@ -83,7 +84,10 @@ const BusinessJury: React.FC = () => {
           headers: { Authorization: `Bearer ${authToken}` },
         });
         
-        setData(res.data);
+       //setTotalCount(res.data[0]?.TotalCount || 0);
+        setTotalCount(res.data.length);
+         setData(res.data);
+        
       } catch (err) {
         console.error("❌ Error fetching users:", err);
       } finally {
@@ -347,7 +351,7 @@ const BusinessJury: React.FC = () => {
             </tbody>          
         </table>
         {/* Pagination */}
-         <Pagination table={table} />
+          <Pagination  table={table}  totalCount={ globalFilter  ? table.getFilteredRowModel().rows.length : totalCount }  />
       </div>
     </div>
     <BusinessPanel

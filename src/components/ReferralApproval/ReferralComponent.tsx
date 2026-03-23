@@ -118,6 +118,7 @@ const ReferralTable: React.FC = () => {
   const tableWrapperRef = useRef<HTMLDivElement | null>(null);
   const [isLevelPanelOpen, setIsLevelPanelOpen] = useState(false);
   const [selectedLevelRow, setSelectedLevelRow] = useState<ReferralData | null>(null);
+   const [totalCount, setTotalCount] = useState(0); 
   
   useEffect(() => {
     const fetchApprovals = async () => {
@@ -127,9 +128,10 @@ const ReferralTable: React.FC = () => {
         const res = await axios.get(`${apiUrl}/api/referralvaluations/${userId}`, {
           headers: { Authorization: `Bearer ${authToken}` },
         });
-        setData(res.data);
-        console.log("approval:", res.data);
-
+       
+         //setTotalCount(res.data[0]?.TotalCount || 0);
+        setTotalCount(res.data.length);
+         setData(res.data);
        
       } catch (err) {
         console.error("❌ Error fetching approvals:", err);
@@ -455,7 +457,7 @@ const ReferralTable: React.FC = () => {
               })}
             </tbody>  
           </table>
-          <Pagination table={table} />
+          <Pagination  table={table}  totalCount={ globalFilter  ? table.getFilteredRowModel().rows.length : totalCount }  />
         </div>
        </div>
       </div>
@@ -473,12 +475,12 @@ const ReferralTable: React.FC = () => {
          reason={reason}
         setReason={setReason}
       />
-      <ProgressSidePanel
+      {/* <ProgressSidePanel
         isOpen={isLevelPanelOpen}
         onClose={() => {
         setIsLevelPanelOpen(false);
         setSelectedLevelRow(null);
-      }}/>
+      }}/> */}
        {/* Final Correct Component */}
       {/* <ReferralReasonPanel
         isOpen={isPanelOpen}

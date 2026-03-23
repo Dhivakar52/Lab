@@ -65,6 +65,7 @@ const PresidentUnit: React.FC = () => {
   const [flagReason, setFlagReason] = useState<Record<number, string>>({});
   const [expandedRow, setExpandedRow] = useState<ExpandedRow>(null);
   const tableWrapperRef = useRef<HTMLDivElement | null>(null);
+   const [totalCount, setTotalCount] = useState(0); 
   
   useEffect(() => {
     const fetchGeneralJury = async () => {
@@ -77,7 +78,8 @@ const PresidentUnit: React.FC = () => {
             headers: { Authorization: `Bearer ${authToken}` },
           }
         );
-
+        //setTotalCount(res.data[0]?.TotalCount || 0);
+        setTotalCount(res.data.length);
         setData(res.data);
       } catch (err) {
         console.error("❌ Error fetching president unit data:", err);
@@ -353,7 +355,7 @@ const PresidentUnit: React.FC = () => {
         </table>
 
         {/* Pagination */}
-       <Pagination table={table} />
+       <Pagination  table={table}  totalCount={ globalFilter  ? table.getFilteredRowModel().rows.length : totalCount }  />
       </div>
      </div>
       {/* <PresidentSidePanel

@@ -122,6 +122,7 @@ const ApprovalTable: React.FC = () => {
   const tableWrapperRef = useRef<HTMLDivElement | null>(null);
   const [isLevelPanelOpen, setIsLevelPanelOpen] = useState(false);
   const [selectedLevelRow, setSelectedLevelRow] = useState<ApprovalData | null>(null);
+   const [totalCount, setTotalCount] = useState(0); 
   const navigate = useNavigate();
   
   useEffect(() => {
@@ -132,8 +133,9 @@ const ApprovalTable: React.FC = () => {
         const res = await axios.get(`${apiUrl}/api/managerevaluation`, {
           headers: { Authorization: `Bearer ${authToken}` },
         });
-
-        setData(res.data);
+        //setTotalCount(res.data[0]?.TotalCount || 0);
+        setTotalCount(res.data.length);
+         setData(res.data);
       } catch (err) {
         console.error("❌ Error fetching approvals:", err);
       } finally {
@@ -600,7 +602,7 @@ const ApprovalTable: React.FC = () => {
               })}
             </tbody>
           </table>
-          <Pagination table={table} />
+           <Pagination  table={table}  totalCount={ globalFilter  ? table.getFilteredRowModel().rows.length : totalCount }  />
           </div>
         </div>
       </div>

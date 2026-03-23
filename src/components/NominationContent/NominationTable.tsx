@@ -81,6 +81,7 @@ const apiUrl = import.meta.env.VITE_API_URL;
   const tableWrapperRef = useRef<HTMLDivElement | null>(null);
   const [isLevelPanelOpen, setIsLevelPanelOpen] = useState(false);
   const [selectedLevelRow, setSelectedLevelRow] = useState<Nomination | null>(null);
+   const [totalCount, setTotalCount] = useState(0); 
 
   useEffect(() => {
     if (location.state?.tab) {
@@ -122,7 +123,9 @@ const apiUrl = import.meta.env.VITE_API_URL;
         },
         headers: { Authorization: `Bearer ${authToken}` },
       });
-      setData(res.data);
+      //setTotalCount(res.data[0]?.TotalCount || 0);
+        setTotalCount(res.data.length);
+         setData(res.data);
       setExpandedRow(null);
     } catch (err) {
       console.error(err);
@@ -419,7 +422,7 @@ const apiUrl = import.meta.env.VITE_API_URL;
               })}
             </tbody>  
           </table>
-            <Pagination table={table} />
+            <Pagination  table={table}  totalCount={ globalFilter  ? table.getFilteredRowModel().rows.length : totalCount }  />
       </div>
      </div>
     </div>

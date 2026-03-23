@@ -372,21 +372,45 @@ useEffect(() => {
     }
   });
 }, [posts]);
+const handlePostClick = async (post: Feed) => {
+  const NominationID = post.NominationID;  // Get the NominationID from the clicked post
 
-    const fetchSeekingUsers = async () => {
-    try {
-      const res = await axios.get(`${apiUrl}/api/users`, {
-        headers: {
-          Authorization: `Bearer ${authToken}`,
-        },
-      });
+  // Perform API call or any logic using the NominationID
+  await fetchSeekingUsers(NominationID);  // Pass the NominationID to the function
+  setSelectedPost(post);  // Optionally, set the selected post for viewing
+};
+
+  //   const fetchSeekingUsers = async () => {
+  //   try {
+  //     const NominationID = 1;
+  //     const res = await axios.get(`${apiUrl}/api/seeking/${NominationID}`, {
+  //       headers: {
+  //         Authorization: `Bearer ${authToken}`,
+  //       },
+  //     });
   
-      setSeekingUsers(res.data || []);
-      console.log("seek data",res.data)
-    } catch (err) {
-      console.error("Seeking users load failed", err);
-    }
-  };
+  //     setSeekingUsers(res.data || []);
+  //     console.log("seek data",res.data)
+  //   } catch (err) {
+  //     console.error("Seeking users load failed", err);
+  //   }
+  // };
+  debugger;
+  const fetchSeekingUsers = async (NominationID: number) => {
+    debugger;
+  try {
+    const res = await axios.get(`${apiUrl}/api/seeking/${NominationID}`, {
+      headers: {
+        Authorization: `Bearer ${authToken}`,
+      },
+    });
+
+    setSeekingUsers(res.data || []);
+    console.log("Seeking users data:", res.data);
+  } catch (err) {
+    console.error("Seeking users load failed", err);
+  }
+};
   const sendSeekingUser = async () => {
     if (selectedUsers.length === 0) {
       alert("Select at least one user");
@@ -674,7 +698,7 @@ const tempId = crypto.randomUUID();
                           onClick={(e) => {
                             e.stopPropagation();
                             setSelectedPost(post);
-                            fetchSeekingUsers();
+                            fetchSeekingUsers(post.NominationID);
                             setSeekingOpen(true);
                           }}
                           className="p-1"
@@ -821,11 +845,13 @@ const tempId = crypto.randomUUID();
                           </div>
                           <div className="leading-tight">
                             <div className="text-sm font-medium text-gray-800">
-                              {u.UserName}
+                              {u.UserName} - <span className="text-xs text-gray-500">{u.TenantName}</span>
                             </div>
+                            
                             <div className="text-xs text-gray-500">
-                              {u.TenantName}
+                              {u.DeptName} | <span className="text-xs text-gray-500">{u.Email}</span>
                             </div>
+                            
                           </div>
                         </div>
                         <input

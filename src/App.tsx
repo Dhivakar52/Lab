@@ -26,7 +26,6 @@ import ProtectedRoute from './components/ProtectedRoute';
 import type { UserRole } from './dataTypes/roles';
 import { ROLE_PAGES } from './dataTypes/roles';
 import { AuthProvider } from './components/ContextAPI/AuthContext.tsx';
-import Testing from './components/Testing/Testing.tsx';
 import ForgotPassword from './pages/auth/Login/ForgotPassword.tsx';
 import ReferralComponent from './components/ReferralApproval/ReferralComponent.tsx';
 import ReferralDetailView from './components/ReferralApproval/ReferralDetailView.tsx';
@@ -57,7 +56,6 @@ const pageComponents: Record<string, React.ReactNode> = {
   'Award Management': <AwardManagement />,
   'Admin Setting': <AdminInner />,
   'Forgot Password': <ForgotPassword/>,
-  'Testing': <Testing />,
   'Referral Approval': <ReferralComponent />,
   'Other Nomination':<OtherNomination/>,
   'Leader Board': <Leader/>,
