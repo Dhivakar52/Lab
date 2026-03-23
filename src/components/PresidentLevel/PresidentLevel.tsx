@@ -50,6 +50,7 @@ const PresidentLevel: React.FC = () => {
   const [flagReason, setFlagReason] = useState<Record<number, string>>({});
   const [expandedRow, setExpandedRow] = useState<ExpandedRow>(null);
   const tableWrapperRef = useRef<HTMLDivElement | null>(null);
+   const [totalCount, setTotalCount] = useState(0); 
   
 
   useEffect(() => {
@@ -63,7 +64,8 @@ const PresidentLevel: React.FC = () => {
             headers: { Authorization: `Bearer ${authToken}` },
           }
         );
-
+        //setTotalCount(res.data[0]?.TotalCount || 0);
+        setTotalCount(res.data.length);
         setData(res.data);
       } catch (err) {
         console.error(err);
@@ -375,7 +377,7 @@ const PresidentLevel: React.FC = () => {
       </div>
 
       {/* 🔹 Pagination */}
-       <Pagination table={table} />
+        <Pagination  table={table}  totalCount={ globalFilter  ? table.getFilteredRowModel().rows.length : totalCount }  />
       <PresidentSidePanel isOpen={false} nominee={null} onClose={() => {}} />
     </div>
   );
