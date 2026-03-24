@@ -82,6 +82,9 @@ const BusinessJuryDetail: React.FC<BusinessJuryDetailProps> = ({
   const [data, setData] = useState<any>(null);
   const [referrals, setReferrals] = useState<any[]>([]);
   //const [documents, setDocuments] = useState<DocumentItem[]>([]);
+   const mode = new URLSearchParams(location.search).get("mode");
+  const isEditMode = mode === "edit";
+
   const [documents, setDocuments] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [expanded, setExpanded] = useState(false);
@@ -92,8 +95,8 @@ const BusinessJuryDetail: React.FC<BusinessJuryDetailProps> = ({
   const [businessJuryDetails, setBusinessJury] = useState<any>(null);
   const [generalJuryDetails, setPresidentLevel] = useState<any>(null);
   const [presidentJuryDetails, setPresidentJury] = useState<any>(null);
-  const location = useLocation();
-  const from = location.state?.from;
+  const location1 = useLocation();
+  const from = location1.state?.from;
   const withdrawAllowedFrom = ["nominations"];
   const [popupOpen, setPopupOpen] = useState(false);
   const [actionType, setActionType] = useState<"approve" | "reject" | null>(null);
@@ -292,7 +295,7 @@ const handleBackward = () => {
 
   if (from === "nominations") {
     navigate("/my-nominations", {
-      state: { tab: location.state?.tab},
+      state: { tab: location1.state?.tab},
     });
     return;
   }
@@ -1076,30 +1079,76 @@ const buildDocumentPayload = () => {
 };
 const handleCloseDrawer = () => {
   setOpenScore(false);
+  setExistingDocs([]);  // Clear on close
+  setForm(prev => ({ ...prev, files: [] }));  // Clear on close
   resetApproveDrawer();
 };
 const handleSubmitEvaluation = async () => {
   if (!validateEvaluation("jury")) return;
 
-  const payload = {
-    NominationID: data.NominationID,
-    UpdatedBy: userId,
-    IsFlag: isFlagged,
-    FlagReason: flagComment,
-    Scores: scores.map(s => ({
-      Criteria: s.title,     
-      Score: Number(s.score),
-      Comments: s.comment
+  let uploadedDocs = [];
+  if (form.files && form.files.length > 0) {
+    uploadedDocs = await uploadFilesToServer(form.files);
+  } else {
+    uploadedDocs = [];
+  }
+
+  const FlagsPayload={
+      NominationID :data.NominationID,
+		  IsFlag: isFlagged,
+      FlagReason: flagComment,
+			CreatedBy :userId
+    }
+
+const attachmentsPayload = [
+  ...existingDocs
+    .filter(doc => !doc.isDeleted)
+    .map(doc => ({
+      AttachmentID: doc.AttachmentID ?? 0,
+      NominationID: isEditMode ? Number(data.NominationID) : 0,
+      AttachmentType:1,
+      OriginalAttachmentName: doc.originalFileName,
+      AttachmentFileType: doc.fileType || "",
+      AttachmentSize: doc.fileSize || "",
+      AttachmentNameGUID: doc.fileNameGUID,
+      AttachmentPath: doc.fileUrl || "",
+      CreatedBy: userId,
+      UpdatedBy: userId
     })),
 
-    Documents: buildDocumentPayload()
-  };
+  ...uploadedDocs.map((f: any) => ({
+    AttachmentID: 0,
+    NominationID: Number(data.NominationID),
+    AttachmentType:1,
+    OriginalAttachmentName: f.originalFileName,
+    AttachmentFileType: f.fileType || "",
+    AttachmentSize: `${(f.fileSize / 1024).toFixed(2)} KB`,
+    AttachmentNameGUID: f.fileNameGUID,
+    AttachmentPath: f.fileUrl || "",
+    CreatedBy: userId
+  }))
+];
 
-  await axios.put(
-    `${apiUrl}/api/evaluation/${data.NominationID}`,
-    payload,
-    { headers: { Authorization: `Bearer ${authToken}` } }
-  );
+  const finalPayload = {
+  Scores:  scores.map(s => ({
+        NominationID:data.NominationID,
+      WeightageID: s.weightId,     
+      Score: Number(s.score),
+      Comments: s.comment,
+      CreatedBy:userId
+    })),
+  Flags: FlagsPayload,
+  Attachments: attachmentsPayload
+};
+console.log("Final",finalPayload);
+await axios.post(
+  `${apiUrl}/api/businessjurylevelnomination`,
+  finalPayload,
+  { 
+    headers: { Authorization: `Bearer ${authToken}` },
+    params: { EvalutionType: 1 }
+  }
+);
 
   handleCloseDrawer();
 };
