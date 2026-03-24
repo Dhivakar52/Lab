@@ -27,7 +27,7 @@ const TopPerformers: React.FC = () => {
             Authorization: `Bearer ${authToken}`,
           },
         });
- 
+        debugger;
         setPerformers(res.data);
         console.log("Top Performers:", res.data);
       } catch (err) {
@@ -39,25 +39,47 @@ const TopPerformers: React.FC = () => {
   }, [authToken, apiUrl]);
  
   // ✅ Group by category and take top 3
+  // const groupedPerformers1 = useMemo(() => {
+  //   const grouped: Record<string, Performer[]> = {};
+ 
+  //   performers.forEach((item) => {
+  //     if (!grouped[item.CategoryName]) {
+  //       grouped[item.CategoryName] = [];
+  //     }
+  //     grouped[item.CategoryName].push(item);
+  //   });
+ 
+  //   // Sort each category and keep top 3
+  //   Object.keys(grouped).forEach((category) => {
+  //     grouped[category] = grouped[category]
+  //       .sort((a, b) => b.Likes - a.Likes)
+  //       .slice(0, 3);
+  //   });
+ 
+  //   return grouped;
+  // }, [performers]);
   const groupedPerformers = useMemo(() => {
-    const grouped: Record<string, Performer[]> = {};
- 
-    performers.forEach((item) => {
-      if (!grouped[item.CategoryName]) {
-        grouped[item.CategoryName] = [];
-      }
-      grouped[item.CategoryName].push(item);
-    });
- 
-    // Sort each category and keep top 3
-    Object.keys(grouped).forEach((category) => {
-      grouped[category] = grouped[category]
-        .sort((a, b) => b.Likes - a.Likes)
-        .slice(0, 3);
-    });
- 
-    return grouped;
-  }, [performers]);
+  const grouped: Record<string, Performer[]> = {};
+
+  performers.forEach((item) => {
+    // ❌ Skip if Likes = 0
+    if (item.Likes === 0) return;
+
+    if (!grouped[item.CategoryName]) {
+      grouped[item.CategoryName] = [];
+    }
+    grouped[item.CategoryName].push(item);
+  });
+
+  // Sort each category and keep top 3
+  Object.keys(grouped).forEach((category) => {
+    grouped[category] = grouped[category]
+      .sort((a, b) => b.Likes - a.Likes)
+      .slice(0, 3);
+  });
+
+  return grouped;
+}, [performers]);
  
   const categories = Object.keys(groupedPerformers);
   const totalPages = categories.length;
@@ -71,7 +93,7 @@ const TopPerformers: React.FC = () => {
         Top 3 Performers in Each Category
       </h3>
  
-      {currentCategory && (
+      {/* {currentCategory && (
         <>
           <h4 className="font-semibold text-gray-900 mb-4">
             {currentCategory}
@@ -90,7 +112,30 @@ const TopPerformers: React.FC = () => {
             ))}
           </div>
         </>
-      )}
+      )} */}
+       {categories.length > 0 && (
+      <>
+        {/* ✅ Category Name at Top */}
+        <h4 className="font-semibold text-green-700 mb-4 text-md">
+          {currentCategory}
+        </h4>
+
+        {/* ✅ Performers List */}
+        <div className="space-y-3 min-h-[120px]">
+          {currentPerformers.map((person, index) => (
+            <div key={index} className="flex justify-between items-center">
+              <span className="text-gray-700 text-sm font-medium">
+                {person.Name.trim()}
+              </span>
+              <span className="text-blue-600 font-semibold text-sm">
+                {person.Likes} Likes
+              </span>
+            </div>
+          ))}
+        </div>
+      </>
+    )}
+
  
       {/* Pagination dots */}
       <div className="flex justify-center gap-2 mt-6">
