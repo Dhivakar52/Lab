@@ -399,7 +399,8 @@ const handlePostClick = async (post: Feed) => {
   const fetchSeekingUsers = async (NominationID: number) => {
     debugger;
   try {
-    const res = await axios.get(`${apiUrl}/api/seeking/${NominationID}`, {
+     const res = await axios.get(`${apiUrl}/api/users`, {
+    //const res = await axios.get(`${apiUrl}/api/seeking/${NominationID}`, {
       headers: {
         Authorization: `Bearer ${authToken}`,
       },
@@ -434,6 +435,7 @@ debugger;
           },
         });
       }
+        alert("Saved successfully ✅");
   
       setSelectedUsers([]);
       setSearch("");
