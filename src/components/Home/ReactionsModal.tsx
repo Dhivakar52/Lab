@@ -133,7 +133,7 @@ const ReactionsModal: React.FC<Props> = ({
                           <div className="text-sm font-medium text-gray-800">
                             {u.UserName}
                           </div>
-                          <div className="text-xs text-gray-500">
+                           <div className="text-xs text-gray-400">
                             {u.Tenant}
                           </div>
                         </div>
@@ -166,13 +166,16 @@ const ReactionsModal: React.FC<Props> = ({
                                 <MessageCircle size={11} fill="white" className="text-white" />
                               </div>
                             </div>
+                           
                             <span className="text-sm font-medium text-gray-800">
                               {c.CommentedBy || "Unknown User"}
                             </span>
+                            
                           </div>
                           <p className="ml-11 text-sm text-gray-700">
                             {c.CommentsText}
                           </p>
+                          
                         </div>
                   ))))}
                   {activeTab === "views" && (
@@ -203,6 +206,10 @@ const ReactionsModal: React.FC<Props> = ({
 
                         <div className="text-sm font-medium text-gray-800">
                           {v.UserName || v.ViewedBy || "Unknown User"}
+                          <div className="text-xs text-gray-400">
+                            {v.Tenant}
+                          </div>
+
                         </div>
                       </div>
                   ))))}

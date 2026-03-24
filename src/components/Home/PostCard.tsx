@@ -411,13 +411,15 @@ const handlePostClick = async (post: Feed) => {
     console.error("Seeking users load failed", err);
   }
 };
+debugger;
   const sendSeekingUser = async () => {
     if (selectedUsers.length === 0) {
       alert("Select at least one user");
       return;
     }
-  
+    debugger;
     try {
+      debugger;
       for (const id of selectedUsers) {
         const payload = {
           nominationID: selectedPost?.NominationID,
@@ -425,7 +427,7 @@ const handlePostClick = async (post: Feed) => {
           active: true,
           submittedBy: userId
         };
-  
+     debugger;
         await axios.post(`${apiUrl}/api/seeking`, payload, {
           headers: {
             Authorization: `Bearer ${authToken}`,
@@ -450,26 +452,6 @@ const resetSeekingPopup = () => {
   // optional — reload full list again
   // fetchSeekingUsers();
 };
-
-// const buildCommentTree = (flatComments: any[]) => {
-//   const map: Record<number, any> = {};
-//   const roots: any[] = [];
-
-//   flatComments.forEach((c) => {
-//     // ensure ChildComments array exists for easier recursion
-//     map[c.NominationCommentsID] = { ...c, ChildComments: c.ChildComments || [] };
-//   });
-
-//   flatComments.forEach((c) => {
-//     if (c.ParentCommentID && map[c.ParentCommentID]) {
-//       map[c.ParentCommentID].ChildComments.push(map[c.NominationCommentsID]);
-//     } else {
-//       roots.push(map[c.NominationCommentsID]);
-//     }
-//   });
-
-//   return roots;
-// };
 
 
 
