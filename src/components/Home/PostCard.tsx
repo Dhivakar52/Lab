@@ -57,6 +57,9 @@ const PostCard: React.FC<PostCardProps> = ({ posts, setPosts }) => {
 
     const [reactionOpen, setReactionOpen] = useState(false);
     const [activeTab, setActiveTab] = useState<ReactionTab>("likes");
+    
+  const [successMsg, setSuccessMsg] = useState<string | null>(null);
+  const [seekingCountMap, setSeekingCountMap] = useState<{ [key: number]: number }>({});
 
   //end home module//
   const { authToken, userId, username } = useAuth();
@@ -370,8 +373,21 @@ useEffect(() => {
       fetchViews(p.NominationID);
       //  addView(p.NominationID); 
     }
+    if (!seekingCountMap[p.NominationID]) {
+      fetchSeekingUsercount(p.NominationID); 
+    }
   });
+  
 }, [posts]);
+useEffect(() => {
+  if (successMsg) {
+    const timer = setTimeout(() => {
+      setSuccessMsg(null);
+    }, 2000); 
+
+    return () => clearTimeout(timer);
+  }
+}, [successMsg]);
 const handlePostClick = async (post: Feed) => {
   const NominationID = post.NominationID;  // Get the NominationID from the clicked post
 
@@ -395,7 +411,6 @@ const handlePostClick = async (post: Feed) => {
   //     console.error("Seeking users load failed", err);
   //   }
   // };
-  debugger;
   const fetchSeekingUsers = async (NominationID: number) => {
     debugger;
   try {
@@ -411,16 +426,13 @@ const handlePostClick = async (post: Feed) => {
   } catch (err) {
     console.error("Seeking users load failed", err);
   }
-};
-debugger;
+  };
   const sendSeekingUser = async () => {
     if (selectedUsers.length === 0) {
       alert("Select at least one user");
       return;
     }
-    debugger;
     try {
-      debugger;
       for (const id of selectedUsers) {
         const payload = {
           nominationID: selectedPost?.NominationID,
@@ -428,14 +440,18 @@ debugger;
           active: true,
           submittedBy: userId
         };
-     debugger;
         await axios.post(`${apiUrl}/api/seeking`, payload, {
           headers: {
             Authorization: `Bearer ${authToken}`,
           },
         });
       }
-        alert("Saved successfully ✅");
+      setSeekingCountMap(prev => ({
+        ...prev,
+        [selectedPost?.NominationID!]:
+          (prev[selectedPost?.NominationID!] || 0) + selectedUsers.length
+      }));
+      setSuccessMsg("Send successfully!");
   
       setSelectedUsers([]);
       setSearch("");
@@ -453,6 +469,30 @@ const resetSeekingPopup = () => {
 
   // optional — reload full list again
   // fetchSeekingUsers();
+};
+
+const fetchSeekingUsercount = async (NominationID: number) => {
+  debugger;
+  try {
+     const NominationID=2158;
+    const res = await axios.get(`${apiUrl}/api/seeking/${NominationID}`, {
+      headers: {
+        Authorization: `Bearer ${authToken}`,
+      },
+    });
+  debugger;
+    const list = Array.isArray(res.data[0]) ? res.data : [];
+    const count = list[0]?.TotalRowCount || 0;
+    console.log(res.data,"set data")
+
+    setSeekingCountMap(prev => ({
+      ...prev,
+      [NominationID]: count
+    }));
+
+  } catch (err) {
+    console.error("Seeking count load failed", err);
+  }
 };
 
 
@@ -683,12 +723,16 @@ const tempId = crypto.randomUUID();
                             e.stopPropagation();
                             setSelectedPost(post);
                             fetchSeekingUsers(post.NominationID);
+                           fetchSeekingUsercount(post.NominationID);
                             setSeekingOpen(true);
                           }}
                           className="p-1"
                           title="Send"  >
                            <Send size={18} className="text-gray-600 hover:text-black" />
                         </button>
+                        <span className="text-xs bg-gray-200 px-2 py-0.5 rounded-full">
+                        {seekingCountMap[post.NominationID] || 0}
+                      </span>
                     </div>
                     <div
                       className="flex items-center text-gray-500 text-sm cursor-pointer"
@@ -781,7 +825,14 @@ const tempId = crypto.randomUUID();
               item
             />
           )}
+          {successMsg && (
+            <div className="fixed top-5 right-5 z-[9999] bg-green-600 text-white px-5 py-3
+            rounded-lg shadow-xl text-sm font-medium animate-slide-in">
+              <span> {successMsg}</span>
+            </div>
+          )}
           {seekingOpen && (
+            
             <div className="fixed inset-0 z-[9999] bg-black/40 flex items-center justify-center">
               <div className="bg-white w-[680px] rounded-xl shadow-xl overflow-hidden">
                 <div className="flex justify-between items-center px-6 h-[56px] border-b border-gray-300">
