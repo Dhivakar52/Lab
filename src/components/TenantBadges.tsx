@@ -1,42 +1,34 @@
 import React from "react";
-import Puthiyathalaimurai from "../assets/images/Puthiyathalaimurai.png";
-import SRMAP from "../assets/images/srmap.jpg";
-import PresidentOffice from "../assets/images/Universitylogo.png";
-import SRMGH from "../assets/images/Universitylogo.png";
-import SRMDentalHospital from "../assets/images/dental-logo.png";
-import Federal from "../assets/images/Federal-logo.png";
-import SRMSikkim from "../assets/images/srmus-logo-full-length.png";
-import SRMIST from "../assets/images/SRMIST-Vadapalani.png";
-import SRMTech from "../assets/images/srmtechlogo.png";
-import layoutLogo from "../assets/images/layout_logo.png";
+
+// const colorMap: Record<string, string> = {
+//   "SRM Group": "bg-blue-100 text-blue-700 border-blue-300",
+//   "SRM Global Hospital": "bg-green-100 text-green-700 border-green-300",
+//   "Puthiya Thalaimurai": "bg-red-100 text-red-700 border-red-300",
+//   "SRM AP": "bg-purple-100 text-purple-700 border-purple-300",
+//   "President Office": "bg-indigo-100 text-indigo-700 border-indigo-300",
+//   "SRM GH": "bg-teal-100 text-teal-700 border-teal-300",
+//   "SRM Dental Hospital": "bg-pink-100 text-pink-700 border-pink-300",
+//   "The Federal": "bg-orange-100 text-orange-700 border-orange-300",
+//   "SRM Sikkim": "bg-emerald-100 text-emerald-700 border-emerald-300",
+//   "SRMIST": "bg-yellow-100 text-yellow-800 border-yellow-400",
+//   "SRM Tech": "bg-cyan-100 text-cyan-700 border-cyan-300",
+// };
 
 const colorMap: Record<string, string> = {
-  "SRM Group": " text-[#3499b8] border-[#3499b8]",
-  "SRM Global Hospital": " text-[#6b4a98] border-[#6b4a98]",
-  "Puthiya Thalaimurai": " text-[#520e11] border-[#520e11]",
-  "SRM AP": "text-[#4d4e42] border-[#4d4e42]",
-  "President Office": " text-[#133b5c] border-[#133b5c]",
-  "SRM GH": "text-[#147fc3] border-[#147fc3]",
-  "SRM Dental Hospital": " text-[#0c4da2] border-[#0c4da2]",
-  "The Federal": "text-[#520f0f] border-[#520f0f]",
-  "SRM Sikkim": " text-[#ffc107] border-[#ffc107]",
-  "SRMIST": " text-[#6b8cc7] border-[#6b8cc7]",
-  "SRM Tech": "text-[#e68a15] border-[#e68a15]",
+  "SRM Group": "bg-[#e0f4f8] text-[#3499b8] border-[#3499b8]",
+  "SRM Global Hospital": "bg-[#ede6f5] text-[#6b4a98] border-[#6b4a98]",
+  "Puthiya Thalaimurai": "bg-[#f3e6e7] text-[#520e11] border-[#520e11]",
+  "SRM AP": "bg-[#f7f8f2] text-[#4d4e42] border-[#4d4e42]",
+  "President Office": "bg-[#e3ebf2] text-[#133b5c] border-[#133b5c]",
+  "SRM GH": "bg-[#e0f2fb] text-[#147fc3] border-[#147fc3]",
+  "SRM Dental Hospital": "bg-[#e0e9f7] text-[#0c4da2] border-[#0c4da2]",
+  "The Federal": "bg-[#d7b763] text-[#520f0f] border-[#520f0f]",
+  "SRM Sikkim": "bg-[#fff2cc] text-[#ffc107] border-[#ffc107]",
+  "SRMIST": "bg-[#eef6ff] text-[#6b8cc7] border-[#6b8cc7]",
+  "SRM Tech": "bg-[#fff1d9] text-[#e68a15] border-[#e68a15]",
 };
 
-const logoMap: Record<string, string> = {
-  "SRM Group": layoutLogo,
-  "SRM Global Hospital": SRMGH,
-  "Puthiya Thalaimurai": Puthiyathalaimurai,
-  "SRM AP": SRMAP,
-  "President Office": PresidentOffice,
-  "SRM GH": SRMGH,
-  "SRM Dental Hospital": SRMDentalHospital,
-  "The Federal": Federal,
-  "SRM Sikkim": SRMSikkim,
-  "SRMIST": SRMIST,
-  "SRM Tech": SRMTech,
-};
+
 
 const tenantNames = [
   "SRM Group",
@@ -55,14 +47,9 @@ const tenantNames = [
 export const ColorBadge = ({ label }: { label: string }) => {
   return (
     <span
-     className={`inline-flex items-center gap-3 px-2 py-1 text-sm font-semibold
+      className={`px-3 py-1 rounded-md text-xs font-semibold border 
         ${colorMap[label] || "bg-gray-100 text-gray-700 border-gray-300"}`}
     >
-      <img
-        src={logoMap[label] || layoutLogo}
-        alt={label}
-        className="w-12 h-12 object-contain rounded bg-white p-[2px]"
-      />
       {label}
     </span>
   );
@@ -70,7 +57,7 @@ export const ColorBadge = ({ label }: { label: string }) => {
 
 const TenantBadges = () => {
   return (
-    <div className="flex flex-wrap gap-3">
+    <div className="flex flex-wrap gap-2">
       {tenantNames.map((name) => (
         <ColorBadge key={name} label={name} />
       ))}
