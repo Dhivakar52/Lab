@@ -1,117 +1,239 @@
-import React from "react";
-import { Heart, MessageCircle, Eye } from "lucide-react";
+import React, { useEffect, useMemo, useState, useCallback } from "react";
+import axios from "axios";
+import {
+  useReactTable,
+  getCoreRowModel,
+  getPaginationRowModel,
+  getFilteredRowModel,
+  flexRender,
+} from "@tanstack/react-table";
+import type { ColumnDef } from "@tanstack/react-table";
+import { Heart, MessageCircle, Eye, Search } from "lucide-react";
+import { useAuth } from "../ContextAPI/AuthContext";
+import Pagination from "../Pagination";
+import TopCard from "./TopCard";
 
-const leaderboardData = [
-  { rank: 1, name: "Rajesh Kumar", org: "SRM Global Hospital", likes: 250, comments: 128, views: 440 },
-  { rank: 2, name: "Rajesh Kumar", org: "SRM Global Hospital", likes: 245, comments: 122, views: 410 },
-  { rank: 3, name: "Rajesh Kumar", org: "SRM Global Hospital", likes: 235, comments: 118, views: 400 },
-  { rank: 4, name: "Rajesh Kumar", org: "SRM Global Hospital", likes: 189, comments: 98, views: 390 },
-  { rank: 5, name: "Rajesh Kumar", org: "SRM Global Hospital", likes: 169, comments: 90, views: 380 },
-];
+const apiUrl = import.meta.env.VITE_API_URL;
+
+interface LeaderboardItem {
+  CategoryName: string;
+  Name: string;
+  LikesCount: number;
+  CommentsCount: number;
+  ViewsCount: number;
+  AvgBusinessJuryScore: number;
+  NoofRank: number;
+}
 
 const Leader = () => {
-  return (
-    <div className="flex h-screen bg-gray-50">
-      <main className="flex-1 p-6 overflow-y-auto">
-        <h1 className="text-xl font-semibold mb-6">Leaderboard</h1>
+  const { authToken } = useAuth();
 
-        {/* TOP 3 */}
-        <div className="grid grid-cols-3 gap-6 mb-6">
-          <TopCard rank="1st" name="Ravi Kumar" org="SRM Global Hospital" />
-          <TopCard rank="2nd" name="Vijay Kumar" org="SRM University - AP" />
-          <TopCard rank="3rd" name="Santhosh Narayanan" org="SRM Tech" />
+  const [data, setData] = useState<LeaderboardItem[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [globalFilter, setGlobalFilter] = useState("");
+
+  // Memoize fetch function
+  const fetchLeaderboard = useCallback(async () => {
+    if (!authToken) return;
+    
+    try {
+      setLoading(true);
+      const res = await axios.get(`${apiUrl}/api/leaderboard`, {
+        headers: { Authorization: `Bearer ${authToken}` },
+      });
+      setData(res.data);
+    } catch (err) {
+      console.error("Leaderboard load failed", err);
+    } finally {
+      setLoading(false);
+    }
+  }, [authToken, apiUrl]);
+
+  useEffect(() => {
+    fetchLeaderboard();
+  }, [fetchLeaderboard]);
+
+  // Sort data
+  const sortedData = useMemo(() => {
+    return [...data].sort(
+      (a, b) => b.AvgBusinessJuryScore - a.AvgBusinessJuryScore
+    );
+  }, [data]);
+
+  // Top 3 and table data with useMemo
+  const top3 = useMemo(() => sortedData.slice(0, 3), [sortedData]);
+  const tableData = useMemo(() => sortedData.slice(3), [sortedData]);
+
+  // Columns with useMemo
+  const columns = useMemo<ColumnDef<LeaderboardItem>[]>(() => [
+    {
+      header: "#Rank",
+      cell: ({ row, table }) => {
+        const pageIndex = table.getState().pagination.pageIndex;
+        const pageSize = table.getState().pagination.pageSize;
+        return row.index + 1 + pageIndex * pageSize + 3;
+      },
+    },
+    {
+      accessorKey: "Name",
+      header: "Name",
+      cell: ({ row }) => (
+        <div className="flex items-center gap-3">
+          <div className="w-9 h-9 rounded-full themeColor text-white flex items-center justify-center font-semibold">
+            {row.original.Name?.charAt(0) || "?"}
+          </div>
+          <div>
+            <div className="font-medium">{row.original.Name}</div>
+            <div className="text-xs text-gray-500">
+              {row.original.CategoryName}
+            </div>
+          </div>
         </div>
+      ),
+    },
+    {
+      accessorKey: "LikesCount",
+      header: "Likes",
+      cell: ({ getValue }) => (
+        <span className="inline-flex items-center gap-1">
+          <Heart size={16} className="text-red-500" />
+          {getValue<number>()}
+        </span>
+      ),
+    },
+    {
+      accessorKey: "CommentsCount",
+      header: "Comments",
+      cell: ({ getValue }) => (
+        <span className="inline-flex items-center gap-1">
+          <MessageCircle size={16} className="text-blue-500" />
+          {getValue<number>()}
+        </span>
+      ),
+    },
+    {
+      accessorKey: "ViewsCount",
+      header: "Views",
+      cell: ({ getValue }) => (
+        <span className="inline-flex items-center gap-1">
+          <Eye size={16} />
+          {getValue<number>()}
+        </span>
+      ),
+    },
+  ], []);
 
-        {/* TABLE */}
-        <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
-          <table className="w-full text-sm">
-            <thead className="bg-gray-100 text-gray-700">
-              <tr>
-                <th className="px-6 py-3 text-left">#Rank</th>
-                <th className="px-6 py-3 text-left">Name</th>
-                <th className="px-6 py-3 text-center">Likes</th>
-                <th className="px-6 py-3 text-center">Comments</th>
-                <th className="px-6 py-3 text-center">Views</th>
-              </tr>
+  // Table Setup with proper dependencies
+  const table = useReactTable({
+    data: tableData,
+    columns,
+    state: { globalFilter },
+    onGlobalFilterChange: setGlobalFilter,
+    getCoreRowModel: getCoreRowModel(),
+    getFilteredRowModel: getFilteredRowModel(),
+    getPaginationRowModel: getPaginationRowModel(),
+  });
+
+  if (loading) {
+    return (
+      <div className="flex justify-center items-center min-h-screen">
+        <div className="text-center py-6">Loading...</div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="p-6">
+      {/* HEADER + SEARCH */}
+      <div className="flex justify-between items-center mb-6">
+        <h1 className="text-xl font-semibold">Leaderboard</h1>
+
+        <div className="relative">
+          <Search className="absolute left-3 top-2.5 w-4 h-4 text-gray-400" />
+          <input
+            value={globalFilter}
+            onChange={(e) => setGlobalFilter(e.target.value)}
+            placeholder="Search leaderboard..."
+            className="pl-10 pr-4 py-2 w-64 text-sm rounded-md border border-gray-300
+                       focus:border-gray-300 focus:ring-0 focus:outline-none"
+          />
+        </div>
+      </div>
+
+      {/* TOP 3 */}
+      <div className="grid grid-cols-3 gap-6 mb-6">
+        {top3.map((item, index) => (
+          <TopCard
+            key={item.Name + index} // Better key
+            rank={index === 0 ? "1st" : index === 1 ? "2nd" : "3rd"}
+            name={item.Name}
+            org={item.CategoryName}
+          />
+        ))}
+      </div>
+
+      {/* TABLE */}
+      <div className="bg-white shadow-md rounded-lg p-6">
+        <div className="overflow-x-auto">
+          <table className="min-w-full border border-gray-200">
+            <thead className="bg-gray-50">
+              {table.getHeaderGroups().map((headerGroup) => (
+                <tr key={headerGroup.id}>
+                  {headerGroup.headers.map((header) => (
+                    <th
+                      key={header.id}
+                      className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase"
+                    >
+                      {flexRender(
+                        header.column.columnDef.header,
+                        header.getContext()
+                      )}
+                    </th>
+                  ))}
+                 </tr>
+              ))}
             </thead>
 
             <tbody>
-              {leaderboardData.map((u) => (
-                <tr
-                  key={u.rank}
-                  className="border-b border-gray-200 last:border-b-0"
-                >
-                  <td className="px-6 py-4">{u.rank}</td>
-
-                  {/* NAME + AVATAR */}
-                  <td className="px-6 py-4">
-                    <div className="flex items-center gap-3">
-                      <div className="w-9 h-9 rounded-full themeColor text-white flex items-center justify-center font-semibold">
-                        {u.name.charAt(0)}
-                      </div>
-                      <div>
-                        <div className="font-medium">{u.name}</div>
-                        <div className="text-xs text-gray-500">{u.org}</div>
-                      </div>
-                    </div>
-                  </td>
-
-                  {/* LIKE */}
-                   <td className="px-6 py-4 text-center">
-                    <span className="inline-flex items-center gap-1">
-                      <Heart size={16} className="text-red-500" />
-                      <span className="text-black">{u.likes}</span>
-                    </span>
-                  </td>
-                  {/* COMMENT */}
-                   <td className="px-6 py-4 text-center">
-                    <span className="inline-flex items-center gap-1">
-                      <MessageCircle size={16} className="text-blue-500" />
-                      <span className="text-black">{u.comments}</span>
-                    </span>
-                  </td>
-                  {/* VIEW */}
-                  <td className="px-6 py-4 text-center">
-                    <span className="inline-flex items-center gap-1 text-black">
-                      <Eye size={16} className="text-gray-600" />
-                      {u.views}
-                    </span>
+              {table.getRowModel().rows.length ? (
+                table.getRowModel().rows.map((row) => (
+                  <tr key={row.id} className="hover:bg-gray-50">
+                    {row.getVisibleCells().map((cell) => (
+                      <td
+                        key={cell.id}
+                        className="px-6 py-4 text-sm text-gray-800"
+                      >
+                        {flexRender(
+                          cell.column.columnDef.cell,
+                          cell.getContext()
+                        )}
+                      </td>
+                    ))}
+                  </tr>
+                ))
+              ) : (
+                <tr>
+                  <td colSpan={columns.length} className="text-center py-8">
+                    No data available
                   </td>
                 </tr>
-              ))}
+              )}
             </tbody>
           </table>
+
+          {/* PAGINATION */}
+          <Pagination
+            table={table}
+            totalCount={
+              globalFilter
+                ? table.getFilteredRowModel().rows.length
+                : tableData.length
+            }
+          />
         </div>
-      </main>
+      </div>
     </div>
   );
 };
 
 export default Leader;
-
-/* ---------- TOP CARD ---------- */
-
-const TopCard = ({
-  rank,
-  name,
-  org,
-}: {
-  rank: string;
-  name: string;
-  org: string;
-}) => (
-  <div className="rounded-xl p-5 text-white bg-gradient-to-r btn-theme flex items-center gap-4">
-    {/* WHITE RING AVATAR */}
-    <div className="w-11 h-11 rounded-full bg-white flex items-center justify-center">
-      <div className="w-10 h-10 rounded-full themeColor text-white flex items-center justify-center font-bold">
-        {name.charAt(0)}
-      </div>
-    </div>
-
-    <div>
-      <div className="text-sm opacity-80">{rank}</div>
-      <div className="font-semibold">{name}</div>
-      <div className="text-xs opacity-80">{org}</div>
-    </div>
-  </div>
-);
