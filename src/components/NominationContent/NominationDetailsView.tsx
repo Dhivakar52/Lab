@@ -190,16 +190,7 @@ const description =
     score:a.ApprovalScore,
   })
 );
-const hasFinalStatus: boolean = approvalFlow.some(
-  (s: ApprovalFlowItem) =>
-    s.status === "Approved" || s.status === "Rejected"
-);
-debugger;
-const showWithdrawButton =
-  withdrawAllowedFrom.includes(from) && !hasFinalStatus;
 
-const myReferral = referrals.find(r => r.ReferralUserID === userId);
- 
   useEffect(() => {
     if (nominationId && authToken) {
       fetchNominationDetails();
@@ -273,13 +264,6 @@ const myReferral = referrals.find(r => r.ReferralUserID === userId);
  
    const returnVal = res.data?.nominationID ?? res.data;
    console.log("return",returnVal)
-    // if (returnVal === 0 || returnVal === -1) {
-    //  setIsWithdrawDialogOpen(false);
-    //   setErrorMessage("Failed to withdraw nomination. Please try again.");
-    //   setTimeout(() => setErrorMessage(""), 3000);
-    //   return;
-    // }
- 
     setIsWithdrawDialogOpen(false);
     setSuccessMessage("Nomination Withdrawn Successfully!");
  
@@ -311,7 +295,9 @@ const getCleanStatus = (status?: string) => {
     : status.trim();
 };
 const mainStatus = getCleanStatus(data.Status);
-
+const showWithdrawButton =
+  withdrawAllowedFrom.includes(from) &&
+  !["approved", "rejected"].includes(mainStatus.toLowerCase());
 return (
  <div className="bg-gray-100 p-6 pb-20">
   <div className="bg-white rounded-xl border border-gray-200 shadow-sm p-6">
