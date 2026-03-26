@@ -2,7 +2,7 @@ import * as Label from "@radix-ui/react-label";
 import { useEffect, useState, useRef } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import axios from "axios";
-import { Edit, X, ArrowLeft } from "lucide-react";
+import { X, ArrowLeft } from "lucide-react";
 import { useAuth } from "../ContextAPI/AuthContext";
 import * as Dialog from "@radix-ui/react-dialog";
 import { useLocation } from "react-router-dom";
@@ -23,14 +23,6 @@ interface SupportingDocument {
   FileNameGUID: string;
   FilePath: string;
 }
-type ApprovalFlowItem = {
-  type: string;
-  status: string;
-  level: string;
-  comments?: string;
-  approvedAt:string;
-  score:string;
-};
 type PopupErrors = {
   score: Record<number, string>;
   comment: Record<number, string>;
@@ -81,26 +73,26 @@ const BusinessJuryDetail: React.FC<BusinessJuryDetailProps> = ({
   const [errorMessage, setErrorMessage] = useState("");
   const [data, setData] = useState<any>(null);
   const [referrals, setReferrals] = useState<any[]>([]);
-  //const [documents, setDocuments] = useState<DocumentItem[]>([]);
-   const mode = new URLSearchParams(location.search).get("mode");
-  const isEditMode = mode === "edit";
-
+  const [isEditMode, setIsEditMode] = useState(false);
   const [documents, setDocuments] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [expanded, setExpanded] = useState(false);
   const [successMessage, setSuccessMessage] = useState("");
-  const [isWithdrawDialogOpen, setIsWithdrawDialogOpen] = useState(false);
   const [expandedDescription, setExpandedDescription] = useState(false);
+  const [expandedApprovalComments, setApprovalComments] = useState(false);
+  const [expandedFlagReason, setExpandedFlagReason] = useState(false);
   const visibleReferrals = expanded ? referrals : referrals.slice(0, 3);
-  const [businessJuryDetails, setBusinessJury] = useState<any>(null);
-  const [generalJuryDetails, setPresidentLevel] = useState<any>(null);
-  const [presidentJuryDetails, setPresidentJury] = useState<any>(null);
   const location1 = useLocation();
   const from = location1.state?.from;
-  const withdrawAllowedFrom = ["nominations"];
-  const [popupOpen, setPopupOpen] = useState(false);
-  const [actionType, setActionType] = useState<"approve" | "reject" | null>(null);
-  const [popupScore, setPopupScore] = useState("");
+  const [attachmentMode, setAttachmentMode] = useState<"approval" | "flag" |"referral"| null>("approval");
+  const [approvalFiles, setApprovalFiles] = useState<File[]>([]);
+  const [flagFiles, setFlagFiles] = useState<File[]>([]);
+  const [existingApprovalDocs, setExistingApprovalDocs] = useState<any[]>([]);
+  const [existingFlagDocs, setExistingFlagDocs] = useState<any[]>([]);
+  const approvalFileRef = useRef<HTMLInputElement | null>(null);
+  const flagFileRef = useRef<HTMLInputElement | null>(null);
+  const [approvalFileError, setApprovalFileError] = useState("");
+  const [flagFileError, setFlagFileError] = useState(""); 
   const [popupComments, setPopupComments] = useState("");
   const DEFAULT_SCORE_ITEMS: ScoreItem[] = [
   { weightId: 1, title: "Integrity", score: "", comment: "" },
@@ -109,29 +101,23 @@ const BusinessJuryDetail: React.FC<BusinessJuryDetailProps> = ({
   { weightId: 4, title: "Outcome", score: "", comment: "" }
 ];
   const [scores, setScores] = useState<ScoreItem[]>(DEFAULT_SCORE_ITEMS);
-  // const [popupErrors, setPopupErrors] = useState<PopupErrors>({scores: {}, comments: "", flagComment: ""});
- const [popupErrors, setPopupErrors] = useState<PopupErrors>({
-  score: {},
-  comment: {},
-  comments: "",
-  flagComment: ""
-});
-  // const [popupErrors, setPopupErrors] = useState({ score: {}, comments: "" ,flagComment: ""});
-  const [successModalOpen, setSuccessModalOpen] = useState(false);
-  const [IsSelf, setIsSelf] = useState<boolean | null>(null);
-  const [flagOpen, setFlagOpen] = useState(false);
-  const [flagOpen1, setFlagOpen1] = useState(false);
-  const [flagReason, setFlagReason] = useState("");
-  const [flagFiles, setFlagFiles] = useState<File[]>([]);
-  const [flagPreview, setFlagPreview] = useState<string | null>(null);
-  const [flagError, setFlagError] = useState("");
-  //home module//
+  const [popupErrors, setPopupErrors] = useState<PopupErrors>({
+    score: {},
+    comment: {},
+    comments: "",
+    flagComment: ""
+  });
+  const refFileRef = useRef<HTMLInputElement | null>(null);
+  const [refFileError, setRefFileError] = useState("");
+  const [openReferralPopup, setOpenReferralPopup] = useState(false);
+  const [selectedReferral, setSelectedReferral] = useState<any>(null);
+  const [refStatus, setRefStatus] = useState<"Approved" | "Rejected">("Approved");
+  const [refComments, setRefComments] = useState("");
+  const [refFiles, setRefFiles] = useState<File[]>([]);
+  const [existingRefDocs, setExistingRefDocs] = useState<any[]>([]);
   const [openApprove, setOpenApprove] = useState(false);
   const [openEvaluation, setOpenEvaluation] = useState(false);
   const [openScore, setOpenScore] = useState(false);
-    const [popupType, setPopupType] = useState<
-    "approve" | "score" | "evaluation" | null
-  >(null);
   const [openCard, setOpenCard] = useState<number | null>(null);
   const fileInputRef = useRef<HTMLInputElement | null>(null);
   const [fileError, setFileError] = useState("");
@@ -139,12 +125,11 @@ const BusinessJuryDetail: React.FC<BusinessJuryDetailProps> = ({
   const [isFlagged, setIsFlagged] = useState(false);
   const [flagComment, setFlagComment] = useState("");
   const [status, setStatus] = useState<"Approved" | "Rejected">("Approved");
-  const [evaluationData, setEvaluationData] = useState<any>(null);
-  //const [scores, setScores] = useState<any[]>([]);
-
   const textareaRef = useRef<HTMLTextAreaElement | null>(null);
   const [activeLevel, setActiveLevel] = useState<"Level-2" | "Level-3" | null>(null);
-  const closePopup = () => setPopupType(null);
+  const [openDocPopup, setOpenDocPopup] = useState(false);
+  const [selectedDocs, setSelectedDocs] = useState<any[]>([]);
+  
   const [form, setForm] = useState<FormState>({
       title: "",
       nomineeName:"",
@@ -158,6 +143,12 @@ const BusinessJuryDetail: React.FC<BusinessJuryDetailProps> = ({
       files: [], 
       file: null as File | null,
     });
+    const getTruncatedText = (text: string,expanded: boolean,limit: number = 160) => {
+      if (!text) return "";
+      return expanded || text.length <= limit
+        ? text
+        : text.slice(0, limit) + "...";
+    };
   const safeParse = (value: any) => {
     try {
       if (!value || value === " " || value === "") return [];
@@ -179,13 +170,13 @@ const BusinessJuryDetail: React.FC<BusinessJuryDetailProps> = ({
       setExpandedDescription(false);
       }
     }, [isOpen]); 
+    
   const apiUrl = import.meta.env.VITE_API_URL;
  
   const fetchNominationDetails = async () => {
     try {
       debugger;
       const res = await axios.get(
-      // `${apiUrl}/api/nominations/${nominationId}`,
     `${apiUrl}/api/jurylevelnomination/${nominationId}/${userId}`, 
       {
         headers: {
@@ -202,72 +193,15 @@ const BusinessJuryDetail: React.FC<BusinessJuryDetailProps> = ({
         return;
       }
       setData(result);
-      setIsSelf(result.IsSelf);
-      setReferrals(result["Referrals ID"] || []);
+      setReferrals(result.Referrals || []);
       setDocuments(result["Supporting Documents"]|| []);
-      const businessJury = result.BusinessJuryDetails?.[0] || null;
-      const generalJury = result.GeneralJuryDetails?.[0] || null;
-      const president = result.PresidentDetails?.[0] || null;
-      setBusinessJury(businessJury);
-      setPresidentLevel(generalJury);
-      setPresidentJury(president);
-      console.log("sucess",res.data)
- 
+      console.log("referal data",result)
     } catch (err) {
       console.error("Failed to load nomination details", err);
     } finally {
       setLoading(false);
     }
   };
-  const handleFlagFileChange = (
-    e: React.ChangeEvent<HTMLInputElement>
-  ) => {
-    if (!e.target.files) return;
-
-    const selectedFiles = Array.from(e.target.files);
-    setFlagFiles(selectedFiles);
-  };
-
- const submitFlagWithAttachment = async () => {
-  if (!flagReason.trim()) {
-    setFlagError("Please enter flag reason");
-    return;
-  }
-
-  const formData = new FormData();
-  formData.append("NominationID", data.NominationID);
-  formData.append("IsFlag", "true");
-  formData.append("FlagReason", flagReason);
-  formData.append("UpdatedBy", String(userId));
-
-  flagFiles.forEach((file) => {
-    formData.append("Files", file);
-  });
-
-  try {
-    await axios.post(
-      `${apiUrl}/api/nomination/flag-with-document`,
-      formData,
-      {
-        headers: {
-          Authorization: `Bearer ${authToken}`,
-          "Content-Type": "multipart/form-data",
-        },
-      }
-    );
-
-    setFlagOpen(false);
-    setFlagReason("");
-    setFlagFiles([]);
-    setFlagError("");
-
-    fetchNominationDetails();
-
-  } catch {
-    alert("Flag save failed");
-  }
-};
-
   const getFileIcon = (fileName: string) => {
   const ext = fileName.split('.').pop()?.toLowerCase();
  
@@ -345,6 +279,97 @@ const allDocuments = [
     file,
   })),
 ];
+const referralDocuments = [
+  ...existingRefDocs
+    .filter((doc) => !doc.isDeleted)
+    .map((doc) => ({
+      source: "api",
+      originalFileName: doc.originalFileName,
+      fileNameGUID: doc.fileNameGUID,
+      fileType: doc.fileType,
+      fileUrl: doc.fileUrl,
+      fileSize: doc.fileSize
+    })),
+
+  ...refFiles.map((file) => ({
+    source: "local",
+    originalFileName: file.name,
+    file
+  }))
+];
+const approvalDocuments = [
+  ...existingApprovalDocs
+    .filter((doc) => !doc.isDeleted)
+    .map((doc) => ({
+      source: "api",
+      originalFileName: doc.originalFileName,
+      fileNameGUID: doc.fileNameGUID,
+      fileType: doc.fileType
+    })),
+
+  ...approvalFiles.map((file) => ({
+    source: "local",
+    originalFileName: file.name,
+    file
+  }))
+];
+const flagDocuments = [
+  ...existingFlagDocs
+    .filter((doc) => !doc.isDeleted)
+    .map((doc) => ({
+      source: "api",
+      originalFileName: doc.originalFileName,
+      fileNameGUID: doc.fileNameGUID,
+      fileType: doc.fileType
+    })),
+
+  ...flagFiles.map((file) => ({
+    source: "local",
+    originalFileName: file.name,
+    file
+  }))
+];
+const removeFile = (doc: any, index: number, type: "approval" | "flag" |"referral") => {
+  if (doc.source === "api") {
+    if (type === "referral") {
+      setExistingRefDocs((prev) =>
+        prev.map((d) =>
+          d.fileNameGUID === doc.fileNameGUID
+            ? { ...d, isDeleted: true }
+            : d
+        )
+      );
+    }
+     if (type === "approval") {
+      setExistingApprovalDocs((prev) =>
+        prev.map((d) =>
+          d.fileNameGUID === doc.fileNameGUID
+            ? { ...d, isDeleted: true }
+            : d
+        )
+      );
+    } else {
+      setExistingFlagDocs((prev) =>
+        prev.map((d) =>
+          d.fileNameGUID === doc.fileNameGUID
+            ? { ...d, isDeleted: true }
+            : d
+        )
+      );
+    }
+  } else {
+    if (type === "approval") {
+      setApprovalFiles((prev) => prev.filter((_, i) => i !== index));
+    } 
+    else 
+    if (type === "referral") {
+      setRefFiles((prev) => prev.filter((_, i) => i !== index));
+    }
+    else {
+      setFlagFiles((prev) => prev.filter((_, i) => i !== index));
+    }
+  }
+};
 const description =
   data?.Descriptions && data.Descriptions.trim() !== ""
     ? data.Descriptions.trim()
@@ -354,53 +379,73 @@ const description =
   const displayText = expandedDescription || !isTruncated
     ? description
     : description.slice(0, maxLength) + "...";
- 
-  const approvalFlow: ApprovalFlowItem[] = (data?.ApprovalStatus || []).map(
-  (a: any) => ({
-    type: a.ApprovalType,
-    status: a.Status,
-    level: a.ApprovalFlow,
-    comments: a.ApprovalComments,
-    approvedAt: a.ApprovedAt,
-    score:a.ApprovalScore,
-  })
-);
-const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+  
+const handleFileUpload = (
+  e: React.ChangeEvent<HTMLInputElement>,
+  type: "approval" | "flag" | "referral"
+) => {
   const selectedFiles = Array.from(e.target.files || []);
-  setFileError("");
   if (!selectedFiles.length) return;
-  if (fileInputRef.current) {
-    fileInputRef.current.value = "";
-  }
-    for (const file of selectedFiles) {
 
-    const isDuplicate = form.files.some(
+  if (type === "approval") setApprovalFileError("");
+  else if (type === "flag") setFlagFileError("");
+  else setRefFileError("");
+
+  let currentFiles: File[] = [];
+  if (type === "approval") currentFiles = approvalFiles;
+  else if (type === "flag") currentFiles = flagFiles;
+  else currentFiles = refFiles;
+
+  for (const file of selectedFiles) {
+
+    const isDuplicate = currentFiles.some(
       (f) => f.name === file.name && f.size === file.size
     );
 
     if (isDuplicate) {
-      setFileError(`"${file.name}" already added.`);
+      if (type === "approval")
+        setApprovalFileError(`"${file.name}" already added.`);
+      else if (type === "flag")
+        setFlagFileError(`"${file.name}" already added.`);
+      else
+        setRefFileError(`"${file.name}" already added.`);
       return;
     }
 
     if (file.size > 2 * 1024 * 1024) {
-      setFileError(`"${file.name}" exceeds 2 MB limit.`);
+      if (type === "approval")
+        setApprovalFileError(`"${file.name}" exceeds 2 MB limit.`);
+      else if (type === "flag")
+        setFlagFileError(`"${file.name}" exceeds 2 MB limit.`);
+      else
+        setRefFileError(`"${file.name}" exceeds 2 MB limit.`);
       return;
     }
   }
 
-  if (form.files.length + selectedFiles.length > 5) {
-    setFileError("Maximum 5 files allowed.");
+  if (currentFiles.length + selectedFiles.length > 5) {
+    if (type === "approval")
+      setApprovalFileError("Maximum 5 files allowed.");
+    else if (type === "flag")
+      setFlagFileError("Maximum 5 files allowed.");
+    else
+      setRefFileError("Maximum 5 files allowed.");
     return;
   }
 
-  // Add the files
-  setForm((prev) => ({
-    ...prev,
-    files: [...prev.files, ...selectedFiles],
-  }));
+  if (type === "approval") {
+    setApprovalFiles((prev) => [...prev, ...selectedFiles]);
+    if (approvalFileRef.current) approvalFileRef.current.value = "";
+  } 
+  else if (type === "flag") {
+    setFlagFiles((prev) => [...prev, ...selectedFiles]);
+    if (flagFileRef.current) flagFileRef.current.value = "";
+  } 
+  else {
+    setRefFiles((prev) => [...prev, ...selectedFiles]);
+    if (refFileRef.current) refFileRef.current.value = "";
+  }
 };
-
 const uploadFilesToServer = async (files: File[]) => {
   const formData = new FormData();
 
@@ -415,279 +460,8 @@ const uploadFilesToServer = async (files: File[]) => {
     },
   });
 
-  return res.data; // backend returns uploaded file info
+  return res.data; 
 };
-const hasFinalStatus: boolean = approvalFlow.some(
-  (s: ApprovalFlowItem) =>
-    s.status === "Approved" || s.status === "Rejected"
-);
-const showWithdrawButton =
-  withdrawAllowedFrom.includes(from) && !hasFinalStatus;
- 
-const referralApproval = data?.ApprovalStatus?.find(
-  (a: any) => a.ApprovalType === "Referral"
-);
-const managerApproval = data?.ApprovalStatus?.find(
-  (a: any) => a.ApprovalType === "Manager"
-);
-const presidentLevel = data?.ApprovalStatus?.find(
-  (a: any) => a.ApprovalType === "General Jury"
-);
-const presidentJury = data?.ApprovalStatus?.find(
-  (a: any) => a.ApprovalType === "President Jury"
-);
-const businessJury = data?.ApprovalStatus?.find(
-  (a: any) => a.ApprovalType === "Business Jury"
-);
- 
-const approvalMap = (data?.ApprovalStatus || []).reduce(
-  (acc: any, a: any) => {
-    acc[a.ApprovalType] = a;
-    return acc;
-  },
-  {}
-);
- 
- 
-const levelOrder = [
-  // "Referral",
-  "Manager",
-  "Business Jury",
-  "Grand Jury",
-];
-const getCurrentApprovalType = () => {
-  switch (from) {
-    // case "referral-approval":
-    //   return "Referral";
-    case "approvals":
-      return "Manager";
-    case "business-jury":
-      return "Business Jury";
-    case "president-unit":
-      return "Grand Jury";
-    case "president-level":
-      return "President Jury";
-    default:
-      return null;
-  }
-};
- 
-const currentType = getCurrentApprovalType();
-const currentApproval = currentType
-  ? approvalMap[currentType]
-  : null;
-const currentStatus = currentApproval?.Status;
- 
-const currentIndex =
-  currentType ? levelOrder.indexOf(currentType) : -1;
-const isPreviousApproved =
-  currentIndex === 0 ||
-  approvalMap[levelOrder[currentIndex - 1]]?.Status === "Approved";
- 
-const isNextLevelApproved = levelOrder
-  .slice(currentIndex + 1)
-  .some(
-    (lvl) => approvalMap[lvl]?.Status === "Approved"
-  );
- 
-const isRejectedEarlier = levelOrder
-  .slice(0, currentIndex)
-  .some(
-    (lvl) => approvalMap[lvl]?.Status === "Rejected"
-  );
-const canShowButtons =
-  currentApproval &&
-  isPreviousApproved &&
-  !isRejectedEarlier &&
-  !isNextLevelApproved;
-  const EDITABLE_STATUSES = [
-  "Not Started",
-  "Under Review",
-];
-const canApprove =
-  canShowButtons &&
-  (EDITABLE_STATUSES.includes(currentStatus) ||
-   currentStatus === "Rejected");
- 
-const canReject =
-  canShowButtons &&
-  (EDITABLE_STATUSES.includes(currentStatus) ||
-   currentStatus === "Approved");
- 
-const juryMap: any = {
-  "business-jury": businessJury,
-  "president-unit": presidentLevel,
-  "president-level": presidentJury
-};
-const currentJury = juryMap[from];
- 
-const EVALUATION_TYPE = {
-  Referral: 1,
-  Manager: 2,
-  BusinessJury: 3,
-  GeneralJury: 4,
-  President: 5,
-};
- 
-const getEvaluationContext = () => {
-  switch (from) {
-    case "referral-approval":
-      return referralApproval
-        ? { type: EVALUATION_TYPE.Referral }
-        : null;
- 
-    case "approvals":
-      return managerApproval
-        ? { type: EVALUATION_TYPE.Manager }
-        : null;
- 
-    case "business-jury":
-      return businessJuryDetails
-        ? { type: EVALUATION_TYPE.BusinessJury }
-        : null;
- 
-    case "president-unit":  
-      return generalJuryDetails
-        ? { type: EVALUATION_TYPE.GeneralJury }
-        : null;
- 
-    case "president-level":
-      return presidentJuryDetails
-        ? { type: EVALUATION_TYPE.President }
-        : null;
- 
-    default:
-      return null;
-  }
-};
- 
-const myReferral = referrals.find(r => r.ReferralUserID === userId);
-const referralStatus = myReferral?.ReferralStatus;
-const isReferralPage = from === "referral-approval";
- 
-const canApproveReferral =
-  isReferralPage &&
-  myReferral &&
-  (referralStatus === "Pending" ||
-   referralStatus === "Under Review" ||
-   referralStatus === "Rejected");
- 
-const canRejectReferral =
-  isReferralPage &&
-  myReferral &&
-  (referralStatus === "Pending" ||
-   referralStatus === "Under Review" ||
-   referralStatus === "Approved");
- 
- 
-const canApproveFinal = isReferralPage ? canApproveReferral : canApprove;
-const canRejectFinal  = isReferralPage ? canRejectReferral  : canReject;
- 
-const buildEvaluationPayload = (approve: boolean) => {
-  const ctx = getEvaluationContext();
-  if (!ctx) return null;
- 
-  switch (ctx.type) {
-    case EVALUATION_TYPE.Referral:
-      return {
-        EvalutionType: EVALUATION_TYPE.Referral,
-        ReferralID: myReferral.ReferralID,
-        ReferralUserID: myReferral.ReferralUserID,
-        NominationID: myReferral.NominationID,
-        IsReferralApproved: approve,
-        ApprovalComments: popupComments.trim(),
-        Active: true,
-        UpdatedBy: userId,
-      };
- 
-    case EVALUATION_TYPE.Manager:
-      return {
-        EvalutionType: EVALUATION_TYPE.Manager,
-        NominationID: data.NominationID,
-        IsManagerApproved: approve,
-        ApprovalComments: popupComments.trim(),
-        UpdatedBy: userId,
-      };
- 
-    case EVALUATION_TYPE.BusinessJury:
-      return {
-        EvalutionType: EVALUATION_TYPE.BusinessJury,
-        JuryApprovalsID: businessJuryDetails.JuryApprovalsID,
-        NominationID: data.NominationID,
-        BusinessJuryID:userId,
-        IsBusinessJuryApproved: approve,
-        BusinessJuryComments: popupComments.trim(),
-        BusinessJuryScore: Number(popupScore),
-        Active: true,
-        UpdatedBy: userId,
-      };
- 
-    case EVALUATION_TYPE.GeneralJury:
-      return {
-        EvalutionType: EVALUATION_TYPE.GeneralJury,
-        JuryApprovalsID: generalJuryDetails.JuryApprovalsID,
-        NominationID: data.NominationID,
-        GeneralJuryID: userId,
-        IsGeneralJuryApproved: approve,
-        GeneralJuryComments: popupComments.trim(),
-        GeneralJuryScore: Number(popupScore),
-        Active: true,
-        UpdatedBy: userId,
-      };
- 
-    case EVALUATION_TYPE.President:
-      return {
-        EvalutionType: EVALUATION_TYPE.President,
-        JuryApprovalsID: presidentJuryDetails.JuryApprovalsID,
-        NominationID: data.NominationID,
-        PresidentID: userId,
-        IsPresidentApproved: approve,
-        PresidentComments: popupComments.trim(),
-        PresidentScore: Number(popupScore),
-        Active: true,
-        UpdatedBy: userId,
-      };
- 
-    default:
-      return null;
-  }
-};
-  const validatePopup = () => {
-    const errs = {
-      score: {},
-      comments: "",
-      flagComment: ""
-    };
-
-    let ok = true;
-  //   scores.forEach((item, i) => {
-  //   if (!item.score && item.score !== 0) {
-  //     errs.scores[i] = "Score required";
-  //     ok = false;
-  //   } else if (item.score < 1 || item.score > 100) {
-  //     errs.scores[i] = "Score must be 1–100";
-  //     ok = false;
-  //   }
-  //   if (!item.comment?.trim()) {
-  //     errs.scores[i] = "Comment required";
-  //     ok = false;
-  //   }
-  // });
-    if (!popupComments?.trim()) {
-      errs.comments = "Comments are required!";
-      ok = false;
-    } else if (popupComments.trim().length > 500) {
-      errs.comments = "Comments cannot exceed 500 characters!";
-      ok = false;
-    }
-    if (isFlagged && !flagComment?.trim()) {
-      errs.flagComment = "Flag reason required";
-      ok = false;
-    }
-
-    //setPopupErrors(errs);
-    return ok;
-  };
   const validateEvaluation = (mode: "manager" | "jury") => {
   const errs: PopupErrors = {
     score: {},
@@ -735,48 +509,6 @@ const buildEvaluationPayload = (approve: boolean) => {
   setPopupErrors(errs);
   return ok;
 };
-
-  const submitFromPopup = async (approve: boolean) => {
-    if (loading || !data || !validatePopup()) return;
- 
-    const ctx = getEvaluationContext();
-    if (!ctx) return;
- 
-    const jsonPayload = buildEvaluationPayload(approve);
-    if (!jsonPayload) return;
- 
-    setLoading(true);
-    setPopupOpen(false);
-   
-    try {
-      await axios.put(
-        `${apiUrl}/api/evaluation/${jsonPayload.JuryApprovalsID ?? 0}/${data.NominationID}`,
-        jsonPayload,
-        {
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${authToken}`,
-          },
-        }
-      );
- 
-      // ✅ SUCCESS - Show CUSTOM MODAL instead of SweetAlert
-      setSuccessModalOpen(true);
- 
-    } catch (err) {
-      console.error("❌ SUBMIT ERROR:", err);
-      setErrorMessage("Action failed. Please try again.");
-    } finally {
-      setLoading(false);
-    }
-  };
- 
-
-const handleSuccessClose = () => {
-    setSuccessModalOpen(false);
-    fetchNominationDetails();
-  };
- 
   useEffect(() => {
     if (nominationId && authToken) {
       fetchNominationDetails();
@@ -790,100 +522,7 @@ const handleSuccessClose = () => {
   if (!data) {
     return <div className="p-6 text-red-600">Nomination not found</div>;
   }
-  const handleWithdraw = async () => {
-   try {
-    const payload = {
-    "nomination": {
-    "cycleID": 0,
-    "awardCategoryID": 0,
-    "nominationTitle": "string",
-    "userID": userId,
-    "isSelf": true,
-    "nominationCreatedBy": 0,
-    "descriptions": "string",
-    "approvalTypeID": 0,
-    "isManagerApproved": true,
-    "approvalComments": "string",
-    "statusID": 0,
-    "active": false,
-    "businessJuryID": 0,
-    "createdBy": 0,
-    "updatedBy": userId
-  },
-  "referralIDs": [
-    {
-      "referralID": 0,
-      "nominationID": 0,
-      "referralUserID": 0,
-      "isReferralApproved": true,
-      "approvalComments": "string",
-      "active": true,
-      "createdBy": 0,
-      "updatedBy": 0
-    }
-  ],
-  "documents": [
-    {
-      "nominationFileID": 0,
-      "nominationID": 0,
-      "originalFileName": "string",
-      "fileType": "string",
-      "fileSize": "string",
-      "fileNameGUID": "string",
-      "filePath": "string",
-      "active": true,
-      "createdBy": 0,
-      "updatedBy": 0
-    }
-  ]
-};
-    const res = await axios.delete(
-      `${apiUrl}/api/nominations/${data.NominationID}`,
-      {
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${authToken}`,
-        },
-        data: payload
-      }
-    );
- 
-   const returnVal = res.data?.nominationID ?? res.data;
-   console.log("return",returnVal)
-    setIsWithdrawDialogOpen(false);
-    setSuccessMessage("Nomination Withdrawn Successfully!");
- 
-    setTimeout(() => {
-      setSuccessMessage("");
-      navigate("/my-nominations");
-    }, 3000);
- 
-  } catch (error) {
-    console.error("Withdraw failed:", error);
-    setErrorMessage("Something went wrong while withdrawing nomination.");
-    setTimeout(() => setErrorMessage(""), 3000);
-  }
-};
-const showScore =
-  !(
-    (from === "referral-approval" && referralApproval) ||
-    (from === "approvals" && managerApproval)
-  );
-const SCORE_REQUIRED_TYPES = [
-  "Business Jury",
-  "Grand Jury",
-];
 
-const handleEdit = () => {
-  const id = location.pathname.split("/").pop();  
-  if (IsSelf) {
-      navigate(`/self-nominations/${id}`);
-    } else {
-      navigate(`/my-nominations/add-nomination/${id}`);
-    }  
-};
-
-// const approvalData = approvalResponse.ApprovalStatus;
 const approvalData = data?.ApprovalStatus || [];
 const level1 = approvalData?.find((l: ApprovalItem) => l.ApprovalFlow === "Level-1");
 const level2 = approvalData?.find((l: ApprovalItem) => l.ApprovalFlow === "Level-2");
@@ -891,17 +530,26 @@ const level3 = approvalData?.find((l: ApprovalItem) => l.ApprovalFlow === "Level
 
 const showLevel2 = level1?.Status === "Approved";
 const showLevel3 = level2?.Status === "Approved";
-// const flagDetails = level1?.Flagdetails
-//   ? JSON.parse(level1.Flagdetails)
-//   : [];
 const flagDetails =safeParse(level1?.Flagdetails);
 const flagData = flagDetails?.[0]; 
-const selectedLevel =
-  activeLevel === "Level-2"
-    ? level2
-    : activeLevel === "Level-3"
-    ? level3
-    : null;
+const approvalCommentText = approvalData?.[0]?.ApprovalComments || "";
+
+const isApprovalTruncated = approvalCommentText.length > 160;
+
+const displayApprovalComment = getTruncatedText(
+  approvalCommentText,
+  expandedApprovalComments,
+  160
+);
+const flagReasonText = flagData?.FlagReason || "";
+
+const isFlagTruncated = flagReasonText.length > 160;
+
+const displayFlagReason = getTruncatedText(
+  flagReasonText,
+  expandedFlagReason,
+  160
+);
 const getBusinessJuryEvaluations = () => {
   const bj = approvalData.find(
     (a: any) => a.ApprovalType === "Business Jury"
@@ -921,34 +569,65 @@ const attributeData = level2;
 debugger;
 const handleManagerApprove = () => {
   if (!level1) return;
+  const isAlreadySaved = !!level1.ApprovedAt;
 
+  setIsEditMode(isAlreadySaved);
   setStatus(level1.Status === "Rejected" ? "Rejected" : "Approved");
   setPopupComments(level1.ApprovalComments || "");
 
-  let flagData = null;
+  let parsedFlag = null;
   try {
     const parsed = level1.Flagdetails ? JSON.parse(level1.Flagdetails) : [];
-    flagData = parsed?.[0];
+    parsedFlag = parsed?.[0];
   } catch {
-    flagData = null;
+    parsedFlag = null;
   }
-  const isFlag = Number(flagData?.Flag) === 1;
+
+  const isFlag = Number(parsedFlag?.Flag) === 1;
   setIsFlagged(isFlag);
+  setFlagComment(parsedFlag?.FlagReason || "");
 
-  setFlagComment(flagData?.FlagReason || "");
-
-  if (flagData?.FlagAttachment?.length) {
-    const mappedDocs = flagData.FlagAttachment.map((file: any) => ({
-      source: "api",
-      fileNameGUID: file.AttachmentsID,
-      originalFileName: file.OriginalAttachmentName,
-      fileType: file.AttachmentFileType
-    }));
-
-    setExistingDocs(mappedDocs);
-  } else {
-    setExistingDocs([]);
+  let parsedFlagAttachments: any[] = [];
+  try {
+    parsedFlagAttachments = level1.FlagAttachment
+      ? JSON.parse(level1.FlagAttachment)
+      : [];
+  } catch {
+    parsedFlagAttachments = [];
   }
+
+  let parsedApprovalAttachments: any[] = [];
+  try {
+    parsedApprovalAttachments = level1.ApprovalAttachment
+      ? JSON.parse(level1.ApprovalAttachment)
+      : [];
+  } catch {
+    parsedApprovalAttachments = [];
+  }
+
+  const flagDocs = parsedFlagAttachments.map((file: any) => ({
+    source: "api",
+    AttachmentID: file.AttachmentsID,
+    fileNameGUID: file.AttachmentNameGUID,
+    originalFileName: file.OriginalAttachmentName,
+    fileType: file.AttachmentFileType,
+    fileUrl: file.AttachmentPath,
+    fileSize: file.AttachmentSize
+  }));
+
+  const approvalDocs = parsedApprovalAttachments.map((file: any) => ({
+    source: "api",
+    AttachmentID: file.AttachmentsID,
+    fileNameGUID: file.AttachmentNameGUID,
+    originalFileName: file.OriginalAttachmentName,
+    fileType: file.AttachmentFileType,
+    fileUrl: file.AttachmentPath,
+    fileSize: file.AttachmentSize
+  }));
+
+  setExistingFlagDocs(flagDocs);
+  setExistingApprovalDocs(approvalDocs);
+
   setOpenApprove(true);
 };
 const juryList: JuryItem[] = getBusinessJuryEvaluations().map((j: any) => ({
@@ -959,54 +638,6 @@ const juryList: JuryItem[] = getBusinessJuryEvaluations().map((j: any) => ({
   Attributes: j.AttributeScore || [],
   FlagReason: j.FlagDetails?.[0]?.FlagReason || ""
 }));
-const needsScore = (type: string) =>
-  SCORE_REQUIRED_TYPES.includes(type);
-
-const buildManagerPayload = () => ({
-  NominationID: data.NominationID,
-  IsManagerApproved: status?.trim() === "Approved" ? true : false,
-  ApprovalComments: popupComments,
-  UpdatedBy: userId,
-  IsFlag: isFlagged,
-  FlagReason: isFlagged ? flagComment : null,
-
-});
-
-const submitManagerApproval = async () => {
-  console.log("CLICKED SUBMIT");
-if (!validateEvaluation("manager")) return;
-  // const isValid = validatePopup();
-  // console.log("VALID ?", isValid);
-
-  // if (loading || !isValid) return;
-
-  const payload = buildManagerPayload();
-  console.log("PAYLOAD 👉", payload);
-
-  try {
-    setLoading(true);
-
-    await axios.put(
-      `${apiUrl}/api/evaluation/0/${data.NominationID}`,
-      payload,
-      {
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${authToken}`,
-        },
-      }
-    );
-
-    setSuccessModalOpen(true);
-    setOpenApprove(false);
-    closeApproveDrawer();
-  } catch (err) {
-    console.error("❌ SAVE ERROR:", err);
-    setErrorMessage("Action failed. Please try again.");
-  } finally {
-    setLoading(false);
-  }
-};
 const getCleanStatus = (status?: string) => {
   if (!status) return "";
   const dashIndex = status.indexOf("-");
@@ -1021,6 +652,10 @@ const resetApproveDrawer = () => {
   setPopupComments("");
   setIsFlagged(false);
   setFlagComment("");
+  setApprovalFiles([]);
+  setFlagFiles([]);
+  setExistingApprovalDocs([]);
+  setExistingFlagDocs([]);
   setExistingDocs([]);
   setPopupErrors({
     score: {},
@@ -1028,60 +663,173 @@ const resetApproveDrawer = () => {
     comments: "",
     flagComment: ""
   });
+  setStatus("Approved");
+  setPopupComments("");
+  setIsFlagged(false);
+  setFlagComment("");
+  setDocuments([]);         
+  setExistingDocs([]);        
+  setForm(prev => ({ ...prev, files: [] }));
+  if (approvalFileRef.current) {
+    approvalFileRef.current.value = "";
+  }
+  if (flagFileRef.current) {
+    flagFileRef.current.value = "";
+  }
+  setApprovalFileError("");
+  setFlagFileError("");
 };
 
 const closeApproveDrawer = () => {
   resetApproveDrawer();
   setOpenApprove(false);
 };
-const openDrawer = () => {
-  setScores(JSON.parse(JSON.stringify(DEFAULT_SCORE_ITEMS)));
-  setIsFlagged(false);
-  setFlagComment("");
-  //setPopupErrors({});
-  setOpenScore(true);
-};
-
-const openEvaluationDrawer = (row: any) => {
-  setEvaluationData(row);
-
-  if (row.scores) {
-    const parsed = typeof row.scores === "string" ? JSON.parse(row.scores) : row.scores;
-
-    const mapped = parsed.map((s: any) => ({
-      weightId: s.WeightID,
-      title: s.WeightName,
-      score: s.Score,
-      comment: s.Comment || ""
-    }));
-
-    setScores(mapped);
-  }
-
-  setIsFlagged(row.normaljuryflag === "1");
-  setFlagComment(row.normaljuryflagreason || "");
-
-  setExistingDocs(row.supportingDocuments || []);
-  setOpenScore(true);
-};
-const buildDocumentPayload = () => {
-  return [
-    ...existingDocs.map(d => ({
-      fileNameGUID: d.fileNameGUID,
-      isDeleted: d.isDeleted || false,
-      isNew: false
-    })),
-    ...form.files.map(f => ({
-      file: f,
-      isNew: true
-    }))
-  ];
-};
 const handleCloseDrawer = () => {
   setOpenScore(false);
-  setExistingDocs([]);  // Clear on close
-  setForm(prev => ({ ...prev, files: [] }));  // Clear on close
+  setExistingDocs([]); 
+  setForm(prev => ({ ...prev, files: [] })); 
   resetApproveDrawer();
+};
+const submitManagerApproval = async () => {
+  console.log("CLICKED SUBMIT");
+
+  if (!validateEvaluation("manager")) return;
+
+  try {
+    setLoading(true);
+
+    let uploadedApprovalDocs: any[] = [];
+    let uploadedFlagDocs: any[] = [];
+
+    if (approvalFiles.length > 0) {
+      uploadedApprovalDocs = await uploadFilesToServer(approvalFiles);
+    }
+
+    if (flagFiles.length > 0) {
+      uploadedFlagDocs = await uploadFilesToServer(flagFiles);
+    }
+
+    const flags = {
+      NominationFlagsID: flagData?.NominationFlagsID || 0,
+      NominationID: Number(nominationId),
+      IsFlag: isFlagged ? true: false,
+      FlagReason: isFlagged ? flagComment : "",
+      CreatedBy: userId,
+      UpdatedBy: userId
+    };
+
+    const approval = {
+      NominationID: Number(nominationId),
+      IsManagerApproved: status === "Approved",
+      ApprovalComments: popupComments,
+      CreatedBy: userId,
+      UpdatedBy: userId
+    };
+
+    const attachments = [
+      ...existingApprovalDocs
+        .filter(doc => !doc.isDeleted)
+        .map(doc => ({
+          AttachmentsID: doc.AttachmentID || 0,
+          NominationID: Number(nominationId),
+          AttachmentType: 47,
+          OriginalAttachmentName: doc.originalFileName,
+          AttachmentFileType: doc.fileType || "",
+          AttachmentSize: doc.fileSize || "",
+          AttachmentNameGUID: doc.fileNameGUID,
+          AttachmentPath: doc.fileUrl || "",
+          CreatedBy: userId,
+          UpdatedBy: userId
+        })),
+
+      ...uploadedApprovalDocs.map(f => ({
+        AttachmentsID: 0,
+        NominationID: Number(nominationId),
+        AttachmentType: 47,
+        OriginalAttachmentName: f.originalFileName,
+        AttachmentFileType: f.fileType || "",
+        AttachmentSize: `${(f.fileSize / 1024).toFixed(2)} KB`,
+        AttachmentNameGUID: f.fileNameGUID,
+        AttachmentPath: f.fileUrl || "",
+        CreatedBy: userId,
+        UpdatedBy: userId
+      })),
+
+      ...(isFlagged
+        ? existingFlagDocs
+            .filter(doc => !doc.isDeleted)
+            .map(doc => ({
+              AttachmentsID: doc.AttachmentID || 0,
+              NominationID: Number(nominationId),
+              AttachmentType: 48,
+              OriginalAttachmentName: doc.originalFileName,
+              AttachmentFileType: doc.fileType || "",
+              AttachmentSize: doc.fileSize || "",
+              AttachmentNameGUID: doc.fileNameGUID,
+              AttachmentPath: doc.fileUrl || "",
+              CreatedBy: userId,
+              UpdatedBy: userId
+            }))
+        : []),
+
+      ...(isFlagged
+        ? uploadedFlagDocs.map(f => ({
+            AttachmentsID: 0,
+            NominationID: Number(nominationId),
+            AttachmentType: 48,
+            OriginalAttachmentName: f.originalFileName,
+            AttachmentFileType: f.fileType || "",
+            AttachmentSize: `${(f.fileSize / 1024).toFixed(2)} KB`,
+            AttachmentNameGUID: f.fileNameGUID,
+            AttachmentPath: f.fileUrl || "",
+            CreatedBy: userId,
+            UpdatedBy: userId
+          }))
+        : [])
+    ];
+
+    const payload = {
+      Approval: approval,
+      Flags: flags,
+      Attachments: attachments
+    };
+
+    console.log("FINAL PAYLOAD 👉", payload);
+
+    const isUpdate = isEditMode;
+
+    let res = await axios({
+      method: isUpdate ? "put" : "post",
+      url: isUpdate
+        ? `${apiUrl}/api/managerlevelnomination/${nominationId}`
+        : `${apiUrl}/api/managerlevelnomination`,
+      data: payload,
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${authToken}`
+      }
+    });
+    if (res.data > 0) {
+        setSuccessMessage(
+          isUpdate ? "Manager level updated successfully!" : "Manager level added successfully!"
+        );
+      } else {
+        setErrorMessage("Operation failed");
+      }
+
+      setTimeout(() => {
+        setSuccessMessage("");
+        setErrorMessage("");
+      }, 3000);
+    fetchNominationDetails();
+    closeApproveDrawer();
+
+  } catch (err) {
+    console.error("❌ SAVE ERROR:", err);
+    setErrorMessage("Action failed. Please try again.");
+  } finally {
+    setLoading(false);
+  }
 };
 const handleSubmitEvaluation = async () => {
   if (!validateEvaluation("jury")) return;
@@ -1152,17 +900,181 @@ await axios.post(
 
   handleCloseDrawer();
 };
+const handleReferralApprove = (ref: any) => {
+  setSelectedReferral(ref);
 
+  const isEdit = !!ref.ApprovedAt;
+  setIsEditMode(isEdit);
+  setRefStatus(ref.Status === "Rejected" ? "Rejected" : "Approved");
+  setRefComments(ref.ApprovalComments || "");
+
+  let parsedDocs: any[] = [];
+  try {
+    parsedDocs = ref.ApprovalAttachment || [];
+  } catch {
+    parsedDocs = [];
+  }
+  const docs = parsedDocs.map((file: any) => ({
+    source: "api",
+    AttachmentID: file.AttachmentsID,
+    fileNameGUID: file.AttachmentNameGUID,
+    originalFileName: file.OriginalAttachmentName,
+    fileType: file.AttachmentFileType,
+    fileUrl: file.AttachmentPath,
+    fileSize: file.AttachmentSize
+  }));
+
+  setExistingRefDocs(docs);
+
+  setOpenReferralPopup(true);
+};
+const submitReferral = async () => {
+  try {
+    setLoading(true);
+    let uploadedDocs: any[] = [];
+    if (refFiles.length > 0) {
+      uploadedDocs = await uploadFilesToServer(refFiles);
+    }
+
+    const payload = {
+      ReferralID: selectedReferral.ReferralID,
+      NominationID: Number(nominationId),
+      ReferralUserID: selectedReferral.ReferralUserID,
+      IsReferralApproved: refStatus === "Approved",
+      ApprovalComments: refComments,
+      CreatedBy: userId,
+      UpdatedBy: userId,
+
+      Attachments: [
+        ...existingRefDocs
+          .filter(doc => !doc.isDeleted)
+          .map(doc => ({
+            AttachmentsID: doc.AttachmentID || 0,
+            NominationID: Number(nominationId),
+            AttachmentType: 49, // referral type
+            OriginalAttachmentName: doc.originalFileName,
+            AttachmentFileType: doc.fileType || "",
+            AttachmentSize: doc.fileSize || "",
+            AttachmentNameGUID: doc.fileNameGUID,
+            AttachmentPath: doc.fileUrl || "",
+            CreatedBy: userId,
+            UpdatedBy: userId
+          })),
+
+        ...uploadedDocs.map(f => ({
+          AttachmentsID: 0,
+          NominationID: Number(nominationId),
+          AttachmentType: 49,
+          OriginalAttachmentName: f.originalFileName,
+          AttachmentFileType: f.fileType || "",
+          AttachmentSize: `${(f.fileSize / 1024).toFixed(2)} KB`,
+          AttachmentNameGUID: f.fileNameGUID,
+          AttachmentPath: f.fileUrl || "",
+          CreatedBy: userId,
+          UpdatedBy: userId
+        }))
+      ]
+    };
+    const res = await axios({
+      method: isEditMode ? "put" : "post",
+      url: isEditMode
+        ? `${apiUrl}/api/referrallevel/${selectedReferral.ReferralID}`
+        : `${apiUrl}/api/referrallevel`,
+      data: payload,
+      headers: {
+        Authorization: `Bearer ${authToken}`
+      }
+    });
+
+    if (res.data > 0) {
+      setSuccessMessage(isEditMode ? "Updated!" : "Saved!");
+    }
+    fetchNominationDetails();
+    setOpenReferralPopup(false);
+
+  } catch (err) {
+    console.error(err);
+    setErrorMessage("Save failed");
+  } finally {
+    setLoading(false);
+  }
+};
+const handleFilePreview = async (doc: any) => {
+  const fileName = doc.originalFileName || doc.name;
+  const ext = fileName.split(".").pop()?.toLowerCase() || "";
+
+  try {
+    if (doc.source === "api") {
+      const response = await axios.get(
+        `${apiUrl}/api/download?fileName=${doc.fileNameGUID}`,
+        {
+          responseType: "blob",
+          headers: { Authorization: `Bearer ${authToken}` },
+        }
+      );
+
+      const blob = response.data;
+
+      if (["jpg", "jpeg", "png", "gif"].includes(ext)) {
+        const url = URL.createObjectURL(blob);
+        window.open(url);
+      } 
+      else if (ext === "pdf") {
+        const pdfUrl = URL.createObjectURL(
+          new Blob([blob], { type: "application/pdf" })
+        );
+        window.open(pdfUrl);
+      } 
+      else {
+        const link = document.createElement("a");
+        link.href = URL.createObjectURL(blob);
+        link.download = fileName;
+        link.click();
+      }
+    }
+    else {
+      const file = doc.file;
+      if (!(file instanceof File)) return;
+
+      if (["jpg", "jpeg", "png", "gif"].includes(ext)) {
+        const url = URL.createObjectURL(file);
+        window.open(url);
+      } 
+      else if (ext === "pdf") {
+        const pdfUrl = URL.createObjectURL(
+          new Blob([file], { type: "application/pdf" })
+        );
+        window.open(pdfUrl);
+      } 
+      else {
+        const link = document.createElement("a");
+        link.href = URL.createObjectURL(file);
+        link.download = file.name;
+        link.click();
+      }
+    }
+  } catch {
+    alert("File not found");
+  }
+};
+const openDocsPopup = (docs: any[]) => {
+  setSelectedDocs(
+    docs.map((d: any) => ({
+      originalFileName: d.originalFileName || d.OriginalAttachmentName,
+      fileNameGUID: d.fileNameGUID || d.AttachmentNameGUID,
+      source: d.source || "api",
+      file: d.file || null
+    }))
+  );
+  setOpenDocPopup(true);
+};
+const parsedFlagDocs = safeParse(level1?.FlagAttachment);
+const parsedApprovalDocs = safeParse(level1?.ApprovalAttachment);
 return (
  <div className="bg-gray-100 p-6 pb-20">
   <div className="bg-white rounded-xl border border-gray-200 shadow-sm p-6">
     <div className="flex gap-6 items-start w-full">
      <div className="flex flex-col items-start gap-3">
-      {/* <button onClick={handleBackward}
-        className="flex items-center text-blue-600 bg-white border rounded-sm px-2 py-1 font-medium">
-        <ArrowLeft size={14} />
-        <span className="ml-1">Back</span>
-      </button> */}
       <div
         className="w-24 h-24 mt-2 rounded-full border-4 border-emerald-500
                   flex items-center justify-center text-white font-bold text-5xl"
@@ -1240,7 +1152,6 @@ return (
               : "bg-gray-100 text-gray-700 border-gray-300"
           }`}>
           {<BadgeCheck size={14} />}
-          {/* {data.Status === "Under Review" && <BadgeCheck size={14} />} */}
           {data.Status}
         </span>
       </div>
@@ -1275,7 +1186,6 @@ return (
         Supportings Documents
       </p>
        <div className="mt-2 flex flex-wrap gap-4">
-       {/* <div className="mt-2 space-y-2"> */}
               {data?.["Supporting Documents"]?.length ? (
                 data["Supporting Documents"].map(
                   (doc: SupportingDocument, i: number) => (
@@ -1339,9 +1249,10 @@ return (
           <th className="px-4 py-3 text-left">Tenant</th>
           <th className="px-4 py-3 text-left">Department</th>
           <th className="px-4 py-3 text-left">Email ID</th>
+          <th className="px-4 py-3 text-left">Approved Date</th>
+          <th className="px-4 py-3 text-left">Status</th>
         </tr>
       </thead>
-
       <tbody>
         {visibleReferrals.map((ref, i) => (
           <tr
@@ -1351,6 +1262,14 @@ return (
             <td className="px-4 py-3">{ref.TenantName}</td>
             <td className="px-4 py-3">{ref.DeptName}</td>
             <td className="px-4 py-3">{ref.Email}</td>
+            <td className="px-4 py-3">{ref.ApprovedAt}</td>
+            <td><button
+                  onClick={() => handleReferralApprove(ref)}
+                  className={`px-4 py-1.5 rounded-lg text-sm border 
+                  ${levelColors[ref.Status] || "bg-gray-50 border-gray-300"} 
+                  ${levelTextColors[ref.Status] || "text-gray-700"}`}>
+                  {ref.Status}
+                </button></td>
           </tr>
         ))}
       </tbody>
@@ -1406,47 +1325,87 @@ return (
                   <span className="text-gray-500">Approved Date :</span>{" "}
                   <span className="font-medium">{approvalData[0].ApprovedAt}</span>
                 </div>
-                {Number(flagData?.Flag) === 1 && (
-                  <div className="flex items-start gap-2">
-                    <span className="text-gray-500">Flag :</span>
-                    <div>
-                      <div className="flex items-center gap-2">
-                        <Flag size={16} className="text-red-600 fill-red-600" />
-                      </div>
-                    </div>
+                <div className="flex items-start gap-2">
+                  <span className="text-gray-500">{Number(flagData?.Flag) === 1 ? "Flagged :" : "Not Flagged :"}</span>
+                  <div className="flex items-center gap-2">
+                    <Flag
+                      size={16}
+                      className={
+                        Number(flagData?.Flag) === 1
+                          ? "text-red-600 fill-red-600"
+                          : "text-gray-400 fill-gray-300"
+                      }/>
                   </div>
-                )}
+                </div>
                 <div>
-                  <span className="text-gray-500">Reason :</span>{" "}
-                  <span className="font-medium text-gray-600">
-                  {flagData?.FlagReason || ""}
+               {parsedFlagDocs?.length > 0 && (
+                  <span
+                    onClick={() => {
+                      setSelectedDocs(
+                        parsedFlagDocs.map((f: any) => ({
+                          originalFileName: f.OriginalAttachmentName,
+                          fileNameGUID: f.AttachmentNameGUID,
+                          source: "api" 
+                        }))
+                      );
+                      setOpenDocPopup(true);
+                    }}
+                    className="text-blue-600 cursor-pointer underline">
+                    Flag Documents ({parsedFlagDocs.length})
                   </span>
+               )}
+                </div>
+                <div>
+                  {parsedApprovalDocs?.length > 0 && (
+                    <span
+                      onClick={() => {
+                        setSelectedDocs(
+                          parsedApprovalDocs.map((f: any) => ({
+                            originalFileName: f.OriginalAttachmentName,
+                            fileNameGUID: f.AttachmentNameGUID,
+                            source: "api" 
+                          }))
+                        );
+                        setOpenDocPopup(true);
+                      }}
+                      className="text-blue-600 cursor-pointer underline">
+                      Approval Documents ({parsedApprovalDocs.length})
+                    </span>
+                  )}
                 </div>
                 <div>
                 </div>
               </div>
+              <div className="flex gap-12">
               <div>
-                <span className="text-gray-500">Comments :</span>
-                <p className="font-medium mt-1">
-                  {approvalData[0].ApprovalComments}
-                </p>
+                <span className="text-gray-500">Approval Comments :</span>
+                <div className="font-medium mt-1 text-sm text-gray-600">
+                  {displayApprovalComment}
+                  {isApprovalTruncated && (
+                    <button
+                      onClick={() => setApprovalComments(!expandedApprovalComments)}
+                      className="ml-1 text-blue-600 underline text-sm">
+                      {expandedApprovalComments ? "Show less" : "Show more"}
+                    </button>
+                  )}
+                </div>
               </div>
-              {/* Attachments */}
-              {Number(flagData?.Flag) === 1 &&
-                flagData?.FlagAttachment?.length > 0 && (
-                  <div className="mt-3">
-                    <span className="text-gray-500">Attachments :</span>
-                    <div className="flex flex-wrap gap-2 mt-1">
-                      {flagData.FlagAttachment.map((file: any, i: number) => (
-                        <div
-                          key={i}
-                          className="text-blue-600 text-sm underline cursor-pointer">
-                          {file.OriginalAttachmentName}.{file.AttachmentFileType}
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-              )}
+            </div>
+             <div className="flex gap-12">
+              <div>
+                <span className="text-gray-500">Flag Reason :</span>
+                <div className="font-medium mt-1 text-sm text-gray-600">
+                  {displayFlagReason}
+                  {isFlagTruncated && (
+                    <button
+                      onClick={() => setExpandedFlagReason(!expandedFlagReason)}
+                      className="ml-1 text-blue-600 underline text-sm">
+                      {expandedFlagReason ? "Show less" : "Show more"}
+                    </button>
+                  )}
+                </div>
+              </div>
+            </div>
             </div>
           </div>
         </div>
@@ -1504,12 +1463,6 @@ return (
                     {approvalData[1].TotalEvalutions}
                   </span>
                 </div>
-                {/* <div>
-                  <span className="text-gray-500">Evaluated Juries :</span>{" "}
-                  <span className="font-medium">
-                    {approvalData[1].EvaluatedJuries}
-                  </span>
-                </div> */}
                 <div>
                   <span className="text-gray-500">Average Score :</span>{" "}
                   <span className="font-medium">
@@ -1597,20 +1550,6 @@ return (
          <button onClick={handleBackward} className="flex items-center text-blue-600 bg-white border rounded-sm px-2 py-1 font-medium">
          <span className=""><ArrowLeft size={14}/></span> Back
           </button>
-          {showWithdrawButton && ( 
-          <button
-          onClick={handleEdit}
-          className="btn-theme-edit text-white rounded-sm px-2 py-1 hover:bg-blue-700 flex items-center"> 
-          <span  className="edit-icon"><Edit size={14} /></span>Edit  
-          </button>
-        )}
-        {showWithdrawButton && (
-          <button
-            onClick={() => setIsWithdrawDialogOpen(true)}
-                  className="px-4 py-2 btn-theme-reject">
-            Withdraw
-          </button>
-        )}
         </div>
     </div>
       <div className={`fixed top-0 right-0 h-full w-[680px] bg-white shadow-2xl z-50
@@ -1625,7 +1564,8 @@ return (
             <X size={20} />
           </button>
         </div>
-        <div className="px-6 py-6 text-sm text-gray-800">
+        {/* <div className="px-6 py-6 text-sm text-gray-800"> */}
+        <div className="px-6 py-6 text-sm text-gray-800 overflow-y-auto h-[calc(100%-70px)]">
           <div className="mb-[18px]">
             <label className="block mb-2 font-medium">
               Status
@@ -1663,11 +1603,49 @@ return (
             {popupErrors.comments && (
               <p className="text-red-600 text-xs mt-1">{popupErrors.comments}</p>
             )}
-
-            {/* <textarea rows={3} placeholder="Enter your comments"
-              className="w-full px-3 py-2 border border-gray-300 rounded-[6px] resize-none focus:outline-none"/> */}
           </div>
-          <div className="flex items-center gap-2 mb-[12px]">
+           <div className="mb-[18px]">
+            <div className="mt-4">
+              <Label.Root className="block text-sm font-medium">
+                Supporting Documents 
+                <span className="text-red-500">(Maximum 5 files allowed & File must be below 2 MB)</span>
+              </Label.Root>
+              <label
+                htmlFor="approvalUpload"
+                className="inline-block bg-gray-100 text-gray-700 border border-gray-300 px-6 py-2 rounded cursor-pointer mt-2 hover:bg-gray-200">
+                Choose File
+              </label>
+              <input
+                id="approvalUpload"
+                ref={approvalFileRef}
+                type="file"
+                multiple
+                onChange={(e) => handleFileUpload(e, "approval")}
+                className="hidden" />
+              {approvalFileError  && <p className="text-red-500 text-sm mt-1">{approvalFileError }</p>}
+            </div>         
+           <div className="mt-3 flex flex-wrap gap-2">
+              {approvalDocuments.map((doc: any, index: number) => (
+                <div
+                  key={doc.source === "api" ? doc.fileNameGUID : index}
+                  className="flex items-center gap-2 bg-gray-100 px-3 py-1 rounded-lg shadow-sm border">
+                  <span
+                    className="text-sm truncate max-w-[180px] cursor-pointer text-blue-600 hover:underline"
+                    onClick={() => handleFilePreview(doc)}>
+                    {doc.originalFileName || doc.name}
+                  </span>
+
+                  <button
+                    type="button"
+                    onClick={() => removeFile(doc, index, "approval")}
+                    className="text-red-500 hover:text-red-700 font-bold text-lg leading-none">
+                    ×
+                  </button>
+                </div>
+              ))}
+            </div>
+             </div> 
+          <div className="flex items-center gap-2 mb-[18px]">
             <Flag size={18} className={isFlagged ? "text-red-600" : "text-gray-400"}/>
             <span className="font-medium">Flag :</span>
             <input type="checkbox" checked={isFlagged}
@@ -1675,9 +1653,11 @@ return (
                 const checked = e.target.checked;
                 setIsFlagged(checked);
                 if (checked) {
+                  setAttachmentMode("flag");
                   setTimeout(() => textareaRef.current?.focus(), 100);
                 } else {
                   setFlagComment("");
+                  setAttachmentMode("approval");
                   setPopupErrors(prev => ({ ...prev, flagComment: "" }));
                 }
               }}
@@ -1702,107 +1682,49 @@ return (
                 {popupErrors.flagComment}
               </p>
             )}
-
+            {isFlagged && (
+          <>
           <div className="mt-4">
               <Label.Root className="block text-sm font-medium">
-                Supporting Documents 
+                Flag Documents 
                 <span className="text-red-500">(Maximum 5 files allowed & File must be below 2 MB)</span>
               </Label.Root>
               <label
-                htmlFor="fileUpload"
+                htmlFor="flagUpload"
                 className="inline-block bg-gray-100 text-gray-700 border border-gray-300 px-6 py-2 rounded cursor-pointer mt-2 hover:bg-gray-200">
                 Choose File
               </label>
               <input
-                id="fileUpload"
-                ref={fileInputRef}
+                id="flagUpload"
+                ref={flagFileRef}
                 type="file"
                 multiple
-                onChange={handleFileUpload}
+                onChange={(e) => handleFileUpload(e, "flag")}
                 className="hidden" />
-              {fileError && <p className="text-red-500 text-sm mt-1">{fileError}</p>}
+              {flagFileError && <p className="text-red-500 text-sm mt-1">{flagFileError}</p>}
             </div>         
-          <div className="mt-3 flex flex-wrap gap-2">
-              {allDocuments.map((doc: any, index: number) => (
+           <div className="mt-3 flex flex-wrap gap-2">
+              {flagDocuments.map((doc: any, index: number) => (
                 <div
                   key={doc.source === "api" ? doc.fileNameGUID : index}
-                  className="flex items-center gap-2 bg-gray-100 px-3 py-1 rounded-lg shadow-sm border relative">
-                  {/* File Name */}
+                  className="flex items-center gap-2 bg-gray-100 px-3 py-1 rounded-lg shadow-sm border">
                   <span
                     className="text-sm truncate max-w-[180px] cursor-pointer text-blue-600 hover:underline"
-                    onClick={async () => {
-                      const fileName = doc.originalFileName;
-                      const ext = fileName.split(".").pop()?.toLowerCase() || "";
-
-                      if (doc.source === "api") {
-                        try {
-                          const response = await axios.get(
-                            `${apiUrl}/api/download?fileName=${doc.fileNameGUID}`,
-                            {
-                              responseType: "blob",
-                              headers: { Authorization: `Bearer ${authToken}` },
-                            }
-                          );
-                          const blobUrl = URL.createObjectURL(response.data);
-                          if (["jpg", "jpeg", "png", "gif"].includes(ext)) {
-                            openPreview(response.data, ext);
-                          } 
-                          else if (ext === "pdf") {
-                            const pdfBlob = new Blob([response.data], { type: "application/pdf" });
-                            const pdfUrl = URL.createObjectURL(pdfBlob);
-                            window.open(pdfUrl, "_blank");
-                          }
-                          // else if (ext === "pdf") {
-                          //   window.open(blobUrl, "_blank");  
-                          // }
-                          else {
-                            const link = document.createElement("a");
-                            link.href = URL.createObjectURL(response.data);
-                            link.download = fileName;
-                            link.click();
-                          }
-                        } catch {
-                          alert("File not found");
-                        }
-                      }
-
-                      else {
-                        const file = doc.file;
-                        if (!(file instanceof File)) return;
-
-                        if (["jpg", "jpeg", "png", "gif"].includes(ext)) {
-                          openPreview(file, ext);
-                        } 
-                         else if (ext === "pdf") {
-                          const pdfBlob = new Blob([file], { type: "application/pdf" });
-                          const pdfUrl = URL.createObjectURL(pdfBlob);
-                          window.open(pdfUrl, "_blank");    
-                          }
-                          else {
-                          const link = document.createElement("a");
-                          link.href = URL.createObjectURL(file);
-                          link.download = file.name;
-                          link.click();
-                        }
-                      }
-                    }}>
+                    onClick={() => handleFilePreview(doc)}>
                     {doc.originalFileName || doc.name}
                   </span>
+
                   <button
                     type="button"
-                    onClick={() => {
-                      if (doc.source === "api") {
-                        setExistingDocs(prev => prev.map(d => d.fileNameGUID === doc.fileNameGUID ? { ...d, isDeleted: true } : d));
-                      } else {
-                        setForm(prev => ({ ...prev, files: prev.files.filter((_, i) => i !== index) }));
-                      }
-                    }}
+                    onClick={() => removeFile(doc, index, "flag")}
                     className="text-red-500 hover:text-red-700 font-bold text-lg leading-none">
                     ×
                   </button>
                 </div>
               ))}
-            </div>           
+            </div>
+            </>
+          )}        
           <div className="flex justify-end gap-4 mt-6">
             <button
               onClick={closeApproveDrawer} 
@@ -1810,7 +1732,8 @@ return (
               Cancel
             </button>
             <button onClick={submitManagerApproval}
-              className="h-[44px] px-8 rounded-md shadow btn-theme">Submit
+              className="h-[44px] px-8 rounded-md shadow btn-theme">
+               {isEditMode ? "Update" : "Save"}
             </button>
           </div>
         </div>
@@ -2048,7 +1971,7 @@ return (
                 ref={fileInputRef}
                 type="file"
                 multiple
-                onChange={handleFileUpload}
+                onChange={(e) => handleFileUpload(e, "approval")}
                 className="hidden" />
               {fileError && <p className="text-red-500 text-sm mt-1">{fileError}</p>}
             </div>         
@@ -2073,7 +1996,6 @@ return (
                               headers: { Authorization: `Bearer ${authToken}` },
                             }
                           );
-                          const blobUrl = URL.createObjectURL(response.data);
                           if (["jpg", "jpeg", "png", "gif"].includes(ext)) {
                             openPreview(response.data, ext);
                           } 
@@ -2156,192 +2078,123 @@ return (
         {errorMessage}
       </div>
     )}
-    {/* Popup Modal */}
-     {popupOpen && (
-        <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/40 px-4">
-          <div className="bg-white w-full max-w-xl p-6 rounded-lg shadow-lg">
-            <div className="flex items-center justify-between mb-4">
-              <h3 className="text-lg font-semibold">
-                {actionType === "approve"
-                  ? "Are you sure you want to approve this nomination?"
-                  : "Are you sure you want to reject this nomination?"}
-              </h3>
-              <button className="text-gray-600" onClick={() => setPopupOpen(false)}>
-                <X />
-              </button>
-            </div>
-         {showScore && (
-            <div className="mt-4">
-              <label className="text-sm font-medium">
-                Score <span className="text-red-600">*</span>
-              </label>
-              <div className="relative">
-                <input
-                  type="text"
-                  maxLength={3}
-                  // className={`w-full mt-1 p-2 pr-10 border rounded text-sm ${popupErrors.score ? "border-red-500" : "border-gray-300"}`}
-                  value={popupScore}
-                  onChange={(e) => {
-                    const v = e.target.value;
-                    if (v === "") {
-                      setPopupScore("");
-                      setPopupErrors(prev => ({ ...prev, score: "" }));
-                      return;
-                    }
-                    if (!/^\d+$/.test(v)) return;
-                    const n = Number(v);
-                    if (n < 1 || n > 100) {
-                      setPopupErrors(prev => ({ ...prev, score: "Score must be between 1 and 100" }));
-                      return;
-                    }
-                    setPopupScore(v);
-                    setPopupErrors(prev => ({ ...prev, score: "" }));
-                  }} />
-                <div className="absolute right-2 bottom-2 text-xs text-gray-500 pointer-events-none">
-                  {popupScore ? popupScore : "1"}/100
+    {openReferralPopup && (
+      <div
+        className={`fixed top-0 right-0 h-full w-[680px] bg-white shadow-2xl z-50
+        transform transition-transform duration-300 ease-in-out
+        ${openReferralPopup ? "translate-x-0" : "translate-x-full"}`}>
+        <div className="flex justify-between items-center px-6 py-4 border-b border-gray-200">
+          <h2 className="text-[16px] font-semibold text-gray-900">
+            Referral Approval
+          </h2>
+          <button onClick={() => setOpenReferralPopup(false)}>
+            <X size={20} />
+          </button>
+        </div>
+        <div className="px-6 py-6 text-sm text-gray-800 overflow-y-auto h-[calc(100%-70px)]">
+          <div className="mb-[18px]">
+            <label className="block mb-2 font-medium">Status</label>
+            <select
+              value={refStatus}
+              onChange={(e) =>
+                setRefStatus(e.target.value as "Approved" | "Rejected")
+              }
+              className="w-full h-[42px] px-3 border border-gray-300 rounded-[6px]">
+              <option value="Approved">Approved</option>
+              <option value="Rejected">Rejected</option>
+            </select>
+          </div>
+          <div className="mb-[18px]">
+            <label className="block mb-2 font-medium">Comments</label>
+            <textarea
+              rows={3}
+              value={refComments}
+              onChange={(e) => setRefComments(e.target.value)}
+              placeholder="Enter your comments"
+              className="w-full px-3 py-2 border rounded-[6px] border-gray-300"/>
+          </div>
+          <div className="mb-[18px]">
+            <Label.Root className="block text-sm font-medium">
+              Supporting Documents
+              <span className="text-red-500">
+                (Max 5 files & below 2MB)
+              </span>
+            </Label.Root>
+            <label
+              htmlFor="refUpload"
+              className="inline-block bg-gray-100 text-gray-700 border border-gray-300 px-6 py-2 rounded cursor-pointer mt-2 hover:bg-gray-200">
+              Choose File
+            </label>
+            <input
+              id="refUpload"
+              ref={refFileRef}
+              type="file"
+              multiple
+              onChange={(e) => handleFileUpload(e, "referral")}
+              className="hidden"/>
+           <div className="mt-3 flex flex-wrap gap-2">
+              {referralDocuments.map((doc: any, index: number) => (
+                <div
+                  key={doc.source === "api" ? doc.fileNameGUID : index}
+                  className="flex items-center gap-2 bg-gray-100 px-3 py-1 rounded-lg shadow-sm border">
+                  <span
+                    className="text-sm truncate max-w-[180px] cursor-pointer text-blue-600 hover:underline"
+                    onClick={() => handleFilePreview(doc)}>
+                    {doc.originalFileName || doc.name}
+                  </span>
+                  <button
+                    type="button"
+                    onClick={() => removeFile(doc, index, "referral")}
+                    className="text-red-500 hover:text-red-700 font-bold text-lg leading-none">
+                    ×
+                  </button>
                 </div>
-              </div>
-              {/* {popupErrors.score && <p className="text-red-600 text-xs mt-1">{popupErrors.score}</p>} */}
-            </div>
-          )}
-            <div className="mt-4">
-              <label className="text-sm font-medium">
-                Approver Comments <span className="text-red-600">*</span>
-              </label>
-              <div className="relative">
-                <textarea
-                  className={`w-full mt-1 p-2 pr-10 border rounded h-28 resize-none text-sm ${popupErrors.comments ? "border-red-500" : "border-gray-300"}`}
-                  value={popupComments}
-                  maxLength={500}
-                  onChange={(e) => {
-                    setPopupComments(e.target.value);
-                    setPopupErrors(prev => ({ ...prev, comments: "" }));
-                  }}/>
-                <div className="absolute right-2 bottom-2 text-xs text-gray-500 pointer-events-none">
-                  {popupComments.length > 0 ? popupComments.length : 1}/500
-                </div>
-              </div>
-              {popupErrors.comments && <p className="text-red-600 text-xs mt-1">{popupErrors.comments}</p>}
-            </div>
-            <div className="flex justify-end gap-3 mt-6">
-              <button className="px-4 py-2 bg-gray-200 rounded" onClick={() => setPopupOpen(false)}>
-                Cancel
-              </button>
-              <button
-                type="button"
-                className={`px-4 py-2 ${actionType === "approve" ? "btn-theme" : "btn-theme-reject"}`}
-                onClick={() => submitFromPopup(actionType === "approve")}
-                disabled={loading} >
-                {loading ? "Processing..." : "Confirm"}
-              </button>
+              ))}
             </div>
           </div>
-        </div>
-      )}
-      {flagOpen && (
-        <div className="fixed inset-0 z-[9999] bg-black/40 flex items-center justify-center">
-          <div className="bg-white w-full max-w-lg rounded-xl shadow-xl p-6">
-
-            <div className="flex justify-between items-center mb-4">
-              <h3 className="text-lg font-semibold text-red-600">
-                🚩 Flag Nomination
-              </h3>
-              <button onClick={() => setFlagOpen(false)}>
-                <X />
-              </button>
-            </div>
-
-      <div className="mb-4">
-        <label className="text-sm font-medium">
-          Reason <span className="text-red-500">*</span>
-        </label>
-
-        <textarea
-          rows={3}
-          value={flagReason}
-          onChange={(e) => setFlagReason(e.target.value)}
-          className="w-full mt-1 p-2 border rounded text-sm"
-          placeholder="Enter reason..."
-        />
-      </div>
-
-      <div className="mb-4">
-        <label className="text-sm font-medium">
-          Upload Supporting Documents
-        </label>
-
-        <input
-          type="file"
-          multiple
-          onChange={handleFlagFileChange}
-          className="w-full mt-1 border p-2 rounded text-sm"
-        />
-      </div>
-
-      {flagFiles.length > 0 && (
-        <div className="mt-2 space-y-1 text-sm text-gray-700">
-          {flagFiles.map((file, index) => (
-            <div key={index} className="flex items-center gap-2">
-              📄 {file.name}
-            </div>
-          ))}
-        </div>
-      )}
-
-      {flagError && (
-        <p className="text-red-600 text-sm mt-2">{flagError}</p>
-      )}
-
-      <div className="flex justify-end gap-3 mt-6">
-        <button
-          className="px-4 py-2 bg-gray-200 rounded"
-          onClick={() => setFlagOpen(false)}
-        >
-          Cancel
-        </button>
-
-        <button
-          onClick={submitFlagWithAttachment}
-          className="px-4 py-2 btn-theme-reject"
-        >
-          Submit Flag
-        </button>
-      </div>
-
+          <div className="flex justify-end gap-4 mt-6">
+            <button
+              onClick={() => setOpenReferralPopup(false)}
+              className="h-[42px] px-6 border border-gray-300 rounded-[6px]">
+              Cancel
+            </button>
+            <button
+              onClick={submitReferral}
+              className="h-[44px] px-8 rounded-md shadow btn-theme">
+              {isEditMode ? "Update" : "Save"}
+            </button>
           </div>
         </div>
-      )}
+      </div>
+    )}
+   {openDocPopup && (
+      <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50">
+        <div className="bg-white w-[500px] rounded-lg shadow-lg p-5">
+          
+          <div className="flex justify-between items-center mb-4">
+            <h3 className="font-semibold">Documents</h3>
+            <button onClick={() => setOpenDocPopup(false)}>✕</button>
+          </div>
 
-        {/* ✅ SUCCESS MODAL - NEW CUSTOM DESIGN */}
-{/* ================= Withdraw Confirmation Dialog ================= */}
-      <Dialog.Root
-        open={isWithdrawDialogOpen}
-        onOpenChange={setIsWithdrawDialogOpen}>
-        <Dialog.Portal>
-          <Dialog.Overlay className="fixed inset-0 bg-black/30 z-50" />
-          <Dialog.Content className="fixed top-1/2 left-1/2 z-50 w-[90%] max-w-sm
-            -translate-x-1/2 -translate-y-1/2 bg-white p-6 rounded-lg shadow-lg">
-      
-            <Dialog.Title className="text-center text-lg font-semibold text-gray-900">
-              Are you sure you want to withdraw this nomination?
-            </Dialog.Title>
-      
-            <div className="mt-6 flex justify-center gap-4">
-              <button
-                onClick={() => setIsWithdrawDialogOpen(false)}
-                className="px-4 py-2 text-sm rounded-md border border-gray-300 hover:bg-gray-100">
-                No
-              </button>
-              <button
-                onClick={handleWithdraw}
-                className="px-4 py-2 btn-theme">
-                Yes
-              </button>
-            </div>
-          </Dialog.Content>
-        </Dialog.Portal>
-      </Dialog.Root>
-      
+          <div className="space-y-2 max-h-[300px] overflow-auto">
+            {selectedDocs.map((doc: any) => (
+              <div
+                key={doc.fileNameGUID}
+                className="border rounded px-3 py-2 hover:bg-gray-50">
+                
+                <span
+                  onClick={() => handleFilePreview(doc)}
+                  className="text-blue-600 cursor-pointer hover:underline">
+                  {doc.originalFileName}
+                </span>
+
+              </div>
+            ))}
+          </div>
+
+        </div>
+      </div>
+    )}
 {/* ================= Document Preview Dialog ================= */}
       <Dialog.Root
         open={previewOpen}
@@ -2380,15 +2233,3 @@ return (
   };
  
 export default BusinessJuryDetail;
-const ScoreBox = ({
-  label,
-  value,
-}: {
-  label: string;
-  value: number;
-}) => (
-  <div className="border border-gray-300 rounded-md px-3 py-1 text-center min-w-[60px]">
-    <div className="text-sm font-semibold">{value}</div>
-    <div className="text-[10px] text-gray-500">{label}</div>
-  </div>
-);

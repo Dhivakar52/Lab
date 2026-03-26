@@ -40,7 +40,9 @@ interface ReferralData {
   ManagerEmailID: string;
   ManagerName: string;
   Descriptions: string;
-   Comments: string | null;
+  Comments: string | null;
+  Levels:string;
+
  // "Referrals ID": { Email: string }[];
  "Referrals ID": {
   Email: string;
@@ -267,110 +269,72 @@ const ReferralTable: React.FC = () => {
       // { accessorKey: "AwardCategory", header: "AwardCategory" },
      // { accessorKey: "Tenant", header: "Entity Name" },
       { accessorKey: "SubmittedDate", header: "Submitted Date" },
-      {
-        id: "Level",
-        header: "Level",
-        cell: ({ row }) => {
-          const levels = ["Level 1", "Level 2", "Level 3"];
-          const level = levels[row.index % levels.length];
-
-          const levelStyles: Record<string, string> = {
-            "Level 1":
-              "bg-orange-50 text-orange-600 border border-orange-200 hover:bg-orange-100",
-            "Level 2":
-              "bg-purple-50 text-purple-600 border border-purple-200 hover:bg-purple-100",
-            "Level 3":
-              "bg-blue-50 text-blue-600 border border-blue-200 hover:bg-blue-100",
-          };
-
-          return (
-            <button
-              onClick={(e) => {
-                e.stopPropagation();
-                setSelectedLevelRow(row.original);
-                setIsLevelPanelOpen(true);
-              }}
-              className={`
-                w-20 h-8
-                text-xs font-semibold
-                rounded-md
-                flex items-center justify-center
-                ${levelStyles[level]}
-              `}>
-              {level}
-            </button>
-          );
-        },
-      },
-      {
-        accessorKey: "Status",
-        header: "Status",
-        cell: ({ getValue }) => {
-          const status = getValue() as string;
-
-          const bgClass = levelColors[status] || "bg-gray-100 border-gray-300";
-          const textClass = levelTextColors[status] || "text-gray-700";
-
-          return (
-            <span
-              className={`inline-flex items-center px-3 py-1 text-sm font-medium border rounded ${bgClass} ${textClass}`} >
-              {status}
-            </span>
-          );
-        },
-      },      
-      //  {
-      //       accessorKey: "Status",
-      //       header: "Status",
-      //       cell: ({ row, getValue }) => {
-      //         const status = getValue() as string;
-      //         const isOpen = expandedRow === row.original.NominationID;
-
-      //         const bgClass = levelColors[status] || "bg-gray-100 border-gray-300";
-      //         const textClass = levelTextColors[status] || "text-gray-700";
-
-      //         return (
-      //           <div
-      //             className={`inline-flex items-center border rounded overflow-hidden ${bgClass} ${textClass}`}>
-      //             <button
-      //               onClick={(e) =>{ e.stopPropagation(); handleStatusClick(row.original.NominationID);}}
-      //               className="px-3 py-1 text-sm font-medium flex-1 text-left">
-      //               {status}
-      //             </button>
-      //             <span className="w-px self-stretch bg-current opacity-30" />
-      //             <button
-      //               onClick={(e) =>{ e.stopPropagation();
-      //                handleStatusClick(row.original.NominationID);}}
-      //               className="px-2 flex items-center justify-center" >
-      //              {isOpen ? <ChevronUp size={18} /> : <ChevronDown size={18} />}
-      //             </button>
-      //           </div>
-      //         );
-      //       },
-      //  },  
-    {
-        header: "Actions",
-        cell: ({ row }) => {
-          const item = row.original;
-
-          const handleDetailsView = () => {
-            navigate(`/nomination-detail/${item.NominationID}`, {
-              state: { from: "referral-approval" },
-            });
-          };
-
-          return (
-            <button
-              onClick={handleDetailsView}
-              className="p-2 rounded hover:bg-gray-100 transition"
-              title="View Details"
-            >
-              <Menu size={18} className="text-blue-600" />
-            </button>
-          );
-        },
-      },
-
+       {
+              id: "Levels",
+              header: "Level",
+              cell: ({ row }) => {
+                const level = row.original.Levels; 
+                const levelStyles: Record<string, string> = {
+                  "Level-1":
+                    "bg-orange-50 text-orange-600 border border-orange-200 hover:bg-orange-100",
+                  "Level-2":
+                    "bg-purple-50 text-purple-600 border border-purple-200 hover:bg-purple-100",
+                  "Level-3":
+                    "bg-blue-50 text-blue-600 border border-blue-200 hover:bg-blue-100",
+                };
+                return (
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setSelectedLevelRow(row.original);
+                      setIsLevelPanelOpen(true);
+                    }}
+                    className={`w-20 h-8 text-xs font-semibold rounded-md flex items-center justify-center
+                      ${levelStyles[level] || "bg-gray-100 text-gray-600 border"}
+                    `}>
+                    {level?.replace("-", " ")}
+                  </button>
+                );
+              },
+            },
+          {
+              accessorKey: "Status",
+              header: "Status",
+              cell: ({ getValue }) => {
+                const status = getValue() as string;
+                const cleanStatus = status?.includes("-")
+                  ? status.substring(status.indexOf("-") + 1).trim()
+                  : status?.trim();
+                const bgClass = levelColors[cleanStatus] || "bg-gray-100 border-gray-300";
+                const textClass = levelTextColors[cleanStatus] || "text-gray-700";
+      
+                return (
+                  <span
+                    className={`inline-flex items-center px-3 py-1 text-sm font-medium border rounded ${bgClass} ${textClass}`} >
+                    {cleanStatus}
+                  </span>
+                );
+              },
+            },       
+        {
+           header: "Actions",
+                  cell: ({ row }) => {
+                    const item = row.original;
+                    const handleDetailsView = (item: ReferralData) => {
+                  navigate(`/businessjury-detail/${item.NominationID}`, {
+                    state: { from: "referral-approval" }
+                  });
+                };
+                    return (
+                      <button
+                        onClick={() => handleDetailsView(row.original)}
+                        className="p-2 rounded hover:bg-gray-100 transition"
+                         title="View Details">
+                        <Menu size={18} className="text-blue-600" />
+                      </button>
+                    );
+                  },
+                },
     ];},[]);
 
   const table = useReactTable({
@@ -475,12 +439,14 @@ const ReferralTable: React.FC = () => {
          reason={reason}
         setReason={setReason}
       />
-      {/* <ProgressSidePanel
-        isOpen={isLevelPanelOpen}
-        onClose={() => {
-        setIsLevelPanelOpen(false);
-        setSelectedLevelRow(null);
-      }}/> */}
+      <ProgressSidePanel
+          isOpen={isLevelPanelOpen}
+          data={selectedLevelRow}
+          onClose={() => {
+            setIsLevelPanelOpen(false);
+            setSelectedLevelRow(null);
+          }}
+        />
        {/* Final Correct Component */}
       {/* <ReferralReasonPanel
         isOpen={isPanelOpen}
