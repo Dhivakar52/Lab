@@ -55,7 +55,6 @@ const Header: React.FC<HeaderProps> = ({ onMobileMenuToggle }) => {
       );
 
       setHeaderNotification(notificationList.data);
-      console.log("All Notifications:", notificationList.data);
     } catch (err) {
       console.error("❌ Error fetching notifications:", err);
     }
