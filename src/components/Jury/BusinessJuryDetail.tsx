@@ -2,11 +2,13 @@ import * as Label from "@radix-ui/react-label";
 import { useEffect, useState, useRef } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import axios from "axios";
-import { X, ArrowLeft } from "lucide-react";
+import { X, ArrowLeft,Menu, Eye } from "lucide-react";
 import { useAuth } from "../ContextAPI/AuthContext";
 import * as Dialog from "@radix-ui/react-dialog";
 import { useLocation } from "react-router-dom";
 //import Swal from "sweetalert2";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger,
+} from "@radix-ui/react-dropdown-menu";
 import { Flag ,User, Building2, Tag, 
   CalendarDays, FileText, Mail, BadgeCheck, Check } from "lucide-react";
 import type { FormState } from "../../dataTypes/nomination";
@@ -107,6 +109,8 @@ const BusinessJuryDetail: React.FC<BusinessJuryDetailProps> = ({
     comments: "",
     flagComment: ""
   });
+  const [openCommentsPopup, setOpenCommentsPopup] = useState(false);
+  const [selectedComment, setSelectedComment] = useState("");
   const refFileRef = useRef<HTMLInputElement | null>(null);
   const [refFileError, setRefFileError] = useState("");
   const [openReferralPopup, setOpenReferralPopup] = useState(false);
@@ -129,6 +133,7 @@ const BusinessJuryDetail: React.FC<BusinessJuryDetailProps> = ({
   const [activeLevel, setActiveLevel] = useState<"Level-2" | "Level-3" | null>(null);
   const [openDocPopup, setOpenDocPopup] = useState(false);
   const [selectedDocs, setSelectedDocs] = useState<any[]>([]);
+  const [isFlowStopped, setIsFlowStopped] = useState(false);
   
   const [form, setForm] = useState<FormState>({
       title: "",
@@ -192,6 +197,12 @@ const BusinessJuryDetail: React.FC<BusinessJuryDetailProps> = ({
         setData(null);
         return;
       }
+      const hasRejectedReferral = result.Referrals?.some(
+        (r: any) =>
+          r.ReferralUserID === userId && r.Status === "Rejected"
+      );
+      debugger;
+      setIsFlowStopped(hasRejectedReferral);
       setData(result);
       setReferrals(result.Referrals || []);
       setDocuments(result["Supporting Documents"]|| []);
@@ -202,6 +213,7 @@ const BusinessJuryDetail: React.FC<BusinessJuryDetailProps> = ({
       setLoading(false);
     }
   };
+
   const getFileIcon = (fileName: string) => {
   const ext = fileName.split('.').pop()?.toLowerCase();
  
@@ -340,7 +352,7 @@ const removeFile = (doc: any, index: number, type: "approval" | "flag" |"referra
         )
       );
     }
-     if (type === "approval") {
+    else if (type === "approval") {
       setExistingApprovalDocs((prev) =>
         prev.map((d) =>
           d.fileNameGUID === doc.fileNameGUID
@@ -361,8 +373,7 @@ const removeFile = (doc: any, index: number, type: "approval" | "flag" |"referra
     if (type === "approval") {
       setApprovalFiles((prev) => prev.filter((_, i) => i !== index));
     } 
-    else 
-    if (type === "referral") {
+    else if (type === "referral") {
       setRefFiles((prev) => prev.filter((_, i) => i !== index));
     }
     else {
@@ -380,10 +391,8 @@ const description =
     ? description
     : description.slice(0, maxLength) + "...";
   
-const handleFileUpload = (
-  e: React.ChangeEvent<HTMLInputElement>,
-  type: "approval" | "flag" | "referral"
-) => {
+const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>,
+  type: "approval" | "flag" | "referral") => {
   const selectedFiles = Array.from(e.target.files || []);
   if (!selectedFiles.length) return;
 
@@ -392,47 +401,53 @@ const handleFileUpload = (
   else setRefFileError("");
 
   let currentFiles: File[] = [];
-  if (type === "approval") currentFiles = approvalFiles;
-  else if (type === "flag") currentFiles = flagFiles;
-  else currentFiles = refFiles;
+  let existingCount = 0;
+
+  if (type === "approval") {
+    currentFiles = approvalFiles;
+    existingCount = existingApprovalDocs.filter(d => !d.isDeleted).length;
+  } 
+  else if (type === "flag") {
+    currentFiles = flagFiles;
+    existingCount = existingFlagDocs.filter(d => !d.isDeleted).length;
+  } 
+  else {
+    currentFiles = refFiles;
+    existingCount = existingRefDocs.filter(d => !d.isDeleted).length;
+  }
+
+  const totalFiles =
+    existingCount + currentFiles.length + selectedFiles.length;
+
+  if (totalFiles > 5) {
+    const msg = "Maximum 5 files allowed.";
+    if (type === "approval") setApprovalFileError(msg);
+    else if (type === "flag") setFlagFileError(msg);
+    else setRefFileError(msg);
+    return;
+  }
 
   for (const file of selectedFiles) {
-
     const isDuplicate = currentFiles.some(
       (f) => f.name === file.name && f.size === file.size
     );
 
     if (isDuplicate) {
-      if (type === "approval")
-        setApprovalFileError(`"${file.name}" already added.`);
-      else if (type === "flag")
-        setFlagFileError(`"${file.name}" already added.`);
-      else
-        setRefFileError(`"${file.name}" already added.`);
+      const msg = `"${file.name}" already added.`;
+      if (type === "approval") setApprovalFileError(msg);
+      else if (type === "flag") setFlagFileError(msg);
+      else setRefFileError(msg);
       return;
     }
 
     if (file.size > 2 * 1024 * 1024) {
-      if (type === "approval")
-        setApprovalFileError(`"${file.name}" exceeds 2 MB limit.`);
-      else if (type === "flag")
-        setFlagFileError(`"${file.name}" exceeds 2 MB limit.`);
-      else
-        setRefFileError(`"${file.name}" exceeds 2 MB limit.`);
+      const msg = `"${file.name}" exceeds 2 MB limit.`;
+      if (type === "approval") setApprovalFileError(msg);
+      else if (type === "flag") setFlagFileError(msg);
+      else setRefFileError(msg);
       return;
     }
   }
-
-  if (currentFiles.length + selectedFiles.length > 5) {
-    if (type === "approval")
-      setApprovalFileError("Maximum 5 files allowed.");
-    else if (type === "flag")
-      setFlagFileError("Maximum 5 files allowed.");
-    else
-      setRefFileError("Maximum 5 files allowed.");
-    return;
-  }
-
   if (type === "approval") {
     setApprovalFiles((prev) => [...prev, ...selectedFiles]);
     if (approvalFileRef.current) approvalFileRef.current.value = "";
@@ -566,6 +581,71 @@ const getBusinessJuryEvaluations = () => {
 const avgScoreData = safeParse(level2?.JuryMemberAvgScore);
 const avgScore = avgScoreData?.[0]?.JuryMemberAvgScore || 0;
 const attributeData = level2;
+const juryList: JuryItem[] = getBusinessJuryEvaluations().map((j: any) => ({
+  Juryname: j.JuryMemberName,
+  SubmittedDate: "-",
+  Score: j.AttributeAvg?.[0]?.TotalScore || 0,
+  Flag: j.FlagDetails?.length > 0 ? 1 : 0,
+  Attributes: j.AttributeScore || [],
+  FlagReason: j.FlagDetails?.[0]?.FlagReason || ""
+}));
+const getCleanStatus = (status?: string) => {
+  if (!status) return "";
+  const dashIndex = status.indexOf("-");
+  return dashIndex >= 0
+    ? status.substring(dashIndex + 1).trim()
+    : status.trim();
+};
+const mainStatus = getCleanStatus(data.Status);
+const resetApproveDrawer = () => {
+  setScores(structuredClone(DEFAULT_SCORE_ITEMS));
+  setPopupComments("");
+  setIsFlagged(false);
+  setFlagComment("");
+  setApprovalFiles([]);
+  setFlagFiles([]);
+  setExistingApprovalDocs([]);
+  setExistingFlagDocs([]);
+  setExistingDocs([]);
+  setPopupErrors({
+    score: {},
+    comment:{},
+    comments: "",
+    flagComment: ""
+  });
+  setStatus("Approved");
+  setPopupComments("");
+  setIsFlagged(false);
+  setFlagComment("");
+  setDocuments([]);         
+  setExistingDocs([]); 
+  setRefStatus("Approved");
+  setRefComments("");
+  setRefFiles([]);
+  setExistingRefDocs([]);
+  setRefFileError("");
+  setForm(prev => ({ ...prev, files: [] }));
+  if (refFileRef.current) refFileRef.current.value = "";       
+  if (approvalFileRef.current) {
+    approvalFileRef.current.value = "";
+  }
+  if (flagFileRef.current) {
+    flagFileRef.current.value = "";
+  }
+  setApprovalFileError("");
+  setFlagFileError("");
+};
+const closeApproveDrawer = () => {
+  resetApproveDrawer();
+  setOpenApprove(false);
+  setOpenReferralPopup(false)
+};
+const handleCloseDrawer = () => {
+  setOpenScore(false);
+  setExistingDocs([]); 
+  setForm(prev => ({ ...prev, files: [] })); 
+  resetApproveDrawer();
+};
 debugger;
 const handleManagerApprove = () => {
   if (!level1) return;
@@ -629,66 +709,6 @@ const handleManagerApprove = () => {
   setExistingApprovalDocs(approvalDocs);
 
   setOpenApprove(true);
-};
-const juryList: JuryItem[] = getBusinessJuryEvaluations().map((j: any) => ({
-  Juryname: j.JuryMemberName,
-  SubmittedDate: "-",
-  Score: j.AttributeAvg?.[0]?.TotalScore || 0,
-  Flag: j.FlagDetails?.length > 0 ? 1 : 0,
-  Attributes: j.AttributeScore || [],
-  FlagReason: j.FlagDetails?.[0]?.FlagReason || ""
-}));
-const getCleanStatus = (status?: string) => {
-  if (!status) return "";
-  const dashIndex = status.indexOf("-");
-  return dashIndex >= 0
-    ? status.substring(dashIndex + 1).trim()
-    : status.trim();
-};
-const mainStatus = getCleanStatus(data.Status);
-
-const resetApproveDrawer = () => {
-  setScores(structuredClone(DEFAULT_SCORE_ITEMS));
-  setPopupComments("");
-  setIsFlagged(false);
-  setFlagComment("");
-  setApprovalFiles([]);
-  setFlagFiles([]);
-  setExistingApprovalDocs([]);
-  setExistingFlagDocs([]);
-  setExistingDocs([]);
-  setPopupErrors({
-    score: {},
-    comment:{},
-    comments: "",
-    flagComment: ""
-  });
-  setStatus("Approved");
-  setPopupComments("");
-  setIsFlagged(false);
-  setFlagComment("");
-  setDocuments([]);         
-  setExistingDocs([]);        
-  setForm(prev => ({ ...prev, files: [] }));
-  if (approvalFileRef.current) {
-    approvalFileRef.current.value = "";
-  }
-  if (flagFileRef.current) {
-    flagFileRef.current.value = "";
-  }
-  setApprovalFileError("");
-  setFlagFileError("");
-};
-
-const closeApproveDrawer = () => {
-  resetApproveDrawer();
-  setOpenApprove(false);
-};
-const handleCloseDrawer = () => {
-  setOpenScore(false);
-  setExistingDocs([]); 
-  setForm(prev => ({ ...prev, files: [] })); 
-  resetApproveDrawer();
 };
 const submitManagerApproval = async () => {
   console.log("CLICKED SUBMIT");
@@ -931,27 +951,42 @@ const handleReferralApprove = (ref: any) => {
 const submitReferral = async () => {
   try {
     setLoading(true);
+
     let uploadedDocs: any[] = [];
+
     if (refFiles.length > 0) {
       uploadedDocs = await uploadFilesToServer(refFiles);
     }
 
     const payload = {
-      ReferralID: selectedReferral.ReferralID,
-      NominationID: Number(nominationId),
-      ReferralUserID: selectedReferral.ReferralUserID,
-      IsReferralApproved: refStatus === "Approved",
-      ApprovalComments: refComments,
-      CreatedBy: userId,
-      UpdatedBy: userId,
+      Approval: 
+        {
+          ReferralID: selectedReferral.ReferralID,
+          NominationID: Number(nominationId),
+          ReferralUserID: selectedReferral.ReferralUserID,
+          IsReferralApproved: refStatus === "Approved",
+          ApprovalComments: refComments,
+          Active: true,
+          UpdatedBy: userId
+        },
 
+      Flags: 
+        {
+          NominationFlagsID: 0,
+          NominationID: Number(nominationId),
+          IsFlag: false,
+          FlagReason: "",
+          CreatedBy: userId,
+          UpdatedBy: userId
+        },
+    
       Attachments: [
         ...existingRefDocs
           .filter(doc => !doc.isDeleted)
           .map(doc => ({
             AttachmentsID: doc.AttachmentID || 0,
             NominationID: Number(nominationId),
-            AttachmentType: 49, // referral type
+            AttachmentType: 47, // ✅ FIXED
             OriginalAttachmentName: doc.originalFileName,
             AttachmentFileType: doc.fileType || "",
             AttachmentSize: doc.fileSize || "",
@@ -964,7 +999,7 @@ const submitReferral = async () => {
         ...uploadedDocs.map(f => ({
           AttachmentsID: 0,
           NominationID: Number(nominationId),
-          AttachmentType: 49,
+          AttachmentType: 47, 
           OriginalAttachmentName: f.originalFileName,
           AttachmentFileType: f.fileType || "",
           AttachmentSize: `${(f.fileSize / 1024).toFixed(2)} KB`,
@@ -975,6 +1010,9 @@ const submitReferral = async () => {
         }))
       ]
     };
+
+    console.log("REFERRAL PAYLOAD 👉", payload);
+
     const res = await axios({
       method: isEditMode ? "put" : "post",
       url: isEditMode
@@ -982,18 +1020,25 @@ const submitReferral = async () => {
         : `${apiUrl}/api/referrallevel`,
       data: payload,
       headers: {
+        "Content-Type": "application/json",
         Authorization: `Bearer ${authToken}`
       }
     });
 
     if (res.data > 0) {
-      setSuccessMessage(isEditMode ? "Updated!" : "Saved!");
+      setSuccessMessage(isEditMode ? "Referral Updated!" : "Referral Saved!");
+    } else {
+      setErrorMessage("Operation failed");
     }
+    setTimeout(() => {
+        setSuccessMessage("");
+        setErrorMessage("");
+      }, 3000);
     fetchNominationDetails();
     setOpenReferralPopup(false);
 
   } catch (err) {
-    console.error(err);
+    console.error("❌ REFERRAL SAVE ERROR:", err);
     setErrorMessage("Save failed");
   } finally {
     setLoading(false);
@@ -1057,6 +1102,17 @@ const handleFilePreview = async (doc: any) => {
     alert("File not found");
   }
 };
+const getDocs = (item: any) => {
+  if (!item?.ApprovalAttachment) return [];
+
+  try {
+    return typeof item.ApprovalAttachment === "string"
+      ? JSON.parse(item.ApprovalAttachment)
+      : item.ApprovalAttachment;
+  } catch {
+    return [];
+  }
+};
 const openDocsPopup = (docs: any[]) => {
   setSelectedDocs(
     docs.map((d: any) => ({
@@ -1067,6 +1123,10 @@ const openDocsPopup = (docs: any[]) => {
     }))
   );
   setOpenDocPopup(true);
+};
+const openCommentPopup = (ref: any) => {
+  setSelectedComment(ref.ApprovalComments || "No comments available");
+  setOpenCommentsPopup(true);
 };
 const parsedFlagDocs = safeParse(level1?.FlagAttachment);
 const parsedApprovalDocs = safeParse(level1?.ApprovalAttachment);
@@ -1240,8 +1300,7 @@ return (
       Referral Information
     </h3>
   {referrals.length ? (
-    <div className="overflow-hidden">
-      {/* <div className="overflow-hidden border border-gray-200 rounded-lg"> */}
+  <div className="overflow-hidden">
     <table className="w-full text-sm border-collapse">
       <thead className="bg-gray-50">
         <tr>
@@ -1250,7 +1309,9 @@ return (
           <th className="px-4 py-3 text-left">Department</th>
           <th className="px-4 py-3 text-left">Email ID</th>
           <th className="px-4 py-3 text-left">Approved Date</th>
+          {/* <th className="px-4 py-3 text-left">Comments</th> */}
           <th className="px-4 py-3 text-left">Status</th>
+          <th className="px-4 py-3 text-left">Action</th>
         </tr>
       </thead>
       <tbody>
@@ -1261,8 +1322,9 @@ return (
             <td className="px-4 py-3">{ref.ReferralName}</td>
             <td className="px-4 py-3">{ref.TenantName}</td>
             <td className="px-4 py-3">{ref.DeptName}</td>
-            <td className="px-4 py-3">{ref.Email}</td>
+            <td className="px-4 py-s3">{ref.Email}</td>
             <td className="px-4 py-3">{ref.ApprovedAt}</td>
+            {/* <td className="px-4 py-3">{ref.ApprovalComments}</td> */}
             <td><button
                   onClick={() => handleReferralApprove(ref)}
                   className={`px-4 py-1.5 rounded-lg text-sm border 
@@ -1270,6 +1332,48 @@ return (
                   ${levelTextColors[ref.Status] || "text-gray-700"}`}>
                   {ref.Status}
                 </button></td>
+            <td className="px-4 py-3">
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <button className="p-2 rounded hover:bg-gray-100">
+                    <Menu size={18} />
+                  </button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end"
+                  className="bg-white border border-[#08805e] rounded-md shadow-md p-1 min-w-[150px]">
+                  <DropdownMenuItem
+                    onClick={() =>
+                      getDocs(ref).length > 0 && openDocsPopup(getDocs(ref))
+                    }
+                    className={`flex items-center gap-2 px-2 py-1.5 rounded text-xs
+                      hover:bg-gray-100 transition
+                      ${getDocs(ref).length === 0
+                        ? "text-gray-400 cursor-not-allowed pointer-events-none"
+                        : "cursor-pointer"}`}>
+                    
+                    <Eye size={14} />
+                    <span>
+                      {getDocs(ref).length > 0 ? "View Documents" : "No Documents"}
+                    </span>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem
+                    onClick={() =>
+                      ref.ApprovalComments && openCommentPopup(ref)
+                    }
+                    className={`flex items-center gap-2 px-2 py-1.5 rounded text-xs
+                      hover:bg-gray-100 transition
+                      ${!ref.ApprovalComments
+                        ? "text-gray-400 cursor-not-allowed pointer-events-none"
+                        : "cursor-pointer"}`}>
+                    
+                    <Eye size={14} />
+                    <span>
+                      {ref.ApprovalComments ? "View Comments" : "No Comments"}
+                    </span>
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            </td>
           </tr>
         ))}
       </tbody>
@@ -1287,6 +1391,7 @@ return (
     <p className="text-gray-500 text-sm">No referral details</p>
   )}
   </div>
+  {!isFlowStopped && (
     <div className="bg-white rounded-xl border border-gray-200 shadow-sm p-6 mt-6">
       <h2 className="text-base font-semibold mb-6">
         Nomination Status Flow
@@ -1545,6 +1650,7 @@ return (
         </div>
       )}
     </div>
+    )}
     <div className="fixed bottom-0 left-0 w-full h-15 bg-white border-t border-gray-200 flex items-center pl-[260px] pr-6">
       <div className="flex justify-end space-x-4 ml-auto" >  
          <button onClick={handleBackward} className="flex items-center text-blue-600 bg-white border rounded-sm px-2 py-1 font-medium">
@@ -2087,7 +2193,7 @@ return (
           <h2 className="text-[16px] font-semibold text-gray-900">
             Referral Approval
           </h2>
-          <button onClick={() => setOpenReferralPopup(false)}>
+          <button onClick={closeApproveDrawer}>
             <X size={20} />
           </button>
         </div>
@@ -2132,6 +2238,7 @@ return (
               multiple
               onChange={(e) => handleFileUpload(e, "referral")}
               className="hidden"/>
+              {refFileError && <p className="text-red-500 text-sm mt-1">{refFileError}</p>}
            <div className="mt-3 flex flex-wrap gap-2">
               {referralDocuments.map((doc: any, index: number) => (
                 <div
@@ -2154,7 +2261,7 @@ return (
           </div>
           <div className="flex justify-end gap-4 mt-6">
             <button
-              onClick={() => setOpenReferralPopup(false)}
+              onClick={closeApproveDrawer}
               className="h-[42px] px-6 border border-gray-300 rounded-[6px]">
               Cancel
             </button>
@@ -2192,6 +2299,21 @@ return (
             ))}
           </div>
 
+        </div>
+      </div>
+    )}
+    {openCommentsPopup && (
+      <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50">
+        <div className="bg-white w-[500px] rounded-lg shadow-lg p-5">
+          <div className="flex justify-between items-center mb-4">
+            <h3 className="font-semibold">Comments</h3>
+            <button onClick={() => setOpenCommentsPopup(false)}>✕</button>
+          </div>
+          <div className="max-h-[300px] overflow-auto border rounded p-3 bg-gray-50">
+            <p className="text-sm text-gray-800 whitespace-pre-wrap">
+              {selectedComment}
+            </p>
+          </div>
         </div>
       </div>
     )}

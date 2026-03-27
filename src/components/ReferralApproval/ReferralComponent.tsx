@@ -447,29 +447,6 @@ const ReferralTable: React.FC = () => {
             setSelectedLevelRow(null);
           }}
         />
-       {/* Final Correct Component */}
-      {/* <ReferralReasonPanel
-        isOpen={isPanelOpen}
-        onClose={() => setIsPanelOpen(false)}
-        nomination={selectedNomination}
-        onApprove={() =>
-          selectedNomination && handleApprove(selectedNomination.NominationID)
-        }
-        onReject={() =>
-          selectedNomination && handleReject(selectedNomination.NominationID)
-        }
-         reason={reason}
-        setReason={setReason}
-      /> */}
-       {/* <ReferralReasonPanel
-        isOpen={isPanelOpen}
-        onClose={() => setIsPanelOpen(false)}
-        nomination={selectedNomination}
-        reason={reason}
-        setReason={setReason}
-        onApprove={() => selectedNomination && handleApprove(selectedNomination.NominationID)}
-        onReject={() => selectedNomination && handleReject(selectedNomination.NominationID)}
-      /> */}
     </div>
   );
 };
