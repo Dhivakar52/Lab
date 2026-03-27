@@ -68,7 +68,7 @@ const BusinessJuryDetail: React.FC<BusinessJuryDetailProps> = ({
  isOpen, onClose}) => {
   const { nominationId } = useParams<{ nominationId: string }>();
   const navigate = useNavigate();
-  const { authToken, userId } = useAuth();
+  const { authToken, userId,userRole } = useAuth();
   const [previewOpen, setPreviewOpen] = useState(false);
   const [previewFile, setPreviewFile] = useState<string | null>(null);
   const [previewType, setPreviewType] = useState<string | null>(null);
@@ -1807,7 +1807,7 @@ return (
                 {approvalData[1].ApprovalFlow} - {approvalData[1].ApprovalType}
               </p>
               <div className="flex gap-3">
-                {approvalData[1].Status === "Approved" && (
+                {(approvalData[1].Status === "Approved"  && userRole==="presidentLevel")&& (
                   <button
                     onClick={() => setOpenEvaluation(true)}
                     className="px-4 py-1.5 rounded-lg border border-blue-500 text-blue-600 text-sm hover:bg-blue-50">
