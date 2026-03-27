@@ -95,7 +95,9 @@ const BusinessJuryDetail: React.FC<BusinessJuryDetailProps> = ({
   const flagFileRef = useRef<HTMLInputElement | null>(null);
   const [approvalFileError, setApprovalFileError] = useState("");
   const [flagFileError, setFlagFileError] = useState(""); 
+  const [popupScore,setPopupScore]=useState("");
   const [popupComments, setPopupComments] = useState("");
+  const [popupCommentsGrand,setPopupCommentsGrand]=useState("");
   const DEFAULT_SCORE_ITEMS: ScoreItem[] = [
   { weightId: 1, title: "Integrity", score: "", comment: "" },
   { weightId: 2, title: "Idea", score: "", comment: "" },
@@ -121,6 +123,7 @@ const BusinessJuryDetail: React.FC<BusinessJuryDetailProps> = ({
   const [existingRefDocs, setExistingRefDocs] = useState<any[]>([]);
   const [openApprove, setOpenApprove] = useState(false);
   const [openEvaluation, setOpenEvaluation] = useState(false);
+  const [openGrandJuryEvaluation,setOpenGrandJuryEvaluation]=useState(false);
   const [openScore, setOpenScore] = useState(false);
   const [openCard, setOpenCard] = useState<number | null>(null);
   const fileInputRef = useRef<HTMLInputElement | null>(null);
@@ -477,7 +480,7 @@ const uploadFilesToServer = async (files: File[]) => {
 
   return res.data; 
 };
-  const validateEvaluation = (mode: "manager" | "jury") => {
+  const validateEvaluation = (mode: "manager" | "jury" | "grandJury") => {
   const errs: PopupErrors = {
     score: {},
     comment: {},
@@ -516,6 +519,19 @@ const uploadFilesToServer = async (files: File[]) => {
     }
   }
 
+  
+  if(mode=="grandJury"){
+    
+    if (!popupCommentsGrand?.trim()) {
+      errs.comments = "Comments are required!";
+      ok = false;
+    }
+    else if (popupCommentsGrand.trim().length > 500) {
+      errs.comments = "Max 500 characters allowed";
+      ok = false;
+    }
+  }
+
   if (isFlagged && !flagComment.trim()) {
     errs.flagComment = "Flag reason required";
     ok = false;
@@ -535,7 +551,28 @@ const uploadFilesToServer = async (files: File[]) => {
   }
  
   if (!data) {
-    return <div className="p-6 text-red-600">Nomination not found</div>;
+   return (
+     <div className="bg-gray-100 p-6 pb-20">
+        <div className="bg-white rounded-xl border border-gray-200 shadow-sm p-6">
+          <div className="flex flex items-center justify-center">
+                  <p className="text-red-500 text-xl font-medium">
+                    Nomination not found
+                  </p>
+              </div>
+            <div className="flex flex-col gap-8">
+                
+                  <div className="flex justify-end">
+                    <button
+                      onClick={handleBackward}
+                      className="flex items-center text-blue-600 bg-white border border-gray-300 rounded-sm px-3 py-2 font-medium hover:bg-gray-50"
+                    >
+                      <ArrowLeft size={14} className="mr-1" /> Back
+                    </button>
+                  </div>
+          </div>
+        </div>
+    </div>
+    )
   }
 
 const approvalData = data?.ApprovalStatus || [];
@@ -546,22 +583,39 @@ const level3 = approvalData?.find((l: ApprovalItem) => l.ApprovalFlow === "Level
 const showLevel2 = level1?.Status === "Approved";
 const showLevel3 = level2?.Status === "Approved";
 const flagDetails =safeParse(level1?.Flagdetails);
+const GrandJuryflagDetails =safeParse(level3?.Flagdetails);
 const flagData = flagDetails?.[0]; 
+const flagGranJuryData=GrandJuryflagDetails?.[0];
 const approvalCommentText = approvalData?.[0]?.ApprovalComments || "";
+const GrandJuryCommentText = approvalData?.[2]?.ApprovalComments || "";
 
 const isApprovalTruncated = approvalCommentText.length > 160;
+const isGrandJuryTruncated = GrandJuryCommentText.length > 160;
 
 const displayApprovalComment = getTruncatedText(
   approvalCommentText,
   expandedApprovalComments,
   160
 );
+
+const displayGrandJuryComment = getTruncatedText(
+  GrandJuryCommentText,
+  expandedApprovalComments,
+  160
+);
 const flagReasonText = flagData?.FlagReason || "";
+const flagGranJuryReasonText=flagGranJuryData?.FlagReason||"";
 
 const isFlagTruncated = flagReasonText.length > 160;
+const isGrandJuryFlagTruncated=flagGranJuryReasonText.length>160;
 
 const displayFlagReason = getTruncatedText(
   flagReasonText,
+  expandedFlagReason,
+  160
+);
+const displayGrandJuryFlagReason = getTruncatedText(
+  flagGranJuryReasonText,
   expandedFlagReason,
   160
 );
@@ -646,9 +700,14 @@ const handleCloseDrawer = () => {
   setForm(prev => ({ ...prev, files: [] })); 
   resetApproveDrawer();
 };
-debugger;
+
+const closeGrandJuryDrawer=()=>{
+    resetApproveDrawer();
+  setOpenGrandJuryEvaluation(false);
+}
 const handleManagerApprove = () => {
   if (!level1) return;
+   if (approvalData[1].ApprovedAt!="")return;
   const isAlreadySaved = !!level1.ApprovedAt;
 
   setIsEditMode(isAlreadySaved);
@@ -710,8 +769,73 @@ const handleManagerApprove = () => {
 
   setOpenApprove(true);
 };
+
+const handleGrandJuryApprove = () => {
+  if (!level3) return;
+  const isAlreadySaved = !!level3.ApprovedAt;
+
+  setIsEditMode(isAlreadySaved);
+  setStatus(level3.Status === "Rejected" ? "Rejected" : "Approved");
+  setPopupCommentsGrand(level3.ApprovalComments || "");
+  setPopupScore(level3.ApprovalScore || "");
+
+  let parsedFlag = null;
+  try {
+    const parsed = level3.Flagdetails ? JSON.parse(level3.Flagdetails) : [];
+    parsedFlag = parsed?.[0];
+  } catch {
+    parsedFlag = null;
+  }
+
+  const isFlag = Number(parsedFlag?.Flag) === 1;
+  setIsFlagged(isFlag);
+  setFlagComment(parsedFlag?.FlagReason || "");
+
+  let parsedFlagAttachments: any[] = [];
+  try {
+    parsedFlagAttachments = level3.FlagAttachment
+      ? JSON.parse(level3.FlagAttachment)
+      : [];
+  } catch {
+    parsedFlagAttachments = [];
+  }
+
+  let parsedApprovalAttachments: any[] = [];
+  try {
+    parsedApprovalAttachments = level3.ApprovalAttachment
+      ? JSON.parse(level3.ApprovalAttachment)
+      : [];
+  } catch {
+    parsedApprovalAttachments = [];
+  }
+
+  const flagDocs = parsedFlagAttachments.map((file: any) => ({
+    source: "api",
+    AttachmentID: file.AttachmentsID,
+    fileNameGUID: file.AttachmentNameGUID,
+    originalFileName: file.OriginalAttachmentName,
+    fileType: file.AttachmentFileType,
+    fileUrl: file.AttachmentPath,
+    fileSize: file.AttachmentSize
+  }));
+
+  const approvalDocs = parsedApprovalAttachments.map((file: any) => ({
+    source: "api",
+    AttachmentID: file.AttachmentsID,
+    fileNameGUID: file.AttachmentNameGUID,
+    originalFileName: file.OriginalAttachmentName,
+    fileType: file.AttachmentFileType,
+    fileUrl: file.AttachmentPath,
+    fileSize: file.AttachmentSize
+  }));
+
+  setExistingFlagDocs(flagDocs);
+  setExistingApprovalDocs(approvalDocs);
+
+  setOpenGrandJuryEvaluation(true);
+};
+
 const submitManagerApproval = async () => {
-  console.log("CLICKED SUBMIT");
 
   if (!validateEvaluation("manager")) return;
 
@@ -851,6 +975,7 @@ const submitManagerApproval = async () => {
     setLoading(false);
   }
 };
+
 const handleSubmitEvaluation = async () => {
   if (!validateEvaluation("jury")) return;
 
@@ -920,6 +1045,151 @@ await axios.post(
 
   handleCloseDrawer();
 };
+
+const submitGrandJuryApproval = async () => {
+  if (!validateEvaluation("grandJury")) return;
+
+  try {
+    setLoading(true);
+
+    let uploadedApprovalDocs: any[] = [];
+    let uploadedFlagDocs: any[] = [];
+
+    if (approvalFiles.length > 0) {
+      uploadedApprovalDocs = await uploadFilesToServer(approvalFiles);
+    }
+
+    if (flagFiles.length > 0) {
+      uploadedFlagDocs = await uploadFilesToServer(flagFiles);
+    }
+
+    const flags = {
+      NominationFlagsID: flagGranJuryData?.NominationFlagsID || 0,
+      NominationID: Number(nominationId),
+      IsFlag: isFlagged ? true: false,
+      FlagReason: isFlagged ? flagComment : "",
+      CreatedBy: userId,
+      UpdatedBy: userId
+    };
+
+    const approval = {
+      JuryApprovalsID:level3.JuryApprovalsID,
+      NominationID: Number(nominationId),
+      PresidentID:userId,
+      IsPresidentApproved: status === "Approved",
+      PresidentComments: popupCommentsGrand,
+      PresidentScore:popupScore,
+      Active:true,
+      CreatedBy: userId,
+      UpdatedBy: userId
+    };
+
+    const attachments = [
+      ...existingApprovalDocs
+        .filter(doc => !doc.isDeleted)
+        .map(doc => ({
+          AttachmentsID: doc.AttachmentID || 0,
+          NominationID: Number(nominationId),
+          AttachmentType: 47,
+          OriginalAttachmentName: doc.originalFileName,
+          AttachmentFileType: doc.fileType || "",
+          AttachmentSize: doc.fileSize || "",
+          AttachmentNameGUID: doc.fileNameGUID,
+          AttachmentPath: doc.fileUrl || "",
+          CreatedBy: userId,
+          UpdatedBy: userId
+        })),
+
+      ...uploadedApprovalDocs.map(f => ({
+        AttachmentsID: 0,
+        NominationID: Number(nominationId),
+        AttachmentType: 47,
+        OriginalAttachmentName: f.originalFileName,
+        AttachmentFileType: f.fileType || "",
+        AttachmentSize: `${(f.fileSize / 1024).toFixed(2)} KB`,
+        AttachmentNameGUID: f.fileNameGUID,
+        AttachmentPath: f.fileUrl || "",
+        CreatedBy: userId,
+        UpdatedBy: userId
+      })),
+
+      ...(isFlagged
+        ? existingFlagDocs
+            .filter(doc => !doc.isDeleted)
+            .map(doc => ({
+              AttachmentsID: doc.AttachmentID || 0,
+              NominationID: Number(nominationId),
+              AttachmentType: 48,
+              OriginalAttachmentName: doc.originalFileName,
+              AttachmentFileType: doc.fileType || "",
+              AttachmentSize: doc.fileSize || "",
+              AttachmentNameGUID: doc.fileNameGUID,
+              AttachmentPath: doc.fileUrl || "",
+              CreatedBy: userId,
+              UpdatedBy: userId
+            }))
+        : []),
+
+      ...(isFlagged
+        ? uploadedFlagDocs.map(f => ({
+            AttachmentsID: 0,
+            NominationID: Number(nominationId),
+            AttachmentType: 48,
+            OriginalAttachmentName: f.originalFileName,
+            AttachmentFileType: f.fileType || "",
+            AttachmentSize: `${(f.fileSize / 1024).toFixed(2)} KB`,
+            AttachmentNameGUID: f.fileNameGUID,
+            AttachmentPath: f.fileUrl || "",
+            CreatedBy: userId,
+            UpdatedBy: userId
+          }))
+        : [])
+    ];
+
+    const payload = {
+      Approval: approval,
+      Flags: flags,
+      Attachments: attachments
+    };
+
+    console.log("Grand Jury Payload", payload);
+
+    const isUpdate = isEditMode;
+
+    let res = await axios({
+      method: isUpdate ? "put" : "post",
+      url: isUpdate
+        ? `${apiUrl}/api/grandjurylevelnomination/${nominationId}`
+        : `${apiUrl}/api/grandjurylevelnomination`,
+      data: payload,
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${authToken}`
+      }
+    });
+    if (res.data > 0) {
+        setSuccessMessage(
+          isUpdate ? "Grand Jury level updated successfully!" : "Grand Jury level added successfully!"
+        );
+      } else {
+        setErrorMessage("Operation failed");
+      }
+
+      setTimeout(() => {
+        setSuccessMessage("");
+        setErrorMessage("");
+      }, 3000);
+    fetchNominationDetails();
+    closeGrandJuryDrawer();
+
+  } catch (err) {
+    console.error("❌ SAVE ERROR:", err);
+    setErrorMessage("Action failed. Please try again.");
+  } finally {
+    setLoading(false);
+  }
+};
+
 const handleReferralApprove = (ref: any) => {
   setSelectedReferral(ref);
 
@@ -948,6 +1218,7 @@ const handleReferralApprove = (ref: any) => {
 
   setOpenReferralPopup(true);
 };
+
 const submitReferral = async () => {
   try {
     setLoading(true);
@@ -1044,6 +1315,7 @@ const submitReferral = async () => {
     setLoading(false);
   }
 };
+
 const handleFilePreview = async (doc: any) => {
   const fileName = doc.originalFileName || doc.name;
   const ext = fileName.split(".").pop()?.toLowerCase() || "";
@@ -1102,6 +1374,7 @@ const handleFilePreview = async (doc: any) => {
     alert("File not found");
   }
 };
+
 const getDocs = (item: any) => {
   if (!item?.ApprovalAttachment) return [];
 
@@ -1130,6 +1403,8 @@ const openCommentPopup = (ref: any) => {
 };
 const parsedFlagDocs = safeParse(level1?.FlagAttachment);
 const parsedApprovalDocs = safeParse(level1?.ApprovalAttachment);
+const parsedGrandJuryFlagDocs = safeParse(level3?.FlagAttachment);
+const parsedGranJuryApprovalDocs = safeParse(level3?.ApprovalAttachment);
 return (
  <div className="bg-gray-100 p-6 pb-20">
   <div className="bg-white rounded-xl border border-gray-200 shadow-sm p-6">
@@ -1403,8 +1678,8 @@ return (
             <div className="w-7 h-7 rounded-full bg-green-500 flex items-center justify-center">
               <Check size={16} className="text-white" />
             </div>
-            <div className="w-[2px] h-full bg-gray-300 mt-1"></div>
-          </div>
+            {approvalData[0].ApprovedAt==""?"": <div className="w-[2px] h-full bg-gray-300 mt-1"></div>} 
+         </div>
           <div className="flex-1 pb-8">
             <div className="flex justify-between items-center mb-2">
               <p className="font-medium text-gray-900">
@@ -1418,6 +1693,7 @@ return (
                   {level1.Status}
                 </button>
             </div>
+            {approvalData[0].ApprovedAt==""?"":
             <div className="bg-gray-50 rounded-lg p-4 text-sm text-gray-700 space-y-2">
               <div className="flex gap-12">
                 <div>
@@ -1498,7 +1774,7 @@ return (
             </div>
              <div className="flex gap-12">
               <div>
-                <span className="text-gray-500">Flag Reason :</span>
+                {displayFlagReason==""?"":<span className="text-gray-500">Flag Reason :</span>}
                 <div className="font-medium mt-1 text-sm text-gray-600">
                   {displayFlagReason}
                   {isFlagTruncated && (
@@ -1512,6 +1788,7 @@ return (
               </div>
             </div>
             </div>
+            }
           </div>
         </div>
       )}
@@ -1522,7 +1799,7 @@ return (
             <div className="w-7 h-7 rounded-full bg-green-500 flex items-center justify-center">
               <Check size={16} className="text-white" />
             </div>
-            <div className="w-[2px] h-full bg-gray-300 mt-1"></div>
+              {approvalData[1].ApprovedAt==""?"":<div className="w-[2px] h-full bg-gray-300 mt-1"></div>}
           </div>
           <div className="flex-1 pb-8">
             <div className="flex justify-between items-center mb-2">
@@ -1550,6 +1827,7 @@ return (
                 </button>
               </div>
             </div>
+             {approvalData[1].ApprovedAt==""?"":
             <div className="bg-gray-50 rounded-lg p-4 text-sm text-gray-700 space-y-2">
               <div className="flex gap-12">
                 <div>
@@ -1594,6 +1872,7 @@ return (
                 </p>
               </div>
             </div>
+            }
           </div>
         </div>
       )}
@@ -1611,18 +1890,15 @@ return (
                 {approvalData[2].ApprovalFlow} - {approvalData[2].ApprovalType}
               </p>
               <button
-                // onClick={() => setOpenScore(true)}
-                onClick={() => {
-                  setActiveLevel("Level-3");
-                  setOpenScore(true);
-                }}
+                 onClick={handleGrandJuryApprove}
                 className={`px-4 py-1.5 rounded-lg text-sm border 
                   ${levelColors[approvalData[2].Status] || "bg-gray-50 border-gray-300"} 
                   ${levelTextColors[approvalData[2].Status] || "text-gray-700"}`}>
                 {approvalData[2].Status}
               </button>
             </div>
-            <div className="bg-gray-50 rounded-lg p-4 text-sm text-gray-700 space-y-2">
+            {approvalData[2].ApprovedAt==""?"":
+             <div className="bg-gray-50 rounded-lg p-4 text-sm text-gray-700 space-y-2">
               <div className="flex gap-12">
                 <div>
                   <span className="text-gray-500">Name :</span>{" "}
@@ -1634,18 +1910,99 @@ return (
                   <span className="text-gray-500">Approved Date :</span>{" "}
                   <span className="font-medium">{approvalData[2].ApprovedAt}</span>
                 </div>
-                <div>
+                 <div>
                   <span className="text-gray-500">Score :</span>{" "}
                   <span className="font-medium">{approvalData[2].ApprovalScore}</span>
+                </div> 
+              </div>              
+              <div className="flex gap-12">
+            
+                <div className="flex items-start gap-2">
+                  <span className="text-gray-500">{Number(flagGranJuryData?.Flag) === 1 ? "Flagged :" : "Not Flagged :"}</span>
+                  <div className="flex items-center gap-2">
+                    <Flag
+                      size={16}
+                      className={
+                        Number(flagGranJuryData?.Flag) === 1
+                          ? "text-red-600 fill-red-600"
+                          : "text-gray-400 fill-gray-300"
+                      }/>
+                  </div>
+                </div>
+
+                <div>
+               {parsedGrandJuryFlagDocs?.length > 0 && (
+                  <span
+                    onClick={() => {
+                      setSelectedDocs(
+                        parsedGrandJuryFlagDocs.map((f: any) => ({
+                          originalFileName: f.OriginalAttachmentName,
+                          fileNameGUID: f.AttachmentNameGUID,
+                          source: "api" 
+                        }))
+                      );
+                      setOpenDocPopup(true);
+                    }}
+                    className="text-blue-600 cursor-pointer underline">
+                    Flag Documents ({parsedGrandJuryFlagDocs.length})
+                  </span>
+               )}
+                </div>
+
+                <div>
+                  {parsedGranJuryApprovalDocs?.length > 0 && (
+                    <span
+                      onClick={() => {
+                        setSelectedDocs(
+                          parsedGranJuryApprovalDocs.map((f: any) => ({
+                            originalFileName: f.OriginalAttachmentName,
+                            fileNameGUID: f.AttachmentNameGUID,
+                            source: "api" 
+                          }))
+                        );
+                        setOpenDocPopup(true);
+                      }}
+                      className="text-blue-600 cursor-pointer underline">
+                      Approval Documents ({parsedGranJuryApprovalDocs.length})
+                    </span>
+                  )}
+                </div>
+
+              </div>
+
+              <div className="flex gap-12">
+                <div>
+                <span className="text-gray-500">Approval Comments :</span>
+                <div className="font-medium mt-1 text-sm text-gray-600">
+                  {displayGrandJuryComment}
+                  {isGrandJuryTruncated && (
+                    <button
+                      onClick={() => setApprovalComments(!expandedApprovalComments)}
+                      className="ml-1 text-blue-600 underline text-sm">
+                      {expandedApprovalComments ? "Show less" : "Show more"}
+                    </button>
+                  )}
+                </div>
+             </div>
+           </div>
+
+             <div className="flex gap-12">
+              <div>
+                {displayGrandJuryFlagReason==""?"":<span className="text-gray-500">Flag Reason :</span>}
+                <div className="font-medium mt-1 text-sm text-gray-600">
+                  {displayGrandJuryFlagReason}
+                  {isGrandJuryFlagTruncated && (
+                    <button
+                      onClick={() => setExpandedFlagReason(!expandedFlagReason)}
+                      className="ml-1 text-blue-600 underline text-sm">
+                      {expandedFlagReason ? "Show less" : "Show more"}
+                    </button>
+                  )}
                 </div>
               </div>
-              <div>
-                <span className="text-gray-500">Comments :</span>
-                <p className="font-medium mt-1 leading-relaxed">
-                  {approvalData[2].ApprovalComments}
-                </p>
-              </div>
             </div>
+            </div>      
+            }
           </div>
         </div>
       )}
@@ -2172,6 +2529,214 @@ return (
         </div>
       </div>
     </div>
+     <div className={`fixed top-0 right-0 h-full w-[680px] bg-white shadow-2xl z-50
+          transform transition-transform duration-300 ease-in-out
+          ${openGrandJuryEvaluation ? "translate-x-0" : "translate-x-full"}
+        `}>
+        <div className="flex justify-between items-center px-6 py-4 border-b border-gray-200">
+          <h2 className="text-[16px] font-semibold text-gray-900">
+            Level 3 - Grand Jury
+          </h2>
+          <button onClick={closeGrandJuryDrawer}>
+            <X size={20} />
+          </button>
+        </div>
+        {/* <div className="px-6 py-6 text-sm text-gray-800"> */}
+        <div className="px-6 py-6 text-sm text-gray-800 overflow-y-auto h-[calc(100%-70px)]">
+          <div className="mb-[18px] flex gap-4 items-end">
+      {/* Status - Left Side */}
+      <div className="flex-1">
+        <label className="block mb-2 font-medium">
+          Status
+        </label>
+        <select 
+          value={status}
+          onChange={(e) => setStatus(e.target.value as "Approved" | "Rejected")}
+          className="w-full h-[42px] px-3 border border-gray-300 rounded-[6px]">
+          <option value="Approved">Approved</option>
+          <option value="Rejected">Rejected</option>
+        </select>
+      </div>
+
+       {/* Score - Right Side */}
+      <div className="w-[120px]">
+         <span className="text-gray-500 text-sm">Score</span>
+        <input
+          type="number"
+          min={1}
+          max={100}
+          value={popupScore}
+          onChange={(e) => {
+            const val = e.target.value;
+            setPopupScore(val);
+            if(val.trim()){
+              setPopupErrors(prev=>({
+                ...prev,
+                score:""
+              }));
+            }
+          }}
+          className="w-full h-[42px] px-3 border border-gray-300 rounded-[6px] text-center"
+        />
+      </div>
+    </div>
+          
+          <div className="mb-[18px]">
+            <label className="block mb-2 font-medium">
+              Comments
+            </label>
+            <textarea rows={3} value={popupCommentsGrand}
+              onChange={(e) => {
+                const value = e.target.value;
+                setPopupCommentsGrand(value);
+                if (value.trim()) {
+                  setPopupErrors(prev => ({
+                    ...prev,
+                    comments: ""
+                  }));
+                }
+              }}
+              placeholder="Enter your comments"
+              className={`w-full px-3 py-2 border rounded-[6px]
+                ${popupErrors.comments ? "border-red-500" : "border-gray-300"}`}/>
+            {popupErrors.comments && (
+              <p className="text-red-600 text-xs mt-1">{popupErrors.comments}</p>
+            )}
+          </div>
+           <div className="mb-[18px]">
+            <div className="mt-4">
+              <Label.Root className="block text-sm font-medium">
+                Supporting Documents 
+                <span className="text-red-500">(Maximum 5 files allowed & File must be below 2 MB)</span>
+              </Label.Root>
+              <label
+                htmlFor="approvalUpload"
+                className="inline-block bg-gray-100 text-gray-700 border border-gray-300 px-6 py-2 rounded cursor-pointer mt-2 hover:bg-gray-200">
+                Choose File
+              </label>
+              <input
+                id="approvalUpload"
+                ref={approvalFileRef}
+                type="file"
+                multiple
+                onChange={(e) => handleFileUpload(e, "approval")}
+                className="hidden" />
+              {approvalFileError  && <p className="text-red-500 text-sm mt-1">{approvalFileError }</p>}
+            </div>         
+           <div className="mt-3 flex flex-wrap gap-2">
+              {approvalDocuments.map((doc: any, index: number) => (
+                <div
+                  key={doc.source === "api" ? doc.fileNameGUID : index}
+                  className="flex items-center gap-2 bg-gray-100 px-3 py-1 rounded-lg shadow-sm border">
+                  <span
+                    className="text-sm truncate max-w-[180px] cursor-pointer text-blue-600 hover:underline"
+                    onClick={() => handleFilePreview(doc)}>
+                    {doc.originalFileName || doc.name}
+                  </span>
+
+                  <button
+                    type="button"
+                    onClick={() => removeFile(doc, index, "approval")}
+                    className="text-red-500 hover:text-red-700 font-bold text-lg leading-none">
+                    ×
+                  </button>
+                </div>
+              ))}
+            </div>
+             </div> 
+          <div className="flex items-center gap-2 mb-[18px]">
+            <Flag size={18} className={isFlagged ? "text-red-600" : "text-gray-400"}/>
+            <span className="font-medium">Flag :</span>
+            <input type="checkbox" checked={isFlagged}
+              onChange={(e) => {
+                const checked = e.target.checked;
+                setIsFlagged(checked);
+                if (checked) {
+                  setAttachmentMode("flag");
+                  setTimeout(() => textareaRef.current?.focus(), 100);
+                } else {
+                  setFlagComment("");
+                  setAttachmentMode("approval");
+                  setPopupErrors(prev => ({ ...prev, flagComment: "" }));
+                }
+              }}
+              className="w-4 h-4 mt-[1px] accent-red-600 cursor-pointer"/>
+          </div>
+            <textarea ref={textareaRef} rows={3} value={flagComment}
+              onChange={(e) => {
+                const value = e.target.value;
+                setFlagComment(value);
+                if (value.trim()) {
+                  setPopupErrors(prev => ({ ...prev, flagComment: "" }));
+                }
+              }}
+              disabled={!isFlagged}
+              placeholder="Flagged reason here"
+              className={`w-full px-3 py-2 rounded-[6px]
+                ${isFlagged
+                  ? "border border-red-300 bg-red-50"
+                  : "border border-gray-200 bg-gray-100 cursor-not-allowed"}`}/>
+            {popupErrors.flagComment && (
+              <p className="text-red-600 text-xs mt-1">
+                {popupErrors.flagComment}
+              </p>
+            )}
+            {isFlagged && (
+          <>
+          <div className="mt-4">
+              <Label.Root className="block text-sm font-medium">
+                Flag Documents 
+                <span className="text-red-500">(Maximum 5 files allowed & File must be below 2 MB)</span>
+              </Label.Root>
+              <label
+                htmlFor="flagUpload"
+                className="inline-block bg-gray-100 text-gray-700 border border-gray-300 px-6 py-2 rounded cursor-pointer mt-2 hover:bg-gray-200">
+                Choose File
+              </label>
+              <input
+                id="flagUpload"
+                ref={flagFileRef}
+                type="file"
+                multiple
+                onChange={(e) => handleFileUpload(e, "flag")}
+                className="hidden" />
+              {flagFileError && <p className="text-red-500 text-sm mt-1">{flagFileError}</p>}
+            </div>         
+           <div className="mt-3 flex flex-wrap gap-2">
+              {flagDocuments.map((doc: any, index: number) => (
+                <div
+                  key={doc.source === "api" ? doc.fileNameGUID : index}
+                  className="flex items-center gap-2 bg-gray-100 px-3 py-1 rounded-lg shadow-sm border">
+                  <span
+                    className="text-sm truncate max-w-[180px] cursor-pointer text-blue-600 hover:underline"
+                    onClick={() => handleFilePreview(doc)}>
+                    {doc.originalFileName || doc.name}
+                  </span>
+
+                  <button
+                    type="button"
+                    onClick={() => removeFile(doc, index, "flag")}
+                    className="text-red-500 hover:text-red-700 font-bold text-lg leading-none">
+                    ×
+                  </button>
+                </div>
+              ))}
+            </div>
+            </>
+          )}        
+          <div className="flex justify-end gap-4 mt-6">
+            <button
+              onClick={closeGrandJuryDrawer} 
+              className="h-[42px] px-6 border border-gray-300 rounded-[6px] text-gray-700">
+              Cancel
+            </button>
+            <button onClick={submitGrandJuryApproval}
+              className="h-[44px] px-8 rounded-md shadow btn-theme">
+               {isEditMode ? "Update" : "Save"}
+            </button>
+          </div>
+        </div>
+      </div>
     {successMessage && (
       <div className="fixed top-5 right-5 z-[9999] bg-green-600 text-white px-5 py-3
       rounded-lg shadow-xl text-sm font-medium animate-slide-in">
