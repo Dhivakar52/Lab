@@ -96,14 +96,22 @@ const Leader = () => {
   const top3 = useMemo(() => filteredData.slice(0, 3), [filteredData]);
   const tableData = useMemo(() => filteredData.slice(3), [filteredData]);
 
-  // ✅ Columns
+  // Columns
   const columns = useMemo<ColumnDef<LeaderboardItem>[]>(() => [
     {
       header: "#Rank",
       cell: ({ row, table }) => {
-        const pageIndex = table.getState().pagination.pageIndex;
-        const pageSize = table.getState().pagination.pageSize;
-        return pageIndex * pageSize + row.index + 1 + top3.length;
+      //   const pageIndex = table.getState().pagination.pageIndex;
+      //   const pageSize = table.getState().pagination.pageSize;
+      //  // return  pageSize + row.index + 1 + top3.length;
+      //    const globalRowIndex = (pageIndex ) + row.index;
+      //    return -1+ globalRowIndex + 1 + top3.length;
+      const { pageIndex, pageSize } = table.getState().pagination;
+
+      const globalIndex = pageIndex   + row.index;
+
+      // ✅ FIXED RANK
+      return globalIndex + 4;
       },
     },
     {
