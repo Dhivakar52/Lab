@@ -110,7 +110,7 @@ const Leader = () => {
 
       const globalIndex = pageIndex   + row.index;
 
-      // ✅ FIXED RANK
+      
       return globalIndex + 4;
       },
     },
@@ -234,6 +234,7 @@ const Leader = () => {
             rank={index === 0 ? "1st" : index === 1 ? "2nd" : "3rd"}
             name={item.Name}
             org={item.CategoryName}
+            score={item.AvgBusinessJuryScore} 
           />
         ))}
       </div>
