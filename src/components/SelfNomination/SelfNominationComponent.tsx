@@ -85,6 +85,8 @@ export default function AddNomination() {
   const [showErrorModal, setShowErrorModal] = useState(false);
   const [fileError, setFileError] = useState("");
   const [totalSelfNominations, setTotalSelfNominations] = useState(0);
+  const[srmExperience,setSrmExperience]=useState("");
+  const[doj,setDoj]=useState("");
   const fileInputRef = useRef<HTMLInputElement | null>(null);
   const [previewOpen, setPreviewOpen] = useState(false);
   const [previewFile, setPreviewFile] = useState<string | null>(null);
@@ -206,6 +208,9 @@ useEffect(() => {
         headers: { Authorization: `Bearer ${authToken}` },
       });
       setTotalSelfNominations(res.data[0]?.TotalRowCount || 0);
+      setDoj(res.data[0]?.DateOfJoining || "");
+      setSrmExperience(res.data[0]?.SRMExperience || "");
+      console.log("Res.data[0]:", res.data[0]);
     } catch (err) {
       console.error("❌ Error fetching nominations count:", err);
       setTotalSelfNominations(0);
@@ -598,7 +603,7 @@ const referralPayload = referrals.map(ref => ({
                  <div>
                   <p className="text-gray-500">DOJ & Age in SRM</p>
                   <div className="flex items-center font-medium">
-                  01/01/2022,4 Years
+                  {doj}, {srmExperience}
                   </div>
                 </div>
                 <div>
@@ -809,7 +814,9 @@ const referralPayload = referrals.map(ref => ({
               </label>
               <Select
                 options={users
-                  .filter((u) => u.UserID !== loggedInUserId)
+                  .filter((u) => u.UserID !== loggedInUserId &&
+                   !referrals.some((ref) => ref.UserID === u.UserID)
+                )
                   .map((u) => ({
                   value: u.UserID,
                   label: u.UserInfo,
