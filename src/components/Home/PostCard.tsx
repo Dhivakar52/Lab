@@ -852,80 +852,107 @@ const PostCard: React.FC<PostCardProps> = ({ posts, setPosts }) => {
       )}
       {seekingOpen && (
 
-        <div className="fixed inset-0 z-[9999] bg-black/40 flex items-center justify-center">
-          <div className="bg-white w-[680px] rounded-xl shadow-xl overflow-hidden">
-            <div className="flex justify-between items-center px-6 h-[56px] border-b border-gray-300">
-              <h3 className="font-medium text-[15px] text-gray-800">
-                Send To
-              </h3>
-              <button onClick={resetSeekingPopup}>
-                {/* <button onClick={() => setSeekingOpen(false)}> */}
-                <X size={18} className="text-gray-600" />
-              </button>
-            </div>
-            <div className="px-6 pt-4 pb-2">
-              <div className="relative">
-                <svg className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"
-                  width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2"
-                  viewBox="0 0 24 24">
-                  <circle cx="11" cy="11" r="8" />
-                  <line x1="21" y1="21" x2="16.65" y2="16.65" />
-                </svg>
-                <input type="text" placeholder="Search" value={search}
-                  onChange={(e) => setSearch(e.target.value)}
-                  className="w-full border border-gray-300 rounded-md pl-9 pr-3 py-2 text-sm text-gray-700
-                        placeholder-gray-400 focus:outline-none focus:border-gray-400"/>
+<div className="fixed inset-0 z-[9999] bg-black/40 flex items-center justify-center">
+  
+  {/* Modal */}
+  <div className="bg-white w-[680px] h-[500px] rounded-xl shadow-xl overflow-hidden flex flex-col">
+    
+    {/* Header */}
+    <div className="flex justify-between items-center px-6 h-[56px] border-b border-gray-300">
+      <h3 className="font-medium text-[15px] text-gray-800">
+        Send To
+      </h3>
+      <button onClick={resetSeekingPopup}>
+        <X size={18} className="text-gray-600" />
+      </button>
+    </div>
+
+    {/* Search */}
+    <div className="px-6 pt-4 pb-2">
+      <div className="relative">
+        <svg
+          className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"
+          width="16"
+          height="16"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="2"
+          viewBox="0 0 24 24"
+        >
+          <circle cx="11" cy="11" r="8" />
+          <line x1="21" y1="21" x2="16.65" y2="16.65" />
+        </svg>
+
+        <input
+          type="text"
+          placeholder="Search"
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+          className="w-full border border-gray-300 rounded-md pl-9 pr-3 py-2 text-sm text-gray-700
+          placeholder-gray-400 focus:outline-none focus:border-gray-400"
+        />
+      </div>
+    </div>
+
+    {/* Scrollable List */}
+    <div className="flex-1 overflow-y-auto">
+      {seekingUsers
+        .filter((u) =>
+          u.UserName.toLowerCase().includes(search.toLowerCase())
+        )
+        .map((u) => (
+          <div
+            key={u.UserID}
+            className="flex items-center justify-between px-6 h-[64px] border-b border-gray-300 hover:bg-gray-50 cursor-pointer"
+            onClick={() => {
+              setSelectedUsers((prev) =>
+                prev.includes(u.UserID)
+                  ? prev.filter((id) => id !== u.UserID)
+                  : [...prev, u.UserID]
+              );
+            }}
+          >
+            <div className="flex items-center gap-4">
+              <div className="w-9 h-9 rounded-full flex items-center justify-center text-white text-sm font-bold themeColor">
+                {u.UserName.charAt(0).toUpperCase()}
+              </div>
+
+              <div className="leading-tight">
+                <div className="text-sm font-medium text-gray-800">
+                  {u.UserName}{" "}
+                  <span className="text-xs text-gray-500">
+                    - {u.TenantName}
+                  </span>
+                </div>
+
+                <div className="text-xs text-gray-500">
+                  {u.DeptName} | {u.Email}
+                </div>
               </div>
             </div>
-            <div className="max-h-[360px] overflow-y-auto">
-              {seekingUsers
-                .filter(u =>
-                  u.UserName.toLowerCase().includes(search.toLowerCase())
-                )
-                .map((u) => (
-                  <div
-                    key={u.UserID}
-                    className="flex items-center justify-between px-6 h-[64px] border-b border-gray-300
-                          hover:bg-gray-50 cursor-pointer"
-                    onClick={() => {
-                      setSelectedUsers(prev =>
-                        prev.includes(u.UserID)
-                          ? prev.filter(id => id !== u.UserID)
-                          : [...prev, u.UserID]
-                      );
-                    }}>
-                    <div className="flex items-center gap-4">
-                      <div className="w-9 h-9 rounded-full flex items-center justify-center text-white text-sm font-bold themeColor">
-                        {u.UserName.charAt(0).toUpperCase()}
-                      </div>
-                      <div className="leading-tight">
-                        <div className="text-sm font-medium text-gray-800">
-                          {u.UserName} - <span className="text-xs text-gray-500">{u.TenantName}</span>
-                        </div>
 
-                        <div className="text-xs text-gray-500">
-                          {u.DeptName} | <span className="text-xs text-gray-500">{u.Email}</span>
-                        </div>
-
-                      </div>
-                    </div>
-                    <input
-                      type="checkbox"
-                      checked={selectedUsers.includes(u.UserID)}
-                      readOnly
-                      className="w-4 h-4 border-gray-400 accent-gray-700" />
-                  </div>
-                ))}
-            </div>
-            <div className="px-6 py-4 border-t border-gray-300">
-              <button
-                onClick={sendSeekingUser}
-                className="w-full py-2.5 rounded-md btn-theme">
-                Send
-              </button>
-            </div>
+            <input
+              type="checkbox"
+              checked={selectedUsers.includes(u.UserID)}
+              readOnly
+              className="w-4 h-4 border-gray-400 accent-gray-700"
+            />
           </div>
-        </div>
+        ))}
+    </div>
+
+    {/* Footer */}
+    <div className="px-6 py-4 border-t border-gray-300">
+      <button
+        onClick={sendSeekingUser}
+        className="w-full py-2.5 rounded-md btn-theme"
+      >
+        Send
+      </button>
+    </div>
+
+  </div>
+</div>
       )}
       {/* View Modal */}
       {/* <ViewerModal
