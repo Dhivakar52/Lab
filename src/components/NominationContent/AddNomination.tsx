@@ -133,7 +133,11 @@ useEffect(() => {
           }
         );
     console.log("Search", response.data);
-        setResults(response.data);
+       const filteredResults = (response.data || []).filter(
+          (user: any) => Number(user.UserID) !== Number(userId)
+        );
+
+        setResults(filteredResults);
         setShowList(true);
       } catch (error) {
         console.error("User Search API Error:", error);
