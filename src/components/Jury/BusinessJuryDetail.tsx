@@ -982,6 +982,7 @@ const closeApproveDrawer = () => {
   setOpenApprove(false);
   setOpenReferralPopup(false)
 };
+
 const handleCloseDrawer = () => {
   setOpenScore(false);
   setExistingDocs([]); 
@@ -993,6 +994,7 @@ const closeGrandJuryDrawer=()=>{
     resetApproveDrawer();
   setOpenGrandJuryEvaluation(false);
 }
+
 const handleManagerApprove = () => {
   if (!level1) return;
    if (approvalData[1].ApprovedAt!="")return;
@@ -1846,6 +1848,7 @@ const getDocs = (item: any) => {
     return [];
   }
 };
+
 const openDocsPopup = (docs: any[]) => {
   setSelectedDocs(
     docs.map((d: any) => ({
@@ -1857,10 +1860,12 @@ const openDocsPopup = (docs: any[]) => {
   );
   setOpenDocPopup(true);
 };
+
 const openCommentPopup = (ref: any) => {
   setSelectedComment(ref.ApprovalComments || "No comments available");
   setOpenCommentsPopup(true);
 };
+
 const parsedFlagDocs = safeParse(level1?.FlagAttachment);
 const parsedApprovalDocs = safeParse(level1?.ApprovalAttachment);
 const parsedJuryFlagDocs = safeParse(level2?.FlagAttachment);

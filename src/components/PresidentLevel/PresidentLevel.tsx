@@ -119,8 +119,12 @@ const PresidentLevel: React.FC = () => {
       },
       { accessorKey: "CategoryName", header: "Category" },
       // { accessorKey: "NominatedBy", header: "Nominated By" },
+      { accessorKey: "LikesCount", header: "Likes" },
+        { accessorKey: "CommentsCount", header: "Comments" },
+        { accessorKey: "referralsCount", header: "Referrals" },
+        { accessorKey: "FlagsCount", header: "Flags" },
       {
-        accessorKey: "ConsolidatedAvgScore",
+        accessorKey: "AvgBusinessJuryScore",
         header: () => (
           <div className="text-end">Consolidated Avg Score</div>
         ),
@@ -224,27 +228,27 @@ const PresidentLevel: React.FC = () => {
               },
         },
 
-      {
-          accessorKey: "FinalStatus",
-          header: () => <div className="text-center">Final Status</div>,
-          cell: ({ getValue }) => {
-            const value = getValue() as string;
+      // {
+      //     accessorKey: "FinalStatus",
+      //     header: () => <div className="text-center">Final Status</div>,
+      //     cell: ({ getValue }) => {
+      //       const value = getValue() as string;
 
-            return (
-              <div className="flex justify-center">
-                {value === "Winner" ? (
-                  <span className="inline-flex items-center gap-1 px-2 py-1">
-                    🏆 {value}
-                  </span>
-                ) : (
-                  <span className="text-sm text-gray-700">
-                    {value}
-                  </span>
-                )}
-              </div>
-            );
-          },
-        },
+      //       return (
+      //         <div className="flex justify-center">
+      //           {value === "Winner" ? (
+      //             <span className="inline-flex items-center gap-1 px-2 py-1">
+      //               🏆 {value}
+      //             </span>
+      //           ) : (
+      //             <span className="text-sm text-gray-700">
+      //               {value}
+      //             </span>
+      //           )}
+      //         </div>
+      //       );
+      //     },
+      //   },
        {
             header: "Actions",
             cell: ({ row }) => {
