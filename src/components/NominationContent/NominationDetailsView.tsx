@@ -1,15 +1,17 @@
 import { useEffect, useState, useRef } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import axios from "axios";
-import { Edit, X, ArrowLeft } from "lucide-react";
+import { Edit, X, ArrowLeft, Menu, Eye } from "lucide-react";
 import { useAuth } from "../ContextAPI/AuthContext";
 import * as Dialog from "@radix-ui/react-dialog";
 import { useLocation } from "react-router-dom";
 //import Swal from "sweetalert2";
 import { User, Building2, Tag, 
-  CalendarDays, FileText, Mail, BadgeCheck, Check } from "lucide-react";
+  CalendarDays, FileText, Mail, BadgeCheck } from "lucide-react";
 import type { FormState } from "../../dataTypes/nomination";
 import { levelColors, levelTextColors } from "../../statusColors.ts";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger,
+} from "@radix-ui/react-dropdown-menu";
 
 interface NominationDetailViewProps {
   isOpen: boolean;
@@ -54,6 +56,17 @@ const NominationDetailView: React.FC<NominationDetailViewProps> = ({
   const from = location.state?.from;
   const tab = location.state?.tab;
   const withdrawAllowedFrom = ["nominations"];
+    const [selectedReferral, setSelectedReferral] = useState<any>(null);
+    const [refStatus, setRefStatus] = useState<"Approved" | "Rejected">("Approved");
+    const [refComments, setRefComments] = useState("");
+    const [refFiles, setRefFiles] = useState<File[]>([]);
+    const [existingRefDocs, setExistingRefDocs] = useState<any[]>([]);
+    const [isEditMode, setIsEditMode] = useState(false);
+    const [openReferralPopup, setOpenReferralPopup] = useState(false);
+    const [selectedDocs, setSelectedDocs] = useState<any[]>([]);
+    const [openDocPopup, setOpenDocPopup] = useState(false);
+    const [selectedComment, setSelectedComment] = useState("");
+    const [openCommentsPopup, setOpenCommentsPopup] = useState(false);
 
    const [IsSelf, setIsSelf] = useState<boolean | null>(null);
   const fileInputRef = useRef<HTMLInputElement | null>(null);
@@ -287,6 +300,124 @@ const handleEdit = () => {
       navigate(`/my-nominations/add-nomination/${id}`);
     }  
 };
+
+const handleReferralApprove = (ref: any) => {
+  setSelectedReferral(ref);
+
+  const isEdit = !!ref.ApprovedAt;
+  setIsEditMode(isEdit);
+  setRefStatus(ref.Status === "Rejected" ? "Rejected" : "Approved");
+  setRefComments(ref.ApprovalComments || "");
+
+  let parsedDocs: any[] = [];
+  try {
+    parsedDocs = ref.ApprovalAttachment || [];
+  } catch {
+    parsedDocs = [];
+  }
+  const docs = parsedDocs.map((file: any) => ({
+    source: "api",
+    AttachmentID: file.AttachmentsID,
+    fileNameGUID: file.AttachmentNameGUID,
+    originalFileName: file.OriginalAttachmentName,
+    fileType: file.AttachmentFileType,
+    fileUrl: file.AttachmentPath,
+    fileSize: file.AttachmentSize
+  }));
+
+  setExistingRefDocs(docs);
+
+  setOpenReferralPopup(true);
+};
+
+const handleFilePreview = async (doc: any) => {
+  const fileName = doc.originalFileName || doc.name;
+  const ext = fileName.split(".").pop()?.toLowerCase() || "";
+
+  try {
+    if (doc.source === "api") {
+      const response = await axios.get(
+        `${apiUrl}/api/download?fileName=${doc.fileNameGUID}`,
+        {
+          responseType: "blob",
+          headers: { Authorization: `Bearer ${authToken}` },
+        }
+      );
+
+      const blob = response.data;
+
+      if (["jpg", "jpeg", "png", "gif"].includes(ext)) {
+        const url = URL.createObjectURL(blob);
+        window.open(url);
+      } 
+      else if (ext === "pdf") {
+        const pdfUrl = URL.createObjectURL(
+          new Blob([blob], { type: "application/pdf" })
+        );
+        window.open(pdfUrl);
+      } 
+      else {
+        const link = document.createElement("a");
+        link.href = URL.createObjectURL(blob);
+        link.download = fileName;
+        link.click();
+      }
+    }
+    else {
+      const file = doc.file;
+      if (!(file instanceof File)) return;
+
+      if (["jpg", "jpeg", "png", "gif"].includes(ext)) {
+        const url = URL.createObjectURL(file);
+        window.open(url);
+      } 
+      else if (ext === "pdf") {
+        const pdfUrl = URL.createObjectURL(
+          new Blob([file], { type: "application/pdf" })
+        );
+        window.open(pdfUrl);
+      } 
+      else {
+        const link = document.createElement("a");
+        link.href = URL.createObjectURL(file);
+        link.download = file.name;
+        link.click();
+      }
+    }
+  } catch {
+    alert("File not found");
+  }
+};
+
+const getDocs = (item: any) => {
+  if (!item?.ApprovalAttachment) return [];
+
+  try {
+    return typeof item.ApprovalAttachment === "string"
+      ? JSON.parse(item.ApprovalAttachment)
+      : item.ApprovalAttachment;
+  } catch {
+    return [];
+  }
+};
+
+const openDocsPopup = (docs: any[]) => {
+  setSelectedDocs(
+    docs.map((d: any) => ({
+      originalFileName: d.originalFileName || d.OriginalAttachmentName,
+      fileNameGUID: d.fileNameGUID || d.AttachmentNameGUID,
+      source: d.source || "api",
+      file: d.file || null
+    }))
+  );
+  setOpenDocPopup(true);
+};
+
+const openCommentPopup = (ref: any) => {
+  setSelectedComment(ref.ApprovalComments || "No comments available");
+  setOpenCommentsPopup(true);
+};
+
 const getCleanStatus = (status?: string) => {
   if (!status) return "";
   const dashIndex = status.indexOf("-");
@@ -474,44 +605,97 @@ return (
     <h3 className="text-sm font-semibold text-gray-900 mb-4">
       Referral Information
     </h3>
-  {referrals.length ? (
-    <div className="overflow-hidden">
-      {/* <div className="overflow-hidden border border-gray-200 rounded-lg"> */}
-    <table className="w-full text-sm border-collapse">
-      <thead className="bg-gray-50">
-        <tr>
-          <th className="px-4 py-3 text-left">Nominee Name</th>
-          <th className="px-4 py-3 text-left">Tenant</th>
-          <th className="px-4 py-3 text-left">Department</th>
-          <th className="px-4 py-3 text-left">Email ID</th>
-        </tr>
-      </thead>
-
-      <tbody>
-        {visibleReferrals.map((ref, i) => (
-          <tr
-            key={i}
-            className="hover:bg-gray-50 border-b border-gray-200 last:border-b-0">
-            <td className="px-4 py-3">{ref.ReferralName}</td>
-            <td className="px-4 py-3">{ref.TenantName}</td>
-            <td className="px-4 py-3">{ref.DeptName}</td>
-            <td className="px-4 py-3">{ref.Email}</td>
-          </tr>
-        ))}
-      </tbody>
-    </table>
-
-      {referrals.length > 3 && (
-        <div
-          className="px-3 py-2 text-xs text-blue-600 cursor-pointer bg-gray-50 text-center border-t border-gray-300"
-          onClick={toggleExpanded}>
-          {expanded ? "Show less" : `+${referrals.length - 3} more`}
-        </div>
-      )}
-    </div>
-  ) : (
-    <p className="text-gray-500 text-sm">No referral details</p>
-  )}
+   {referrals.length ? (
+   <div className="overflow-hidden">
+     <table className="w-full text-sm border-collapse">
+       <thead className="bg-gray-50">
+         <tr>
+           <th className="px-4 py-3 text-left">Nominee Name</th>
+           <th className="px-4 py-3 text-left">Tenant</th>
+           <th className="px-4 py-3 text-left">Department</th>
+           <th className="px-4 py-3 text-left">Email ID</th>
+           <th className="px-4 py-3 text-left">Approved Date</th>
+           {/* <th className="px-4 py-3 text-left">Comments</th> */}
+           <th className="px-4 py-3 text-left">Status</th>
+           <th className="px-4 py-3 text-left">Action</th>
+         </tr>
+       </thead>
+       <tbody>
+         {visibleReferrals.map((ref, i) => (
+           <tr
+             key={i}
+             className="hover:bg-gray-50 border-b border-gray-200 last:border-b-0">
+             <td className="px-4 py-3">{ref.ReferralName}</td>
+             <td className="px-4 py-3">{ref.TenantName}</td>
+             <td className="px-4 py-3">{ref.DeptName}</td>
+             <td className="px-4 py-s3">{ref.Email}</td>
+             <td className="px-4 py-3">{ref.ApprovedAt}</td>
+             {/* <td className="px-4 py-3">{ref.ApprovalComments}</td> */}
+             <td><button
+                   onClick={() => handleReferralApprove(ref)}
+                   className={`px-4 py-1.5 rounded-lg text-sm border 
+                   ${levelColors[ref.ReferralStatus] || "bg-gray-50 border-gray-300"} 
+                   ${levelTextColors[ref.ReferralStatus] || "text-gray-700"}`}>
+                   {ref.ReferralStatus}
+                 </button></td>
+             <td className="px-4 py-3">
+               <DropdownMenu>
+                 <DropdownMenuTrigger asChild>
+                   <button className="p-2 rounded hover:bg-gray-100">
+                     <Menu size={18} />
+                   </button>
+                 </DropdownMenuTrigger>
+                 <DropdownMenuContent align="end"
+                   className="bg-white border border-[#08805e] rounded-md shadow-md p-1 min-w-[150px]">
+                   <DropdownMenuItem
+                     onClick={() =>
+                       getDocs(ref).length > 0 && openDocsPopup(getDocs(ref))
+                     }
+                     className={`flex items-center gap-2 px-2 py-1.5 rounded text-xs
+                       hover:bg-gray-100 transition
+                       ${getDocs(ref).length === 0
+                         ? "text-gray-400 cursor-not-allowed pointer-events-none"
+                         : "cursor-pointer"}`}>
+                     
+                     <Eye size={14} />
+                     <span>
+                       {getDocs(ref).length > 0 ? "View Documents" : "No Documents"}
+                     </span>
+                   </DropdownMenuItem>
+                   <DropdownMenuItem
+                     onClick={() =>
+                       ref.ApprovalComments && openCommentPopup(ref)
+                     }
+                     className={`flex items-center gap-2 px-2 py-1.5 rounded text-xs
+                       hover:bg-gray-100 transition
+                       ${!ref.ApprovalComments
+                         ? "text-gray-400 cursor-not-allowed pointer-events-none"
+                         : "cursor-pointer"}`}>
+                     
+                     <Eye size={14} />
+                     <span>
+                       {ref.ApprovalComments ? "View Comments" : "No Comments"}
+                     </span>
+                   </DropdownMenuItem>
+                 </DropdownMenuContent>
+               </DropdownMenu>
+             </td>
+           </tr>
+         ))}
+       </tbody>
+     </table>
+ 
+       {referrals.length > 3 && (
+         <div
+           className="px-3 py-2 text-xs text-blue-600 cursor-pointer bg-gray-50 text-center border-t border-gray-300"
+           onClick={toggleExpanded}>
+           {expanded ? "Show less" : `+${referrals.length - 3} more`}
+         </div>
+       )}
+     </div>
+   ) : (
+     <p className="text-gray-500 text-sm">No referral details</p>
+   )}
   </div>
     <div className="fixed bottom-0 left-0 w-full h-15 bg-white border-t border-gray-200 flex items-center pl-[260px] pr-6">
       <div className="flex justify-end space-x-4 ml-auto" >  

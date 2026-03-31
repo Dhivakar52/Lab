@@ -140,9 +140,13 @@ const BusinessJury: React.FC = () => {
                },
              },
         { accessorKey: "CategoryName", header: "Category" },
-        // { accessorKey: "NominatedBy", header: "Nominated By" },
+        { accessorKey: "LikesCount", header: "Likes" },
+        { accessorKey: "CommentsCount", header: "Comments" },
+        { accessorKey: "referralsCount", header: "Referrals" },
+        { accessorKey: "FlagsCount", header: "Flags" },
+
          {
-        accessorKey: "BusinessJuryScore",
+        accessorKey: "AvgIntegrativeScore",
         header: () => (
           <div className="text-end">Score(Out of 100)</div>
         ),

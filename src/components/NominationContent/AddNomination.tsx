@@ -618,7 +618,8 @@ const payload = {
               </label>
               <Select
                 options={users
-                  .filter((u) => u.UserID !== loggedInUserId)
+                  .filter((u) => u.UserID !== loggedInUserId &&
+                   !referrals.some((ref) => ref.UserID === u.UserID))
                   .map((u) => ({
                   value: u.UserID,
                   label: u.UserInfo,
