@@ -24,6 +24,7 @@ interface LeaderboardItem {
   NoofRank: number;
   TotalRowCount: number;
   AwardCategoryID: number;
+  AvatarUrl?: string;
 }
 
 interface CategoryData {
@@ -79,7 +80,7 @@ const AnimatedRank = ({ rank, children }: { rank: number; children: React.ReactN
 };
 
 // Rank icon component
-const RankIcon = ({ rank }: { rank: number }) => {
+const RankIcon1 = ({ rank }: { rank: number }) => {
   if (rank === 1) {
     return (
       <div className="relative">
@@ -209,27 +210,27 @@ const Leader = () => {
         
         let rankColor = themeColors.textSecondary;
         let rankBg = '#f1f5f9';
-        if (rank === 1) {
-          rankColor = themeColors.gold;
-          rankBg = '#fef3c7';
-        } else if (rank === 2) {
-          rankColor = themeColors.silver;
-          rankBg = '#f1f5f9';
-        } else if (rank === 3) {
-          rankColor = themeColors.bronze;
-          rankBg = '#ffedd5';
-        }
+        // if (rank === 1) {
+        //   rankColor = themeColors.gold;
+        //   rankBg = '#fef3c7';
+        // } else if (rank === 2) {
+        //   rankColor = themeColors.silver;
+        //   rankBg = '#f1f5f9';
+        // } else if (rank === 3) {
+        //   rankColor = themeColors.bronze;
+        //   rankBg = '#ffedd5';
+        // }
         
         // For top 3, show special icons instead of numbers
-        if (rank === 1 || rank === 2 || rank === 3) {
-          return (
-            <div className="flex justify-center">
-              <div className={`transition-all duration-500 ${isAnimating ? 'scale-125 animate-bounce' : 'scale-100'}`}>
-                <RankIcon rank={rank} />
-              </div>
-            </div>
-          );
-        }
+        // if (rank === 1 || rank === 2 || rank === 3) {
+        //   return (
+        //     <div className="flex justify-center">
+        //       <div className={`transition-all duration-500 ${isAnimating ? 'scale-125 animate-bounce' : 'scale-100'}`}>
+        //         {/* <RankIcon rank={rank} /> */}
+        //       </div>
+        //     </div>
+        //   );
+        // }
         
         return (
           <div className="flex justify-center">
@@ -287,11 +288,11 @@ const Leader = () => {
             <span 
               className={`inline-flex items-center justify-center px-3 py-1 rounded-full font-bold text-sm transition-all duration-500 ${isAnimating ? 'scale-110' : 'scale-100'}`}
               style={{ 
-                background: rank === 1 ? 'linear-gradient(90deg, #fbbf24, #f59e0b)' : 'linear-gradient(90deg, rgb(8, 128, 94) 16%, rgb(24, 97, 174) 100%)',
+                background: rank === 0 ? 'linear-gradient(90deg, #fbbf24, #f59e0b)' : 'linear-gradient(90deg, rgb(8, 128, 94) 16%, rgb(24, 97, 174) 100%)',
                 color: 'white'
               }}
             >
-              {rank === 1 && <Trophy size={12} className="mr-1" />}
+              {/* {rank === 1 && <Trophy size={12} className="mr-1" />} */}
               {row.original.AvgBusinessJuryScore?.toFixed(2) || '0.00'}
             </span>
           </div>
@@ -373,10 +374,10 @@ const Leader = () => {
       <div className="px-4 sm:px-6 lg:px-8 py-8">
         {/* Header Section with Gradient */}
         <div className="mb-8 rounded-2xl overflow-hidden shadow-lg">
-          <div className="px-6 py-8" style={gradientStyle}>
+          <div className="p-3" style={gradientStyle}>
             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
               <div>
-                <h1 className="text-3xl font-bold text-white">
+                <h1 className="text-2xl font-bold text-white">
                   Leaderboard
                 </h1>
                 <p className="text-sm mt-1 text-white/80">
@@ -436,23 +437,21 @@ const Leader = () => {
                   }}
                 >
                   <div className="p-6">
-                    <div className="flex justify-between items-start mb-4">
+                    <div className="flex justify-between items-start mb-2">
                       <div>
-                        <div className="text-sm font-medium uppercase tracking-wide" style={{ color: themeColors.textSecondary }}>
-                          {rankLabel} Place
-                        </div>
-                        <div className="text-2xl font-bold mt-1" style={{ color: themeColors.textPrimary }}>
-                          {item.Name}  
+                         <div className="text-xl font-bold mt-1" style={{ color: themeColors.textPrimary }}>
+                          {item.Name}
                         </div>
                       </div>
                       <div 
-                        className="w-14 h-14 rounded-full flex items-center justify-center shadow-lg animate-pulse"
+                        className="w-10 h-10 rounded-full flex items-center justify-center shadow-lg animate-pulse"
                         style={{ backgroundColor: rankColor }}
                       >
-                        {rankIcon}
+                        {/* {rankIcon} */}
+                         {rankLabel}
                       </div>
                     </div>
-                    <div className="space-y-3">
+                    <div className="space-y-2">
                       <div className="flex items-center gap-2 text-sm" style={{ color: themeColors.textSecondary }}>
                         <Users size={16} />
                         <span>{item.CategoryName}</span>
@@ -463,7 +462,7 @@ const Leader = () => {
                         >
                           {item.AvgBusinessJuryScore?.toFixed(2) || '0'}
                         </span>
-                        <span className="text-sm" style={{ color: themeColors.textSecondary }}>points</span>
+                        <span className="text-sm" style={{ color: themeColors.textSecondary }}>scores</span>
                       </div>
                       <div className="flex gap-4 pt-2">
                         <div className="flex items-center gap-1">
@@ -491,6 +490,7 @@ const Leader = () => {
           </div>
         )}
 
+       
         {/* Table Section */}
         <div className="rounded-2xl shadow-lg overflow-hidden bg-white" style={{ borderColor: themeColors.border }}>
           {/* Table Header with Gradient */}
@@ -505,11 +505,18 @@ const Leader = () => {
                 {table.getHeaderGroups().map((headerGroup) => (
                   <tr key={headerGroup.id}>
                     {headerGroup.headers.map((header) => (
-                      <th
-                        key={header.id}
-                        className="px-6 py-4 text-center text-xs font-semibold uppercase tracking-wider"
-                        style={{ color: themeColors.textSecondary }}
-                      >
+                      // <th
+                      //   key={header.id}
+                      //   className="px-6 py-4 text-center text-xs font-semibold uppercase tracking-wider"
+                      //   style={{ color: themeColors.textSecondary }}
+                      // >
+                       <th
+                            key={header.id}
+                            className={`px-6 py-4 text-xs font-semibold uppercase tracking-wider ${
+                              header.id === "Name" ? "text-left" : "text-center" 
+                            }
+                            `}
+                          > 
                         {flexRender(
                           header.column.columnDef.header,
                           header.getContext()
