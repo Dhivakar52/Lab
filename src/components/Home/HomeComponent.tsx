@@ -95,12 +95,20 @@ const HomeComponent: React.FC = () => {
         setPosts(res.data);
         setProfile(filtered);
 
-        const listCard = await axios.get(`${apiUrl}/api/nomiantionmylist/${userId}`, {
+        const listCard = await axios.get(`${apiUrl}/api/nomiantionmylist/0`, {
+           params: { userId: userId },
           headers: {
             "Content-Type": "application/json",
             Authorization: `Bearer ${authToken}`,
           },
         });
+        // const listCard = await axios.get(`${apiUrl}/api/nomiantionmylist?userID=${userId}`, {
+        
+        //   headers: {
+        //     "Content-Type": "application/json",
+        //     Authorization: `Bearer ${authToken}`,
+        //   },
+        // });
 
         setList(listCard.data);
       } catch (err) {
