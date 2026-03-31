@@ -130,7 +130,7 @@ const ApprovalTable: React.FC = () => {
       try {
         if (!authToken) throw new Error("No auth token found");
 
-        const res = await axios.get(`${apiUrl}/api/managerevaluation`, {
+        const res = await axios.get(`${apiUrl}/api/managerevaluation?ManagerID=${userId}`, {
           headers: { Authorization: `Bearer ${authToken}` },
         });
         //setTotalCount(res.data[0]?.TotalCount || 0);
