@@ -13,6 +13,7 @@ import { Flag ,User, Building2, Tag,
   CalendarDays, FileText, Mail, BadgeCheck, Check } from "lucide-react";
 import type { FormState } from "../../dataTypes/nomination";
 import { levelColors, levelTextColors } from "../../statusColors.ts";
+import JuryEvaluationConfiguration from "../AdminSetting/JuryEvaluationConfiguration.tsx";
 
 interface BusinessJuryDetailProps {
   isOpen: boolean;
@@ -86,17 +87,38 @@ const BusinessJuryDetail: React.FC<BusinessJuryDetailProps> = ({
   const visibleReferrals = expanded ? referrals : referrals.slice(0, 3);
   const location1 = useLocation();
   const from = location1.state?.from;
-  const [attachmentMode, setAttachmentMode] = useState<"approval" | "flag" |"referral"| null>("approval");
+  const [attachmentMode, setAttachmentMode] = useState<"approval" | "flag"
+   |"referral" |"juryApproval"|"grandApproval"|"juryFlag"|"grandFlag"| null>("approval");
   const [approvalFiles, setApprovalFiles] = useState<File[]>([]);
   const [flagFiles, setFlagFiles] = useState<File[]>([]);
+  const [juryApprovalFiles, setJuryApprovalFiles] = useState<File[]>([]);
+  const [juryFlagFiles, setJuryFlagFiles] = useState<File[]>([]);
+  const [grandApprovalFiles, setGrandApprovalFiles] = useState<File[]>([]);
+  const [grandFlagFiles, setGrandFlagFiles] = useState<File[]>([]);
+
   const [existingApprovalDocs, setExistingApprovalDocs] = useState<any[]>([]);
   const [existingFlagDocs, setExistingFlagDocs] = useState<any[]>([]);
+  const [existingJuryApprovalDocs, setExistingJuryApprovalDocs] = useState<any[]>([]);
+  const [existingJuryFlagDocs, setExistingJuryFlagDocs] = useState<any[]>([]);
+  const [existingGrandApprovalDocs, setExistingGrandApprovalDocs] = useState<any[]>([]);
+  const [existingGrandFlagDocs, setExistingGrandFlagDocs] = useState<any[]>([]);
+
   const approvalFileRef = useRef<HTMLInputElement | null>(null);
   const flagFileRef = useRef<HTMLInputElement | null>(null);
+  const juryApprovalFileRef = useRef<HTMLInputElement | null>(null);
+  const grandApprovalFileRef = useRef<HTMLInputElement | null>(null);
+  const juryFlagFileRef = useRef<HTMLInputElement | null>(null);
+  const grandFlagFileRef = useRef<HTMLInputElement | null>(null);
   const [approvalFileError, setApprovalFileError] = useState("");
   const [flagFileError, setFlagFileError] = useState(""); 
+  const [juryApprovalFileError, setJuryApprovalFileError] = useState("");
+  const [grandApprovalFileError, setGrandApprovalFileError] = useState(""); 
+  const [juryFlagFileError, setJuryFlagFileError] = useState(""); 
+  const [grandFlagFileError, setGrandFlagFileError] = useState(""); 
+
   const [popupScore,setPopupScore]=useState("");
   const [popupComments, setPopupComments] = useState("");
+  const[popupCommentsJury,setPopupCommentsJury]=useState("");
   const [popupCommentsGrand,setPopupCommentsGrand]=useState("");
   const DEFAULT_SCORE_ITEMS: ScoreItem[] = [
   { weightId: 1, title: "Integrity", score: "", comment: "" },
@@ -126,18 +148,55 @@ const BusinessJuryDetail: React.FC<BusinessJuryDetailProps> = ({
   const [openGrandJuryEvaluation,setOpenGrandJuryEvaluation]=useState(false);
   const [openScore, setOpenScore] = useState(false);
   const [openCard, setOpenCard] = useState<number | null>(null);
-  const fileInputRef = useRef<HTMLInputElement | null>(null);
-  const [fileError, setFileError] = useState("");
   const [existingDocs, setExistingDocs] = useState<any[]>([]);
   const [isFlagged, setIsFlagged] = useState(false);
   const [flagComment, setFlagComment] = useState("");
   const [status, setStatus] = useState<"Approved" | "Rejected">("Approved");
   const textareaRef = useRef<HTMLTextAreaElement | null>(null);
-  const [activeLevel, setActiveLevel] = useState<"Level-2" | "Level-3" | null>(null);
   const [openDocPopup, setOpenDocPopup] = useState(false);
   const [selectedDocs, setSelectedDocs] = useState<any[]>([]);
   const [isFlowStopped, setIsFlowStopped] = useState(false);
-  
+  const [juryComments, setJuryComments] = useState("");
+  const [isJuryFlagged, setIsJuryFlagged] = useState(false);
+  const [grandComments, setGrandComments] = useState("");
+  const [isGrandFlagged, setIsGrandFlagged] = useState(false);
+  const [juryStatus, setJuryStatus] = useState<"Approved" | "Rejected">("Approved");
+  const [juryScore, setJuryScore] = useState("");
+  const [juryErrors, setJuryErrors] = useState<any>({});
+  const [juryFlagComment, setJuryFlagComment] = useState("");
+  const [grandStatus, setGrandStatus] = useState<"Approved" | "Rejected">("Approved");
+  const [grandScore, setGrandScore] = useState("");
+  const [grandErrors, setGrandErrors] = useState<any>({});
+  const [grandFlagComment, setGrandFlagComment] = useState("");
+  // Manager
+const [managerData, setManagerData] = useState({
+  status: "Approved",
+  comments: "",
+  flag: false,
+  flagComment: "",
+  approvalDocs: [],
+  flagDocs: []
+});
+
+const [juryData, setJuryData] = useState({
+  status: "Approved",
+  score: "",
+  comments: "",
+  flag: false,
+  flagComment: "",
+  approvalDocs: [],
+  flagDocs: []
+});
+
+const [grandData, setGrandData] = useState({
+  status: "Approved",
+  score: "",
+  comments: "",
+  flag: false,
+  flagComment: "",
+  approvalDocs: [],
+  flagDocs: []
+});
   const [form, setForm] = useState<FormState>({
       title: "",
       nomineeName:"",
@@ -279,21 +338,7 @@ const openPreview = (file: Blob, ext: string) => {
   setPreviewFile(blobUrl);
   setPreviewOpen(true);
 };
-const allDocuments = [
-  ...existingDocs
-    .filter(doc => !doc.isDeleted)
-    .map(doc => ({
-      source: "api",
-      originalFileName: doc.originalFileName,
-      fileNameGUID: doc.fileNameGUID,
-    })),
 
-  ...form.files.map(file => ({
-    source: "local",
-    originalFileName: file.name,
-    file,
-  })),
-];
 const referralDocuments = [
   ...existingRefDocs
     .filter((doc) => !doc.isDeleted)
@@ -312,6 +357,7 @@ const referralDocuments = [
     file
   }))
 ];
+
 const approvalDocuments = [
   ...existingApprovalDocs
     .filter((doc) => !doc.isDeleted)
@@ -328,6 +374,41 @@ const approvalDocuments = [
     file
   }))
 ];
+
+const approvalJuryDocuments = [
+  ...existingJuryApprovalDocs
+    .filter((doc) => !doc.isDeleted)
+    .map((doc) => ({
+      source: "api",
+      originalFileName: doc.originalFileName,
+      fileNameGUID: doc.fileNameGUID,
+      fileType: doc.fileType
+    })),
+
+  ...juryApprovalFiles.map((file) => ({
+    source: "local",
+    originalFileName: file.name,
+    file
+  }))
+];
+
+const approvalGrandDocuments = [
+  ...existingGrandApprovalDocs
+    .filter((doc) => !doc.isDeleted)
+    .map((doc) => ({
+      source: "api",
+      originalFileName: doc.originalFileName,
+      fileNameGUID: doc.fileNameGUID,
+      fileType: doc.fileType
+    })),
+
+  ...grandApprovalFiles.map((file) => ({
+    source: "local",
+    originalFileName: file.name,
+    file
+  }))
+];
+
 const flagDocuments = [
   ...existingFlagDocs
     .filter((doc) => !doc.isDeleted)
@@ -344,7 +425,42 @@ const flagDocuments = [
     file
   }))
 ];
-const removeFile = (doc: any, index: number, type: "approval" | "flag" |"referral") => {
+
+const flagJuryDocuments = [
+  ...existingJuryFlagDocs
+    .filter((doc) => !doc.isDeleted)
+    .map((doc) => ({
+      source: "api",
+      originalFileName: doc.originalFileName,
+      fileNameGUID: doc.fileNameGUID,
+      fileType: doc.fileType
+    })),
+
+  ...juryFlagFiles.map((file) => ({
+    source: "local",
+    originalFileName: file.name,
+    file
+  }))
+];
+
+const flagGrandDocuments = [
+  ...existingGrandFlagDocs
+    .filter((doc) => !doc.isDeleted)
+    .map((doc) => ({
+      source: "api",
+      originalFileName: doc.originalFileName,
+      fileNameGUID: doc.fileNameGUID,
+      fileType: doc.fileType
+    })),
+
+  ...grandFlagFiles.map((file) => ({
+    source: "local",
+    originalFileName: file.name,
+    file
+  }))
+];
+const removeFile = (doc: any, index: number, type: "approval" | "flag" |"referral" |"juryApproval"|
+  "grandApproval"|"juryFlag"|"grandFlag") => {
   if (doc.source === "api") {
     if (type === "referral") {
       setExistingRefDocs((prev) =>
@@ -357,6 +473,38 @@ const removeFile = (doc: any, index: number, type: "approval" | "flag" |"referra
     }
     else if (type === "approval") {
       setExistingApprovalDocs((prev) =>
+        prev.map((d) =>
+          d.fileNameGUID === doc.fileNameGUID
+            ? { ...d, isDeleted: true }
+            : d
+        )
+      );
+    } else if (type === "juryApproval") {
+      setExistingJuryApprovalDocs((prev) =>
+        prev.map((d) =>
+          d.fileNameGUID === doc.fileNameGUID
+            ? { ...d, isDeleted: true }
+            : d
+        )
+      );
+    } else if (type === "grandApproval") {
+      setExistingGrandApprovalDocs((prev) =>
+        prev.map((d) =>
+          d.fileNameGUID === doc.fileNameGUID
+            ? { ...d, isDeleted: true }
+            : d
+        )
+      );
+    } else if (type === "juryFlag") {
+      setExistingJuryFlagDocs((prev) =>
+        prev.map((d) =>
+          d.fileNameGUID === doc.fileNameGUID
+            ? { ...d, isDeleted: true }
+            : d
+        )
+      );
+    } else if (type === "grandFlag") {
+      setExistingGrandFlagDocs((prev) =>
         prev.map((d) =>
           d.fileNameGUID === doc.fileNameGUID
             ? { ...d, isDeleted: true }
@@ -379,11 +527,24 @@ const removeFile = (doc: any, index: number, type: "approval" | "flag" |"referra
     else if (type === "referral") {
       setRefFiles((prev) => prev.filter((_, i) => i !== index));
     }
+    else if (type === "juryApproval") {
+      setJuryApprovalFiles((prev) => prev.filter((_, i) => i !== index));
+    }
+    else if (type === "grandApproval") {
+      setGrandApprovalFiles((prev) => prev.filter((_, i) => i !== index));
+    }
+    else if (type === "juryFlag") {
+      setJuryFlagFiles((prev) => prev.filter((_, i) => i !== index));
+    }
+    else if (type === "grandFlag") {
+      setGrandFlagFiles((prev) => prev.filter((_, i) => i !== index));
+    }
     else {
       setFlagFiles((prev) => prev.filter((_, i) => i !== index));
     }
   }
 };
+
 const description =
   data?.Descriptions && data.Descriptions.trim() !== ""
     ? data.Descriptions.trim()
@@ -395,18 +556,23 @@ const description =
     : description.slice(0, maxLength) + "...";
   
 const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>,
-  type: "approval" | "flag" | "referral") => {
+  type:"approval" | "flag"
+   |"referral" |"juryApproval"|"grandApproval"|"juryFlag"|"grandFlag") => {
   const selectedFiles = Array.from(e.target.files || []);
   if (!selectedFiles.length) return;
 
   if (type === "approval") setApprovalFileError("");
   else if (type === "flag") setFlagFileError("");
+  else if (type === "juryApproval") setJuryApprovalFileError("");
+  else if (type === "grandApproval") setGrandApprovalFileError("");
+  else if (type === "juryFlag") setJuryFlagFileError("");
+  else if (type === "grandFlag") setGrandFlagFileError("");
   else setRefFileError("");
 
   let currentFiles: File[] = [];
   let existingCount = 0;
 
-  if (type === "approval") {
+  if (type === "approval" ) {
     currentFiles = approvalFiles;
     existingCount = existingApprovalDocs.filter(d => !d.isDeleted).length;
   } 
@@ -414,6 +580,23 @@ const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>,
     currentFiles = flagFiles;
     existingCount = existingFlagDocs.filter(d => !d.isDeleted).length;
   } 
+  else if (type === "juryApproval") {
+    currentFiles = juryApprovalFiles;
+    existingCount = existingJuryApprovalDocs.filter(d => !d.isDeleted).length;
+  }
+    else if (type === "grandApproval") {
+    currentFiles = grandApprovalFiles;
+    existingCount = existingGrandApprovalDocs.filter(d => !d.isDeleted).length;
+  }
+  else if (type === "juryFlag") {
+    currentFiles = juryFlagFiles;
+    existingCount = existingJuryFlagDocs.filter(d => !d.isDeleted).length;
+  }
+  else if (type === "grandFlag") {
+    currentFiles = grandFlagFiles;
+    existingCount = existingGrandFlagDocs.filter(d => !d.isDeleted).length;
+  }
+
   else {
     currentFiles = refFiles;
     existingCount = existingRefDocs.filter(d => !d.isDeleted).length;
@@ -426,6 +609,10 @@ const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>,
     const msg = "Maximum 5 files allowed.";
     if (type === "approval") setApprovalFileError(msg);
     else if (type === "flag") setFlagFileError(msg);
+    else if (type  === "grandApproval") setGrandApprovalFileError(msg);
+    else if (type  === "juryApproval") setJuryApprovalFileError(msg);
+    else if (type  === "juryFlag") setJuryFlagFileError(msg);
+    else if (type  === "grandFlag") setGrandFlagFileError(msg);
     else setRefFileError(msg);
     return;
   }
@@ -438,7 +625,11 @@ const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>,
     if (isDuplicate) {
       const msg = `"${file.name}" already added.`;
       if (type === "approval") setApprovalFileError(msg);
+      else if (type === "juryApproval") setJuryApprovalFileError(msg);
+      else if (type === "grandApproval") setGrandApprovalFileError(msg);
       else if (type === "flag") setFlagFileError(msg);
+      else if (type === "juryFlag") setJuryFlagFileError(msg);
+      else if (type === "grandFlag") setGrandFlagFileError(msg);
       else setRefFileError(msg);
       return;
     }
@@ -446,7 +637,12 @@ const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>,
     if (file.size > 2 * 1024 * 1024) {
       const msg = `"${file.name}" exceeds 2 MB limit.`;
       if (type === "approval") setApprovalFileError(msg);
+      else if (type === "juryApproval") setJuryApprovalFileError(msg);
+      else if (type === "grandApproval") setGrandApprovalFileError(msg);
       else if (type === "flag") setFlagFileError(msg);
+      else if (type === "juryFlag") setJuryFlagFileError(msg);
+      else if (type === "grandFlag") setGrandFlagFileError(msg);
+
       else setRefFileError(msg);
       return;
     }
@@ -455,10 +651,27 @@ const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>,
     setApprovalFiles((prev) => [...prev, ...selectedFiles]);
     if (approvalFileRef.current) approvalFileRef.current.value = "";
   } 
+  else if (type === "juryApproval") {
+    setJuryApprovalFiles((prev) => [...prev, ...selectedFiles]);
+    if (juryApprovalFileRef.current) juryApprovalFileRef.current.value = "";
+  }
+    else if (type === "grandApproval") {  
+    setGrandApprovalFiles((prev) => [...prev, ...selectedFiles]);
+    if (grandApprovalFileRef.current) grandApprovalFileRef.current.value = "";
+  }
+
   else if (type === "flag") {
     setFlagFiles((prev) => [...prev, ...selectedFiles]);
     if (flagFileRef.current) flagFileRef.current.value = "";
   } 
+  else if (type === "juryFlag") {
+    setJuryFlagFiles((prev) => [...prev, ...selectedFiles]);
+    if (juryFlagFileRef.current) juryFlagFileRef.current.value = "";
+  }
+  else if (type === "grandFlag") {
+    setGrandFlagFiles((prev) => [...prev, ...selectedFiles]);
+    if (grandFlagFileRef.current) grandFlagFileRef.current.value = "";
+  }
   else {
     setRefFiles((prev) => [...prev, ...selectedFiles]);
     if (refFileRef.current) refFileRef.current.value = "";
@@ -505,6 +718,14 @@ const uploadFilesToServer = async (files: File[]) => {
         errs.comment[i] = "Comment required";
         ok = false;
       }
+      if (!popupCommentsJury?.trim()) {
+      errs.comments = "Comments are required!";
+      ok = false;
+    }
+    else if (popupCommentsJury.trim().length > 500) {
+      errs.comments = "Max 500 characters allowed";
+      ok = false;
+    }
     });
   }
 
@@ -519,7 +740,7 @@ const uploadFilesToServer = async (files: File[]) => {
     }
   }
 
-  
+
   if(mode=="grandJury"){
     
     if (!popupCommentsGrand?.trim()) {
@@ -583,17 +804,26 @@ const level3 = approvalData?.find((l: ApprovalItem) => l.ApprovalFlow === "Level
 const showLevel2 = level1?.Status === "Approved";
 const showLevel3 = level2?.Status === "Approved";
 const flagDetails =safeParse(level1?.Flagdetails);
+const juryFlagDetails =safeParse(level2?.Flagdetails);
 const GrandJuryflagDetails =safeParse(level3?.Flagdetails);
 const flagData = flagDetails?.[0]; 
-const flagGranJuryData=GrandJuryflagDetails?.[0];
+const flagBusinessJuryData=juryFlagDetails?.[0];
+const flagGrandJuryData=GrandJuryflagDetails?.[0];
 const approvalCommentText = approvalData?.[0]?.ApprovalComments || "";
+const juryApprovalCommentText=approvalData?.[1]?.ApprovalComments||"";
 const GrandJuryCommentText = approvalData?.[2]?.ApprovalComments || "";
 
 const isApprovalTruncated = approvalCommentText.length > 160;
+const isJuryApprovalTruncated=juryApprovalCommentText.length>160;
 const isGrandJuryTruncated = GrandJuryCommentText.length > 160;
 
 const displayApprovalComment = getTruncatedText(
   approvalCommentText,
+  expandedApprovalComments,
+  160
+);
+const displayJuryApprovalComment = getTruncatedText(
+  juryApprovalCommentText,
   expandedApprovalComments,
   160
 );
@@ -603,14 +833,22 @@ const displayGrandJuryComment = getTruncatedText(
   expandedApprovalComments,
   160
 );
+
 const flagReasonText = flagData?.FlagReason || "";
-const flagGranJuryReasonText=flagGranJuryData?.FlagReason||"";
+const flagBusinessJuryReasonText=flagBusinessJuryData?.FlagReason||"";
+const flagGranJuryReasonText=flagGrandJuryData?.FlagReason||"";
 
 const isFlagTruncated = flagReasonText.length > 160;
+const isJuryFlagTruncated=flagBusinessJuryReasonText.length>160;
 const isGrandJuryFlagTruncated=flagGranJuryReasonText.length>160;
 
 const displayFlagReason = getTruncatedText(
   flagReasonText,
+  expandedFlagReason,
+  160
+);
+const displayJuryFlagReason = getTruncatedText(
+  flagBusinessJuryReasonText,
   expandedFlagReason,
   160
 );
@@ -632,17 +870,37 @@ const getBusinessJuryEvaluations = () => {
     return [];
   }
 };
+
 const avgScoreData = safeParse(level2?.JuryMemberAvgScore);
 const avgScore = avgScoreData?.[0]?.JuryMemberAvgScore || 0;
 const attributeData = level2;
-const juryList: JuryItem[] = getBusinessJuryEvaluations().map((j: any) => ({
-  Juryname: j.JuryMemberName,
-  SubmittedDate: "-",
-  Score: j.AttributeAvg?.[0]?.TotalScore || 0,
-  Flag: j.FlagDetails?.length > 0 ? 1 : 0,
-  Attributes: j.AttributeScore || [],
-  FlagReason: j.FlagDetails?.[0]?.FlagReason || ""
-}));
+
+// const juryList: JuryItem[] = getBusinessJuryEvaluations().map((j: any) => ({
+//   Juryname: j.JuryMemberName,
+//   SubmittedDate: "-",
+//   Score: j.AttributeAvg?.[0]?.TotalScore || 0,
+//   Flag: j.FlagDetails?.length > 0 ? 1 : 0,
+//   Attributes: j.AttributeScore || [],
+//   FlagReason: j.FlagDetails?.[0]?.FlagReason || ""
+// }));
+const juryList: JuryItem[] = getBusinessJuryEvaluations().map((j: any) => {
+  console.log("JURY RAW 👉", j); 
+  return {
+    Juryname: j.JuryMemberName || "-",
+    SubmittedDate: j.SubmittedDate || "-",
+    Score:
+      j.TotalScore ||
+      j.AttributeAvg?.[0]?.TotalScore ||
+      j.Score ||0,
+    Flag: Array.isArray(j.FlagDetails) && j.FlagDetails.length > 0 ? 1 : 0,
+    Attributes: (j.AttributeScore || []).map((a: any) => ({
+      AttributeName: a.AttributeName || a.WeightageName || "-",
+      Score: a.Score ?? 0,
+      Comments: a.Comments || a.Comment || "-"
+    })),
+    FlagReason: j.FlagDetails?.[0]?.FlagReason || ""
+  };
+});
 const getCleanStatus = (status?: string) => {
   if (!status) return "";
   const dashIndex = status.indexOf("-");
@@ -650,16 +908,26 @@ const getCleanStatus = (status?: string) => {
     ? status.substring(dashIndex + 1).trim()
     : status.trim();
 };
+
 const mainStatus = getCleanStatus(data.Status);
+
 const resetApproveDrawer = () => {
   setScores(structuredClone(DEFAULT_SCORE_ITEMS));
   setPopupComments("");
   setIsFlagged(false);
   setFlagComment("");
   setApprovalFiles([]);
+  setJuryApprovalFiles([]);
+  setGrandApprovalFiles([]);
   setFlagFiles([]);
+  setJuryFlagFiles([]);
+  setGrandFlagFiles([]);
   setExistingApprovalDocs([]);
+  setExistingJuryApprovalDocs([]);
+  setExistingGrandApprovalDocs([]);
   setExistingFlagDocs([]);
+  setExistingJuryFlagDocs([]);
+  setExistingGrandFlagDocs([]);
   setExistingDocs([]);
   setPopupErrors({
     score: {},
@@ -679,16 +947,36 @@ const resetApproveDrawer = () => {
   setExistingRefDocs([]);
   setRefFileError("");
   setForm(prev => ({ ...prev, files: [] }));
+
   if (refFileRef.current) refFileRef.current.value = "";       
   if (approvalFileRef.current) {
     approvalFileRef.current.value = "";
   }
+  if (juryApprovalFileRef.current) {
+    juryApprovalFileRef.current.value = "";
+  }
+    if (grandApprovalFileRef.current) {
+    grandApprovalFileRef.current.value = "";
+  }
+  if (juryFlagFileRef.current) {
+    juryFlagFileRef.current.value = "";
+  }
+  if (grandFlagFileRef.current) {
+    grandFlagFileRef.current.value = "";
+  }
+
   if (flagFileRef.current) {
     flagFileRef.current.value = "";
   }
   setApprovalFileError("");
+  setJuryApprovalFileError("");
+  setGrandApprovalFileError("");
   setFlagFileError("");
+  setJuryFlagFileError("");
+  setGrandFlagFileError("");
+  setIsEditMode(false);
 };
+
 const closeApproveDrawer = () => {
   resetApproveDrawer();
   setOpenApprove(false);
@@ -708,7 +996,7 @@ const closeGrandJuryDrawer=()=>{
 const handleManagerApprove = () => {
   if (!level1) return;
    if (approvalData[1].ApprovedAt!="")return;
-  const isAlreadySaved = !!level1.ApprovedAt;
+   const isAlreadySaved = level1?.ApprovedAt !== null && level1?.ApprovedAt !== "";
 
   setIsEditMode(isAlreadySaved);
   setStatus(level1.Status === "Rejected" ? "Rejected" : "Approved");
@@ -779,37 +1067,37 @@ const handleGrandJuryApprove = () => {
   setPopupCommentsGrand(level3.ApprovalComments || "");
   setPopupScore(level3.ApprovalScore || "");
 
-  let parsedFlag = null;
+  let parsedGrandFlag = null;
   try {
     const parsed = level3.Flagdetails ? JSON.parse(level3.Flagdetails) : [];
-    parsedFlag = parsed?.[0];
+    parsedGrandFlag = parsed?.[0];
   } catch {
-    parsedFlag = null;
+    parsedGrandFlag = null;
   }
 
-  const isFlag = Number(parsedFlag?.Flag) === 1;
+  const isFlag = Number(parsedGrandFlag?.Flag) === 1;
   setIsFlagged(isFlag);
-  setFlagComment(parsedFlag?.FlagReason || "");
+  setFlagComment(parsedGrandFlag?.FlagReason || "");
 
-  let parsedFlagAttachments: any[] = [];
+  let parsedGrandFlagAttachments: any[] = [];
   try {
-    parsedFlagAttachments = level3.FlagAttachment
+    parsedGrandFlagAttachments = level3.FlagAttachment
       ? JSON.parse(level3.FlagAttachment)
       : [];
   } catch {
-    parsedFlagAttachments = [];
+    parsedGrandFlagAttachments = [];
   }
 
-  let parsedApprovalAttachments: any[] = [];
+  let parsedGrandApprovalAttachments: any[] = [];
   try {
-    parsedApprovalAttachments = level3.ApprovalAttachment
+    parsedGrandApprovalAttachments = level3.ApprovalAttachment
       ? JSON.parse(level3.ApprovalAttachment)
       : [];
   } catch {
-    parsedApprovalAttachments = [];
+    parsedGrandApprovalAttachments = [];
   }
 
-  const flagDocs = parsedFlagAttachments.map((file: any) => ({
+  const flagGrandDocs = parsedGrandFlagAttachments.map((file: any) => ({
     source: "api",
     AttachmentID: file.AttachmentsID,
     fileNameGUID: file.AttachmentNameGUID,
@@ -819,7 +1107,7 @@ const handleGrandJuryApprove = () => {
     fileSize: file.AttachmentSize
   }));
 
-  const approvalDocs = parsedApprovalAttachments.map((file: any) => ({
+  const approvalGrandDocs = parsedGrandApprovalAttachments.map((file: any) => ({
     source: "api",
     AttachmentID: file.AttachmentsID,
     fileNameGUID: file.AttachmentNameGUID,
@@ -829,8 +1117,8 @@ const handleGrandJuryApprove = () => {
     fileSize: file.AttachmentSize
   }));
 
-  setExistingFlagDocs(flagDocs);
-  setExistingApprovalDocs(approvalDocs);
+  setExistingGrandFlagDocs(flagGrandDocs);
+  setExistingGrandApprovalDocs(approvalGrandDocs);
 
   setOpenGrandJuryEvaluation(true);
 };
@@ -976,74 +1264,247 @@ const submitManagerApproval = async () => {
   }
 };
 
-const handleSubmitEvaluation = async () => {
+const handleJuryApprove = () => {
+  if (!level2) return;
+
+  const isAlreadySaved = !!level2?.ApprovedAt;
+  setIsEditMode(isAlreadySaved);
+
+  setStatus(level2.Status === "Rejected" ? "Rejected" : "Approved");
+  setPopupCommentsJury(level2.ApprovalComments || "");
+  setPopupScore(level2.ApprovalScore || "");
+
+  let parsedFlag = null;
+  try {
+    const parsed = level2.Flagdetails ? JSON.parse(level2.Flagdetails) : [];
+    parsedFlag = parsed?.[0];
+  } catch {
+    parsedFlag = null;
+  }
+
+  const isFlag = Number(parsedFlag?.Flag) === 1;
+  setIsFlagged(isFlag);
+  setFlagComment(parsedFlag?.FlagReason || "");
+
+  let parsedApprovalAttachments: any[] = [];
+  try {
+    parsedApprovalAttachments = level2.ApprovalAttachment
+      ? JSON.parse(level2.ApprovalAttachment)
+      : [];
+  } catch {
+    parsedApprovalAttachments = [];
+  }
+
+  const approvalDocs = parsedApprovalAttachments.map((file: any) => ({
+    source: "api",
+    AttachmentID: file.AttachmentsID,
+    fileNameGUID: file.AttachmentNameGUID,
+    originalFileName: file.OriginalAttachmentName,
+    fileType: file.AttachmentFileType,
+    fileUrl: file.AttachmentPath,
+    fileSize: file.AttachmentSize
+  }));
+
+  setExistingJuryApprovalDocs(approvalDocs);
+  let parsedFlagAttachments: any[] = [];
+  try {
+    parsedFlagAttachments = level2.FlagAttachment
+      ? JSON.parse(level2.FlagAttachment)
+      : [];
+  } catch {
+    parsedFlagAttachments = [];
+  }
+
+  const flagDocs = parsedFlagAttachments.map((file: any) => ({
+    source: "api",
+    AttachmentID: file.AttachmentsID,
+    fileNameGUID: file.AttachmentNameGUID,
+    originalFileName: file.OriginalAttachmentName,
+    fileType: file.AttachmentFileType,
+    fileUrl: file.AttachmentPath,
+    fileSize: file.AttachmentSize
+  }));
+
+  setExistingJuryFlagDocs(flagDocs);
+  try {
+    const bj = approvalData.find(
+      (a: any) => a.ApprovalType === "Business Jury"
+    );
+
+    const parsed = bj?.JuryMember ? JSON.parse(bj.JuryMember) : [];
+
+    const currentUser = parsed.find(
+      (j: any) => j.BusinessJuryID === userId
+    );
+
+    if (currentUser?.AttributeScore) {
+      const mappedScores = currentUser.AttributeScore.map((s: any) => ({
+        weightId: s.WeightageID,
+        title: s.AttributeName,
+        score: s.Score,
+        comment: s.Comments,
+        juryScoresID: s.JuryScoresID
+      }));
+
+      setScores(mappedScores);
+    } else {
+      setScores(structuredClone(DEFAULT_SCORE_ITEMS));
+    }
+  } catch {
+    setScores(structuredClone(DEFAULT_SCORE_ITEMS));
+  }
+
+  setOpenScore(true);
+};
+
+const submitJuryApproval = async () => {
   if (!validateEvaluation("jury")) return;
 
-  let uploadedDocs = [];
-  if (form.files && form.files.length > 0) {
-    uploadedDocs = await uploadFilesToServer(form.files);
-  } else {
-    uploadedDocs = [];
-  }
+  try{
+  let uploadedJuryApprovalDocs: any[] = [];
+    let uploadedJuryFlagDocs: any[] = [];
 
-  const FlagsPayload={
-      NominationID :data.NominationID,
-		  IsFlag: isFlagged,
-      FlagReason: flagComment,
-			CreatedBy :userId
+    if (juryApprovalFiles.length > 0) {
+      uploadedJuryApprovalDocs = await uploadFilesToServer(juryApprovalFiles);
     }
 
-const attachmentsPayload = [
-  ...existingDocs
-    .filter(doc => !doc.isDeleted)
-    .map(doc => ({
-      AttachmentID: doc.AttachmentID ?? 0,
-      NominationID: isEditMode ? Number(data.NominationID) : 0,
-      AttachmentType:1,
-      OriginalAttachmentName: doc.originalFileName,
-      AttachmentFileType: doc.fileType || "",
-      AttachmentSize: doc.fileSize || "",
-      AttachmentNameGUID: doc.fileNameGUID,
-      AttachmentPath: doc.fileUrl || "",
+    if (juryFlagFiles.length > 0) {
+      uploadedJuryFlagDocs = await uploadFilesToServer(juryFlagFiles);
+    }
+
+    const FlagsPayload = {
+      NominationFlagsID: flagBusinessJuryData?.NominationFlagsID || 0,
+      NominationID: Number(nominationId),
+      IsFlag: isFlagged ? true: false,
+      FlagReason: isFlagged ? flagComment : "",
       CreatedBy: userId,
       UpdatedBy: userId
-    })),
+    };
 
-  ...uploadedDocs.map((f: any) => ({
-    AttachmentID: 0,
-    NominationID: Number(data.NominationID),
-    AttachmentType:1,
-    OriginalAttachmentName: f.originalFileName,
-    AttachmentFileType: f.fileType || "",
-    AttachmentSize: `${(f.fileSize / 1024).toFixed(2)} KB`,
-    AttachmentNameGUID: f.fileNameGUID,
-    AttachmentPath: f.fileUrl || "",
-    CreatedBy: userId
-  }))
-];
+    const approvalPayload = {
+      JuryApprovalsID:level2.JuryApprovalsID || 0,
+      NominationID: Number(nominationId),
+      BusinessJuryID:userId,
+      IsBusinessJuryApproved: status === "Approved",
+      BusinessJuryComments: popupCommentsJury,
+      BusinessJuryScore:popupScore,
+      Active:true,
+      CreatedBy: userId,
+      UpdatedBy: userId
+    };
 
-  const finalPayload = {
-  Scores:  scores.map(s => ({
-        NominationID:data.NominationID,
-      WeightageID: s.weightId,     
-      Score: Number(s.score),
-      Comments: s.comment,
-      CreatedBy:userId
-    })),
-  Flags: FlagsPayload,
-  Attachments: attachmentsPayload
-};
-console.log("Final",finalPayload);
-await axios.post(
-  `${apiUrl}/api/businessjurylevelnomination`,
-  finalPayload,
-  { 
-    headers: { Authorization: `Bearer ${authToken}` },
-    params: { EvalutionType: 1 }
+   
+    const attachmentsPayload = [
+      ...existingJuryApprovalDocs
+        .filter(doc => !doc.isDeleted)
+        .map(doc => ({
+          AttachmentsID: doc.AttachmentID || 0,
+          NominationID: Number(nominationId),
+          AttachmentType: 47,
+          OriginalAttachmentName: doc.originalFileName,
+          AttachmentFileType: doc.fileType || "",
+          AttachmentSize: doc.fileSize || "",
+          AttachmentNameGUID: doc.fileNameGUID,
+          AttachmentPath: doc.fileUrl || "",
+          CreatedBy: userId,
+          UpdatedBy: userId
+        })),
+
+      ...uploadedJuryApprovalDocs.map(f => ({
+        AttachmentsID: 0,
+        NominationID: Number(nominationId),
+        AttachmentType: 47,
+        OriginalAttachmentName: f.originalFileName,
+        AttachmentFileType: f.fileType || "",
+        AttachmentSize: `${(f.fileSize / 1024).toFixed(2)} KB`,
+        AttachmentNameGUID: f.fileNameGUID,
+        AttachmentPath: f.fileUrl || "",
+        CreatedBy: userId,
+        UpdatedBy: userId
+      })),
+
+      ...(isFlagged
+        ? existingJuryFlagDocs
+            .filter(doc => !doc.isDeleted)
+            .map(doc => ({  
+              AttachmentsID: doc.AttachmentID || 0,
+              NominationID: Number(nominationId),
+              AttachmentType: 48,
+              OriginalAttachmentName: doc.originalFileName,
+              AttachmentFileType: doc.fileType || "",
+              AttachmentSize: doc.fileSize || "",
+              AttachmentNameGUID: doc.fileNameGUID,
+              AttachmentPath: doc.fileUrl || "",
+              CreatedBy: userId,
+              UpdatedBy: userId
+            }))
+        : []),
+
+      ...(isFlagged
+        ? uploadedJuryFlagDocs.map(f => ({
+            AttachmentsID: 0,
+            NominationID: Number(nominationId),
+            AttachmentType: 48,
+            OriginalAttachmentName: f.originalFileName,
+            AttachmentFileType: f.fileType || "",
+            AttachmentSize: `${(f.fileSize / 1024).toFixed(2)} KB`,
+            AttachmentNameGUID: f.fileNameGUID,
+            AttachmentPath: f.fileUrl || "",
+            CreatedBy: userId,
+            UpdatedBy: userId
+          }))
+        : [])
+    ];
+
+    const finalPayload = {
+    Scores: scores.map(s => ({
+    JuryScoresID: s.juryScoresID || 0, 
+    NominationID: Number(nominationId),
+    WeightageID: s.weightId,
+    Score: Number(s.score),
+    Comments: s.comment,
+    CreatedBy: userId,
+    UpdatedBy: userId
+  })),
+    Flags: FlagsPayload,
+    Attachments: attachmentsPayload,
+    Approval:approvalPayload
+  };
+  console.log("Jury Final",finalPayload);
+
+    const isUpdate = isEditMode;
+
+    let res = await axios({
+      method: isUpdate ? "put" : "post",
+      url: isUpdate
+        ? `${apiUrl}/api/businessjurylevelnomination/${nominationId}`
+        : `${apiUrl}/api/businessjurylevelnomination`,
+      data: finalPayload,
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${authToken}`
+      },
+      params: { EvalutionType: 1 }
+    });
+    if (res.data > 0) {
+        setSuccessMessage(
+          isUpdate ? "Business Jury level updated successfully!" : "Business Jury level added successfully!"
+        );
+      } else {
+        setErrorMessage("Operation failed");
+      }
+      setTimeout(() => {
+      setSuccessMessage("");
+      setErrorMessage("");
+      }, 3000);
+    fetchNominationDetails();
+    handleCloseDrawer();
+  }catch (err) {
+    console.error("❌ SAVE ERROR:", err);
+    setErrorMessage("Action failed. Please try again.");
+  } finally {
+    setLoading(false);
   }
-);
-
-  handleCloseDrawer();
 };
 
 const submitGrandJuryApproval = async () => {
@@ -1052,19 +1513,18 @@ const submitGrandJuryApproval = async () => {
   try {
     setLoading(true);
 
-    let uploadedApprovalDocs: any[] = [];
-    let uploadedFlagDocs: any[] = [];
+    let uploadedGrandApprovalDocs: any[] = [];
+    let uploadedGrandFlagDocs: any[] = [];
 
-    if (approvalFiles.length > 0) {
-      uploadedApprovalDocs = await uploadFilesToServer(approvalFiles);
+    if (grandApprovalFiles.length > 0) {
+      uploadedGrandApprovalDocs = await uploadFilesToServer(grandApprovalFiles);
     }
 
-    if (flagFiles.length > 0) {
-      uploadedFlagDocs = await uploadFilesToServer(flagFiles);
+    if (grandFlagFiles.length > 0) {
+      uploadedGrandFlagDocs = await uploadFilesToServer(grandFlagFiles);
     }
-
     const flags = {
-      NominationFlagsID: flagGranJuryData?.NominationFlagsID || 0,
+      NominationFlagsID: flagGrandJuryData?.NominationFlagsID || 0,
       NominationID: Number(nominationId),
       IsFlag: isFlagged ? true: false,
       FlagReason: isFlagged ? flagComment : "",
@@ -1085,7 +1545,7 @@ const submitGrandJuryApproval = async () => {
     };
 
     const attachments = [
-      ...existingApprovalDocs
+      ...existingGrandApprovalDocs
         .filter(doc => !doc.isDeleted)
         .map(doc => ({
           AttachmentsID: doc.AttachmentID || 0,
@@ -1100,7 +1560,7 @@ const submitGrandJuryApproval = async () => {
           UpdatedBy: userId
         })),
 
-      ...uploadedApprovalDocs.map(f => ({
+      ...uploadedGrandApprovalDocs.map(f => ({
         AttachmentsID: 0,
         NominationID: Number(nominationId),
         AttachmentType: 47,
@@ -1114,9 +1574,9 @@ const submitGrandJuryApproval = async () => {
       })),
 
       ...(isFlagged
-        ? existingFlagDocs
+        ? existingGrandFlagDocs
             .filter(doc => !doc.isDeleted)
-            .map(doc => ({
+            .map(doc => ({  
               AttachmentsID: doc.AttachmentID || 0,
               NominationID: Number(nominationId),
               AttachmentType: 48,
@@ -1131,7 +1591,7 @@ const submitGrandJuryApproval = async () => {
         : []),
 
       ...(isFlagged
-        ? uploadedFlagDocs.map(f => ({
+        ? uploadedGrandFlagDocs.map(f => ({
             AttachmentsID: 0,
             NominationID: Number(nominationId),
             AttachmentType: 48,
@@ -1403,6 +1863,8 @@ const openCommentPopup = (ref: any) => {
 };
 const parsedFlagDocs = safeParse(level1?.FlagAttachment);
 const parsedApprovalDocs = safeParse(level1?.ApprovalAttachment);
+const parsedJuryFlagDocs = safeParse(level2?.FlagAttachment);
+const parsedJuryApprovalDocs = safeParse(level2?.ApprovalAttachment);
 const parsedGrandJuryFlagDocs = safeParse(level3?.FlagAttachment);
 const parsedGranJuryApprovalDocs = safeParse(level3?.ApprovalAttachment);
 return (
@@ -1815,11 +2277,7 @@ return (
                   </button>
                 )}
                 <button
-                  // onClick={() => setOpenScore(true)}
-                  onClick={() => {
-                    setActiveLevel("Level-2");
-                    setOpenScore(true);
-                  }}
+                  onClick={handleJuryApprove}
                   className={`px-4 py-1.5 rounded-lg text-sm border 
                   ${levelColors[approvalData[1].Status] || "bg-gray-50 border-gray-300"} 
                   ${levelTextColors[approvalData[1].Status] || "text-gray-700"}`}>
@@ -1864,6 +2322,56 @@ return (
                   <span className="text-gray-500">Score :</span>{" "}
                   <span className="font-medium">{approvalData[1].ApprovalScore}</span>
                 </div>
+                  <div className="flex gap-12">
+                <div className="flex items-start gap-2">
+                  <span className="text-gray-500">{Number(flagBusinessJuryData?.Flag) === 1 ? "Flagged :" : "Not Flagged :"}</span>
+                  <div className="flex items-center gap-2">
+                    <Flag
+                      size={16}
+                      className={
+                        Number(flagBusinessJuryData?.Flag) === 1
+                          ? "text-red-600 fill-red-600"
+                          : "text-gray-400 fill-gray-300"
+                      }/>
+                  </div>
+                </div>
+                <div>
+               {parsedJuryFlagDocs?.length > 0 && (
+                  <span
+                    onClick={() => {
+                      setSelectedDocs(
+                        parsedJuryFlagDocs.map((f: any) => ({
+                          originalFileName: f.OriginalAttachmentName,
+                          fileNameGUID: f.AttachmentNameGUID,
+                          source: "api" 
+                        }))
+                      );
+                      setOpenDocPopup(true);
+                    }}
+                    className="text-blue-600 cursor-pointer underline">
+                    Flag Documents ({parsedJuryFlagDocs.length})
+                  </span>
+               )}
+                </div>
+                <div>
+                  {parsedJuryApprovalDocs?.length > 0 && (
+                    <span
+                      onClick={() => {
+                        setSelectedDocs(
+                          parsedJuryApprovalDocs.map((f: any) => ({
+                            originalFileName: f.OriginalAttachmentName,
+                            fileNameGUID: f.AttachmentNameGUID,
+                            source: "api" 
+                          }))
+                        );
+                        setOpenDocPopup(true);
+                      }}
+                      className="text-blue-600 cursor-pointer underline">
+                      Approval Documents ({parsedJuryApprovalDocs.length})
+                    </span>
+                  )}
+                </div>
+              </div>
               </div>
               <div>
                 <span className="text-gray-500">Comments :</span>
@@ -1916,14 +2424,13 @@ return (
                 </div> 
               </div>              
               <div className="flex gap-12">
-            
                 <div className="flex items-start gap-2">
-                  <span className="text-gray-500">{Number(flagGranJuryData?.Flag) === 1 ? "Flagged :" : "Not Flagged :"}</span>
+                  <span className="text-gray-500">{Number(flagGrandJuryData?.Flag) === 1 ? "Flagged :" : "Not Flagged :"}</span>
                   <div className="flex items-center gap-2">
                     <Flag
                       size={16}
                       className={
-                        Number(flagGranJuryData?.Flag) === 1
+                        Number(flagGrandJuryData?.Flag) === 1
                           ? "text-red-600 fill-red-600"
                           : "text-gray-400 fill-gray-300"
                       }/>
@@ -1969,7 +2476,6 @@ return (
                 </div>
 
               </div>
-
               <div className="flex gap-12">
                 <div>
                 <span className="text-gray-500">Approval Comments :</span>
@@ -2039,11 +2545,6 @@ return (
               <option value="Approved">Approved</option>
               <option value="Rejected">Rejected</option>
             </select>
-            {/* <select
-              className="w-full h-[42px] px-3 border border-gray-300 rounded-[6px] bg-white focus:outline-none ">
-              <option>Approved</option>
-              <option>Rejected</option>
-            </select> */}
           </div>
           <div className="mb-[18px]">
             <label className="block mb-2 font-medium">
@@ -2335,6 +2836,62 @@ return (
       </div>
       {/* <div className="px-6 py-6 space-y-6 text-sm"> */}
       <div className="flex-1 overflow-y-auto px-6 py-6 space-y-6 text-sm">
+        <div className="mb-[18px] flex gap-4 items-end">
+          <div className="flex-1">
+            <label className="block mb-2 font-medium">
+              Status
+            </label>
+            <select 
+              value={juryStatus}
+              onChange={(e) => setJuryStatus(e.target.value as "Approved" | "Rejected")}
+              className="w-full h-[42px] px-3 border border-gray-300 rounded-[6px]">
+              <option value="Approved">Approved</option>
+              <option value="Rejected">Rejected</option>
+            </select>
+          </div>
+          <div className="w-[120px]">
+            <span className="text-gray-500 text-sm">Score</span>
+            <input
+              type="number"
+              min={1}
+              max={100}
+              value={juryScore}
+              onChange={(e) => {
+                const val = e.target.value;
+                setJuryScore(val);
+                if(val.trim()){
+                  setJuryErrors(prev=>({
+                    ...prev,
+                    score:""
+                  }));
+                }
+              }}
+              className="w-full h-[42px] px-3 border border-gray-300 rounded-[6px] text-center"
+            />
+          </div>
+        </div>
+        <div className="mb-[18px]">
+          <label className="block mb-2 font-medium">
+            Comments
+          </label>
+          <textarea rows={3} value={juryComments}
+            onChange={(e) => {
+              const value = e.target.value;
+              setJuryComments(value);
+              if (value.trim()) {
+                setJuryErrors(prev => ({
+                  ...prev,
+                  comments: ""
+                }));
+              }
+            }}
+            placeholder="Enter your comments"
+            className={`w-full px-3 py-2 border rounded-[6px]
+              ${juryErrors.comments ? "border-red-500" : "border-gray-300"}`}/>
+          {juryErrors.comments && (
+            <p className="text-red-600 text-xs mt-1">{juryErrors.comments}</p>
+          )}
+        </div>
         {scores.map((item, i) => (
           <div key={i}>
             <div className="flex items-center gap-6 mb-2">
@@ -2384,147 +2941,133 @@ return (
               )}        
           </div>
          ))}
-          <div className="flex items-center gap-2 mb-[12px]">
-            <Flag size={18} className={isFlagged ? "text-red-600" : "text-gray-400"}/>
-            <span className="font-medium">Flag :</span>
-            <input type="checkbox" checked={isFlagged}
-              onChange={(e) => {
-                const checked = e.target.checked;
-                setIsFlagged(checked);
-                if (checked) {
-                  setTimeout(() => textareaRef.current?.focus(), 100);
-                } else {
-                  setFlagComment("");
-                  setPopupErrors(prev => ({ ...prev, flagComment: "" }));
-                }
-              }}
-              className="w-4 h-4 mt-[1px] accent-red-600 cursor-pointer"/>
-          </div>
-            <textarea ref={textareaRef} rows={3} value={flagComment}
-              onChange={(e) => {
-                const value = e.target.value;
-                setFlagComment(value);
-                if (value.trim()) {
-                  setPopupErrors(prev => ({ ...prev, flagComment: "" }));
-                }
-              }}
-              disabled={!isFlagged}
-              placeholder="Flagged reason here"
-              className={`w-full px-3 py-2 rounded-[6px]
-                ${isFlagged
-                  ? "border border-red-300 bg-red-50"
-                  : "border border-gray-200 bg-gray-100 cursor-not-allowed"}`}/>
-            {popupErrors.flagComment && (
-              <p className="text-red-600 text-xs mt-1">
-                {popupErrors.flagComment}
-              </p>
-            )}
          <div className="mt-4">
               <Label.Root className="block text-sm font-medium">
                 Supporting Documents 
                 <span className="text-red-500">(Maximum 5 files allowed & File must be below 2 MB)</span>
               </Label.Root>
               <label
-                htmlFor="fileUpload"
+                htmlFor="juryUpload"
                 className="inline-block bg-gray-100 text-gray-700 border border-gray-300 px-6 py-2 rounded cursor-pointer mt-2 hover:bg-gray-200">
                 Choose File
               </label>
               <input
-                id="fileUpload"
-                ref={fileInputRef}
+                id="juryUpload"
+                ref={juryApprovalFileRef}
                 type="file"
                 multiple
-                onChange={(e) => handleFileUpload(e, "approval")}
+                onChange={(e) => handleFileUpload(e, "juryApproval")}
                 className="hidden" />
-              {fileError && <p className="text-red-500 text-sm mt-1">{fileError}</p>}
+              {juryApprovalFileError && <p className="text-red-500 text-sm mt-1">{juryApprovalFileError}</p>}
             </div>         
             <div className="mt-3 flex flex-wrap gap-2">
-              {allDocuments.map((doc: any, index: number) => (
+              {approvalJuryDocuments.map((doc: any, index: number) => (
                 <div
                   key={doc.source === "api" ? doc.fileNameGUID : index}
-                  className="flex items-center gap-2 bg-gray-100 px-3 py-1 rounded-lg shadow-sm border relative">
-                  {/* File Name */}
+                  className="flex items-center gap-2 bg-gray-100 px-3 py-1 rounded-lg shadow-sm border">
                   <span
                     className="text-sm truncate max-w-[180px] cursor-pointer text-blue-600 hover:underline"
-                    onClick={async () => {
-                      const fileName = doc.originalFileName;
-                      const ext = fileName.split(".").pop()?.toLowerCase() || "";
-
-                      if (doc.source === "api") {
-                        try {
-                          const response = await axios.get(
-                            `${apiUrl}/api/download?fileName=${doc.fileNameGUID}`,
-                            {
-                              responseType: "blob",
-                              headers: { Authorization: `Bearer ${authToken}` },
-                            }
-                          );
-                          if (["jpg", "jpeg", "png", "gif"].includes(ext)) {
-                            openPreview(response.data, ext);
-                          } 
-                          else if (ext === "pdf") {
-                            const pdfBlob = new Blob([response.data], { type: "application/pdf" });
-                            const pdfUrl = URL.createObjectURL(pdfBlob);
-                            window.open(pdfUrl, "_blank");
-                          }
-                          // else if (ext === "pdf") {
-                          //   window.open(blobUrl, "_blank");  
-                          // }
-                          else {
-                            const link = document.createElement("a");
-                            link.href = URL.createObjectURL(response.data);
-                            link.download = fileName;
-                            link.click();
-                          }
-                        } catch {
-                          alert("File not found");
-                        }
-                      }
-
-                      else {
-                        const file = doc.file;
-                        if (!(file instanceof File)) return;
-
-                        if (["jpg", "jpeg", "png", "gif"].includes(ext)) {
-                          openPreview(file, ext);
-                        } 
-                         else if (ext === "pdf") {
-                          const pdfBlob = new Blob([file], { type: "application/pdf" });
-                          const pdfUrl = URL.createObjectURL(pdfBlob);
-                          window.open(pdfUrl, "_blank");    
-                          }
-                          else {
-                          const link = document.createElement("a");
-                          link.href = URL.createObjectURL(file);
-                          link.download = file.name;
-                          link.click();
-                        }
-                      }
-                    }}>
+                    onClick={() => handleFilePreview(doc)}>
                     {doc.originalFileName || doc.name}
                   </span>
+
                   <button
                     type="button"
-                    onClick={() => {
-                      if (doc.source === "api") {
-                        setExistingDocs(prev => prev.map(d => d.fileNameGUID === doc.fileNameGUID ? { ...d, isDeleted: true } : d));
-                      } else {
-                        setForm(prev => ({ ...prev, files: prev.files.filter((_, i) => i !== index) }));
-                      }
-                    }}
+                    onClick={() => removeFile(doc, index, "juryApproval")}
                     className="text-red-500 hover:text-red-700 font-bold text-lg leading-none">
                     ×
                   </button>
                 </div>
               ))}
-            </div>     
+            </div>  
+         <div className="flex items-center gap-2 mb-[18px]">
+            <Flag size={18} className={isJuryFlagged ? "text-red-600" : "text-gray-400"}/>
+            <span className="font-medium">Flag :</span>
+            <input type="checkbox" checked={isJuryFlagged}
+              onChange={(e) => {
+                const checked = e.target.checked;
+                setIsJuryFlagged(checked);
+                if (checked) {
+                  setAttachmentMode("juryFlag");
+                  setTimeout(() => textareaRef.current?.focus(), 100);
+                } else {
+                  setJuryFlagComment("");
+                  setAttachmentMode("juryApproval");
+                  setPopupErrors(prev => ({ ...prev, flagComment: "" }));
+                }
+              }}
+              className="w-4 h-4 mt-[1px] accent-red-600 cursor-pointer"/>
+          </div>
+            <textarea ref={textareaRef} rows={3} value={juryFlagComment}
+              onChange={(e) => {
+                const value = e.target.value;
+                setJuryFlagComment(value);
+                if (value.trim()) {
+                  setPopupErrors(prev => ({ ...prev, juryFlagComment: "" }));
+                }
+              }}
+              disabled={!isJuryFlagged}
+              placeholder="Flagged reason here"
+              className={`w-full px-3 py-2 rounded-[6px]
+                ${isJuryFlagged
+                  ? "border border-red-300 bg-red-50"
+                  : "border border-gray-200 bg-gray-100 cursor-not-allowed"}`}/>
+            {juryErrors.comments && (
+              <p className="text-red-600 text-xs mt-1">
+                {juryErrors.comments}
+              </p>
+            )}
+            {isJuryFlagged && (
+          <>
+          <div className="mt-4">
+              <Label.Root className="block text-sm font-medium">
+                Flag Documents 
+                <span className="text-red-500">(Maximum 5 files allowed & File must be below 2 MB)</span>
+              </Label.Root>
+              <label
+                htmlFor="juryflagUpload"
+                className="inline-block bg-gray-100 text-gray-700 border border-gray-300 px-6 py-2 rounded cursor-pointer mt-2 hover:bg-gray-200">
+                Choose File
+              </label>
+              <input
+                id="juryflagUpload"
+                ref={juryFlagFileRef}
+                type="file"
+                multiple
+                onChange={(e) => handleFileUpload(e, "juryFlag")}
+                className="hidden" />
+              {juryFlagFileError && <p className="text-red-500 text-sm mt-1">{juryFlagFileError}</p>}
+            </div>         
+           <div className="mt-3 flex flex-wrap gap-2">
+              {flagJuryDocuments.map((doc: any, index: number) => (
+                <div
+                  key={doc.source === "api" ? doc.fileNameGUID : index}
+                  className="flex items-center gap-2 bg-gray-100 px-3 py-1 rounded-lg shadow-sm border">
+                  <span
+                    className="text-sm truncate max-w-[180px] cursor-pointer text-blue-600 hover:underline"
+                    onClick={() => handleFilePreview(doc)}>
+                    {doc.originalFileName || doc.name}
+                  </span>
+
+                  <button
+                    type="button"
+                    onClick={() => removeFile(doc, index, "juryFlag")}
+                    className="text-red-500 hover:text-red-700 font-bold text-lg leading-none">
+                    ×
+                  </button>
+                </div>
+              ))}
+            </div>
+            </>
+          )} 
+            
         <div className="flex justify-end gap-3 pt-6">
            <button
               onClick={handleCloseDrawer} 
               className="h-[42px] px-6 border border-gray-300 rounded-[6px] text-gray-700">
               Cancel
             </button>
-            <button  onClick={handleSubmitEvaluation}
+            <button  onClick={submitJuryApproval}
              className="h-[44px] px-8 rounded-md shadow btn-theme"> Submit </button>
         </div>
       </div>
@@ -2544,57 +3087,51 @@ return (
         {/* <div className="px-6 py-6 text-sm text-gray-800"> */}
         <div className="px-6 py-6 text-sm text-gray-800 overflow-y-auto h-[calc(100%-70px)]">
           <div className="mb-[18px] flex gap-4 items-end">
-      {/* Status - Left Side */}
-      <div className="flex-1">
-        <label className="block mb-2 font-medium">
-          Status
-        </label>
-        <select 
-          value={status}
-          onChange={(e) => setStatus(e.target.value as "Approved" | "Rejected")}
-          className="w-full h-[42px] px-3 border border-gray-300 rounded-[6px]">
-          <option value="Approved">Approved</option>
-          <option value="Rejected">Rejected</option>
-        </select>
-      </div>
+            {/* Status - Left Side */}
+            <div className="flex-1">
+              <label className="block mb-2 font-medium">
+                Status
+              </label>
+              <select 
+                value={grandStatus}
+                onChange={(e) => setGrandStatus(e.target.value as "Approved" | "Rejected")}
+                className="w-full h-[42px] px-3 border border-gray-300 rounded-[6px]">
+                <option value="Approved">Approved</option>
+                <option value="Rejected">Rejected</option>
+              </select>
+            </div>
 
-       {/* Score - Right Side */}
-      <div className="w-[120px]">
-         <span className="text-gray-500 text-sm">Score</span>
-        <input
-          type="number"
-          min={1}
-          max={100}
-          value={popupScore}
-          onChange={(e) => {
-            const val = e.target.value;
-            setPopupScore(val);
-            if(val.trim()){
-              setPopupErrors(prev=>({
-                ...prev,
-                score:""
-              }));
-            }
-          }}
-          className="w-full h-[42px] px-3 border border-gray-300 rounded-[6px] text-center"
-        />
-      </div>
-    </div>
+            {/* Score - Right Side */}
+            <div className="w-[120px]">
+              <span className="text-gray-500 text-sm">Score</span>
+              <input
+                type="number"
+                min={1}
+                max={100}
+                value={grandScore}
+                onChange={(e) => {
+                  const val = e.target.value;
+                  setGrandScore(val);
+                  if(val.trim()){
+                    setGrandErrors(prev=>({
+                      ...prev,
+                      score:""
+                    }));
+                  }
+                }}
+                className="w-full h-[42px] px-3 border border-gray-300 rounded-[6px] text-center"
+              />
+            </div>
+          </div>
           
           <div className="mb-[18px]">
             <label className="block mb-2 font-medium">
               Comments
             </label>
-            <textarea rows={3} value={popupCommentsGrand}
+            <textarea rows={3} value={grandComments}
               onChange={(e) => {
                 const value = e.target.value;
-                setPopupCommentsGrand(value);
-                if (value.trim()) {
-                  setPopupErrors(prev => ({
-                    ...prev,
-                    comments: ""
-                  }));
-                }
+                setGrandFlagComment(value); 
               }}
               placeholder="Enter your comments"
               className={`w-full px-3 py-2 border rounded-[6px]
@@ -2603,6 +3140,7 @@ return (
               <p className="text-red-600 text-xs mt-1">{popupErrors.comments}</p>
             )}
           </div>
+
            <div className="mb-[18px]">
             <div className="mt-4">
               <Label.Root className="block text-sm font-medium">
@@ -2610,21 +3148,21 @@ return (
                 <span className="text-red-500">(Maximum 5 files allowed & File must be below 2 MB)</span>
               </Label.Root>
               <label
-                htmlFor="approvalUpload"
+                htmlFor="grandUpload"
                 className="inline-block bg-gray-100 text-gray-700 border border-gray-300 px-6 py-2 rounded cursor-pointer mt-2 hover:bg-gray-200">
                 Choose File
               </label>
               <input
-                id="approvalUpload"
-                ref={approvalFileRef}
+                id="grandUpload"
+                ref={grandApprovalFileRef}
                 type="file"
                 multiple
-                onChange={(e) => handleFileUpload(e, "approval")}
+                onChange={(e) => handleFileUpload(e, "grandApproval")}
                 className="hidden" />
-              {approvalFileError  && <p className="text-red-500 text-sm mt-1">{approvalFileError }</p>}
+              {grandApprovalFileError  && <p className="text-red-500 text-sm mt-1">{grandApprovalFileError }</p>}
             </div>         
            <div className="mt-3 flex flex-wrap gap-2">
-              {approvalDocuments.map((doc: any, index: number) => (
+              {approvalGrandDocuments.map((doc: any, index: number) => (
                 <div
                   key={doc.source === "api" ? doc.fileNameGUID : index}
                   className="flex items-center gap-2 bg-gray-100 px-3 py-1 rounded-lg shadow-sm border">
@@ -2636,44 +3174,45 @@ return (
 
                   <button
                     type="button"
-                    onClick={() => removeFile(doc, index, "approval")}
+                    onClick={() => removeFile(doc, index, "grandApproval")}
                     className="text-red-500 hover:text-red-700 font-bold text-lg leading-none">
                     ×
                   </button>
                 </div>
               ))}
             </div>
-             </div> 
+           </div> 
+           
           <div className="flex items-center gap-2 mb-[18px]">
-            <Flag size={18} className={isFlagged ? "text-red-600" : "text-gray-400"}/>
+            <Flag size={18} className={isGrandFlagged ? "text-red-600" : "text-gray-400"}/>
             <span className="font-medium">Flag :</span>
-            <input type="checkbox" checked={isFlagged}
+            <input type="checkbox" checked={isGrandFlagged}
               onChange={(e) => {
                 const checked = e.target.checked;
-                setIsFlagged(checked);
+                setIsGrandFlagged(checked);
                 if (checked) {
-                  setAttachmentMode("flag");
+                  setAttachmentMode("grandFlag");
                   setTimeout(() => textareaRef.current?.focus(), 100);
                 } else {
-                  setFlagComment("");
-                  setAttachmentMode("approval");
+                  setGrandFlagComment("");
+                  setAttachmentMode("grandApproval");
                   setPopupErrors(prev => ({ ...prev, flagComment: "" }));
                 }
               }}
               className="w-4 h-4 mt-[1px] accent-red-600 cursor-pointer"/>
           </div>
-            <textarea ref={textareaRef} rows={3} value={flagComment}
+            <textarea ref={textareaRef} rows={3} value={grandFlagComment}
               onChange={(e) => {
                 const value = e.target.value;
-                setFlagComment(value);
+                setGrandComments(value);
                 if (value.trim()) {
-                  setPopupErrors(prev => ({ ...prev, flagComment: "" }));
+                  setPopupErrors(prev => ({ ...prev, grandFlagComment: "" }));
                 }
               }}
-              disabled={!isFlagged}
+              disabled={!isGrandFlagged}
               placeholder="Flagged reason here"
               className={`w-full px-3 py-2 rounded-[6px]
-                ${isFlagged
+                ${isGrandFlagged
                   ? "border border-red-300 bg-red-50"
                   : "border border-gray-200 bg-gray-100 cursor-not-allowed"}`}/>
             {popupErrors.flagComment && (
@@ -2681,7 +3220,7 @@ return (
                 {popupErrors.flagComment}
               </p>
             )}
-            {isFlagged && (
+            {isGrandFlagged && (
           <>
           <div className="mt-4">
               <Label.Root className="block text-sm font-medium">
@@ -2689,21 +3228,21 @@ return (
                 <span className="text-red-500">(Maximum 5 files allowed & File must be below 2 MB)</span>
               </Label.Root>
               <label
-                htmlFor="flagUpload"
+                htmlFor="grandflagUpload"
                 className="inline-block bg-gray-100 text-gray-700 border border-gray-300 px-6 py-2 rounded cursor-pointer mt-2 hover:bg-gray-200">
                 Choose File
               </label>
               <input
-                id="flagUpload"
-                ref={flagFileRef}
+                id="grandflagUpload"
+                ref={grandFlagFileRef}
                 type="file"
                 multiple
-                onChange={(e) => handleFileUpload(e, "flag")}
+                onChange={(e) => handleFileUpload(e, "grandFlag")}
                 className="hidden" />
               {flagFileError && <p className="text-red-500 text-sm mt-1">{flagFileError}</p>}
             </div>         
            <div className="mt-3 flex flex-wrap gap-2">
-              {flagDocuments.map((doc: any, index: number) => (
+              {flagGrandDocuments.map((doc: any, index: number) => (
                 <div
                   key={doc.source === "api" ? doc.fileNameGUID : index}
                   className="flex items-center gap-2 bg-gray-100 px-3 py-1 rounded-lg shadow-sm border">
@@ -2715,7 +3254,7 @@ return (
 
                   <button
                     type="button"
-                    onClick={() => removeFile(doc, index, "flag")}
+                    onClick={() => removeFile(doc, index, "grandFlag")}
                     className="text-red-500 hover:text-red-700 font-bold text-lg leading-none">
                     ×
                   </button>

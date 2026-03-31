@@ -241,8 +241,8 @@ const Leader = () => {
 
       {/* TABLE */}
       <div className="bg-white shadow rounded-lg p-6">
-        <div className="overflow-x-auto">
-          <table className="min-w-full ">
+           <div className="overflow-x-auto">
+          <table className="min-w-full border border-gray-200">
             <thead className="bg-gray-50 border border-gray-200">
               {table.getHeaderGroups().map((headerGroup) => (
                 <tr key={headerGroup.id}>

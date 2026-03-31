@@ -4,48 +4,69 @@ import NotificationModal from "./Notification/NotificationModal";
 import { useAuth } from "./ContextAPI/AuthContext";
 import { useLocation } from "react-router-dom";
 import axios from "axios";
-
+ 
 // Header Component
 interface HeaderProps {
   onMobileMenuToggle: () => void;
 }
-
+ 
 interface NotificationCount {
   UnReadCount: number;
   TotalRowCount?: number;
   UserID?: number;
 }
-
+ 
 const apiUrl = import.meta.env.VITE_API_URL;
-
+ 
 const Header: React.FC<HeaderProps> = ({ onMobileMenuToggle }) => {
   const [isNotificationOpen, setIsNotificationOpen] = useState(false);
   const [notificationCount, setNotificationCount] =
     useState<NotificationCount | null>(null);
   const [headerNotification, setHeaderNotification] = useState<any[]>([]);
   const { userId } = useAuth();
-
-  const username = localStorage.getItem("username");
-  const email = localStorage.getItem("email");
+ 
+  // const username = localStorage.getItem("username");
+  // const email = localStorage.getItem("email");
   const location = useLocation();
-
+const [userDetail, setUserDetail] = useState<any>(null);
+ 
+const username = userDetail?.[0]?.UserName || localStorage.getItem("username");
+const email = userDetail?.[0]?.Email || localStorage.getItem("email");
   // ----------------------------
   // FETCH NOTIFICATIONS
   // ----------------------------
+  const fetchUserDetail = async () => {
+  try {
+    const token = localStorage.getItem("authToken");
+ 
+    const res = await axios.get(
+      `${apiUrl}/api/users?userId=${userId}`,
+      {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      }
+    );
+ 
+    setUserDetail(res.data);
+  } catch (err) {
+    console.error("❌ Error fetching user detail:", err);
+  }
+};
   const fetchNotifications = async () => {
     try {
       const token = localStorage.getItem("authToken");
       if (!token) throw new Error("No auth token found");
-
+ 
       const res = await axios.get(
         `${apiUrl}/api/notificationcount/${userId}`,
         {
           headers: { Authorization: `Bearer ${token}` },
         }
       );
-
+ 
       setNotificationCount(res.data[0]);
-
+ 
       // Notification List API
       const notificationList = await axios.get(
         `${apiUrl}/api/notificationlog/${userId}`,
@@ -53,7 +74,7 @@ const Header: React.FC<HeaderProps> = ({ onMobileMenuToggle }) => {
           headers: { Authorization: `Bearer ${token}` },
         }
       );
-
+ 
       setHeaderNotification(notificationList.data);
     } catch (err) {
       console.error("❌ Error fetching notifications:", err);
@@ -63,13 +84,12 @@ const Header: React.FC<HeaderProps> = ({ onMobileMenuToggle }) => {
 //    fetchNotifications();
 //   }, []);
   // Run only when userId is available (NO infinite loop)
-  useEffect(() => {
-    if (userId) 
-    {
-      fetchNotifications();
-    }
-  }, [userId]);
-
+useEffect(() => {
+  if (userId) {
+    fetchNotifications();
+    fetchUserDetail();
+  }
+}, [userId]);
 const headerTitleMap: Record<string, string> = {
   // "my-nominations": "My Nomination Details",
   // "other-nominations": "Other Nomination Details",
@@ -85,7 +105,7 @@ const headerTitleMap: Record<string, string> = {
   const getHeaderTitle = () => {
   const from = location.state?.from;
   const tab = location.state?.tab;
-
+ 
     if (from === "nominations") {
       return tab === "others"
         ? "Other Nomination Details"
@@ -94,7 +114,7 @@ const headerTitleMap: Record<string, string> = {
     else if (from && headerTitleMap[from]) {
       return headerTitleMap[from];
     }
-
+ 
     switch (location.pathname) {
       case "/home":
         return "Dashboard";
@@ -116,7 +136,7 @@ const headerTitleMap: Record<string, string> = {
      case "/approvals":
         return "Manager Approval";
       case "/other-nomination":
-        return "Other Nomination"; 
+        return "Other Nomination";
       case "/business-jury":
         return "Business Jury";
       case "/president-unit":
@@ -139,7 +159,7 @@ const headerTitleMap: Record<string, string> = {
         return "Nomination Management";
     }
   };
-
+ 
   return (
     <div className="bg-white shadow-lg z-1 px-4 sm:px-6 lg:px-8 py-3 flex items-center justify-between">
       {/* Mobile Menu Button */}
@@ -154,7 +174,7 @@ const headerTitleMap: Record<string, string> = {
           {getHeaderTitle()}
         </h1>
       </div>
-
+ 
       <div className="flex items-center space-x-3 sm:space-x-5">
         {/* Notification Icon */}
         <div
@@ -168,12 +188,12 @@ const headerTitleMap: Record<string, string> = {
                 {notificationCount.UnReadCount > 99 ? "99+" : notificationCount.UnReadCount}
               </span>
             )}
-
+ 
         </div>
-
+ 
         {/* Profile Section */}
        <div className="flex items-center space-x-3 cursor-pointer hover:bg-gray-50 px-2 sm:px-3 py-2 rounded-lg transition-colors group">
-
+ 
   {/* Avatar ONLY – increased */}
   <div
     className="w-9 h-9 sm:w-11 sm:h-11
@@ -186,27 +206,27 @@ const headerTitleMap: Record<string, string> = {
   >
     {username ? username.trim().charAt(0).toUpperCase() : ""}
   </div>
-
+ 
   {/* Text unchanged */}
   <div className="text-sm hidden sm:block min-w-0 flex-1">
     <div className="font-semibold text-gray-800 truncate">{username}</div>
     <div className="text-gray-500 text-xs truncate">{email}</div>
   </div>
-
+ 
 </div>
-
+ 
       </div>
-
+ 
       {/* Notification Modal */}
       <NotificationModal
         isOpen={isNotificationOpen}
         onClose={() => setIsNotificationOpen(false)}
         notifications={headerNotification}
-        notificationcount={fetchNotifications} // fix part 
-        // notificationcount={fetchNotifications()} 
+        notificationcount={fetchNotifications} // fix part
+        // notificationcount={fetchNotifications()}
       />
     </div>
   );
 };
-
+ 
 export default Header;
