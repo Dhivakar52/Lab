@@ -817,17 +817,26 @@ const PostCard: React.FC<PostCardProps> = ({ posts, setPosts }) => {
                     </div>
                   </div>
                   {isCommentOpen && (
+                    // <FeedComment
+                    //   post={post}
+                    //   username={username || ""}
+                    //   comments={nestedComments}
+                    //   commentText={commentText[NominationID] || ""}
+                    //   setCommentText={(v) =>
+                    //     setCommentText((prev) => ({ ...prev, [NominationID]: v }))
+                    //   }
+                    //   handleAddComment={() => handleAddComment(post)}
+                    //   handleReply={handleReply}
+                    // />
                     <FeedComment
-                      post={post}
-                      username={username || ""}
-                      comments={nestedComments}
-                      commentText={commentText[NominationID] || ""}
-                      setCommentText={(v) =>
-                        setCommentText((prev) => ({ ...prev, [NominationID]: v }))
-                      }
-                      handleAddComment={() => handleAddComment(post)}
-                      handleReply={handleReply}
-                    />)}
+                        post={post}
+                        username={username || ""}
+                        commentText={commentText[NominationID] || ""}
+                        setCommentText={(v) =>
+                          setCommentText((prev) => ({ ...prev, [NominationID]: v }))
+                        }
+                    />
+                    )}
                 </div>
               </div>
             </div>
