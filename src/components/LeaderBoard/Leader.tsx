@@ -37,12 +37,14 @@ const Leader = () => {
 
   const [data, setData] = useState<LeaderboardItem[]>([]);
   const [loading, setLoading] = useState(true);
-  const [globalFilter, setGlobalFilter] = useState("");
+  // ❌ Search removed
+// const [globalFilter, setGlobalFilter] = useState("");
   const [awardcategory, setCategory] = useState<CategoryData[]>([]);
   const [selectedCategory, setSelectedCategory] = useState("");
-  const [totalCount, setTotalCount] = useState(0); 
+  const [sortBy, setSortBy] = useState("score");
+  const [totalCount, setTotalCount] = useState(0);
 
-  // ✅ Fetch leaderboard
+  // Fetch leaderboard
   const fetchLeaderboard = useCallback(async () => {
     if (!authToken) return;
 
@@ -60,7 +62,7 @@ const Leader = () => {
     }
   }, [authToken]);
 
-  // ✅ Fetch category
+  // Fetch category
   const fetchCategory = async () => {
     try {
       const res = await axios.get(`${apiUrl}/api/awardCategory`, {
@@ -77,14 +79,22 @@ const Leader = () => {
     fetchCategory();
   }, [fetchLeaderboard]);
 
-  // ✅ Sort
+  // Sort
   const sortedData = useMemo(() => {
-    return [...data].sort(
-      (a, b) => b.AvgBusinessJuryScore - a.AvgBusinessJuryScore
-    );
-  }, [data]);
+    const sorted = [...data];
 
-  // ✅ Filter
+    if (sortBy === "likes") {
+      sorted.sort((a, b) => b.LikesCount - a.LikesCount);
+    } else if (sortBy === "comments") {
+      sorted.sort((a, b) => b.CommentsCount - a.CommentsCount);
+    } else {
+      sorted.sort((a, b) => b.AvgBusinessJuryScore - a.AvgBusinessJuryScore);
+    }
+
+    return sorted;
+  }, [data, sortBy]);
+
+  // Filter
   const filteredData = useMemo(() => {
     if (!selectedCategory) return sortedData;
     return sortedData.filter(
@@ -92,31 +102,25 @@ const Leader = () => {
     );
   }, [sortedData, selectedCategory]);
 
-  // ✅ Top3 + Table
+  // Top 3 (for cards only)
   const top3 = useMemo(() => filteredData.slice(0, 3), [filteredData]);
-  const tableData = useMemo(() => filteredData.slice(3), [filteredData]);
+
+  // ✅ Table uses FULL data
+  const tableData = useMemo(() => filteredData, [filteredData]);
 
   // Columns
   const columns = useMemo<ColumnDef<LeaderboardItem>[]>(() => [
     {
       header: "#Rank",
       cell: ({ row, table }) => {
-      //   const pageIndex = table.getState().pagination.pageIndex;
-      //   const pageSize = table.getState().pagination.pageSize;
-      //  // return  pageSize + row.index + 1 + top3.length;
-      //    const globalRowIndex = (pageIndex ) + row.index;
-      //    return -1+ globalRowIndex + 1 + top3.length;
-      const { pageIndex, pageSize } = table.getState().pagination;
-
-      const globalIndex = pageIndex   + row.index;
-
-      
-      return globalIndex + 4;
+        const { pageIndex, pageSize } = table.getState().pagination;
+        const globalIndex = pageIndex  + row.index;
+        return globalIndex + 1;
       },
     },
     {
       accessorKey: "Name",
-      id: "Name", 
+      id: "Name",
       header: "Name",
       cell: ({ row }) => (
         <div className="flex items-center gap-3">
@@ -170,20 +174,16 @@ const Leader = () => {
         </span>
       ),
     },
-  ], [top3.length]);
+  ], []);
 
-  // ✅ Table
   const table = useReactTable({
     data: tableData,
     columns,
-    state: { globalFilter },
-    onGlobalFilterChange: setGlobalFilter,
+    // ❌ Removed global filter
     getCoreRowModel: getCoreRowModel(),
-    getFilteredRowModel: getFilteredRowModel(),
     getPaginationRowModel: getPaginationRowModel(),
   });
 
-  // ✅ Reset page on filter change
   useEffect(() => {
     table.setPageIndex(0);
   }, [selectedCategory]);
@@ -194,23 +194,22 @@ const Leader = () => {
 
   return (
     <div className="p-6">
-      {/* HEADER */}
       <div className="flex justify-between items-center mb-6">
         <h1 className="text-xl font-semibold">Leaderboard</h1>
 
         <div className="flex gap-3 items-center">
-          {/* SEARCH */}
-          <div className="relative">
-            <Search className="absolute left-3 top-2.5 w-4 h-4 text-gray-400" />
-            <input
-              value={globalFilter}
-              onChange={(e) => setGlobalFilter(e.target.value)}
-              placeholder="Search..."
-              className="pl-10 pr-4 py-2 border border-gray-300 rounded-md text-sm"
-            />
-          </div>
+          {/* ❌ Search removed */}
+           {/* SORT DROPDOWN */}
+          <select
+            value={sortBy}
+            onChange={(e) => setSortBy(e.target.value)}
+            className="px-3 py-2 border border-gray-300 rounded-md text-sm"
+          >
+            <option value="score">Sort by Score</option>
+            <option value="likes">Sort by Likes</option>
+            <option value="comments">Sort by Comments</option>
+          </select>
 
-          {/* DROPDOWN */}
           <select
             value={selectedCategory}
             onChange={(e) => setSelectedCategory(e.target.value)}
@@ -223,6 +222,8 @@ const Leader = () => {
               </option>
             ))}
           </select>
+
+         
         </div>
       </div>
 
@@ -234,14 +235,14 @@ const Leader = () => {
             rank={index === 0 ? "1st" : index === 1 ? "2nd" : "3rd"}
             name={item.Name}
             org={item.CategoryName}
-            score={item.AvgBusinessJuryScore} 
+            score={item.AvgBusinessJuryScore}
           />
         ))}
       </div>
 
       {/* TABLE */}
       <div className="bg-white shadow rounded-lg p-6">
-           <div className="overflow-x-auto">
+        <div className="overflow-x-auto">
           <table className="min-w-full border border-gray-200">
             <thead className="bg-gray-50 border border-gray-200">
               {table.getHeaderGroups().map((headerGroup) => (
@@ -267,7 +268,7 @@ const Leader = () => {
 
             <tbody>
               {table.getRowModel().rows.map((row) => (
-                <tr key={row.id} className="hover:bg-gray-50 transition border-gray-200">
+                <tr key={row.id} className="hover:bg-gray-50 border-gray-200">
                   {row.getVisibleCells().map((cell) => (
                     <td
                       key={cell.id}
@@ -288,10 +289,10 @@ const Leader = () => {
             </tbody>
           </table>
 
-          {/* PAGINATION */}
-          
-           <Pagination  table={table}  totalCount={ globalFilter  ? table.getFilteredRowModel().rows.length : totalCount }  />
-        </div>
+          <Pagination
+            table={table}
+            totalCount={totalCount}
+          />        </div>
       </div>
     </div>
   );
