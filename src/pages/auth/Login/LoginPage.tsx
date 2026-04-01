@@ -51,7 +51,7 @@ export default function Login({ setUserRole }: LoginProps) {
       });
  
       const data = await res.json();
-      console.log("Data",data)
+      console.log(" login Data",data)
       if (!res.ok) {
         showMessage(data.message || "Invalid email or password", "error");
         return;
@@ -65,6 +65,7 @@ export default function Login({ setUserRole }: LoginProps) {
       const username = data.username ?? data.userName ?? data?.result?.username;
       const userEmail = data.email ?? data.userEmail ?? data?.result?.email;
        const tenantname = data.tenantname ?? data.tenantname ?? data?.result?.tenantname;
+       const primaryfield = data.primaryfield ?? data.primaryfield ?? data?.result?.primaryfield;
        console.log(data.tenantname)
  
       if (!token) {
@@ -96,6 +97,7 @@ export default function Login({ setUserRole }: LoginProps) {
       localStorage.setItem("email", userEmail ?? "");
       localStorage.setItem("userRole", role_user);
        localStorage.setItem("tenantname", tenantname);
+      localStorage.setItem("primaryfield", primaryfield);
  
       setUserRole(role_user);
       showMessage("Login successful!", "success");
@@ -190,6 +192,7 @@ console.log(data);
     const userEmail = data.email;
     const refreshToken = data.refreshtoken;
     const tenantname = data.tenantname;
+      const primaryfield = data.primaryfield;
 
     let role_user: UserRole;
       switch (Number(roleid)) {
@@ -208,6 +211,8 @@ console.log(data);
     localStorage.setItem("username", username ?? "");
     localStorage.setItem("email", userEmail ?? "");
     localStorage.setItem("userRole", role_user);
+    localStorage.setItem("tenantname", tenantname);
+    localStorage.setItem("primaryfield", primaryfield);
 
     setUserRole(role_user);
 
