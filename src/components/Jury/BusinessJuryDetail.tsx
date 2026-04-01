@@ -222,7 +222,6 @@ const currentStage =
  
   const fetchNominationDetails = async () => {
     try {
-      debugger;
       const res = await axios.get(
     `${apiUrl}/api/jurylevelnomination/${nominationId}/${userId}`, 
       {
@@ -231,7 +230,6 @@ const currentStage =
         },
       }
     );
-    debugger;
       const result = Array.isArray(res.data)
         ? res.data[0] : res.data;
  
@@ -243,7 +241,6 @@ const currentStage =
         (r: any) =>
           r.ReferralUserID === userId && r.Status === "Rejected"
       );
-      debugger;
       setIsFlowStopped(hasRejectedReferral);
       setData(result);
       setReferrals(result.Referrals || []);
@@ -729,7 +726,7 @@ const uploadFilesToServer = async (files: File[]) => {
     }
   }
 
-  if (isFlagged && !flagComment.trim()) {
+  if (isGrandFlagged  && !grandFlagComment.trim()) {
     errs.flagComment = "Flag reason required";
     ok = false;
   }
@@ -780,13 +777,13 @@ const level3 = approvalData?.find((l: ApprovalItem) => l.ApprovalFlow === "Level
 const showReferral = currentStage === "referral";
 
 const showManager =
-  currentStage === "manager" || level1?.Status === "Approved";
+  currentStage === "manager" || level1?.Status === "Approved" || level1?.Status === "Rejected";
 
 const showJury =
-  currentStage === "jury" || level2?.Status === "Approved";
+  currentStage === "jury" || level2?.Status === "Approved"  || level2?.Status === "Rejected";;
 
 const showGrand =
-  currentStage === "grand" || level3?.Status === "Approved";
+  currentStage === "grand" || level3?.Status === "Approved"  || level3?.Status === "Rejected";;
 
 const isReferralEditable = (ref: any) =>
   currentStage === "referral" && ref.ReferralUserID === userId;
@@ -801,36 +798,40 @@ const isGrandEditable =
   currentStage === "grand" && userRole === "President";
 
 const isManagerDisabled = currentStage !== "manager" || level2?.Status === "Approved";
-const isJuryDisabled = currentStage !== "jury" || level3?.Status === "Approved";
-const isGrandDisabled = currentStage !== "grand";
+const isJuryDisabled = currentStage !== "jury" ||level1?.Status === "Not Started" 
+|| level3?.Status === "Approved" || level1?.Status === "Rejected";
+const isGrandDisabled = currentStage !== "grand" || level2?.Status === "Not Started" || level2?.Status === "Rejected";
 
 const flagDetails =safeParse(level1?.Flagdetails);
 const juryFlagDetails =safeParse(level2?.Flagdetails);
 const GrandJuryflagDetails =safeParse(level3?.Flagdetails);
 const flagData = flagDetails?.[0]; 
 const flagBusinessJuryData=juryFlagDetails?.[0];
+debugger;
 const flagGrandJuryData=GrandJuryflagDetails?.[0];
-const approvalCommentText = approvalData?.[0]?.ApprovalComments || "";
-const juryApprovalCommentText=approvalData?.[1]?.ApprovalComments||"";
-const GrandJuryCommentText = approvalData?.[2]?.ApprovalComments || "";
+// const approvalCommentText = approvalData?.[0]?.ApprovalComments || "";
+// const juryApprovalCommentText=approvalData?.[1]?.ApprovalComments||"";
+// const GrandJuryCommentText = level3?.ApprovalComments || "";
+const level1Comment = level1?.ApprovalComments || "";
+const level2Comment = level2?.ApprovalComments || "";
+const level3Comment = level3?.ApprovalComments || "";
 
-const isApprovalTruncated = approvalCommentText.length > 160;
-const isJuryApprovalTruncated=juryApprovalCommentText.length>160;
-const isGrandJuryTruncated = GrandJuryCommentText.length > 160;
+const isApprovalTruncated = level1Comment.length > 160;
+const isJuryApprovalTruncated=level2Comment.length>160;
+const isGrandJuryTruncated = level3Comment.length > 160;
 
 const displayApprovalComment = getTruncatedText(
-  approvalCommentText,
+  level1Comment,
   expandedApprovalComments,
   160
 );
 const displayJuryApprovalComment = getTruncatedText(
-  juryApprovalCommentText,
+  level2Comment,
   expandedApprovalComments,
   160
 );
-
 const displayGrandJuryComment = getTruncatedText(
-  GrandJuryCommentText,
+  level3Comment,
   expandedApprovalComments,
   160
 );
@@ -929,6 +930,10 @@ const resetApproveDrawer = () => {
     comments: "",
     flagComment: ""
   });
+  setPopupCommentsJury("");
+  setPopupCommentsGrand("");
+  setJuryFlagComment("");
+  setGrandFlagComment("");
   setStatus("Approved");
   setPopupComments("");
   setIsFlagged(false);
@@ -1054,14 +1059,107 @@ const handleManagerApprove = () => {
   setOpenApprove(true);
 };
 
+const handleJuryApprove = () => {
+  if (!level2) return;
+
+  const isAlreadySaved = !!level2?.ApprovedAt;
+  setIsEditMode(isAlreadySaved);
+
+  setStatus(level2.Status === "Rejected" ? "Rejected" : "Approved");
+  setPopupCommentsJury(level2.ApprovalComments || "");
+  setPopupScore(level2.ApprovalScore || "");
+
+  let parsedFlag = null;
+  try {
+    const parsed = level2.Flagdetails ? JSON.parse(level2.Flagdetails) : [];
+    parsedFlag = parsed?.[0];
+  } catch {
+    parsedFlag = null;
+  }
+
+  const isFlag = Number(parsedFlag?.Flag) === 1;
+  setIsFlagged(isFlag);
+  setFlagComment(parsedFlag?.FlagReason || "");
+
+  let parsedApprovalAttachments: any[] = [];
+  try {
+    parsedApprovalAttachments = level2.ApprovalAttachment
+      ? JSON.parse(level2.ApprovalAttachment)
+      : [];
+  } catch {
+    parsedApprovalAttachments = [];
+  }
+
+  const approvalDocs = parsedApprovalAttachments.map((file: any) => ({
+    source: "api",
+    AttachmentID: file.AttachmentsID,
+    fileNameGUID: file.AttachmentNameGUID,
+    originalFileName: file.OriginalAttachmentName,
+    fileType: file.AttachmentFileType,
+    fileUrl: file.AttachmentPath,
+    fileSize: file.AttachmentSize
+  }));
+
+  setExistingJuryApprovalDocs(approvalDocs);
+  let parsedFlagAttachments: any[] = [];
+  try {
+    parsedFlagAttachments = level2.FlagAttachment
+      ? JSON.parse(level2.FlagAttachment)
+      : [];
+  } catch {
+    parsedFlagAttachments = [];
+  }
+
+  const flagDocs = parsedFlagAttachments.map((file: any) => ({
+    source: "api",
+    AttachmentID: file.AttachmentsID,
+    fileNameGUID: file.AttachmentNameGUID,
+    originalFileName: file.OriginalAttachmentName,
+    fileType: file.AttachmentFileType,
+    fileUrl: file.AttachmentPath,
+    fileSize: file.AttachmentSize
+  }));
+
+  setExistingJuryFlagDocs(flagDocs);
+  try {
+    const bj = approvalData.find(
+      (a: any) => a.ApprovalType === "Business Jury"
+    );
+
+    const parsed = bj?.JuryMember ? JSON.parse(bj.JuryMember) : [];
+
+    const currentUser = parsed.find(
+      (j: any) => j.BusinessJuryID === userId
+    );
+
+    if (currentUser?.AttributeScore) {
+      const mappedScores = currentUser.AttributeScore.map((s: any) => ({
+        weightId: s.WeightageID,
+        title: s.AttributeName,
+        score: s.Score,
+        comment: s.Comments,
+        juryScoresID: s.JuryScoresID
+      }));
+
+      setScores(mappedScores);
+    } else {
+      setScores(structuredClone(DEFAULT_SCORE_ITEMS));
+    }
+  } catch {
+    setScores(structuredClone(DEFAULT_SCORE_ITEMS));
+  }
+
+  setOpenScore(true);
+};
+
 const handleGrandJuryApprove = () => {
   if (!level3) return;
   const isAlreadySaved = !!level3.ApprovedAt;
 
   setIsEditMode(isAlreadySaved);
-  setStatus(level3.Status === "Rejected" ? "Rejected" : "Approved");
+  setGrandStatus(level3.Status === "Rejected" ? "Rejected" : "Approved");
   setPopupCommentsGrand(level3.ApprovalComments || "");
-  setPopupScore(level3.ApprovalScore || "");
+  setGrandScore(level3.ApprovalScore || "");
 
   let parsedGrandFlag = null;
   try {
@@ -1072,8 +1170,8 @@ const handleGrandJuryApprove = () => {
   }
 
   const isFlag = Number(parsedGrandFlag?.Flag) === 1;
-  setIsFlagged(isFlag);
-  setFlagComment(parsedGrandFlag?.FlagReason || "");
+  setIsGrandFlagged(isFlag);
+  setGrandFlagComment(parsedGrandFlag?.FlagReason || "");
 
   let parsedGrandFlagAttachments: any[] = [];
   try {
@@ -1260,98 +1358,6 @@ const submitManagerApproval = async () => {
   }
 };
 
-const handleJuryApprove = () => {
-  if (!level2) return;
-
-  const isAlreadySaved = !!level2?.ApprovedAt;
-  setIsEditMode(isAlreadySaved);
-
-  setStatus(level2.Status === "Rejected" ? "Rejected" : "Approved");
-  setPopupCommentsJury(level2.ApprovalComments || "");
-  setPopupScore(level2.ApprovalScore || "");
-
-  let parsedFlag = null;
-  try {
-    const parsed = level2.Flagdetails ? JSON.parse(level2.Flagdetails) : [];
-    parsedFlag = parsed?.[0];
-  } catch {
-    parsedFlag = null;
-  }
-
-  const isFlag = Number(parsedFlag?.Flag) === 1;
-  setIsFlagged(isFlag);
-  setFlagComment(parsedFlag?.FlagReason || "");
-
-  let parsedApprovalAttachments: any[] = [];
-  try {
-    parsedApprovalAttachments = level2.ApprovalAttachment
-      ? JSON.parse(level2.ApprovalAttachment)
-      : [];
-  } catch {
-    parsedApprovalAttachments = [];
-  }
-
-  const approvalDocs = parsedApprovalAttachments.map((file: any) => ({
-    source: "api",
-    AttachmentID: file.AttachmentsID,
-    fileNameGUID: file.AttachmentNameGUID,
-    originalFileName: file.OriginalAttachmentName,
-    fileType: file.AttachmentFileType,
-    fileUrl: file.AttachmentPath,
-    fileSize: file.AttachmentSize
-  }));
-
-  setExistingJuryApprovalDocs(approvalDocs);
-  let parsedFlagAttachments: any[] = [];
-  try {
-    parsedFlagAttachments = level2.FlagAttachment
-      ? JSON.parse(level2.FlagAttachment)
-      : [];
-  } catch {
-    parsedFlagAttachments = [];
-  }
-
-  const flagDocs = parsedFlagAttachments.map((file: any) => ({
-    source: "api",
-    AttachmentID: file.AttachmentsID,
-    fileNameGUID: file.AttachmentNameGUID,
-    originalFileName: file.OriginalAttachmentName,
-    fileType: file.AttachmentFileType,
-    fileUrl: file.AttachmentPath,
-    fileSize: file.AttachmentSize
-  }));
-
-  setExistingJuryFlagDocs(flagDocs);
-  try {
-    const bj = approvalData.find(
-      (a: any) => a.ApprovalType === "Business Jury"
-    );
-
-    const parsed = bj?.JuryMember ? JSON.parse(bj.JuryMember) : [];
-
-    const currentUser = parsed.find(
-      (j: any) => j.BusinessJuryID === userId
-    );
-
-    if (currentUser?.AttributeScore) {
-      const mappedScores = currentUser.AttributeScore.map((s: any) => ({
-        weightId: s.WeightageID,
-        title: s.AttributeName,
-        score: s.Score,
-        comment: s.Comments,
-        juryScoresID: s.JuryScoresID
-      }));
-
-      setScores(mappedScores);
-    } else {
-      setScores(structuredClone(DEFAULT_SCORE_ITEMS));
-    }
-  } catch {
-    setScores(structuredClone(DEFAULT_SCORE_ITEMS));
-  }
-
-  setOpenScore(true);
-};
 
 const submitJuryApproval = async () => {
   if (!validateEvaluation("jury")) return;
@@ -1522,8 +1528,8 @@ const submitGrandJuryApproval = async () => {
     const flags = {
       NominationFlagsID: flagGrandJuryData?.NominationFlagsID || 0,
       NominationID: Number(nominationId),
-      IsFlag: isFlagged ? true: false,
-      FlagReason: isFlagged ? flagComment : "",
+      IsFlag: isGrandFlagged  ? true: false,
+      FlagReason: isGrandFlagged  ? grandFlagComment  : "",
       CreatedBy: userId,
       UpdatedBy: userId
     };
@@ -1534,7 +1540,7 @@ const submitGrandJuryApproval = async () => {
       PresidentID:userId,
       IsPresidentApproved: status === "Approved",
       PresidentComments: popupCommentsGrand,
-      PresidentScore:popupScore,
+      PresidentScore: grandScore ? Number(grandScore) : 0,
       Active:true,
       CreatedBy: userId,
       UpdatedBy: userId
@@ -1569,7 +1575,7 @@ const submitGrandJuryApproval = async () => {
         UpdatedBy: userId
       })),
 
-      ...(isFlagged
+      ...(isGrandFlagged
         ? existingGrandFlagDocs
             .filter(doc => !doc.isDeleted)
             .map(doc => ({  
@@ -1586,7 +1592,7 @@ const submitGrandJuryApproval = async () => {
             }))
         : []),
 
-      ...(isFlagged
+      ...(isGrandFlagged
         ? uploadedGrandFlagDocs.map(f => ({
             AttachmentsID: 0,
             NominationID: Number(nominationId),
@@ -2031,7 +2037,6 @@ return (
       </div>
     </div>
   </div>
-  {showReferral &&
   <div className="bg-white rounded-xl border border-gray-200 shadow-sm p-6 mt-6">
     <h3 className="text-sm font-semibold text-gray-900 mb-4">
       Referral Information
@@ -2127,8 +2132,7 @@ return (
     <p className="text-gray-500 text-sm">No referral details</p>
   )}
   </div>
-  }
-  {!isFlowStopped && (
+  {!isFlowStopped && !showReferral && (
     <div className="bg-white rounded-xl border border-gray-200 shadow-sm p-6 mt-6">
       <h2 className="text-base font-semibold mb-6">
         Nomination Status Flow
@@ -3131,10 +3135,10 @@ return (
             <label className="block mb-2 font-medium">
               Comments
             </label>
-            <textarea rows={3} value={grandComments}
+            <textarea rows={3} value={popupCommentsGrand}
               onChange={(e) => {
                 const value = e.target.value;
-                setGrandFlagComment(value); 
+                setPopupCommentsGrand(value); 
               }}
               placeholder="Enter your comments"
               className={`w-full px-3 py-2 border rounded-[6px]
@@ -3143,7 +3147,6 @@ return (
               <p className="text-red-600 text-xs mt-1">{popupErrors.comments}</p>
             )}
           </div>
-
            <div className="mb-[18px]">
             <div className="mt-4">
               <Label.Root className="block text-sm font-medium">
@@ -3185,7 +3188,6 @@ return (
               ))}
             </div>
            </div> 
-           
           <div className="flex items-center gap-2 mb-[18px]">
             <Flag size={18} className={isGrandFlagged ? "text-red-600" : "text-gray-400"}/>
             <span className="font-medium">Flag :</span>
@@ -3207,9 +3209,9 @@ return (
             <textarea ref={textareaRef} rows={3} value={grandFlagComment}
               onChange={(e) => {
                 const value = e.target.value;
-                setGrandComments(value);
+                setGrandFlagComment(value);
                 if (value.trim()) {
-                  setPopupErrors(prev => ({ ...prev, grandFlagComment: "" }));
+                  setPopupErrors(prev => ({ ...prev, flagComment: "" }));
                 }
               }}
               disabled={!isGrandFlagged}
