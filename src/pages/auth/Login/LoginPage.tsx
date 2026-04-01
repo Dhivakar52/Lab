@@ -64,8 +64,8 @@ export default function Login({ setUserRole }: LoginProps) {
       const userid = data.userid ?? data.userId ?? data?.result?.userid;
       const username = data.username ?? data.userName ?? data?.result?.username;
       const userEmail = data.email ?? data.userEmail ?? data?.result?.email;
-       const tenantname = data.tenantname ?? data.tenantname ?? data?.result?.tenantname;
-       const primaryfield = data.primaryfield ?? data.primaryfield ?? data?.result?.primaryfield;
+      const tenantname = data.tenantname ?? data.tenantname ?? data?.result?.tenantname;
+      const primaryfield = data.primaryfield ?? data.primaryfield ?? data?.result?.primaryfield;
        console.log(data.tenantname)
  
       if (!token) {
