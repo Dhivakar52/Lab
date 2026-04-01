@@ -157,9 +157,7 @@ const BusinessJuryDetail: React.FC<BusinessJuryDetailProps> = ({
   const [openDocPopup, setOpenDocPopup] = useState(false);
   const [selectedDocs, setSelectedDocs] = useState<any[]>([]);
   const [isFlowStopped, setIsFlowStopped] = useState(false);
-  const [juryComments, setJuryComments] = useState("");
   const [isJuryFlagged, setIsJuryFlagged] = useState(false);
-  const [grandComments, setGrandComments] = useState("");
   const [isGrandFlagged, setIsGrandFlagged] = useState(false);
   const [juryStatus, setJuryStatus] = useState<"Approved" | "Rejected">("Approved");
   const [juryScore, setJuryScore] = useState("");
@@ -697,7 +695,6 @@ const uploadFilesToServer = async (files: File[]) => {
         errs.comment[i] = "Comment required";
         ok = false;
       }
-     
     });
   }
 
@@ -725,15 +722,15 @@ const uploadFilesToServer = async (files: File[]) => {
     }
   }
 
-  if (isGrandFlagged  && !grandFlagComment.trim()) {
+  if (isFlagged  && !flagComment.trim()) {
     errs.flagComment = "Flag reason required";
     ok = false;
   }
-else if (isFlagged && juryFlagComment.trim()) {
+else if (isJuryFlagged && !juryFlagComment.trim()) {
     errs.juryFlagComment = "Flag reason required";
     ok = false;
   }
-  else if (isFlagged && grandFlagComment.trim()) {
+  else if (isGrandFlagged && !grandFlagComment.trim()) {
     errs.grandFlagComment = "Flag reason required";
     ok = false;
   }
@@ -884,7 +881,6 @@ const avgScore = avgScoreData?.[0]?.JuryMemberAvgScore || 0;
 const attributeData = level2;
 
 const juryList: JuryItem[] = getBusinessJuryEvaluations().map((j: any) => {
-  console.log("JURY RAW 👉", j); 
   return {
     Juryname: j.JuryMemberName || "-",
     SubmittedDate: j.SubmittedDate || "-",
@@ -893,7 +889,7 @@ const juryList: JuryItem[] = getBusinessJuryEvaluations().map((j: any) => {
       j.AttributeAvg?.[0]?.TotalScore ||
       j.Score ||0,
     Flag: Array.isArray(j.FlagDetails) && j.FlagDetails.length > 0 ? 1 : 0,
-    Attributes: (j.AttributeScore || []).map((a: any) => ({
+    Attributes: (j.BusinessJuryAttributeScore || []).map((a: any) => ({
       AttributeName: a.AttributeName || a.WeightageName || "-",
       Score: a.Score ?? 0,
       Comments: a.Comments || a.Comment || "-"
@@ -1074,24 +1070,25 @@ const handleManagerApprove = () => {
 const handleJuryApprove = () => {
   if (!level2) return;
 
-  const isAlreadySaved = !!level2?.ApprovedAt;
+  const isAlreadySaved = level2.BusinessJuryAttributeScore&& level2.BusinessJuryAttributeScore !== "[]";
+  console.log("isAlreadySaved", isAlreadySaved);
   setIsEditMode(isAlreadySaved);
 
-  setStatus(level2.Status === "Rejected" ? "Rejected" : "Approved");
+  setJuryStatus(level2.Status === "Rejected" ? "Rejected" : "Approved");
   setPopupCommentsJury(level2.ApprovalComments || "");
-  setPopupScore(level2.ApprovalScore || "");
+  setJuryScore(level2.ApprovalScore || "");
 
-  let parsedFlag = null;
+  let parsedJuryFlag = null;
   try {
     const parsed = level2.Flagdetails ? JSON.parse(level2.Flagdetails) : [];
-    parsedFlag = parsed?.[0];
+    parsedJuryFlag = parsed?.[0];
   } catch {
-    parsedFlag = null;
+    parsedJuryFlag = null;
   }
 
-  const isFlag = Number(parsedFlag?.Flag) === 1;
-  setIsFlagged(isFlag);
-  setJuryFlagComment(parsedFlag?.FlagReason || "");
+  const isJuryFlag = Number(parsedJuryFlag?.Flag) === 1;
+  setIsJuryFlagged(isJuryFlag);
+  setJuryFlagComment(parsedJuryFlag?.FlagReason || "");
 
   let parsedJuryApprovalAttachments: any[] = [];
   try {
@@ -1102,20 +1099,7 @@ const handleJuryApprove = () => {
     parsedJuryApprovalAttachments = [];
   }
 
-    const attributeData = safeParse(level2?.BusinessJuryAttributeScore);
 
-const mappedScores: ScoreItem[] = attributeData.map((a: any) => ({
-  weightId: a.ScoreWeightageID,
-  title: a.AttributeName,
-  score: a.Score,
-  comment: a.Comments || ""
-}));
-
-if (attributeData.length > 0) {
-  setScores(mappedScores);
-} else {
-  setScores(structuredClone(DEFAULT_SCORE_ITEMS));
-}
   const approvalJuryDocs = parsedJuryApprovalAttachments.map((file: any) => ({
     source: "api",
     AttachmentID: file.AttachmentsID,
@@ -1148,29 +1132,23 @@ if (attributeData.length > 0) {
 
   setExistingJuryFlagDocs(flagJuryDocs);
   try {
-    const bj = approvalData.find(
-      (a: any) => a.ApprovalType === "Business Jury"
-    );
+    
+        
+  const parsed = safeParse(level2?.BusinessJuryAttributeScore);
 
-    const parsed = bj?.JuryMember ? JSON.parse(bj.JuryMember) : [];
+  if (parsed.length > 0) {
+    const mappedScores = parsed.map((a: any) => ({
+      weightId: a.ScoreWeightageID,
+      title: a.AttributeName,
+      score: a.Score,
+      comment: a.Comments || ""
+    }));
 
-    const currentUser = parsed.find(
-      (j: any) => j.BusinessJuryID === userId
-    );
+    setScores(mappedScores);
+  } else {
+    setScores(structuredClone(DEFAULT_SCORE_ITEMS));
+  }
 
-    if (currentUser?.AttributeScore) {
-      const mappedScores = currentUser.AttributeScore.map((s: any) => ({
-        weightId: s.WeightageID,
-        title: s.AttributeName,
-        score: s.Score,
-        comment: s.Comments,
-        juryScoresID: s.JuryScoresID
-      }));
-
-      setScores(mappedScores);
-    } else {
-      setScores(structuredClone(DEFAULT_SCORE_ITEMS));
-    }
   } catch {
     setScores(structuredClone(DEFAULT_SCORE_ITEMS));
   }
@@ -1415,23 +1393,23 @@ const submitJuryApproval = async () => {
     const FlagsPayload = {
       NominationFlagsID: flagBusinessJuryData?.NominationFlagsID || 0,
       NominationID: Number(nominationId),
-      IsFlag: isFlagged ? true: false,
-      FlagReason: isFlagged ? juryFlagComment : "",
+      IsFlag: isJuryFlagged ? true: false,
+      FlagReason: isJuryFlagged ? juryFlagComment : "",
       CreatedBy: userId,
       UpdatedBy: userId
     };
 
-    const approvalPayload = {
-      JuryApprovalsID:level2.JuryApprovalsID || 0,
-      NominationID: Number(nominationId),
-      BusinessJuryID:userId,
-      IsBusinessJuryApproved: status === (primaryfield === "IsPrimary" ? "Approved" : null),
-      BusinessJuryComments: juryComments.trim(),
-      BusinessJuryScore:juryScore,
-      Active:true,
-      CreatedBy: userId,
-      UpdatedBy: userId
-    };
+     const approvalPayload = {
+       JuryApprovalsID: level2?.JuryApprovalsID || 0,  
+       NominationID: Number(nominationId),
+       BusinessJuryID: userId,
+       IsBusinessJuryApproved: status === "Approved", 
+       BusinessJuryComments: popupCommentsJury.trim(), 
+       BusinessJuryScore: juryScore,
+       Active: true,
+       CreatedBy: userId,
+       UpdatedBy: userId
+     };
 
    
     const attachmentsPayload = [
@@ -1463,7 +1441,7 @@ const submitJuryApproval = async () => {
         UpdatedBy: userId
       })),
 
-      ...(isFlagged
+      ...(isJuryFlagged
         ? existingJuryFlagDocs
             .filter(doc => !doc.isDeleted)
             .map(doc => ({  
@@ -1480,7 +1458,7 @@ const submitJuryApproval = async () => {
             }))
         : []),
 
-      ...(isFlagged
+      ...(isJuryFlagged
         ? uploadedJuryFlagDocs.map(f => ({
             AttachmentsID: 0,
             NominationID: Number(nominationId),
@@ -2329,7 +2307,8 @@ return (
                 </button>
               </div>
             </div>
-             {approvalData[1].ApprovedAt==""?"":
+
+             {approvalData[1].EvaluatedJuries==0?"":
             <div className="bg-gray-50 rounded-lg p-4 text-sm text-gray-700 space-y-2">
               <div className="flex gap-12">
                 <div>
@@ -2338,34 +2317,47 @@ return (
                     {approvalData[1].ApprovalName} ({approvalData[1].ApprovalDepartment})
                   </span>
                 </div>
-                <div>
-                  <span className="text-gray-500">Approved Date :</span>{" "}
-                  <span className="font-medium">{approvalData[1].ApprovedAt}</span>
-                </div>
-                <div>
-                  <span className="text-gray-500">Total Jury Evaluations :</span>{" "}
-                  <span className="font-medium">
-                    {approvalData[1].TotalEvalutions}
-                  </span>
-                </div>
-                <div>
-                  <span className="text-gray-500">Average Score :</span>{" "}
-                  <span className="font-medium">
-                    {avgScore}
-                  </span>
-                </div>
+               
+                {primaryfield=="IsPrimary" &&
+                <div className="flex gap-12">
+                  {approvalData[1].ApprovedAt==""?"":(
+                    <div>
+                      <span className="text-gray-500">Approved Date :</span>{" "}
+                      <span className="font-medium">{approvalData[1].ApprovedAt}</span>
+                    </div>
+                  )}
+
+                  <div>
+                    <span className="text-gray-500">Total Jury Evaluations :</span>{" "}
+                    <span className="font-medium">
+                      {approvalData[1].EvaluatedJuries}/{approvalData[1].TotalEvalutions}
+                    </span>
+                  </div>
+
+                  <div>
+                    <span className="text-gray-500">Average Score :</span>{" "}
+                    <span className="font-medium">
+                      {avgScore}
+                    </span>
+                  </div>
+
                  <div>
                   <span className="text-gray-500">Total Flag :</span>{" "}
                   <span className="font-medium">
                     {approvalData[1].TotalFlagCount}
                   </span>
                 </div>
+
+                </div>
+                }
               </div>
               <div className="flex gap-12">
+                 {approvalData[1].ApprovedAt&&
                 <div>
                   <span className="text-gray-500">Score :</span>{" "}
                   <span className="font-medium">{approvalData[1].ApprovalScore}</span>
                 </div>
+                }
                   <div className="flex gap-12">
                 <div className="flex items-start gap-2">
                   <span className="text-gray-500">{Number(flagBusinessJuryData?.Flag) === 1 ? "Flagged :" : "Not Flagged :"}</span>
@@ -2417,12 +2409,24 @@ return (
                 </div>
               </div>
               </div>
-              <div>
-                <span className="text-gray-500">Comments :</span>
-                <p className="font-medium mt-1 leading-relaxed">
-                  {approvalData[1].ApprovalComments}
-                </p>
+
+            {approvalData[1].ApprovedAt !="" &&
+              <div className="flex gap-12">
+                  <div>
+                  <span className="text-gray-500">Approval Comments :</span>
+                  <div className="font-medium mt-1 text-sm text-gray-600">
+                    {displayJuryApprovalComment}
+                    {isJuryApprovalTruncated && (
+                      <button
+                        onClick={() => setApprovalComments(!expandedApprovalComments)}
+                        className="ml-1 text-blue-600 underline text-sm">
+                        {expandedApprovalComments ? "Show less" : "Show more"}
+                      </button>
+                    )}
+                  </div>
               </div>
+            </div>
+            }
             </div>
             }
           </div>
@@ -2921,10 +2925,10 @@ return (
           <label className="block mb-2 font-medium">
             Comments
           </label>
-          <textarea rows={3} value={juryComments}
+          <textarea rows={3} value={popupCommentsJury}
             onChange={(e) => {
               const value = e.target.value;
-              setJuryComments(value);
+              setPopupCommentsJury(value);
               if (value.trim()) {
                 setJuryErrors((prev:any) => ({
                   ...prev,
@@ -3119,7 +3123,9 @@ return (
               Cancel
             </button>
             <button  onClick={submitJuryApproval}
-             className="h-[44px] px-8 rounded-md shadow btn-theme"> Submit </button>
+              className="h-[44px] px-8 rounded-md shadow btn-theme">                
+              {isEditMode ? "Update" : "Save"}
+            </button>
         </div>
       </div>
     </div>
