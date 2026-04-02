@@ -96,7 +96,7 @@ const headerTitleMap: Record<string, string> = {
   "referral-approval": "Referral Approval Details",
   "approvals": "Manager Approval Details",
   "business-jury": "Business Jury Review",
-  "president-level": "President Jury Review",
+  "president-level": "Grand Jury Review",
   "president-unit": "President Unit Review",
 };
   // ----------------------------

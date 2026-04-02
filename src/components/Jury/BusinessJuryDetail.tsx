@@ -6,13 +6,13 @@ import { X, ArrowLeft,Menu, Eye } from "lucide-react";
 import { useAuth } from "../ContextAPI/AuthContext";
 import * as Dialog from "@radix-ui/react-dialog";
 import { useLocation } from "react-router-dom";
+//import Swal from "sweetalert2";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger,
 } from "@radix-ui/react-dropdown-menu";
 import { Flag ,User, Building2, Tag, 
   CalendarDays, FileText, Mail, BadgeCheck, Check } from "lucide-react";
 import type { FormState } from "../../dataTypes/nomination";
 import { levelColors, levelTextColors } from "../../statusColors.ts";
-import JuryEvaluationConfiguration from "../AdminSetting/JuryEvaluationConfiguration.tsx";
 
 interface BusinessJuryDetailProps {
   isOpen: boolean;
@@ -67,18 +67,20 @@ interface ApprovalItem {
   JuryMember?: string;
 }
 const BusinessJuryDetail: React.FC<BusinessJuryDetailProps> = ({
- isOpen }) => {
+ isOpen, onClose}) => {
   const { nominationId } = useParams<{ nominationId: string }>();
   const navigate = useNavigate();
   const { authToken, userId,userRole,primaryfield } = useAuth();
   const [previewOpen, setPreviewOpen] = useState(false);
+  const[juryMemName,setJuryMemName]=useState("");
+  const[juryMemDept,setJuryMemDept]=useState("");
   const [previewFile, setPreviewFile] = useState<string | null>(null);
   const [previewType, setPreviewType] = useState<string | null>(null);
   const [errorMessage, setErrorMessage] = useState("");
   const [data, setData] = useState<any>(null);
   const [referrals, setReferrals] = useState<any[]>([]);
   const [isEditMode, setIsEditMode] = useState(false);
-  const [_documents, setDocuments] = useState<any[]>([]);
+  const [documents, setDocuments] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [expanded, setExpanded] = useState(false);
   const [successMessage, setSuccessMessage] = useState("");
@@ -88,7 +90,7 @@ const BusinessJuryDetail: React.FC<BusinessJuryDetailProps> = ({
   const visibleReferrals = expanded ? referrals : referrals.slice(0, 3);
   const location1 = useLocation();
   const from = location1.state?.from;
-  const [_attachmentMode, setAttachmentMode] = useState<"approval" | "flag"
+  const [attachmentMode, setAttachmentMode] = useState<"approval" | "flag"
    |"referral" |"juryApproval"|"grandApproval"|"juryFlag"|"grandFlag"| null>("approval");
   const [approvalFiles, setApprovalFiles] = useState<File[]>([]);
   const [flagFiles, setFlagFiles] = useState<File[]>([]);
@@ -113,10 +115,12 @@ const BusinessJuryDetail: React.FC<BusinessJuryDetailProps> = ({
   const [juryApprovalFileError, setJuryApprovalFileError] = useState("");
   const [grandApprovalFileError, setGrandApprovalFileError] = useState(""); 
   const [juryFlagFileError, setJuryFlagFileError] = useState(""); 
-  const [_grandFlagFileError, setGrandFlagFileError] = useState(""); 
+  const [grandFlagFileError, setGrandFlagFileError] = useState(""); 
+  const [popupScore,setPopupScore]=useState("");
   const [popupComments, setPopupComments] = useState("");
   const[popupCommentsJury,setPopupCommentsJury]=useState("");
   const [popupCommentsGrand,setPopupCommentsGrand]=useState("");
+
   const DEFAULT_SCORE_ITEMS: ScoreItem[] = [
   { weightId: 1, title: "Integrity", score: "", comment: "" },
   { weightId: 2, title: "Idea", score: "", comment: "" },
@@ -147,7 +151,7 @@ const BusinessJuryDetail: React.FC<BusinessJuryDetailProps> = ({
   const [openGrandJuryEvaluation,setOpenGrandJuryEvaluation]=useState(false);
   const [openScore, setOpenScore] = useState(false);
   const [openCard, setOpenCard] = useState<number | null>(null);
-  const [_existingDocs, setExistingDocs] = useState<any[]>([]);
+  const [existingDocs, setExistingDocs] = useState<any[]>([]);
   const [isFlagged, setIsFlagged] = useState(false);
   const [flagComment, setFlagComment] = useState("");
   const [status, setStatus] = useState<"Approved" | "Rejected">("Approved");
@@ -163,9 +167,9 @@ const BusinessJuryDetail: React.FC<BusinessJuryDetailProps> = ({
   const [juryFlagComment, setJuryFlagComment] = useState("");
   const [grandStatus, setGrandStatus] = useState<"Approved" | "Rejected">("Approved");
   const [grandScore, setGrandScore] = useState("");
-  const [_grandErrors, setGrandErrors] = useState<any>({});
+  const [grandErrors, setGrandErrors] = useState<any>({});
   const [grandFlagComment, setGrandFlagComment] = useState("");
-  const [_form, setForm] = useState<FormState>({
+  const [form, setForm] = useState<FormState>({
       title: "",
       nomineeName:"",
       department: "",
@@ -189,6 +193,9 @@ const currentStage =
     : from === "president-level"
     ? "grand"
     : "";
+
+
+    
     
     const getTruncatedText = (text: string,expanded: boolean,limit: number = 160) => {
       if (!text) return "";
@@ -245,12 +252,15 @@ const currentStage =
       setData(result);
       setReferrals(result.Referrals || []);
       setDocuments(result["Supporting Documents"]|| []);
+      console.log("referal data",result)
     } catch (err) {
       console.error("Failed to load nomination details", err);
     } finally {
       setLoading(false);
     }
   };
+
+  
 
   const getFileIcon = (fileName: string) => {
   const ext = fileName.split('.').pop()?.toLowerCase();
@@ -786,17 +796,39 @@ const showJury =
 const showGrand =
   currentStage === "grand" || level3?.Status === "Approved"  || level3?.Status === "Rejected";;
 
+  const isBusinesJuryDisplay = currentStage === "jury" 
+  ? level2.BusinessJuryAttributeScore!== "[]" 
+  : currentStage === "grand" 
+    ? level2.ApprovedAt !== "" 
+    : false; 
+
+const juryScores = JSON.parse(approvalData[1].BusinessJuryAttributeScore || "[]");
+
+let result;
+
+if (primaryfield === "IsPrimary" || currentStage==="grand") {
+  result = { 
+    name: approvalData[1].ApprovalName ,
+    dept:approvalData[1].ApprovalDepartment
+  };
+} else {
+  result = {
+    name: juryScores[0]?.JuryName,
+    dept: juryScores[0]?.JuryDept
+  };
+}
+
 const isReferralEditable = (ref: any) =>
   currentStage === "referral" && ref.ReferralUserID === userId;
 
-// const isManagerEditable =
-//   currentStage === "manager" && level1?.ApprovalNameID === userId;
+const isManagerEditable =
+  currentStage === "manager" && level1?.ApprovalNameID === userId;
 
-// const isJuryEditable =
-//   currentStage === "jury" && userRole === "Business Jury";
+const isJuryEditable =
+  currentStage === "jury" && userRole === "Business Jury";
 
-// const isGrandEditable =
-//   currentStage === "grand" && userRole === "President";
+const isGrandEditable =
+  currentStage === "grand" && userRole === "President";
 
 const isManagerDisabled = currentStage !== "manager" || level2?.Status === "Approved";
 const isJuryDisabled = currentStage !== "jury" ||level1?.Status === "Not Started" 
@@ -841,7 +873,7 @@ const flagBusinessJuryReasonText=flagBusinessJuryData?.FlagReason||"";
 const flagGranJuryReasonText=flagGrandJuryData?.FlagReason||"";
 
 const isFlagTruncated = flagReasonText.length > 160;
-const _isJuryFlagTruncated=flagBusinessJuryReasonText.length>160;
+const isJuryFlagTruncated=flagBusinessJuryReasonText.length>160;
 const isGrandJuryFlagTruncated=flagGranJuryReasonText.length>160;
 
 const displayFlagReason = getTruncatedText(
@@ -859,6 +891,7 @@ const displayGrandJuryFlagReason = getTruncatedText(
   expandedFlagReason,
   160
 );
+
 const getBusinessJuryEvaluations = () => {
   const bj = approvalData.find(
     (a: any) => a.ApprovalType === "Business Jury"
@@ -882,11 +915,12 @@ const juryList: JuryItem[] = getBusinessJuryEvaluations().map((j: any) => {
     Juryname: j.JuryMemberName || "-",
     SubmittedDate: j.SubmittedDate || "-",
     Score:
+       j.ApprovalScore || 
       j.TotalScore ||
-      j.AttributeAvg?.[0]?.TotalScore ||
-      j.Score ||0,
+      j.AttributeAvg?.[0]?.JuryIntegrativeScore || 0,
     Flag: Array.isArray(j.FlagDetails) && j.FlagDetails.length > 0 ? 1 : 0,
     Attributes: (j.BusinessJuryAttributeScore || []).map((a: any) => ({
+      
       AttributeName: a.AttributeName || a.WeightageName || "-",
       Score: a.Score ?? 0,
       Comments: a.Comments || a.Comment || "-"
@@ -894,6 +928,8 @@ const juryList: JuryItem[] = getBusinessJuryEvaluations().map((j: any) => {
     FlagReason: j.FlagDetails?.[0]?.FlagReason || ""
   };
 });
+
+
 
 const getCleanStatus = (status?: string) => {
   if (!status) return "";
@@ -1068,7 +1104,6 @@ const handleJuryApprove = () => {
   if (!level2) return;
 
   const isAlreadySaved = level2.BusinessJuryAttributeScore&& level2.BusinessJuryAttributeScore !== "[]";
-  console.log("isAlreadySaved", isAlreadySaved);
   setIsEditMode(isAlreadySaved);
 
   setJuryStatus(level2.Status === "Rejected" ? "Rejected" : "Approved");
@@ -1129,8 +1164,7 @@ const handleJuryApprove = () => {
 
   setExistingJuryFlagDocs(flagJuryDocs);
   try {
-    
-        
+       
   const parsed = safeParse(level2?.BusinessJuryAttributeScore);
 
   if (parsed.length > 0) {
@@ -1321,6 +1355,8 @@ const submitManagerApproval = async () => {
       Attachments: attachments
     };
 
+    console.log("FINAL PAYLOAD 👉", payload);
+
     const isUpdate = isEditMode;
 
     let res = await axios({
@@ -1350,12 +1386,12 @@ const submitManagerApproval = async () => {
     closeApproveDrawer();
 
   } catch (err) {
+    console.error("❌ SAVE ERROR:", err);
     setErrorMessage("Action failed. Please try again.");
   } finally {
     setLoading(false);
   }
 };
-
 
 const submitJuryApproval = async () => {
    if (!validateEvaluation("jury")) return;
@@ -1399,7 +1435,6 @@ const submitJuryApproval = async () => {
        BusinessJuryID: userId,
        IsBusinessJuryApproved: status === "Approved", 
        BusinessJuryComments: popupCommentsJury.trim(), 
-       BusinessJuryScore: juryScore,
        Active: true,
        CreatedBy: userId,
        UpdatedBy: userId
@@ -1482,6 +1517,7 @@ const submitJuryApproval = async () => {
     Attachments: attachmentsPayload,
     ...(primaryfield === "IsPrimary" && { Approval: approvalPayload }),
   };
+  console.log("Jury Final",finalPayload);
 
   const isUpdate = isEditMode;
 
@@ -1511,6 +1547,7 @@ const submitJuryApproval = async () => {
     fetchNominationDetails();
     handleCloseDrawer();
   }catch (err) {
+    console.error("❌ SAVE ERROR:", err);
     setErrorMessage("Action failed. Please try again.");
   } finally {
     setLoading(false);
@@ -1622,6 +1659,7 @@ const submitGrandJuryApproval = async () => {
       Attachments: attachments
     };
 
+    console.log("Grand Jury Payload", payload);
 
     const isUpdate = isEditMode;
 
@@ -1652,6 +1690,7 @@ const submitGrandJuryApproval = async () => {
     closeGrandJuryDrawer();
 
   } catch (err) {
+    console.error("❌ SAVE ERROR:", err);
     setErrorMessage("Action failed. Please try again.");
   } finally {
     setLoading(false);
@@ -1725,7 +1764,7 @@ const submitReferral = async () => {
           .map(doc => ({
             AttachmentsID: doc.AttachmentID || 0,
             NominationID: Number(nominationId),
-            AttachmentType: 47,
+            AttachmentType: 47, // ✅ FIXED
             OriginalAttachmentName: doc.originalFileName,
             AttachmentFileType: doc.fileType || "",
             AttachmentSize: doc.fileSize || "",
@@ -1749,6 +1788,8 @@ const submitReferral = async () => {
         }))
       ]
     };
+
+    console.log("REFERRAL PAYLOAD 👉", payload);
 
     const res = await axios({
       method: isEditMode ? "put" : "post",
@@ -1775,6 +1816,7 @@ const submitReferral = async () => {
     setOpenReferralPopup(false);
 
   } catch (err) {
+    console.error("❌ REFERRAL SAVE ERROR:", err);
     setErrorMessage("Save failed");
   } finally {
     setLoading(false);
@@ -1875,6 +1917,7 @@ const parsedJuryFlagDocs = safeParse(level2?.FlagAttachment);
 const parsedJuryApprovalDocs = safeParse(level2?.ApprovalAttachment);
 const parsedGrandJuryFlagDocs = safeParse(level3?.FlagAttachment);
 const parsedGranJuryApprovalDocs = safeParse(level3?.ApprovalAttachment);
+
 return (
  <div className="bg-gray-100 p-6 pb-20">
   <div className="bg-white rounded-xl border border-gray-200 shadow-sm p-6">
@@ -2277,7 +2320,7 @@ return (
                 {approvalData[1].ApprovalFlow} - {approvalData[1].ApprovalType}
               </p>
               <div className="flex gap-3">
-                {(approvalData[1].Status === "Approved"  && userRole==="presidentLevel")&& (
+                {(primaryfield==="IsPrimary" || currentStage==="grand")&& (
                   <button
                     onClick={() => setOpenEvaluation(true)}
                     className="px-4 py-1.5 rounded-lg border border-blue-500 text-blue-600 text-sm hover:bg-blue-50">
@@ -2295,24 +2338,24 @@ return (
               </div>
             </div>
 
-             {approvalData[1].EvaluatedJuries==0?"":
+             {isBusinesJuryDisplay?
             <div className="bg-gray-50 rounded-lg p-4 text-sm text-gray-700 space-y-2">
               <div className="flex gap-12">
                 <div>
                   <span className="text-gray-500">Name :</span>{" "}
                   <span className="font-medium">
-                    {approvalData[1].ApprovalName} ({approvalData[1].ApprovalDepartment})
+                    {result.name}({result.dept})
                   </span>
                 </div>
                
-                {primaryfield=="IsPrimary" &&
+               {(primaryfield==="IsPrimary" || currentStage==="grand" )&&
                 <div className="flex gap-12">
-                  {approvalData[1].ApprovedAt==""?"":(
+                  {approvalData[1].ApprovedAt!=""&&
                     <div>
                       <span className="text-gray-500">Approved Date :</span>{" "}
                       <span className="font-medium">{approvalData[1].ApprovedAt}</span>
                     </div>
-                  )}
+                  }
 
                   <div>
                     <span className="text-gray-500">Total Jury Evaluations :</span>{" "}
@@ -2336,15 +2379,9 @@ return (
                 </div>
 
                 </div>
-                }
+}
               </div>
               <div className="flex gap-12">
-                 {approvalData[1].ApprovedAt&&
-                <div>
-                  <span className="text-gray-500">Score :</span>{" "}
-                  <span className="font-medium">{approvalData[1].ApprovalScore}</span>
-                </div>
-                }
                   <div className="flex gap-12">
                 <div className="flex items-start gap-2">
                   <span className="text-gray-500">{Number(flagBusinessJuryData?.Flag) === 1 ? "Flagged :" : "Not Flagged :"}</span>
@@ -2414,7 +2451,26 @@ return (
               </div>
             </div>
             }
+              {approvalData[1].FlagReason!="" &&
+              
+             <div className="flex gap-12">
+              <div>
+               {displayJuryFlagReason==""?"":<span className="text-gray-500">Flag Reason :</span>}
+                <div className="font-medium mt-1 text-sm text-gray-600">
+                  {displayJuryFlagReason}
+                  {isJuryFlagTruncated && (
+                    <button
+                      onClick={() => setExpandedFlagReason(!expandedFlagReason)}
+                      className="ml-1 text-blue-600 underline text-sm">
+                      {expandedFlagReason ? "Show less" : "Show more"}
+                    </button>
+                  )}
+                </div>
+              </div>
             </div>
+              }
+            </div>
+            :""
             }
           </div>
         </div>
@@ -2760,7 +2816,7 @@ return (
           <div className="border border-gray-300 rounded-lg p-4 text-center bg-green-50 text-green-700">
            <div className="text-sm">Total Evaluations</div>
             <div className="text-xl font-semibold">
-              {attributeData?.TotalEvalutions || 0}
+              {attributeData?.EvaluatedJuries || 0}
             </div>
           </div>
           <div className="border border-gray-300 rounded-lg p-4 text-center bg-blue-50 text-blue-700">
@@ -2887,26 +2943,7 @@ return (
               <option value="Rejected">Rejected</option>
             </select>
           </div>
-          <div className="w-[120px]">
-            <span className="text-gray-500 text-sm">Score</span>
-            <input
-              type="number"
-              min={1}
-              max={100}
-              value={juryScore}
-              onChange={(e) => {
-                const val = e.target.value;
-                setJuryScore(val);
-                if(val.trim()){
-                  setJuryErrors((prev:any)=>({
-                    ...prev,
-                    score:""
-                  }));
-                }
-              }}
-              className="w-full h-[42px] px-3 border border-gray-300 rounded-[6px] text-center"
-            />
-          </div>
+
         </div>
         <div className="mb-[18px]">
           <label className="block mb-2 font-medium">

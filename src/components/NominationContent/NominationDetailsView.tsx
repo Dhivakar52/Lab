@@ -760,7 +760,21 @@ return (
           </Dialog.Content>
         </Dialog.Portal>
       </Dialog.Root>
-      
+      {openCommentsPopup && (
+      <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50">
+        <div className="bg-white w-[500px] rounded-lg shadow-lg p-5">
+          <div className="flex justify-between items-center mb-4">
+            <h3 className="font-semibold">Comments</h3>
+            <button onClick={() => setOpenCommentsPopup(false)}>✕</button>
+          </div>
+          <div className="max-h-[300px] overflow-auto border rounded p-3 bg-gray-50">
+            <p className="text-sm text-gray-800 whitespace-pre-wrap">
+              {selectedComment}
+            </p>
+          </div>
+        </div>
+      </div>
+    )}
 {/* ================= Document Preview Dialog ================= */}
       <Dialog.Root
         open={previewOpen}
