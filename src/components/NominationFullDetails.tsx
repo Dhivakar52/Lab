@@ -3,7 +3,7 @@ import { useAuth } from "./ContextAPI/AuthContext";
 import { useEffect, useState } from "react";
 import axios from "axios";
 import { useParams } from "react-router-dom";
-import {  FileText, MoveLeft } from "lucide-react";
+import {  FileText, MoveLeft, MoveRight } from "lucide-react";
 import StatusFlow from "./StatusFlow";
 
 const apiUrl = import.meta.env.VITE_API_URL;
@@ -11,7 +11,7 @@ const apiUrl = import.meta.env.VITE_API_URL;
 const NominationFullDetails:React.FC = () => {
     const { nominationID } = useParams();  
     const [data, setData] = useState<any>([]);
-    const [_loading, setLoading] = useState(true);
+    const [loading, setLoading] = useState(true);
     const { authToken } = useAuth();
 
     useEffect(() => {

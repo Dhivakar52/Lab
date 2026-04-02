@@ -4,7 +4,7 @@ import { X } from 'lucide-react';
 import { useState, useEffect } from "react";
 import { useAuth } from "../ContextAPI/AuthContext";
 import axios from "axios";
-// import StatusFlow from "../StatusFlow";
+import StatusFlow from "../StatusFlow";
 
 //import { data } from 'react-router-dom';
 
@@ -95,7 +95,7 @@ const NominationDetailsModal: React.FC<NominationDetailsProps> = ({ isOpen, onCl
     createdBy: 0,
     updatedBy: userId
   },
-  referralIDs: data["Referrals ID"]?.map(_ref => ({
+  referralIDs: data["Referrals ID"]?.map(ref => ({
     referralID: 0,
     nominationID: 0,
     referralUserID:  0,
@@ -106,7 +106,7 @@ const NominationDetailsModal: React.FC<NominationDetailsProps> = ({ isOpen, onCl
     updatedBy: 0
   })) || [],
   
-  documents: data["Supporting Documents"]?.map(_doc => ({
+  documents: data["Supporting Documents"]?.map(doc => ({
     nominationFileID:  0,
     nominationID: 0,
     originalFileName: 0,
@@ -167,7 +167,7 @@ const getFileIcon = (fileName: string) => {
       return "https://img.icons8.com/color/48/file.png";
   }
 };
-    // const fallbackUrl = "File not found"; 
+    const fallbackUrl = "File not found"; 
 
 const approvalFlow = data?.ApprovalStatus?.map(a => ({
   type: a.ApprovalType,

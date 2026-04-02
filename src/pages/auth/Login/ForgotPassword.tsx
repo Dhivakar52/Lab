@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-// import axios from "axios";
+import axios from "axios";
 
 export default function ForgotPassword() {
   const [email, setEmail] = useState("");
@@ -13,7 +13,7 @@ export default function ForgotPassword() {
   const rx = /^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}$/;
     return rx.test(value);
   };
-// const apiUrl = import.meta.env.VITE_API_URL;
+const apiUrl = import.meta.env.VITE_API_URL;
   const handleNext = async () => {
     if (!email) {
       setError("Email is required");
@@ -27,17 +27,17 @@ export default function ForgotPassword() {
     setError("");
     setLoading(true);
     try {       
-        // const _response = await axios.put(
-        //   `${apiUrl}/api/generateotp`,
-        //   {},
-        //   {
-        //     params: {
-        //       UserEmail: email,
-        //       IsResendOTP: false,
-        //     },
-        //   // headers: { Authorization: `Bearer ${authToken}`,},   
-        //   }
-        // );
+        const response = await axios.put(
+          `${apiUrl}/api/generateotp`,
+          {},
+          {
+            params: {
+              UserEmail: email,
+              IsResendOTP: false,
+            },
+          // headers: { Authorization: `Bearer ${authToken}`,},   
+          }
+        );
   } catch (error: any) {
   console.log("Full error object:", error);
   }

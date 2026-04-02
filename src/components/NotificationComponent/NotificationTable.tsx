@@ -52,7 +52,7 @@ const apiUrl = import.meta.env.VITE_API_URL;
 const NotificationTable: React.FC<NotificationTableProps> = ({
   isOpen,
   onClose,
-  // notifications = []
+  notifications = []
 }) => {
   const [data, setData] = useState<Notification[]>([]);
   const [loading, setLoading] = useState(true);
