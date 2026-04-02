@@ -1,16 +1,16 @@
-import FilterComponent from '../FilterComponent';
+
 import NominationTable from './NominationTable';
-import  type Nomination  from '../../dataTypes/nomination';
+
 import * as Tabs from '@radix-ui/react-tabs';
-import { useLocation, useNavigate } from "react-router-dom";
-import React, { useEffect, useState } from "react";
+import { useLocation } from "react-router-dom";
+import React, { useEffect } from "react";
 import OtherNominationTable from "./OtherNominationTable"
 
 
 const NominationComponent = () => {
     // const [activeTab, setActiveTab] = React.useState<'my' | 'others'>('my');
     const location = useLocation();
-    const navigate=useNavigate();
+    // const navigate=useNavigate();
     const [tab, setTab] = React.useState("table");
 
     useEffect(() => {

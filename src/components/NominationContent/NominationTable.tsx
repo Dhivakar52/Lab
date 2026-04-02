@@ -11,9 +11,9 @@ import { useAuth } from "../ContextAPI/AuthContext";
 import { ColorBadge } from "../TenantBadges";
 import { useNavigate } from "react-router-dom";
 import Pagination from "../Pagination";
-import {DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger,
+import {DropdownMenu, DropdownMenuTrigger,
 } from "@radix-ui/react-dropdown-menu";
-import StatusFlow from "../CommonStatusFlow"; 
+
 import { levelColors, levelTextColors } from "../../statusColors.ts";
 import { useLocation } from "react-router-dom";
 import ProgressSidePanel from "../ProgressSidePanel";
@@ -72,7 +72,7 @@ const apiUrl = import.meta.env.VITE_API_URL;
   const [globalFilter, setGlobalFilter] = useState("");
   const [expandedRow, setExpandedRow] = useState<number | null>(null);
   const navigate = useNavigate();
-  const [refreshKey, setRefreshKey] = useState(0);
+  const [refreshKey] = useState(0);
   const { authToken, userId } = useAuth();
   // const [tab, setTab] = useState("my");
   const location = useLocation();
@@ -96,23 +96,7 @@ const apiUrl = import.meta.env.VITE_API_URL;
 //   setLoading(false);
 // };
 
- const fetchNominations1 = async () => {
-      try {
-         const res = await axios.get(`${apiUrl}/api/nominationsbyuser`, {
-          params: {
-            userID: userId,
-            NominatedBy: 0,
-          },
-          headers: { Authorization: `Bearer ${authToken}`,},
-        });
-        setData(res.data);
-        console.log("Nomination Table", res.data)
-      } catch (err) {
-        console.error("❌ Error fetching nominations:", err);
-      } finally {
-        setLoading(false);
-      }
-    };
+
   const fetchNominations = async () => {
     setLoading(true);
     try {
@@ -134,11 +118,7 @@ const apiUrl = import.meta.env.VITE_API_URL;
     }
     setExpandedRow(null);
   };
-  const getCleanStatus = (status?: string) => {
-    if (!status) return "";
-    const parts = status.split("-");
-    return parts.length > 1 ? parts[1].trim() : status.trim();
-  };
+ 
 
   useEffect(() => {
   const handleClickOutside = (event: MouseEvent) => {
@@ -167,11 +147,7 @@ const apiUrl = import.meta.env.VITE_API_URL;
     setInitialized(true);
   }, []);
 
-  const handleStatusClick = (nominationID: number) => {
-      setExpandedRow(prev =>
-        prev === nominationID ? null : nominationID
-      );
-    };
+
   const handleForm=()=>{
     navigate("add-nomination");
   }
@@ -406,14 +382,14 @@ const apiUrl = import.meta.env.VITE_API_URL;
                   {isExpanded && (
                     <tr className="bg-gray-50">
                       <td colSpan={columns.length} className="px-2 py-2">
-                        <StatusFlow
+                        {/* <StatusFlow
                           steps={(item.ApprovalStatus || []).map((a: any) => ({
                             type: a.ApprovalType,
                             status: a.Status,
                             level: a.ApprovalFlow,
                             approvedAt: a.ApprovedAt,
                           }))}
-                        />
+                        /> */}
                       </td>
                     </tr>
                   )}

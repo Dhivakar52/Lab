@@ -37,19 +37,19 @@ interface UserType {
   ManagerEmail : string;
 }
 
-const emptyForm: AddNominationState = {
-  title: "",
-  nomineeName: "",
-  nomineeData: [],
-  department: [],
-  email: "",
-  mobile: "",
-  managerEmail: "",
-  contestType: "",
-  description: "",
-  entityName: [],
-  file: null,
-};
+// const emptyForm: AddNominationState = {
+//   title: "",
+//   nomineeName: "",
+//   nomineeData: [],
+//   department: [],
+//   email: "",
+//   mobile: "",
+//   managerEmail: "",
+//   contestType: "",
+//   description: "",
+//   entityName: [],
+//   file: null,
+// };
 
 const apiUrl = import.meta.env.VITE_API_URL;
 
@@ -58,16 +58,16 @@ export default function AddNomination() {
   const [allDepartments, setAllDepartments] = useState<DepartmentType[]>([]); 
   const [filteredDepartments, setFilteredDepartments] = useState<DepartmentType[]>([]); 
   const [allUsers, setAllUsers] = useState<UserType[]>([]); 
-  const [filteredUsers, setFilteredUsers] = useState<UserType[]>([]); 
+  // const [filteredUsers, setFilteredUsers] = useState<UserType[]>([]); 
   const [users, setUsers] = useState<any[]>([]);
  
   // const [entitydropdown, setEntityName] = useState<any[]>([]);
-  const [successMsg, setSuccessMsg] = useState("");
+  const [successMsg, _setSuccessMsg] = useState("");
   const [searchText, setSearchText] = useState("");
   const [results, setResults] = useState<SearchResult[]>([]);
   const [showList, setShowList] = useState(false);
   const [selectedUserID, setSelectedUserID] = useState<number | null>(null);
-  const [selectedTenantID, setSelectedTenantID] = useState<number | null>(null);
+  const [_selectedTenantID, setSelectedTenantID] = useState<number | null>(null);
   const [showSuccessModal, setShowSuccessModal] = useState(false);
   const [form, setForm] = useState<AddNominationState>({
     title: "",
@@ -88,8 +88,8 @@ export default function AddNomination() {
   const [errors, setErrors] = useState<{ [key: string]: string }>({});
   const [showErrorModal, setShowErrorModal] = useState(false);
   const [referrals, setReferrals] = useState<any[]>([]);
-  const [data, setData] = useState<any>(null);
-  const [loading, setLoading] = useState(true);
+  // const [data, setData] = useState<any>(null);
+  // const [loading, setLoading] = useState(true);
   const { nominationId } = useParams<{ nominationId: string }>();
   const [errorMessage, setErrorMessage] = useState("");
   const isEditMode = Boolean(nominationId);
@@ -261,7 +261,7 @@ useEffect(() => {
       const data = res.data[0];
       console.log("sucess",res.data)
 
-      const userId = data?.UserID;
+      // const userId = data?.UserID;
  
       const userData = await axios.get(
           `${apiUrl}/api/users?userId=${res.data[0].UserID}`,
@@ -354,7 +354,7 @@ useEffect(() => {
       }
     }
 
-    setFilteredUsers(filtered);
+    // setFilteredUsers(filtered);
     console.log("Filtered Users:", filtered);
   }, [form.entityName, form.department, allUsers, filteredDepartments]);
 

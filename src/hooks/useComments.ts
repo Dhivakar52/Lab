@@ -19,7 +19,7 @@ export const useComments = (nominationId: number) => {
 
 export const useAddComment = () => {
   const queryClient = useQueryClient();
-  const { authToken, userId, username } = useAuth();
+  const { authToken, userId } = useAuth();
 
   return useMutation({
     mutationFn: ({ 
@@ -39,7 +39,7 @@ export const useAddComment = () => {
         token: authToken!,
       }),
 
-    onSuccess: (newComment, { nominationId }) => {
+    onSuccess: (_newComment, { nominationId }) => {
       // Invalidate and refetch comments for this post
       queryClient.invalidateQueries({ queryKey: commentsKey(nominationId) });
       
