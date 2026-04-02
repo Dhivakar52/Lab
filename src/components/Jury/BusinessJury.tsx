@@ -19,7 +19,7 @@ import { useNavigate } from "react-router-dom";
 import Pagination from "../Pagination";
 import StatusFlow from "../CommonStatusFlow"; 
 import { Flag } from "lucide-react";
-import { levelColors, levelTextColors } from "../../statusColors.ts";
+// import { levelColors, levelTextColors } from "../../statusColors.ts";
 
 
 export interface BusinessJury {

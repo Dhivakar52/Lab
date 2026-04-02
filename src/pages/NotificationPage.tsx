@@ -1,8 +1,8 @@
 
 // import React  from 'react';
 // import { Bell} from 'lucide-react';
-// // import NotificationModal from '../components/Notification/NotificationModal';
-// import NotificationTable from '../components/NotificationComponent/NotificationTable';
+// import NotificationModal from '../components/Notification/NotificationModal';
+//import NotificationTable from '../components/NotificationComponent/NotificationTable';
 
 const Demo = () => {
   // const [isOpen, setIsOpen] = React.useState(true);

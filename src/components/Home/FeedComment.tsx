@@ -22,7 +22,7 @@ const FeedComment: React.FC<CommentSectionProps> = ({
   setCommentText,
 }) => {
   const scrollRef = useRef<HTMLDivElement | null>(null);
-  const { userId } = useAuth();
+  const { } = useAuth();
   
   // Use React Query hooks
   const { data: comments = [], isLoading, error } = useComments(post.NominationID);

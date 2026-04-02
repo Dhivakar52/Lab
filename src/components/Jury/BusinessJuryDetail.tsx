@@ -6,7 +6,6 @@ import { X, ArrowLeft,Menu, Eye } from "lucide-react";
 import { useAuth } from "../ContextAPI/AuthContext";
 import * as Dialog from "@radix-ui/react-dialog";
 import { useLocation } from "react-router-dom";
-//import Swal from "sweetalert2";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger,
 } from "@radix-ui/react-dropdown-menu";
 import { Flag ,User, Building2, Tag, 
@@ -68,7 +67,7 @@ interface ApprovalItem {
   JuryMember?: string;
 }
 const BusinessJuryDetail: React.FC<BusinessJuryDetailProps> = ({
- isOpen, onClose}) => {
+ isOpen }) => {
   const { nominationId } = useParams<{ nominationId: string }>();
   const navigate = useNavigate();
   const { authToken, userId,userRole,primaryfield } = useAuth();
@@ -79,7 +78,7 @@ const BusinessJuryDetail: React.FC<BusinessJuryDetailProps> = ({
   const [data, setData] = useState<any>(null);
   const [referrals, setReferrals] = useState<any[]>([]);
   const [isEditMode, setIsEditMode] = useState(false);
-  const [documents, setDocuments] = useState<any[]>([]);
+  const [_documents, setDocuments] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [expanded, setExpanded] = useState(false);
   const [successMessage, setSuccessMessage] = useState("");
@@ -89,7 +88,7 @@ const BusinessJuryDetail: React.FC<BusinessJuryDetailProps> = ({
   const visibleReferrals = expanded ? referrals : referrals.slice(0, 3);
   const location1 = useLocation();
   const from = location1.state?.from;
-  const [attachmentMode, setAttachmentMode] = useState<"approval" | "flag"
+  const [_attachmentMode, setAttachmentMode] = useState<"approval" | "flag"
    |"referral" |"juryApproval"|"grandApproval"|"juryFlag"|"grandFlag"| null>("approval");
   const [approvalFiles, setApprovalFiles] = useState<File[]>([]);
   const [flagFiles, setFlagFiles] = useState<File[]>([]);
@@ -114,8 +113,7 @@ const BusinessJuryDetail: React.FC<BusinessJuryDetailProps> = ({
   const [juryApprovalFileError, setJuryApprovalFileError] = useState("");
   const [grandApprovalFileError, setGrandApprovalFileError] = useState(""); 
   const [juryFlagFileError, setJuryFlagFileError] = useState(""); 
-  const [grandFlagFileError, setGrandFlagFileError] = useState(""); 
-  const [popupScore,setPopupScore]=useState("");
+  const [_grandFlagFileError, setGrandFlagFileError] = useState(""); 
   const [popupComments, setPopupComments] = useState("");
   const[popupCommentsJury,setPopupCommentsJury]=useState("");
   const [popupCommentsGrand,setPopupCommentsGrand]=useState("");
@@ -149,7 +147,7 @@ const BusinessJuryDetail: React.FC<BusinessJuryDetailProps> = ({
   const [openGrandJuryEvaluation,setOpenGrandJuryEvaluation]=useState(false);
   const [openScore, setOpenScore] = useState(false);
   const [openCard, setOpenCard] = useState<number | null>(null);
-  const [existingDocs, setExistingDocs] = useState<any[]>([]);
+  const [_existingDocs, setExistingDocs] = useState<any[]>([]);
   const [isFlagged, setIsFlagged] = useState(false);
   const [flagComment, setFlagComment] = useState("");
   const [status, setStatus] = useState<"Approved" | "Rejected">("Approved");
@@ -165,9 +163,9 @@ const BusinessJuryDetail: React.FC<BusinessJuryDetailProps> = ({
   const [juryFlagComment, setJuryFlagComment] = useState("");
   const [grandStatus, setGrandStatus] = useState<"Approved" | "Rejected">("Approved");
   const [grandScore, setGrandScore] = useState("");
-  const [grandErrors, setGrandErrors] = useState<any>({});
+  const [_grandErrors, setGrandErrors] = useState<any>({});
   const [grandFlagComment, setGrandFlagComment] = useState("");
-  const [form, setForm] = useState<FormState>({
+  const [_form, setForm] = useState<FormState>({
       title: "",
       nomineeName:"",
       department: "",
@@ -247,7 +245,6 @@ const currentStage =
       setData(result);
       setReferrals(result.Referrals || []);
       setDocuments(result["Supporting Documents"]|| []);
-      console.log("referal data",result)
     } catch (err) {
       console.error("Failed to load nomination details", err);
     } finally {
@@ -792,14 +789,14 @@ const showGrand =
 const isReferralEditable = (ref: any) =>
   currentStage === "referral" && ref.ReferralUserID === userId;
 
-const isManagerEditable =
-  currentStage === "manager" && level1?.ApprovalNameID === userId;
+// const isManagerEditable =
+//   currentStage === "manager" && level1?.ApprovalNameID === userId;
 
-const isJuryEditable =
-  currentStage === "jury" && userRole === "Business Jury";
+// const isJuryEditable =
+//   currentStage === "jury" && userRole === "Business Jury";
 
-const isGrandEditable =
-  currentStage === "grand" && userRole === "President";
+// const isGrandEditable =
+//   currentStage === "grand" && userRole === "President";
 
 const isManagerDisabled = currentStage !== "manager" || level2?.Status === "Approved";
 const isJuryDisabled = currentStage !== "jury" ||level1?.Status === "Not Started" 
@@ -844,7 +841,7 @@ const flagBusinessJuryReasonText=flagBusinessJuryData?.FlagReason||"";
 const flagGranJuryReasonText=flagGrandJuryData?.FlagReason||"";
 
 const isFlagTruncated = flagReasonText.length > 160;
-const isJuryFlagTruncated=flagBusinessJuryReasonText.length>160;
+const _isJuryFlagTruncated=flagBusinessJuryReasonText.length>160;
 const isGrandJuryFlagTruncated=flagGranJuryReasonText.length>160;
 
 const displayFlagReason = getTruncatedText(
@@ -1324,8 +1321,6 @@ const submitManagerApproval = async () => {
       Attachments: attachments
     };
 
-    console.log("FINAL PAYLOAD 👉", payload);
-
     const isUpdate = isEditMode;
 
     let res = await axios({
@@ -1355,7 +1350,6 @@ const submitManagerApproval = async () => {
     closeApproveDrawer();
 
   } catch (err) {
-    console.error("❌ SAVE ERROR:", err);
     setErrorMessage("Action failed. Please try again.");
   } finally {
     setLoading(false);
@@ -1488,7 +1482,6 @@ const submitJuryApproval = async () => {
     Attachments: attachmentsPayload,
     ...(primaryfield === "IsPrimary" && { Approval: approvalPayload }),
   };
-  console.log("Jury Final",finalPayload);
 
   const isUpdate = isEditMode;
 
@@ -1518,7 +1511,6 @@ const submitJuryApproval = async () => {
     fetchNominationDetails();
     handleCloseDrawer();
   }catch (err) {
-    console.error("❌ SAVE ERROR:", err);
     setErrorMessage("Action failed. Please try again.");
   } finally {
     setLoading(false);
@@ -1630,7 +1622,6 @@ const submitGrandJuryApproval = async () => {
       Attachments: attachments
     };
 
-    console.log("Grand Jury Payload", payload);
 
     const isUpdate = isEditMode;
 
@@ -1661,7 +1652,6 @@ const submitGrandJuryApproval = async () => {
     closeGrandJuryDrawer();
 
   } catch (err) {
-    console.error("❌ SAVE ERROR:", err);
     setErrorMessage("Action failed. Please try again.");
   } finally {
     setLoading(false);
@@ -1735,7 +1725,7 @@ const submitReferral = async () => {
           .map(doc => ({
             AttachmentsID: doc.AttachmentID || 0,
             NominationID: Number(nominationId),
-            AttachmentType: 47, // ✅ FIXED
+            AttachmentType: 47,
             OriginalAttachmentName: doc.originalFileName,
             AttachmentFileType: doc.fileType || "",
             AttachmentSize: doc.fileSize || "",
@@ -1759,8 +1749,6 @@ const submitReferral = async () => {
         }))
       ]
     };
-
-    console.log("REFERRAL PAYLOAD 👉", payload);
 
     const res = await axios({
       method: isEditMode ? "put" : "post",
@@ -1787,7 +1775,6 @@ const submitReferral = async () => {
     setOpenReferralPopup(false);
 
   } catch (err) {
-    console.error("❌ REFERRAL SAVE ERROR:", err);
     setErrorMessage("Save failed");
   } finally {
     setLoading(false);

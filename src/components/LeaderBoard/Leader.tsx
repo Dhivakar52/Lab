@@ -4,11 +4,10 @@ import {
   useReactTable,
   getCoreRowModel,
   getPaginationRowModel,
-  getFilteredRowModel,
   flexRender,
 } from "@tanstack/react-table";
 import type { ColumnDef } from "@tanstack/react-table";
-import { Heart, MessageCircle, Eye, Trophy, Users, ArrowUpDown, Crown, Medal, Sparkles, Award } from "lucide-react";
+import { Heart, MessageCircle, Eye, Users, ArrowUpDown, Crown, Medal, Sparkles, Award } from "lucide-react";
 import { useAuth } from "../ContextAPI/AuthContext";
 import Pagination from "../Pagination";
 
@@ -54,66 +53,6 @@ const gradientStyle = {
   background: 'linear-gradient(90deg, rgb(8, 128, 94) 16%, rgb(24, 97, 174) 100%)'
 };
 
-const gradientBg = {
-  background: 'linear-gradient(135deg, rgb(8, 128, 94) 0%, rgb(24, 97, 174) 100%)'
-};
-
-// Animated rank component with pop effect
-const AnimatedRank = ({ rank, children }: { rank: number; children: React.ReactNode }) => {
-  const [isAnimating, setIsAnimating] = useState(true);
-
-  useEffect(() => {
-    const timer = setTimeout(() => setIsAnimating(false), 500);
-    return () => clearTimeout(timer);
-  }, []);
-
-  return (
-    <div className={`relative transition-all duration-500 ${isAnimating ? 'scale-110 animate-bounce' : 'scale-100'}`}>
-      {children}
-      {isAnimating && rank <= 3 && (
-        <div className="absolute -top-2 -right-2">
-          <Sparkles size={16} className="text-yellow-400 animate-ping" />
-        </div>
-      )}
-    </div>
-  );
-};
-
-// Rank icon component
-const RankIcon1 = ({ rank }: { rank: number }) => {
-  if (rank === 1) {
-    return (
-      <div className="relative">
-        <div className="absolute inset-0 animate-ping rounded-full bg-yellow-400 opacity-75"></div>
-        <div className="relative w-12 h-12 rounded-full bg-gradient-to-r from-yellow-400 to-yellow-500 flex items-center justify-center shadow-lg">
-          <Crown size={24} className="text-white" />
-          <div className="absolute -top-1 -right-1">
-            <Sparkles size={12} className="text-yellow-300 animate-spin" />
-          </div>
-        </div>
-      </div>
-    );
-  } else if (rank === 2) {
-    return (
-      <div className="relative">
-        <div className="absolute inset-0 animate-pulse rounded-full bg-gray-400 opacity-50"></div>
-        <div className="relative w-12 h-12 rounded-full bg-gradient-to-r from-gray-400 to-gray-500 flex items-center justify-center shadow-lg">
-          <Medal size={24} className="text-white" />
-        </div>
-      </div>
-    );
-  } else if (rank === 3) {
-    return (
-      <div className="relative">
-        <div className="absolute inset-0 animate-pulse rounded-full bg-amber-600 opacity-50"></div>
-        <div className="relative w-12 h-12 rounded-full bg-gradient-to-r from-amber-500 to-amber-600 flex items-center justify-center shadow-lg">
-          <Award size={24} className="text-white" />
-        </div>
-      </div>
-    );
-  }
-  return null;
-};
 
 const Leader = () => {
   const { authToken } = useAuth();
@@ -123,7 +62,7 @@ const Leader = () => {
   const [awardcategory, setCategory] = useState<CategoryData[]>([]);
   const [selectedCategory, setSelectedCategory] = useState("");
   const [sortBy, setSortBy] = useState("score");
-  const [totalCount, setTotalCount] = useState(0);
+  const [_totalCount, setTotalCount] = useState(0);
   const [animateRows, setAnimateRows] = useState<number[]>([]);
   const tableWrapperRef = useRef<HTMLDivElement | null>(null);
 
@@ -225,28 +164,7 @@ useEffect(() => {
 
         let rankColor = themeColors.textSecondary;
         let rankBg = '#f1f5f9';
-        // if (rank === 1) {
-        //   rankColor = themeColors.gold;
-        //   rankBg = '#fef3c7';
-        // } else if (rank === 2) {
-        //   rankColor = themeColors.silver;
-        //   rankBg = '#f1f5f9';
-        // } else if (rank === 3) {
-        //   rankColor = themeColors.bronze;
-        //   rankBg = '#ffedd5';
-        // }
-
-        // For top 3, show special icons instead of numbers
-        // if (rank === 1 || rank === 2 || rank === 3) {
-        //   return (
-        //     <div className="flex justify-center">
-        //       <div className={`transition-all duration-500 ${isAnimating ? 'scale-125 animate-bounce' : 'scale-100'}`}>
-        //         {/* <RankIcon rank={rank} /> */}
-        //       </div>
-        //     </div>
-        //   );
-        // }
-
+       
         return (
           <div className="flex justify-center">
             <span
@@ -295,7 +213,7 @@ useEffect(() => {
       id: "Name",
       header: "Participant",
       cell: ({ row }) => {
-        const rank = row.index + 1;
+       // const rank = row.index + 1;
         const isAnimating = animateRows.includes(row.index);
 
         return (
@@ -486,7 +404,7 @@ useEffect(() => {
             {top3.map((item, index) => {
               let rankLabel = index === 0 ? "1st" : index === 1 ? "2nd" : "3rd";
               let rankColor = index === 0 ? themeColors.gold : index === 1 ? themeColors.silver : themeColors.bronze;
-              let rankIcon = index === 0 ? <Crown size={28} /> : index === 1 ? <Medal size={28} /> : <Award size={28} />;
+             // let rankIcon = index === 0 ? <Crown size={28} /> : index === 1 ? <Medal size={28} /> : <Award size={28} />;
 
               return (
                 <div

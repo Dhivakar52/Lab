@@ -1,5 +1,5 @@
-import React, { useState, useEffect, useMemo } from "react";
-import { X, Heart, MessageCircle, HeartHandshake, Share, MoreHorizontal, MessageCircleMore, Eye, Send, Trophy, UsersRound } from "lucide-react";
+import React, { useState, useEffect } from "react";
+import { X, MessageCircle,   MoreHorizontal,   Send, Trophy, UsersRound } from "lucide-react";
 import axios from "axios";
 import type { Feed } from "../../dataTypes/nomination";
 import { useAuth } from "../ContextAPI/AuthContext";
@@ -8,31 +8,29 @@ import FeedLikeComponent from "./FeedLikeComponent";
 import FeedLikePop from "./FeedLikePop";
 import FeedComment from "./FeedComment";
 import ReactionsModal from "./ReactionsModal";
-import ViewerModal from "./ViewerModal";
-import { data } from "react-router-dom";
 
 interface PostCardProps {
   posts: Feed[];
   setPosts: React.Dispatch<React.SetStateAction<Feed[]>>;
 }
 
-const getLikeText = (likedByList: any[], currentUserId: number | null, username: any) => {
-  if (!likedByList || likedByList.length === 0) return "0 Likes";
+// const getLikeText = (likedByList: any[], currentUserId: number | null, username: any) => {
+//   if (!likedByList || likedByList.length === 0) return "0 Likes";
 
-  const isLikedByYou = likedByList.some(l => l.UserID === currentUserId);
+//   const isLikedByYou = likedByList.some(l => l.UserID === currentUserId);
 
-  if (isLikedByYou) {
-    const others = likedByList.length - 1;
-    if (others === 0) return "You liked this";
-    return `${username} & ${others} others`;
-  }
+//   if (isLikedByYou) {
+//     const others = likedByList.length - 1;
+//     if (others === 0) return "You liked this";
+//     return `${username} & ${others} others`;
+//   }
 
-  const firstUser = likedByList[0]?.UserName || "Someone";
-  const others = likedByList.length - 1;
+//   const firstUser = likedByList[0]?.UserName || "Someone";
+//   const others = likedByList.length - 1;
 
-  if (others <= 0) return `${firstUser} liked this`;
-  return `${firstUser} & ${others} others`;
-};
+//   if (others <= 0) return `${firstUser} liked this`;
+//   return `${firstUser} & ${others} others`;
+// };
 
 const PostCard: React.FC<PostCardProps> = ({ posts, setPosts }) => {
   const [likedPosts, setLikedPosts] = useState<number[]>([]);
@@ -41,7 +39,7 @@ const PostCard: React.FC<PostCardProps> = ({ posts, setPosts }) => {
   const [commentText, setCommentText] = useState<{ [key: number]: string }>({});
   const [selectedPost, setSelectedPost] = useState<Feed | null>(null);
   const [viewsMap, setViewsMap] = useState<{ [key: number]: number }>({});
-  const [showViewers, setShowViewers] = useState(false);
+  const [_showViewers, setShowViewers] = useState(false);
   const [viewerList, setViewerList] = useState<any[]>([]);
   const [viewed, setViewed] = useState<{ [key: number]: boolean }>({});
   const [showLikePopup, setShowLikePopup] = useState(false);
@@ -66,16 +64,6 @@ const PostCard: React.FC<PostCardProps> = ({ posts, setPosts }) => {
 
   const apiUrl = import.meta.env.VITE_API_URL;
 
-  const normalizeUserList = (list: any[] = []) => {
-    return list.filter(
-      (u) =>
-        u &&
-        typeof u === "object" &&
-        u.UserID &&
-        u.UserName
-    );
-  };
-
   // Load liked posts
   useEffect(() => {
     const liked = posts
@@ -97,7 +85,6 @@ const PostCard: React.FC<PostCardProps> = ({ posts, setPosts }) => {
         });
         const data = res.data;
         setComments(Array.isArray(data) ? data : []);
-        console.log("Comments", res.data)
       } catch (err) {
         console.error("❌ Error fetching comments:", err);
       }
@@ -235,7 +222,6 @@ const PostCard: React.FC<PostCardProps> = ({ posts, setPosts }) => {
     }
   };
 
-
   // COMMENT POST API
   const handleAddComment = async (post: Feed) => {
     const text = commentText[post.NominationID]?.trim();
@@ -262,7 +248,7 @@ const PostCard: React.FC<PostCardProps> = ({ posts, setPosts }) => {
         }
       );
 
-      const newID = res.data;
+      //const newID = res.data;
 
       const tempId = crypto.randomUUID();
       const newComment = {
@@ -298,15 +284,12 @@ const PostCard: React.FC<PostCardProps> = ({ posts, setPosts }) => {
       console.error("❌ Error posting comment:", err);
     }
   };
-
-
   const toggleComments = (nominationId: number) => {
     setShowComments((prev) => ({
       ...prev,
       [nominationId]: !prev[nominationId],
     }));
   };
-
   const fetchViews = async (nominationId: number) => {
     try {
       const res = await axios.get(
@@ -328,10 +311,6 @@ const PostCard: React.FC<PostCardProps> = ({ posts, setPosts }) => {
           : [];
 
       setViewerList(list);
-      console.log("view data", list)
-
-      //setViewerList(res.data);
-
       setViewsMap((prev) => ({
         ...prev,
         [nominationId]:
@@ -383,29 +362,7 @@ const PostCard: React.FC<PostCardProps> = ({ posts, setPosts }) => {
       return () => clearTimeout(timer);
     }
   }, [successMsg]);
-  const handlePostClick = async (post: Feed) => {
-    const NominationID = post.NominationID;  // Get the NominationID from the clicked post
-
-    // Perform API call or any logic using the NominationID
-    await fetchSeekingUsers(NominationID);  // Pass the NominationID to the function
-    setSelectedPost(post);  // Optionally, set the selected post for viewing
-  };
-
-  //   const fetchSeekingUsers = async () => {
-  //   try {
-  //     const NominationID = 1;
-  //     const res = await axios.get(`${apiUrl}/api/seeking/${NominationID}`, {
-  //       headers: {
-  //         Authorization: `Bearer ${authToken}`,
-  //       },
-  //     });
-
-  //     setSeekingUsers(res.data || []);
-  //     console.log("seek data",res.data)
-  //   } catch (err) {
-  //     console.error("Seeking users load failed", err);
-  //   }
-  // };
+  
   const fetchSeekingUsers = async (NominationID: number) => {
     try {
       const res = await axios.get(`${apiUrl}/api/users`, {
@@ -415,9 +372,6 @@ const PostCard: React.FC<PostCardProps> = ({ posts, setPosts }) => {
       });
 
       setSeekingUsers(Array.isArray(res.data) ? res.data : []);
-
-      console.log("Seeking users:", res.data);
-
       // also refresh count when popup opens
       fetchSeekingUsercount(NominationID);
 
@@ -446,7 +400,6 @@ const PostCard: React.FC<PostCardProps> = ({ posts, setPosts }) => {
           },
         });
       }
-
       // refresh actual count from DB
       if (selectedPost?.NominationID) {
         await fetchSeekingUsercount(selectedPost.NominationID);
@@ -480,15 +433,11 @@ const PostCard: React.FC<PostCardProps> = ({ posts, setPosts }) => {
         },
       });
 
-      console.log("Seeking count API response:", res.data);
-
       let list: any[] = [];
-
       // Case 1: API returns array directly
       if (Array.isArray(res.data)) {
         list = res.data;
       }
-
       // Case 2: API returns { Seeking: "[...json...]" }
       else if (res.data?.Seeking) {
         list = JSON.parse(res.data.Seeking);
@@ -542,7 +491,6 @@ const PostCard: React.FC<PostCardProps> = ({ posts, setPosts }) => {
         }
       }
     });
-
     return roots;
   };
 
@@ -623,19 +571,19 @@ const PostCard: React.FC<PostCardProps> = ({ posts, setPosts }) => {
 
           //  const filteredFlat = (comments || []).filter(c => c.NominationID === post.NominationID);
 
-          const filteredFlat = (comments || [])
-            .filter(c => c.NominationID === post.NominationID)
-            // Remove duplicates by creating a Map
-            .reduce((acc: any[], current) => {
-              const existing = acc.find(item =>
-                item.NominationCommentsID === current.NominationCommentsID
-              );
-              if (!existing) {
-                acc.push(current);
-              }
-              return acc;
-            }, []);
-          const nestedComments = buildCommentTree(filteredFlat);
+          // const filteredFlat = (comments || [])
+          //   .filter(c => c.NominationID === post.NominationID)
+          //   // Remove duplicates by creating a Map
+          //   .reduce((acc: any[], current) => {
+          //     const existing = acc.find(item =>
+          //       item.NominationCommentsID === current.NominationCommentsID
+          //     );
+          //     if (!existing) {
+          //       acc.push(current);
+          //     }
+          //     return acc;
+          //   }, []);
+          // const _nestedComments = buildCommentTree(filteredFlat);
 
           return (
             <div
