@@ -7,7 +7,6 @@ import { useAuth } from "../ContextAPI/AuthContext";
 import type { AddNominationState } from "../../dataTypes/nomination";
 import Select from "react-select";
 import { useNavigate } from "react-router-dom";
-import type { ClearIndicatorProps } from "react-select";
 
 // interface OptionType {
 //   value: number;
@@ -101,7 +100,7 @@ useEffect(() => {
   }
 }, [form.email]); // runs whenever emails change
 
-const NoClearIndicator = (props: ClearIndicatorProps<any, true>) => {
+const NoClearIndicator = () => {
   return null;
 };
     console.log("Form Submitted");
@@ -407,16 +406,16 @@ const handleNomineeChange = (selected: any) => {
     console.log("📦 Sending payload:", payload);
 
     try {
-      const res = await axios.post(
-        "http://172.16.5.106:5195/api/nomination",
-        payload,
-        {
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${authToken}`,
-          },
-        }
-      );
+      // const res = await axios.post(
+      //   "http://172.16.5.106:5195/api/nomination",
+      //   payload,
+      //   {
+      //     headers: {
+      //       "Content-Type": "application/json",
+      //       Authorization: `Bearer ${authToken}`,
+      //     },
+      //   }
+      // );
       setShowSuccessModal(true);
     } catch (err) {
       console.error("❌ Error submitting nomination:", err);

@@ -61,8 +61,8 @@ const NominationDetailView: React.FC<NominationDetailViewProps> = ({
     const [_openReferralPopup, setOpenReferralPopup] = useState(false);
     const [_selectedDocs, setSelectedDocs] = useState<any[]>([]);
     const [_openDocPopup, setOpenDocPopup] = useState(false);
-    const [_selectedComment, setSelectedComment] = useState("");
-    const [_openCommentsPopup, setOpenCommentsPopup] = useState(false);
+    const [selectedComment, setSelectedComment] = useState("");
+    const [openCommentsPopup, setOpenCommentsPopup] = useState(false);
 
    const [IsSelf, setIsSelf] = useState<boolean | null>(null);
   //const fileInputRef = useRef<HTMLInputElement | null>(null);
@@ -188,16 +188,16 @@ const description =
     ? description
     : description.slice(0, maxLength) + "...";
  
-  const approvalFlow: ApprovalFlowItem[] = (data?.ApprovalStatus || []).map(
-  (a: any) => ({
-    type: a.ApprovalType,
-    status: a.Status,
-    level: a.ApprovalFlow,
-    comments: a.ApprovalComments,
-    approvedAt: a.ApprovedAt,
-    score:a.ApprovalScore,
-  })
-);
+//   const approvalFlow: ApprovalFlowItem[] = (data?.ApprovalStatus || []).map(
+//   (a: any) => ({
+//     type: a.ApprovalType,
+//     status: a.Status,
+//     level: a.ApprovalFlow,
+//     comments: a.ApprovalComments,
+//     approvedAt: a.ApprovedAt,
+//     score:a.ApprovalScore,
+//   })
+// );
 
   useEffect(() => {
     if (nominationId && authToken) {
