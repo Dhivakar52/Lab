@@ -102,14 +102,6 @@ const HomeComponent: React.FC = () => {
             Authorization: `Bearer ${authToken}`,
           },
         });
-        // const listCard = await axios.get(`${apiUrl}/api/nomiantionmylist?userID=${userId}`, {
-        
-        //   headers: {
-        //     "Content-Type": "application/json",
-        //     Authorization: `Bearer ${authToken}`,
-        //   },
-        // });
-
         setList(listCard.data);
       } catch (err) {
         console.error("❌ Error fetching feeds:", err);
@@ -157,12 +149,6 @@ const HomeComponent: React.FC = () => {
         return sorted.sort((a, b) => b.Comments - a.Comments);
       case "views":
         return sorted.sort((a, b) => b.Views - a.Views);
-      // case "nominated":
-      //   return sorted.sort((a, b) => b.NominatedCount - a.NominatedCount);
-      // case "name":
-      //   return sorted.sort((a, b) => a.Nominee.localeCompare(b.Nominee));
-      // case "category":
-      //   return sorted.sort((a, b) => a.AwardCategory.localeCompare(b.AwardCategory));
       default:
         return sorted;
     }

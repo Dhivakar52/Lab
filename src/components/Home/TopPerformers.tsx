@@ -15,7 +15,6 @@ const TopPerformers: React.FC = () => {
   const [performers, setPerformers] = useState<Performer[]>([]);
   const [currentPage, setCurrentPage] = useState(0);
  
-  const ITEMS_PER_PAGE = 1; // one category per slide
   const apiUrl = import.meta.env.VITE_API_URL;
  
   useEffect(() => {
@@ -27,9 +26,7 @@ const TopPerformers: React.FC = () => {
             Authorization: `Bearer ${authToken}`,
           },
         });
-        debugger;
         setPerformers(res.data);
-        console.log("Top Performers:", res.data);
       } catch (err) {
         console.error("Error fetching performers:", err);
       }
@@ -82,7 +79,7 @@ const TopPerformers: React.FC = () => {
 }, [performers]);
  
   const categories = Object.keys(groupedPerformers);
-  const totalPages = categories.length;
+  //const totalPages = categories.length;
  
   const currentCategory = categories[currentPage];
   const currentPerformers = groupedPerformers[currentCategory] || [];

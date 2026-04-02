@@ -8,7 +8,7 @@ interface LikeSectionProps {
   onLike: () => void;
 }
 
-const FeedLikeComponent: React.FC<LikeSectionProps> = ({ post, isLiked, onLike }) => {
+const FeedLikeComponent: React.FC<LikeSectionProps> = ({  isLiked, onLike }) => {
   return (
     <button
       onClick={onLike}

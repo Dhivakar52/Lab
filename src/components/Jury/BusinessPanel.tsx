@@ -26,9 +26,9 @@ const BusinessPanel: React.FC<NomineeSidePanelProps> = ({
 }) => {
   const [businessJuryComments, setBusinessJuryComments] = useState('');
   const { authToken, userId } = useAuth();
-  const [data, setData] = useState<BusinessJury[]>([]);
-  const [loading, setLoading] = useState<boolean>(false);
-  const [sidebarOpen, setSidebarOpen] = useState<boolean>(true); // Sidebar state
+  const [_data, setData] = useState<BusinessJury[]>([]);
+  const [_loading, setLoading] = useState<boolean>(false);
+  const [_sidebarOpen, setSidebarOpen] = useState<boolean>(true); // Sidebar state
   const [commentError, setCommentError] = useState("");
   const [score, setScore] = useState();
   const [error, setError] = useState('');
@@ -387,7 +387,7 @@ const BusinessPanel: React.FC<NomineeSidePanelProps> = ({
         <div className="grid grid-cols-1 gap-4">
                 <div className="space-y-1">
                   {/* <div className="text-sm font-medium text-gray-900">Nomination Status Flow</div> */}
-                  <StatusFlow steps={approvalFlow} />
+                  {/* <StatusFlow steps={approvalFlow} /> */}
                 </div>
               </div>
              {/* Row 8 – Supporting Documents */}

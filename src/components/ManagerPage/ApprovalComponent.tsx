@@ -8,7 +8,6 @@ import {
   getFilteredRowModel,
   flexRender,
 } from "@tanstack/react-table";
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@radix-ui/react-dropdown-menu";
 import type { ColumnDef } from "@tanstack/react-table";
 import { useAuth } from "../ContextAPI/AuthContext";
 import { Menu } from "lucide-react";
@@ -106,17 +105,17 @@ const apiUrl = import.meta.env.VITE_API_URL;
 
 const ApprovalTable: React.FC = () => {
   const [isPanelOpen, setIsPanelOpen] = useState(false);
-  const [selectedNomination, setSelectedNomination] = useState<ApprovalView | null>(null);
+  const [selectedNomination, _setSelectedNomination] = useState<ApprovalView | null>(null);
   const [data, setData] = useState<ApprovalData[]>([]);
   const [loading, setLoading] = useState(true);
   const [globalFilter, setGlobalFilter] = useState("");
   const { userId, authToken } = useAuth();
-  const [successMessage, setSuccessMessage] = useState("");
+  const [_successMessage, setSuccessMessage] = useState("");
   const [reason, setReason] = useState("");
-  const [toastType, setToastType] = useState<"success" | "error">("success");
+  const [_toastType, setToastType] = useState<"success" | "error">("success");
   const [flagReason, setFlagReason] = useState<Record<number, string>>({});
   const [flagError, setFlagError] = useState<Record<number, string>>({});
-  const [expandedFlagRow, setExpandedFlagRow] = useState<number | null>(null);
+  const [_expandedFlagRow, setExpandedFlagRow] = useState<number | null>(null);
   const [expandedRow, setExpandedRow] = useState<ExpandedRow>(null);
   const flagInputRefs = useRef<{ [key: number]: HTMLInputElement | null }>({});
   const tableWrapperRef = useRef<HTMLDivElement | null>(null);
@@ -145,22 +144,7 @@ const ApprovalTable: React.FC = () => {
     fetchApprovals();
     setExpandedRow(null);
   }, []);
-  const handleFlagClick = (item: any) => {
-    setExpandedRow(prev => {
-      if (prev?.id === item.NominationID && prev?.type === "flag") {
-        return null;
-      }
-      return { id: item.NominationID, type: "flag" };
-    });
-  };
-  const handleStatusClick = (item: any) => {
-    setExpandedRow(prev => {
-      if (prev?.id === item.NominationID && prev?.type === "status") {
-        return null;
-      }
-      return { id: item.NominationID, type: "status" };
-    });
-  };
+  
    useEffect(() => {
    const handleClickOutside = (event: MouseEvent) => {
      if (!tableWrapperRef.current) return;
@@ -328,59 +312,11 @@ const ApprovalTable: React.FC = () => {
           );
         },
       },  
-    // {
-    //             accessorKey: "Status",
-    //             header: "Status",
-    //             cell: ({ row, getValue }) => {
-    //               const status = getValue() as string;
-    //               const isOpen =
-    //                 expandedRow?.id === row.original.NominationID &&
-    //                 expandedRow?.type === "status";
     
-    //               const bgClass = levelColors[status] || "bg-gray-100 border-gray-300";
-    //               const textClass = levelTextColors[status] || "text-gray-700";
-    
-    //               return (
-    //                 <div
-    //                   className={`inline-flex items-center border rounded overflow-hidden ${bgClass} ${textClass}`}>
-    //                   <button
-    //                     onClick={(e) => {e.stopPropagation();handleStatusClick(row.original);}}
-    //                     className="px-3 py-1 text-sm font-medium flex-1 text-left">
-    //                     {status}
-    //                   </button>
-    //                   <span className="w-px self-stretch bg-current opacity-30" />
-    //                   <button
-    //                     onClick={(e) =>{e.stopPropagation(); handleStatusClick(row.original);}}
-    //                     className="px-2 flex items-center justify-center" >
-    //                    {isOpen ? <ChevronUp size={18} /> : <ChevronDown size={18} />}
-    //                   </button>
-    //                 </div>
-    //               );
-    //             },
-    //        },
-    //        {
-    //         header: "Flag",
-    //         cell: ({ row }) => {
-    //           const item = row.original as any;
-    //           const flagStatus = Number(item.FlagStatus);
-    //           if (flagStatus < 0) return null;
-    //           const isRed = flagStatus === 1;
-    //           return (
-    //             <button
-    //               onClick={(e) =>{e.stopPropagation(); handleFlagClick(item);}}
-    //               className="p-1"
-    //               title={isRed ? "Click to Flag" : "Click to UnFlag"}>
-    //               <Flag
-    //                 size={18}
-    //                 className={isRed ? "text-red-600 fill-red-600" : "text-gray-400 fill-gray-400"}/>
-    //             </button>
-    //           );
-    //         },
-    //       },
       {
               header: "Actions",
               cell: ({ row }) => {
-                const item = row.original;
+                //const item = row.original;
                 const handleDetailsView = (item: ApprovalData) => {
               navigate(`/businessjury-detail/${item.NominationID}`, {
                 state: { from: "approvals" }
@@ -513,7 +449,6 @@ const ApprovalTable: React.FC = () => {
 
                   } catch (error) {
                     console.error("Flag Error:", error);
-                    alert("Flag update failed");
                   }
                 };
                 return (
