@@ -6,7 +6,6 @@ import TrophyImage from "../../../assets/images/login_cup_img.png";
 import loginBg from "../../../assets/images/login_left_img.png";
 import { Eye, EyeClosed } from "lucide-react";
 import { USER_ROLES, type UserRole } from "../../../dataTypes/roles";
-import axios from "axios";
  
 interface LoginProps {
   setUserRole: React.Dispatch<React.SetStateAction<UserRole | null | undefined>>;
@@ -66,7 +65,6 @@ export default function Login({ setUserRole }: LoginProps) {
       const userEmail = data.email ?? data.userEmail ?? data?.result?.email;
       const tenantname = data.tenantname ?? data.tenantname ?? data?.result?.tenantname;
       const primaryfield = data.primaryfield ?? data.primaryfield ?? data?.result?.primaryfield;
-       console.log(data.tenantname)
  
       if (!token) {
         showMessage("Login failed. Token missing.", "error");
@@ -129,17 +127,17 @@ export default function Login({ setUserRole }: LoginProps) {
     }
      try {
       
-      const response = await axios.put(
-      `${apiUrl}/api/generateotp`,
-      {},
-      {
-        params: {
-          UserEmail: email,
-          IsResendOTP: false,
-        },
-       // headers: { Authorization: `Bearer ${authToken}`,},   
-      }
-    );
+    //   const response = await axios.put(
+    //   `${apiUrl}/api/generateotp`,
+    //   {},
+    //   {
+    //     params: {
+    //       UserEmail: email,
+    //       IsResendOTP: false,
+    //     },
+    //    // headers: { Authorization: `Bearer ${authToken}`,},   
+    //   }
+    // );
       
     } catch (err) {
       console.error("Login error:", err);

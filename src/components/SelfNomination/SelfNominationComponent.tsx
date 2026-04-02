@@ -1,6 +1,5 @@
 import * as Label from "@radix-ui/react-label";
 import { useEffect, useState,useRef } from "react";
-import { Outlet } from "react-router-dom";
 import axios from "axios";
 import type { FormState } from "../../dataTypes/nomination";
 import { useAuth } from "../ContextAPI/AuthContext";
@@ -10,12 +9,8 @@ import { useParams } from "react-router-dom";
 import * as Dialog from "@radix-ui/react-dialog";
 import { X, User, Building2, Mail,Phone } from "lucide-react";
 
-import Pagination from "../Pagination";
 
-// interface OptionType {
-//   value: number;
-//   label: string;
-// }
+
 interface UploadedDocument {
   originalFileName: string;
   fileType: string;
@@ -23,23 +18,7 @@ interface UploadedDocument {
   fileNameGUID: string;
   fileUrl: string;
 }
-type ExistingDoc = {
-  fileNameGUID: string;
-  originalFileName: string;
-  fileType: string;
-  fileSize: string;
-  filePath: string;
-  source: "api";
-  isDeleted: boolean;   
-};
-type NewDoc = {
-  file: File;
-  source: "local";
-};
-type Referral = {
-  userId: number;
-  isRemoved: boolean;
-};
+
 
 const apiUrl = import.meta.env.VITE_API_URL;
 
@@ -53,7 +32,6 @@ export default function AddNomination() {
   const [contest, setContest]= useState([]);
   const [users, setUsers] = useState<any[]>([]);
   const [referrals, setReferrals] = useState<any[]>([]);
-  const [successMsg, setSuccessMsg] = useState("");
   const {  authToken, userId } = useAuth();
   const [showSuccessModal, setShowSuccessModal] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
@@ -172,18 +150,7 @@ useEffect(() => {
   fetchNominationById();
 }, [nominationId, isEditMode, authToken]);
 
-// const allDocuments = [
-//   ...existingDocs.filter(d => !d.isDeleted),
-//   ...form.files.map(file => ({
-//     source: "new",
-//     file,
-//     originalFileName: file.name,
-//   })),
-// ];
-// const allDocuments = [
-//   ...existingDocs.filter(doc => !doc.isDeleted).map(doc => ({ ...doc, source: "api" })),
-//   ...form.files 
-// ];
+
 const allDocuments = [
   ...existingDocs
     .filter(doc => !doc.isDeleted)
@@ -210,7 +177,6 @@ useEffect(() => {
       setTotalSelfNominations(res.data[0]?.TotalRowCount || 0);
       setDoj(res.data[0]?.DateOfJoining || "");
       setSrmExperience(res.data[0]?.SRMExperience || "");
-      console.log("Res.data[0]:", res.data[0]);
     } catch (err) {
       console.error("❌ Error fetching nominations count:", err);
       setTotalSelfNominations(0);
@@ -254,14 +220,7 @@ const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     setFileError("Maximum 5 files allowed.");
     return;
   }
-  const wrappedFiles = selectedFiles.map((file) => ({
-    source: "local",
-    originalFileName: file.name,
-    file,
-    fileType: file.type,
-    fileSize: file.size,
-  }));
-
+ 
   // Add the files
   setForm((prev) => ({
     ...prev,
@@ -285,24 +244,7 @@ const uploadFilesToServer = async (files: File[]) => {
 
   return res.data; // backend returns uploaded file info
 };
-const newFiles = form.files; // only local files
 
-// let uploadedDocs: UploadedDocument[] = [];
-
-// if (newFiles.length > 0) {
-//   uploadedDocs = await uploadFilesToServer(newFiles);
-// }
-
-const handleRemoveFile = (index: number) => {
-  const updatedFiles = [...form.files];
-  updatedFiles.splice(index, 1);
-
-  setForm((prev) => ({ ...prev, files: updatedFiles }));
-
-  if (fileInputRef.current) {
-    fileInputRef.current.value = "";
-  }
-};
 
 useEffect(() => {
   const fetchUser = async () => {
@@ -317,8 +259,6 @@ useEffect(() => {
         }
       );
      const user = res2.data[0]; 
-    console.log("✅ Success User Data:", user);
-
 const res3 = await axios.get(`${apiUrl}/api/awardCategory`, {
   headers: {
     "Content-Type": "application/json",
@@ -327,7 +267,6 @@ const res3 = await axios.get(`${apiUrl}/api/awardCategory`, {
 });
 
 setContest(res3.data); 
-console.log("Contest Type", res3.data); 
 
 const res4 = await axios.get(`${apiUrl}/api/usersbyname?pageNumber=1&pageSize=100`, {
   headers: {
@@ -335,8 +274,7 @@ const res4 = await axios.get(`${apiUrl}/api/usersbyname?pageNumber=1&pageSize=10
     Authorization: `Bearer ${authToken}`,
   },
 });
-setUsers(res4.data.Users || []);
-console.log("Contest Type", res4.data);    
+setUsers(res4.data.Users || []); 
  setForm((prev) => ({
         ...prev,
         nomineeName: user?.UserName?.trim() || "",
@@ -487,44 +425,13 @@ const referralPayload = referrals.map(ref => ({
     },
     referralIDs: referralPayload,
     documents: documentsPayload,
-    // referralIDs: referrals.map((ref) => ({
-    //   referralID: ref.UserID,
-    //   nominationID: Number(nominationId || 0),
-    //   referralUserID: ref.UserID,
-    //   isReferralApproved: true,
-    //   approvalComments: "",
-    //   active: true,
-    //   createdBy: Number(userId),
-    //   updatedBy: Number(userId),
-    //    referralEmail: ref.UserInfo
-    // })),
-    // documents: uploadedDocs.map((doc:any) => ({
-    //     nominationFileID: Number(userId),
-    //     nominationID: Number(nominationId || 0),
-    //     originalFileName: doc.originalFileName,
-    //     fileType: doc.fileType,
-    //     fileSize: `${(doc.fileSize / 1024).toFixed(2)} KB`,
-    //     fileNameGUID: doc.fileNameGUID,
-    //     filePath: doc.fileUrl, // <<< correct path
-    //     active: true,
-    //     createdBy: Number(userId),
-    //     updatedBy: Number(userId),
-    //   })),
+    
+    
   };
 
-  console.log("📦 Sending payload:", payload);
+ 
   try {
-    // const res = await axios.post(
-    //   // "http://172.16.5.106:5195/api/nomination",
-    //   `${apiUrl}/api/nomination`,
-    //   payload,
-    //   {
-    //     headers: {
-    //       "Content-Type": "application/json",
-    //       Authorization: `Bearer ${authToken}`, 
-    //     },
-    //   }
-    // );
+    
      const url = isEditMode
       ? `${apiUrl}/api/nominations/${nominationId}`
       : `${apiUrl}/api/nomination`;
@@ -548,8 +455,6 @@ const referralPayload = referrals.map(ref => ({
       return;
     }
        setShowSuccessModal(true);
-
-    console.log("✅ Success:", res.data);
   } catch (err) {
     console.error("❌ Error submitting nomination:", err);
     setShowErrorModal(true);
@@ -745,7 +650,7 @@ const referralPayload = referrals.map(ref => ({
                               headers: { Authorization: `Bearer ${authToken}` },
                             }
                           );
-                          const blobUrl = URL.createObjectURL(response.data);
+                        //  const blobUrl = URL.createObjectURL(response.data);
                           if (["jpg", "jpeg", "png", "gif"].includes(ext)) {
                             openPreview(response.data, ext);
                           } 

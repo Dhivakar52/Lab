@@ -9,12 +9,9 @@ import {
   CircleCheckBig,
   Gavel,
   Users,
-  Award,
-  Shield,
   ClipboardList,
-  UserPlus, ChevronLeft,
+  ChevronLeft,
   LogOut,X,
-  Trophy,
   TrophyIcon
 } from "lucide-react";
 import { Link, useLocation, useNavigate } from 'react-router-dom';

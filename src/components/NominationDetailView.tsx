@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import axios from "axios";
-import { X, ArrowLeft } from "lucide-react";
+import { X } from "lucide-react";
 import StatusFlow from "./StatusFlow";
 import { useAuth } from "./ContextAPI/AuthContext";
 import * as Dialog from "@radix-ui/react-dialog";
@@ -52,7 +52,7 @@ const NominationDetailView: React.FC<NominationDetailViewProps> = ({
   const [errorMessage, setErrorMessage] = useState("");
   const [data, setData] = useState<any>(null);
   const [referrals, setReferrals] = useState<any[]>([]);
-  const [documents, setDocuments] = useState<any[]>([]);
+  const [_documents, setDocuments] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [expanded, setExpanded] = useState(false);
   const [successMessage, setSuccessMessage] = useState("");
@@ -83,16 +83,7 @@ const NominationDetailView: React.FC<NominationDetailViewProps> = ({
 
   const fetchNominationDetails = async () => {
     try {
-      // const res = await axios.get(
-      //   `${apiUrl}/api/nominations/${nominationId}`,
-      //   {
-      //     headers: {
-      //       Authorization: `Bearer ${authToken}`,
-      //     },
-      //   }
-      // );
-      // const result = res.data[0]; 
-      // setData(result);
+      
        const api = pageConfig.fetchApi.replace("{id}", nominationId!);
 
       const res = await axios.get(`${apiUrl}${api}`, {
@@ -101,7 +92,6 @@ const NominationDetailView: React.FC<NominationDetailViewProps> = ({
 
       const result = res.data[0] ?? res.data;
       setData(result);
-      console.log("sucess",res.data)
       setReferrals(result["Referrals ID"] || []);
       setDocuments(result["Supporting Documents"]|| []);
     } catch (err) {
@@ -133,15 +123,7 @@ const NominationDetailView: React.FC<NominationDetailViewProps> = ({
       return "https://img.icons8.com/color/48/file.png";
   }
 };
- const handleBackward1 = () => {
-  switch (sourcePage) {
-    case "referral-approval":
-      navigate("/referral-approval");
-      break;
-    default:
-      navigate("/my-nominations");
-  }
-};
+ 
   const handleBackward = () => {
     collapseSidebar: true
   if (from === "my-nominations") {
@@ -344,7 +326,7 @@ return (
           </div>
         </div>
         <div className="mb-4">
-          <StatusFlow steps={approvalFlow} />
+          {/* <StatusFlow steps={approvalFlow} /> */}
         </div>
         <div className="mb-4">
         <div className="text-sm font-medium text-gray-900 mb-1">Referrals</div>

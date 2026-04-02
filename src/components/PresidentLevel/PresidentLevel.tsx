@@ -15,7 +15,6 @@ import type {
 import { useAuth } from "../ContextAPI/AuthContext";
 import { ColorBadge } from "../TenantBadges";
 import { useNavigate } from "react-router-dom";
-import PresidentSidePanel from "./PresidentSidePanel";
 import Pagination from "../Pagination";
 import StatusFlow from "../CommonStatusFlow"; 
 import { Flag } from "lucide-react";

@@ -1,11 +1,11 @@
 
-// import React  from 'react';
+ import React  from 'react';
 // import { Bell} from 'lucide-react';
 // import NotificationModal from '../components/Notification/NotificationModal';
 import NotificationTable from '../components/NotificationComponent/NotificationTable';
 
-const Demo = () => {
-  // const [isOpen, setIsOpen] = React.useState(true);
+const Demo = () => { 
+   const [isOpen, setIsOpen] = React.useState(true);
 
   return (
     <div className="">
@@ -21,7 +21,12 @@ const Demo = () => {
         isOpen={isOpen}
         onClose={() => setIsOpen(false)}
       /> */}
-        <NotificationTable />
+        {/* <NotificationTable /> */}
+         <NotificationTable
+        isOpen={isOpen}
+        onClose={() => setIsOpen(false)}
+       // notifications=[]
+      />
     </div>
   );
 };
