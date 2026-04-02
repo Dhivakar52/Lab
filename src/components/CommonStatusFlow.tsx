@@ -77,34 +77,34 @@ const CommonStatusFlow: React.FC<CommonStatusFlowProps> = ({ steps }) => {
             const overall = getOverallStatus(items);
             return (
               <div key={level} className="flex items-center">
-                {/* <div className={`flex-1 min-w-[240px] border rounded-xl px-2 py-1 ${levelColors[overall]}`}> */}
+                <div className={`flex-1 min-w-[240px] border rounded-xl px-2 py-1 ${levelColors[overall]}`}>
                   <div className="space-y-0.5">
                     {(level === "Level-1"
                         ? (() => {
                             const s = getPrimaryLevel1Item(items);
                             if (!s) return null;
 
-                            // return (
-                            // <div className="flex items-center justify-center gap-2 text-xs px-2 py-1">
-                            //     <span className={`font-medium ${levelTextColors[overall]}`}>
-                            //     Referral / Manager – {s.status}
-                            //     </span>
-                            //     <span className={levelTextColors[overall]}>
-                            //         {statusIcon(s.status)}
-                            //     </span>
-                            // </div>
-                            // );
+                            return (
+                            <div className="flex items-center justify-center gap-2 text-xs px-2 py-1">
+                                <span className={`font-medium ${levelTextColors[overall]}`}>
+                                Referral / Manager – {s.status}
+                                </span>
+                                <span className={levelTextColors[overall]}>
+                                    {statusIcon(s.status)}
+                                </span>
+                            </div>
+                            );
                         })()
                         : items.map((s, idx) => (
                             <div
                             key={idx}
                             className="flex items-center justify-center gap-2 text-xs px-2 py-1">
-                           {/* <span className={`font-medium ${levelTextColors[overall]}`}>
+                           <span className={`font-medium ${levelTextColors[overall]}`}>
                                 {s.type} – {s.status}
                             </span>
                            <span className={levelTextColors[overall]}>
                                 {statusIcon(s.status)}
-                           </span> */}
+                           </span>
                             </div>
                         )))}
                     </div>
@@ -116,6 +116,7 @@ const CommonStatusFlow: React.FC<CommonStatusFlowProps> = ({ steps }) => {
             );
           })}
         </div>
+    </div>
   );
 };
 
