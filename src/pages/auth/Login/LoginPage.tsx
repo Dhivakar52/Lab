@@ -6,7 +6,7 @@ import TrophyImage from "../../../assets/images/login_cup_img.png";
 import loginBg from "../../../assets/images/login_left_img.png";
 import { Eye, EyeClosed } from "lucide-react";
 import { USER_ROLES, type UserRole } from "../../../dataTypes/roles";
-import axios from "axios";
+// import axios from "axios";
  
 interface LoginProps {
   setUserRole: React.Dispatch<React.SetStateAction<UserRole | null | undefined>>;
@@ -127,17 +127,17 @@ export default function Login({ setUserRole }: LoginProps) {
     }
      try {
       
-      const response = await axios.put(
-      `${apiUrl}/api/generateotp`,
-      {},
-      {
-        params: {
-          UserEmail: email,
-          IsResendOTP: false,
-        },
-       // headers: { Authorization: `Bearer ${authToken}`,},   
-      }
-    );
+    //   const _response = await axios.put(
+    //   `${apiUrl}/api/generateotp`,
+    //   {},
+    //   {
+    //     params: {
+    //       UserEmail: email,
+    //       IsResendOTP: false,
+    //     },
+    //    // headers: { Authorization: `Bearer ${authToken}`,},   
+    //   }
+    // );
       
     } catch (err) {
       console.error("Login error:", err);
@@ -189,7 +189,7 @@ console.log(data);
     const username = data.username;
     const userEmail = data.email;
     const refreshToken = data.refreshtoken;
-    const tenantname = data.tenantname;
+    // const tenantname = data.tenantname;
 
     let role_user: UserRole;
       switch (Number(roleid)) {

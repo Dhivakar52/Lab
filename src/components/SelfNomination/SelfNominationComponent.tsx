@@ -1,6 +1,6 @@
 import * as Label from "@radix-ui/react-label";
 import { useEffect, useState,useRef } from "react";
-import { Outlet } from "react-router-dom";
+// import { Outlet } from "react-router-dom";
 import axios from "axios";
 import type { FormState } from "../../dataTypes/nomination";
 import { useAuth } from "../ContextAPI/AuthContext";
@@ -10,7 +10,7 @@ import { useParams } from "react-router-dom";
 import * as Dialog from "@radix-ui/react-dialog";
 import { X, User, Building2, Mail,Phone } from "lucide-react";
 
-import Pagination from "../Pagination";
+// import Pagination from "../Pagination";
 
 // interface OptionType {
 //   value: number;
@@ -23,23 +23,23 @@ interface UploadedDocument {
   fileNameGUID: string;
   fileUrl: string;
 }
-type ExistingDoc = {
-  fileNameGUID: string;
-  originalFileName: string;
-  fileType: string;
-  fileSize: string;
-  filePath: string;
-  source: "api";
-  isDeleted: boolean;   
-};
-type NewDoc = {
-  file: File;
-  source: "local";
-};
-type Referral = {
-  userId: number;
-  isRemoved: boolean;
-};
+// type ExistingDoc = {
+//   fileNameGUID: string;
+//   originalFileName: string;
+//   fileType: string;
+//   fileSize: string;
+//   filePath: string;
+//   source: "api";
+//   isDeleted: boolean;   
+// };
+// type NewDoc = {
+//   file: File;
+//   source: "local";
+// };
+// type Referral = {
+//   userId: number;
+//   isRemoved: boolean;
+// };
 
 const apiUrl = import.meta.env.VITE_API_URL;
 
@@ -53,7 +53,7 @@ export default function AddNomination() {
   const [contest, setContest]= useState([]);
   const [users, setUsers] = useState<any[]>([]);
   const [referrals, setReferrals] = useState<any[]>([]);
-  const [successMsg, setSuccessMsg] = useState("");
+  // const [successMsg, setSuccessMsg] = useState("");
   const {  authToken, userId } = useAuth();
   const [showSuccessModal, setShowSuccessModal] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
@@ -254,13 +254,13 @@ const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     setFileError("Maximum 5 files allowed.");
     return;
   }
-  const wrappedFiles = selectedFiles.map((file) => ({
-    source: "local",
-    originalFileName: file.name,
-    file,
-    fileType: file.type,
-    fileSize: file.size,
-  }));
+  // const wrappedFiles = selectedFiles.map((file) => ({
+  //   source: "local",
+  //   originalFileName: file.name,
+  //   file,
+  //   fileType: file.type,
+  //   fileSize: file.size,
+  // }));
 
   // Add the files
   setForm((prev) => ({
@@ -285,7 +285,7 @@ const uploadFilesToServer = async (files: File[]) => {
 
   return res.data; // backend returns uploaded file info
 };
-const newFiles = form.files; // only local files
+// const newFiles = form.files; // only local files
 
 // let uploadedDocs: UploadedDocument[] = [];
 
@@ -293,16 +293,16 @@ const newFiles = form.files; // only local files
 //   uploadedDocs = await uploadFilesToServer(newFiles);
 // }
 
-const handleRemoveFile = (index: number) => {
-  const updatedFiles = [...form.files];
-  updatedFiles.splice(index, 1);
+// const handleRemoveFile = (index: number) => {
+//   const updatedFiles = [...form.files];
+//   updatedFiles.splice(index, 1);
 
-  setForm((prev) => ({ ...prev, files: updatedFiles }));
+//   setForm((prev) => ({ ...prev, files: updatedFiles }));
 
-  if (fileInputRef.current) {
-    fileInputRef.current.value = "";
-  }
-};
+//   if (fileInputRef.current) {
+//     fileInputRef.current.value = "";
+//   }
+// };
 
 useEffect(() => {
   const fetchUser = async () => {
@@ -745,7 +745,7 @@ const referralPayload = referrals.map(ref => ({
                               headers: { Authorization: `Bearer ${authToken}` },
                             }
                           );
-                          const blobUrl = URL.createObjectURL(response.data);
+                          // const blobUrl = URL.createObjectURL(response.data);
                           if (["jpg", "jpeg", "png", "gif"].includes(ext)) {
                             openPreview(response.data, ext);
                           } 
