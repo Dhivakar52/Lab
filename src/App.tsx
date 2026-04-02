@@ -11,7 +11,6 @@ import AddNomination from './components/NominationContent/AddNomination';
 import ApprovalComponent from './components/ManagerPage/ApprovalComponent';
 import BusinessJury from './components/Jury/BusinessJury';
 import PresidentLevel from './components/PresidentLevel/PresidentLevel';
-import PresidentUnit from './components/PresidentUnitLevel/PresidentUnit';
 import AdminInner from './components/AdminSetting/AdminInner';
 import AwardCategories from './components/AdminSetting/AwardCategories';
 import EntitiesDepartments from './components/AdminSetting/EntitiesDepartments';
@@ -51,7 +50,6 @@ const pageComponents: Record<string, React.ReactNode> = {
   'My Nominations': <MyNominationPage />,
   'Approvals': <ApprovalComponent />,
   'Business Jury': <BusinessJury />,
-  'President Unit': <PresidentUnit />,
   'President Level': <PresidentLevel />,
   'Award Management': <AwardManagement />,
   'Admin Setting': <AdminInner />,

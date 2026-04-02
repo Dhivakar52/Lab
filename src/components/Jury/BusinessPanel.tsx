@@ -3,7 +3,6 @@ import { X, FileText } from "lucide-react";
 import { useAuth } from "../ContextAPI/AuthContext";
 import axios from "axios";
 import type { BusinessJury } from "./BusinessJury";
-import StatusFlow from "../StatusFlow";
 
 interface NomineeSidePanelProps {
   isOpen: boolean;
@@ -169,16 +168,12 @@ const BusinessPanel: React.FC<NomineeSidePanelProps> = ({
       // setMessage("Business Jury Rejected Successfully!");
       // setMessageType('reject');
       } catch (error) {
-        console.error("Reject Error:", error);
         alert("Reject failed");
       } finally{
        setLoading(false);
        setSidebarOpen(false);
        window.location.reload();  
 
-      //  setTimeout(() => {
-      //   setMessage('');
-      // }, 3000);
       }
     };
 
@@ -242,11 +237,7 @@ const BusinessPanel: React.FC<NomineeSidePanelProps> = ({
         return null;
     }
   };
-        const approvalFlow = nominee?.ApprovalStatus?.map((a : any) => ({
-      type: a.ApprovalType,
-      status: a.Status
-    })) ?? [];
-
+       
    const isGeneralJuryApproved = (): boolean => {
      // Use .some() for efficiency. Return true if ANY entry matches the criteria.
      return nominee?.ApprovalStatus?.some(
@@ -440,11 +431,11 @@ const BusinessPanel: React.FC<NomineeSidePanelProps> = ({
          </div>
       )}
            {isGeneralJuryApproved() ? (
-                    // ⭐ Condition Met: Hide buttons and show a message
+                   
                     <div>
                     </div>
                 ) : (
-                    // ⭐ Condition Not Met: Show the action buttons
+                   
                     <>
 
                       <ActionButtons />

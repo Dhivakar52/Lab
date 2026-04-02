@@ -142,11 +142,7 @@ const AwardCategories: React.FC = () => {
 
 
 const handleSave = async () => {
-  // if (!categoryName.trim()) {
-  //   //alert("Category name is required");
-  //   return;
-  // }
-
+ 
   const categoryData = { 
     categoryCode: categoryCode.trim(),                 
     categoryName: categoryName.trim(),

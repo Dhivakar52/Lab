@@ -1,5 +1,4 @@
 import { useRef } from "react";
-import { Flag } from "lucide-react";
 
 interface DocumentItem {
   source: "api" | "local";
@@ -24,9 +23,7 @@ export default function DocumentsUpload({
   setDocuments,
   fileError,
   setFileError,
-  openPreview,
-  apiUrl,
-  authToken
+ 
 }: Props) {
 
   const fileInputRef = useRef<HTMLInputElement>(null);

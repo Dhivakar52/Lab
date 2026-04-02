@@ -7,7 +7,7 @@ export default function VerifyOtp() {
   const [otp, setOtp] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
-  const [success, setSuccess] = useState("");
+  const [_success, setSuccess] = useState("");
 
   const navigate = useNavigate();
   const { state } = useLocation();

@@ -27,7 +27,7 @@ const AddCategoryPanel: React.FC<Props> = ({
    editCategoryId,
 }) => {
   // Local validation state (safe)
-  const [showError, setShowError] = useState(false);
+  const [_showError, setShowError] = useState(false);
 
   const [errors, setErrors] = useState({
   categoryName: false,
@@ -43,16 +43,7 @@ const AddCategoryPanel: React.FC<Props> = ({
 
   if (!isOpen) return null;
 
-  // Wrapper – onSave unchanged
-  const handleSave1 = () => {
-    if (!categoryName.trim() || !categoryCode.trim()) {
-      setShowError(true);
-      return;
-    }
-
-    setShowError(false);
-    onSave(); // original save flow
-  };
+ 
   const handleSave = () => {
   const newErrors = {
     categoryName: !categoryName.trim(),
@@ -99,28 +90,7 @@ const AddCategoryPanel: React.FC<Props> = ({
             <label className="block text-sm font-medium mb-1">
               Category Name<span className="text-red-600">*</span>
             </label>
-            {/* <input
-              id="categoryName"
-              value={categoryName}
-               maxLength={200}
-               autoComplete="off"
-              onChange={(e) => {
-                setCategoryName(e.target.value);
-                if (showError) setShowError(false);
-              }}
-              className={`w-full border border-gray-300 rounded-md px-3 py-2 text-sm 
-                 focus:outline-none focus:ring-0 focus:border-gray-300 ${
-                showError && !categoryName.trim()
-                  ? "border-red-500"
-                  : ""
-              }`}
-              placeholder="Enter category name"
-            />
-            {showError && !categoryName.trim() && (
-              <p className="text-red-500 text-xs mt-1">
-                Category Name is required
-              </p>
-            )} */}
+           
             <input
                     id="categoryName"
                     value={categoryName}
@@ -149,28 +119,7 @@ const AddCategoryPanel: React.FC<Props> = ({
             <label className="block text-sm font-medium mb-1">
               Category Code<span className="text-red-600">*</span>
             </label>
-            {/* <input
-              id="categoryCode"
-              value={categoryCode}
-               maxLength={50}
-               autoComplete="off"
-              onChange={(e) => {
-                setCategoryCode(e.target.value);
-                if (showError) setShowError(false);
-              }}
-              className={`w-full border border-gray-300 rounded-md px-3 py-2 text-sm
-                 focus:outline-none focus:ring-0 focus:border-gray-300 ${
-                showError && !categoryCode.trim()
-                  ? "border-red-500"
-                  : ""
-              }`}
-              placeholder="Enter category code"
-            />
-            {showError && !categoryCode.trim() && (
-              <p className="text-red-500 text-xs mt-1">
-                Category Code is required
-              </p>
-            )} */}
+            
             <input
                    id="categoryCode"
                     value={categoryCode}
@@ -199,14 +148,7 @@ const AddCategoryPanel: React.FC<Props> = ({
             <label className="block text-sm font-medium mb-1">
               Description
             </label>
-            {/* <textarea
-              id="description"
-              value={description}
-              onChange={(e) => setDescription(e.target.value)}
-              rows={4}
-              className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm"
-              placeholder="Enter description"
-            /> */}
+           
              <textarea
                     id="description"
                     value={description}

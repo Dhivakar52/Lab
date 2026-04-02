@@ -13,7 +13,6 @@ import { useAuth } from "../ContextAPI/AuthContext";
 // Correct Component Import
 import ReferralPanel from "./ReferralPanel";
 import { useNavigate } from "react-router-dom";
-import ReferralReasonPanel from "./ReferralDetailView";
 // Components
 import { ColorBadge } from "../TenantBadges";
 import Pagination from "../Pagination";
@@ -103,19 +102,19 @@ const apiUrl = import.meta.env.VITE_API_URL;
 
 const ReferralTable: React.FC = () => {
   const [isPanelOpen, setIsPanelOpen] = useState(false);
-  const [selectedNomination, setSelectedNomination] =
+  const [selectedNomination, _setSelectedNomination] =
     useState<ReferralView | null>(null);
 
   const [data, setData] = useState<ReferralData[]>([]);
-  const [resvalue, setApproveData] = useState<ReferralData[]>([]);
+  const [_resvalue, _setApproveData] = useState<ReferralData[]>([]);
   const [loading, setLoading] = useState(true);
   const [globalFilter, setGlobalFilter] = useState("");
   const { userId, authToken } = useAuth();
-  const [successMessage, setSuccessMessage] = useState("");
+  const [_successMessage, setSuccessMessage] = useState("");
   const [reason, setReason] = useState("");
   const navigate = useNavigate();
-  const [toastType, setToastType] = useState<"success" | "error">("success");
-  const [flagReason, setFlagReason] = useState<Record<number, string>>({});
+  const [_toastType, setToastType] = useState<"success" | "error">("success");
+  const [_flagReason, _setFlagReason] = useState<Record<number, string>>({});
   const [expandedRow, setExpandedRow] = useState<number | null>(null);
   const tableWrapperRef = useRef<HTMLDivElement | null>(null);
   const [isLevelPanelOpen, setIsLevelPanelOpen] = useState(false);
@@ -158,11 +157,7 @@ const ReferralTable: React.FC = () => {
       document.addEventListener("click", handleClickOutside);
       return () => document.removeEventListener("click", handleClickOutside);
     }, []);
-  const handleStatusClick = (nominationID: number) => {
-    setExpandedRow(prev =>
-      prev === nominationID ? null : nominationID
-    );
-  };
+  
   const handleApprove = async (nominationID: number) => {
      if (!selectedNomination) return;
     try {
@@ -249,10 +244,7 @@ const ReferralTable: React.FC = () => {
       alert("Reject failed");
     }
   };
- const handleOpenPanel = (nomination: ReferralView) => {
-    setSelectedNomination(nomination);
-    setIsPanelOpen(true);
-  };
+
   const columns = useMemo<ColumnDef<ReferralData>[]>(() => {
     return [
       // { accessorKey: "NominationID", header: "Nomination ID" },
@@ -319,7 +311,6 @@ const ReferralTable: React.FC = () => {
         {
            header: "Actions",
                   cell: ({ row }) => {
-                    const item = row.original;
                     const handleDetailsView = (item: ReferralData) => {
                   navigate(`/businessjury-detail/${item.NominationID}`, {
                     state: { from: "referral-approval" }

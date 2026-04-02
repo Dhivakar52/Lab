@@ -44,7 +44,7 @@ interface Nomination {
 interface NotificationTableProps {
   isOpen: boolean;
   onClose: () => void;
-  notifications: Notification[];
+  //notifications: Notification[];
 }
 
 const apiUrl = import.meta.env.VITE_API_URL;
@@ -52,7 +52,7 @@ const apiUrl = import.meta.env.VITE_API_URL;
 const NotificationTable: React.FC<NotificationTableProps> = ({
   isOpen,
   onClose,
-  notifications = []
+  //notifications = []
 }) => {
   const [data, setData] = useState<Notification[]>([]);
   const [loading, setLoading] = useState(true);
