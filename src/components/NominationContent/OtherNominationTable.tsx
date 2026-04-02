@@ -23,7 +23,7 @@ import {
   DropdownMenuTrigger,
 } from "@radix-ui/react-dropdown-menu";
 import Pagination from "../Pagination";
-import StatusFlow from "../CommonStatusFlow"; 
+
 import { levelColors, levelTextColors } from "../../statusColors.ts";
 
 interface Nomination {
@@ -75,12 +75,12 @@ const NominationTable: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [globalFilter, setGlobalFilter] = useState("");
   const [modalOpen, setModalOpen] = useState(false);
-  const [selectedNomination, setSelectedNomination] = useState<Nomination | null>(null);
-  const [successMessage, setSuccessMessage] = useState("");
+  const [selectedNomination, _setSelectedNomination] = useState<Nomination | null>(null);
+  const [_successMessage, setSuccessMessage] = useState("");
   const navigate = useNavigate();
   const { authToken, userId } = useAuth();
   const [expandedRow, setExpandedRow] = useState<number | null>(null);
-  const [tab, setTab] = useState("others");
+  const [_tab, _setTab] = useState("others");
   
  const fetchNominations = async () => {
       try {
@@ -156,7 +156,7 @@ const NominationTable: React.FC = () => {
      {
         header: "Actions",
         cell: ({ row }) => {  
-         const item = row.original;    
+        //  const item = row.original;    
          const handleDetailsView = (item: Nomination) => {
           navigate(`/nomination-detail/${item.NominationID}`, {
             state: { from: "other-nominations", tab: "form" }
@@ -251,14 +251,14 @@ const NominationTable: React.FC = () => {
                   {isExpanded && (
                     <tr className="bg-gray-50">
                       <td colSpan={columns.length} className="px-6 py-4">
-                        <StatusFlow
+                        {/* <StatusFlow
                           steps={(item.ApprovalStatus || []).map((a: any) => ({
                             type: a.ApprovalType,
                             status: a.Status,
                             level: a.ApprovalFlow,
                             approvedAt: a.ApprovedAt,
                           }))}
-                        />
+                        /> */}
                       </td>
                     </tr>
                   )}
@@ -268,7 +268,7 @@ const NominationTable: React.FC = () => {
             </tbody>  
           </table>
         </div>
-         <Pagination table={table} />
+         {/* <Pagination table={table} /> */}
         {/* 📄 Pagination */}
         {/* <div className="flex items-center justify-between mt-4">
           <div className="text-sm text-gray-600">

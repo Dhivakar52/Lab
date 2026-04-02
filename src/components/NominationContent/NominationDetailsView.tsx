@@ -34,7 +34,7 @@ type ApprovalFlowItem = {
 };
 
 const NominationDetailView: React.FC<NominationDetailViewProps> = ({
- isOpen, onClose}) => {
+ isOpen}) => {
   const { nominationId } = useParams<{ nominationId: string }>();
   const navigate = useNavigate();
   const { authToken, userId } = useAuth();
@@ -45,7 +45,7 @@ const NominationDetailView: React.FC<NominationDetailViewProps> = ({
   const [data, setData] = useState<any>(null);
   const [referrals, setReferrals] = useState<any[]>([]);
   //const [documents, setDocuments] = useState<DocumentItem[]>([]);
-  const [documents, setDocuments] = useState<any[]>([]);
+  const [_documents, setDocuments] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [expanded, setExpanded] = useState(false);
   const [successMessage, setSuccessMessage] = useState("");
@@ -54,38 +54,38 @@ const NominationDetailView: React.FC<NominationDetailViewProps> = ({
   const visibleReferrals = expanded ? referrals : referrals.slice(0, 3);
   const location = useLocation();
   const from = location.state?.from;
-  const tab = location.state?.tab;
+  // const _tab = location.state?.tab;
   const withdrawAllowedFrom = ["nominations"];
-    const [selectedReferral, setSelectedReferral] = useState<any>(null);
-    const [refStatus, setRefStatus] = useState<"Approved" | "Rejected">("Approved");
-    const [refComments, setRefComments] = useState("");
-    const [refFiles, setRefFiles] = useState<File[]>([]);
-    const [existingRefDocs, setExistingRefDocs] = useState<any[]>([]);
-    const [isEditMode, setIsEditMode] = useState(false);
-    const [openReferralPopup, setOpenReferralPopup] = useState(false);
-    const [selectedDocs, setSelectedDocs] = useState<any[]>([]);
-    const [openDocPopup, setOpenDocPopup] = useState(false);
-    const [selectedComment, setSelectedComment] = useState("");
-    const [openCommentsPopup, setOpenCommentsPopup] = useState(false);
+    const [_selectedReferral, setSelectedReferral] = useState<any>(null);
+    const [_refStatus, setRefStatus] = useState<"Approved" | "Rejected">("Approved");
+    const [_refComments, setRefComments] = useState("");
+
+    const [_existingRefDocs, setExistingRefDocs] = useState<any[]>([]);
+    const [_isEditMode, setIsEditMode] = useState(false);
+    const [_openReferralPopup, setOpenReferralPopup] = useState(false);
+    const [_selectedDocs, setSelectedDocs] = useState<any[]>([]);
+    const [_openDocPopup, setOpenDocPopup] = useState(false);
+    const [_selectedComment, setSelectedComment] = useState("");
+    const [_openCommentsPopup, setOpenCommentsPopup] = useState(false);
 
    const [IsSelf, setIsSelf] = useState<boolean | null>(null);
-  const fileInputRef = useRef<HTMLInputElement | null>(null);
-  const [existingDocs, setExistingDocs] = useState<any[]>([]);
+  // const _fileInputRef = useRef<HTMLInputElement | null>(null);
+  // const [existingDocs, setExistingDocs] = useState<any[]>([]);
 
-  const textareaRef = useRef<HTMLTextAreaElement | null>(null);
-  const [form, setForm] = useState<FormState>({
-      title: "",
-      nomineeName:"",
-      department: "",
-      email: "",
-      nomineeData:"",
-      mobile: "",
-      managerEmail: "",
-      contestType: "",
-      description: "",
-      files: [], 
-      file: null as File | null,
-    });    
+  // const textareaRef = useRef<HTMLTextAreaElement | null>(null);
+  // const [form, setForm] = useState<FormState>({
+  //     title: "",
+  //     nomineeName:"",
+  //     department: "",
+  //     email: "",
+  //     nomineeData:"",
+  //     mobile: "",
+  //     managerEmail: "",
+  //     contestType: "",
+  //     description: "",
+  //     files: [], 
+  //     file: null as File | null,
+  //   });    
   const toggleExpanded = () => setExpanded(!expanded);
     useEffect(() => {
       if (isOpen) {
@@ -193,16 +193,16 @@ const description =
     ? description
     : description.slice(0, maxLength) + "...";
  
-  const approvalFlow: ApprovalFlowItem[] = (data?.ApprovalStatus || []).map(
-  (a: any) => ({
-    type: a.ApprovalType,
-    status: a.Status,
-    level: a.ApprovalFlow,
-    comments: a.ApprovalComments,
-    approvedAt: a.ApprovedAt,
-    score:a.ApprovalScore,
-  })
-);
+//   const approvalFlow: ApprovalFlowItem[] = (data?.ApprovalStatus || []).map(
+//   (a: any) => ({
+//     type: a.ApprovalType,
+//     status: a.Status,
+//     level: a.ApprovalFlow,
+//     comments: a.ApprovalComments,
+//     approvedAt: a.ApprovedAt,
+//     score:a.ApprovalScore,
+//   })
+// );
 
   useEffect(() => {
     if (nominationId && authToken) {
@@ -330,64 +330,7 @@ const handleReferralApprove = (ref: any) => {
   setOpenReferralPopup(true);
 };
 
-const handleFilePreview = async (doc: any) => {
-  const fileName = doc.originalFileName || doc.name;
-  const ext = fileName.split(".").pop()?.toLowerCase() || "";
 
-  try {
-    if (doc.source === "api") {
-      const response = await axios.get(
-        `${apiUrl}/api/download?fileName=${doc.fileNameGUID}`,
-        {
-          responseType: "blob",
-          headers: { Authorization: `Bearer ${authToken}` },
-        }
-      );
-
-      const blob = response.data;
-
-      if (["jpg", "jpeg", "png", "gif"].includes(ext)) {
-        const url = URL.createObjectURL(blob);
-        window.open(url);
-      } 
-      else if (ext === "pdf") {
-        const pdfUrl = URL.createObjectURL(
-          new Blob([blob], { type: "application/pdf" })
-        );
-        window.open(pdfUrl);
-      } 
-      else {
-        const link = document.createElement("a");
-        link.href = URL.createObjectURL(blob);
-        link.download = fileName;
-        link.click();
-      }
-    }
-    else {
-      const file = doc.file;
-      if (!(file instanceof File)) return;
-
-      if (["jpg", "jpeg", "png", "gif"].includes(ext)) {
-        const url = URL.createObjectURL(file);
-        window.open(url);
-      } 
-      else if (ext === "pdf") {
-        const pdfUrl = URL.createObjectURL(
-          new Blob([file], { type: "application/pdf" })
-        );
-        window.open(pdfUrl);
-      } 
-      else {
-        const link = document.createElement("a");
-        link.href = URL.createObjectURL(file);
-        link.download = file.name;
-        link.click();
-      }
-    }
-  } catch {
-    alert("File not found");
-  }
-};
 
 const getDocs = (item: any) => {
   if (!item?.ApprovalAttachment) return [];

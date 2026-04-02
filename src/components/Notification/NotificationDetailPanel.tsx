@@ -4,32 +4,32 @@ import React from "react";
 import { Link, useNavigate } from "react-router-dom";
  
  
-type Notification= {
-  TotalRowCount: number;
-  NotificationID: number;
-  ReferenceIdPK: number;
-  FromUser: string;
-  ToUser: string;
-  Title: string;
-  NotificationContent: string;
-  DeviceID: string | null;
-  DeviceToken: string | null;
-  IsSent: boolean;
-  SentAt: string | null;
-  IsRead: boolean | null;
-  ReadAt: string | null;
-  CreatedAt:string;
-  Nomination: Nomination[];
-};
+// type Notification= {
+//   TotalRowCount: number;
+//   NotificationID: number;
+//   ReferenceIdPK: number;
+//   FromUser: string;
+//   ToUser: string;
+//   Title: string;
+//   NotificationContent: string;
+//   DeviceID: string | null;
+//   DeviceToken: string | null;
+//   IsSent: boolean;
+//   SentAt: string | null;
+//   IsRead: boolean | null;
+//   ReadAt: string | null;
+//   CreatedAt:string;
+//   Nomination: Nomination[];
+// };
  
-type Nomination= {
-  NominationID: number;
-  Nominee: string;
-  Tenant: string;
-  NominatedBy: string;
-  AwardCategory: string;
-  Descriptions:string;
-};
+// type Nomination= {
+//   NominationID: number;
+//   Nominee: string;
+//   Tenant: string;
+//   NominatedBy: string;
+//   AwardCategory: string;
+//   Descriptions:string;
+// };
  
 interface NotificationDetailPanelProps {
   isOpen: boolean;

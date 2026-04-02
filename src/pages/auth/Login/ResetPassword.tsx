@@ -2,7 +2,7 @@ import { useState } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { Eye, EyeOff } from "lucide-react";
 import axios from "axios";
-import { useFormState } from "react-dom";
+// import { useFormState } from "react-dom";
 //import { useAuth } from "./ContextAPI/AuthContext";
 
 export default function ResetPassword() {
@@ -15,7 +15,7 @@ export default function ResetPassword() {
 
   const [showPass, setShowPass] = useState(false);
   const [showConfirm, setShowConfirm] = useState(false);
-  const[data,setData]= useState<any>([]);
+  const[_data,setData]= useState<any>([]);
 
   const navigate = useNavigate();
   const { state } = useLocation();

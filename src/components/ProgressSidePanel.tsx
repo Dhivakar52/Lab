@@ -1,5 +1,5 @@
-import { X, CheckCircle, XCircle, Clock, Circle, TimerIcon, Hourglass, HourglassIcon, LucideHourglass } from "lucide-react";
-import { useEffect, useState, useRef } from "react";
+import { X, CheckCircle, XCircle, Hourglass } from "lucide-react";
+import { useState} from "react";
 
 interface ProgressSidePanelProps {
   isOpen: boolean;
@@ -28,17 +28,17 @@ const getStageIcon = (status: string) => {
   );
 };
 
-const getLineColor = (status: string) => {
-  if (status === "Approved") return "bg-green-300";
-  if (status === "Rejected") return "bg-red-300";
-  return "bg-gray-300";
-};
-const getStatusTextStyle = (status: string) => {
-  if (status === "Approved") return "text-green-600";
-  if (status === "Rejected") return "text-red-500";
-  if (status === "Under Review") return "text-yellow-600";
-  return "text-gray-500";
-};
+// const getLineColor = (status: string) => {
+//   if (status === "Approved") return "bg-green-300";
+//   if (status === "Rejected") return "bg-red-300";
+//   return "bg-gray-300";
+// };
+// const getStatusTextStyle = (status: string) => {
+//   if (status === "Approved") return "text-green-600";
+//   if (status === "Rejected") return "text-red-500";
+//   if (status === "Under Review") return "text-yellow-600";
+//   return "text-gray-500";
+// };
 const getStatusBadgeStyle = (status: string) => {
   if (status === "Approved")
     return "bg-green-100 text-green-700";
