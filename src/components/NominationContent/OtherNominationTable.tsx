@@ -22,7 +22,6 @@ import {
   DropdownMenu,
   DropdownMenuTrigger,
 } from "@radix-ui/react-dropdown-menu";
-import Pagination from "../Pagination";
 import StatusFlow from "../CommonStatusFlow"; 
 import { levelColors, levelTextColors } from "../../statusColors.ts";
 
@@ -75,7 +74,7 @@ const NominationTable: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [globalFilter, setGlobalFilter] = useState("");
   const [modalOpen, setModalOpen] = useState(false);
-  const [selectedNomination, setSelectedNomination] = useState<Nomination | null>(null);
+  const [selectedNomination, _setSelectedNomination] = useState<Nomination | null>(null);
   const [successMessage, setSuccessMessage] = useState("");
   const navigate = useNavigate();
   const { authToken, userId } = useAuth();
@@ -268,7 +267,6 @@ const NominationTable: React.FC = () => {
             </tbody>  
           </table>
         </div>
-         <Pagination table={table} />
         {/* 📄 Pagination */}
         {/* <div className="flex items-center justify-between mt-4">
           <div className="text-sm text-gray-600">

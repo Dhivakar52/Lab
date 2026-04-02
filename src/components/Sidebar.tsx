@@ -42,7 +42,7 @@ const navigationItems: NavigationItem[] = [
   { icon: ClipboardList, label: 'Referral Approval', path: '/referral-approval',pageKey:'Referral Approval' },
   { icon: CircleCheckBig, label: 'Approvals', path: '/approvals',pageKey:'Approvals' },
   { icon: Gavel, label: 'Business Jury', path: '/business-jury' ,pageKey:'Business Jury'},
-  { icon: Gavel, label: 'Primary Business Jury', path: '/president-unit',pageKey:'President Unit' },
+  // { icon: Gavel, label: 'Primary Business Jury', path: '/president-unit',pageKey:'President Unit' },
   { icon: Gavel, label: 'Grand Jury', path: '/president-level',pageKey:'President Level' },
   { icon: Users, label: 'Leader Board', path: '/leader-board' ,pageKey:'Leader Board'},
   { icon: TrophyIcon, label: 'Award Management', path: '/award-management',pageKey:'Award Management' },

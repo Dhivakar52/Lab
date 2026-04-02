@@ -4,7 +4,7 @@ import  type Nomination  from '../../dataTypes/nomination';
 import * as Tabs from '@radix-ui/react-tabs';
 import { useLocation, useNavigate } from "react-router-dom";
 import React, { useEffect, useState } from "react";
-import OtherNominationTable from "./OtherNominationTable"
+// import OtherNominationTable from "./OtherNominationTable"
 
 
 const NominationComponent = () => {
@@ -54,7 +54,7 @@ const NominationComponent = () => {
                      <div>
 
           </div>
-        <OtherNominationTable  />
+        {/* <OtherNominationTable  /> */}
         </Tabs.Content>
         </div>
         
