@@ -175,6 +175,7 @@ const PresidentLevel: React.FC = () => {
        {
             header: "Actions",
             cell: ({ row }) => {
+              // const item = row.original;
               const handleDetailsView = (item: PresidentLevelNominee) => {
             navigate(`/businessjury-detail/${item.NominationID}`, {
               state: { from: "president-level" }
@@ -337,6 +338,7 @@ const PresidentLevel: React.FC = () => {
 
       {/* 🔹 Pagination */}
         <Pagination  table={table}  totalCount={ globalFilter  ? table.getFilteredRowModel().rows.length : totalCount }  />
+    
     </div>
   );
 };

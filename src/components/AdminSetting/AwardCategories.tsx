@@ -216,24 +216,24 @@ const handleDelete = async (category: Category) => {
 
   if (result.isConfirmed) {
     try {
-      const payload = {
-        categoryCode: "AUTO",
-        categoryName: category.CategoryName,
-        description: category.Description || "",
-        active: false,
-        submittedBy: Number(userId),
-      };
+      // const payload = {
+      //   categoryCode: "AUTO",
+      //   categoryName: category.CategoryName,
+      //   description: category.Description || "",
+      //   active: false,
+      //   submittedBy: Number(userId),
+      // };
 
-      const response = await axios.put(
-        `${apiUrl}/api/awardCategory/${category.AwardCategoryID}`,
-        payload,
-        {
-          headers: {
-            Authorization: `Bearer ${authToken}`,
-            "Content-Type": "application/json",
-          },
-        }
-      );
+      // const response = await axios.put(
+      //   `${apiUrl}/api/awardCategory/${category.AwardCategoryID}`,
+      //   payload,
+      //   {
+      //     headers: {
+      //       Authorization: `Bearer ${authToken}`,
+      //       "Content-Type": "application/json",
+      //     },
+      //   }
+      // );
       setData(prev => prev.filter(item => item.AwardCategoryID !== category.AwardCategoryID));
       Swal.fire({
         icon: "success",

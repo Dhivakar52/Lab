@@ -2,7 +2,6 @@ import * as Label from "@radix-ui/react-label";
 import { useEffect, useState} from "react";
 import { Outlet } from "react-router-dom";
 import axios from "axios";
-import { ArrowLeft } from "lucide-react";
 import { useAuth } from "../ContextAPI/AuthContext";
 import type { AddNominationState } from "../../dataTypes/nomination";
 import Select from "react-select";
@@ -223,9 +222,7 @@ export default function OtherNominationForm() {
     setReferrals(referrals.filter((r) => r.UserID !== userID));
   };
 
-  const handleBackward = () => {
-    window.history.back();
-  }
+ 
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -235,73 +232,68 @@ export default function OtherNominationForm() {
       return;
     }
 
-    const payload = {
-      nomination: {
-        cycleID: 1,
-        awardCategoryID: Number(form.contestType),
-        userID: Number(userId),
-        nominationTitle: form.title,
-        isSelf: false,
-        nominationCreatedBy: Number(userId),
-        descriptions: form.description,
-        approvalTypeID: 1,
-        isManagerApproved: true,
-        approvalComments: "Submitted via UI",
-        statusID: 1,
-        active: true,
-        businessJuryID: 0,
-        createdBy: Number(userId),
-        updatedBy: Number(userId),
-      },
-      referralIDs: referrals.map((ref) => ({
-        referralID: ref.UserID,
-        nominationID: 0,
-        referralUserID: ref.UserID,
-        isReferralApproved: true,
-        approvalComments: "",
-        active: true,
-        createdBy: Number(userId),
-        updatedBy: Number(userId),
-        referralEmail: ref.UserInfo
-      })),
-      documents: form.file
-        ? [
-            {
-              nominationFileID: Number(userId),
-              nominationID: Number(userId),
-              originalFileName: form.file.name,
-              fileType: form.file.type,
-              fileSize: `${(form.file.size / 1024).toFixed(2)} KB`,
-              fileNameGUID: crypto.randomUUID(),
-              filePath: `/uploads/${form.file.name}`,
-              active: true,
-              createdBy: Number(userId),
-              updatedBy: Number(userId),
-            },
-          ]
-        : [],
-    };
-
-    console.log("📦 Sending payload:", payload);
+    // const payload = {
+    //   nomination: {
+    //     cycleID: 1,
+    //     awardCategoryID: Number(form.contestType),
+    //     userID: Number(userId),
+    //     nominationTitle: form.title,
+    //     isSelf: false,
+    //     nominationCreatedBy: Number(userId),
+    //     descriptions: form.description,
+    //     approvalTypeID: 1,
+    //     isManagerApproved: true,
+    //     approvalComments: "Submitted via UI",
+    //     statusID: 1,
+    //     active: true,
+    //     businessJuryID: 0,
+    //     createdBy: Number(userId),
+    //     updatedBy: Number(userId),
+    //   },
+    //   referralIDs: referrals.map((ref) => ({
+    //     referralID: ref.UserID,
+    //     nominationID: 0,
+    //     referralUserID: ref.UserID,
+    //     isReferralApproved: true,
+    //     approvalComments: "",
+    //     active: true,
+    //     createdBy: Number(userId),
+    //     updatedBy: Number(userId),
+    //     referralEmail: ref.UserInfo
+    //   })),
+    //   documents: form.file
+    //     ? [
+    //         {
+    //           nominationFileID: Number(userId),
+    //           nominationID: Number(userId),
+    //           originalFileName: form.file.name,
+    //           fileType: form.file.type,
+    //           fileSize: `${(form.file.size / 1024).toFixed(2)} KB`,
+    //           fileNameGUID: crypto.randomUUID(),
+    //           filePath: `/uploads/${form.file.name}`,
+    //           active: true,
+    //           createdBy: Number(userId),
+    //           updatedBy: Number(userId),
+    //         },
+    //       ]
+    //     : [],
+    // };
 
     try {
-      const res = await axios.post(
-        `${apiUrl}/api/nomination`,
-        payload,
-        {
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${authToken}`,
-          },
-        }
-      );
-
-      console.log("✅ Success:", res.data);
+      // const res = await axios.post(
+      //   `${apiUrl}/api/nomination`,
+      //   payload,
+      //   {
+      //     headers: {
+      //       "Content-Type": "application/json",
+      //       Authorization: `Bearer ${authToken}`,
+      //     },
+      //   }
+      // );
       setSuccessMsg("Nomination submitted successfully!");
       setTimeout(() => setSuccessMsg(""), 3000);
       //navigate("/my-nominations");
     } catch (err) {
-      console.error("❌ Error submitting nomination:", err);
       alert("Failed to submit nomination. Please check the console.");
     }
   };

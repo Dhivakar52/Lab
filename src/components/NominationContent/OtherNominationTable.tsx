@@ -75,11 +75,12 @@ const NominationTable: React.FC = () => {
   const [globalFilter, setGlobalFilter] = useState("");
   const [modalOpen, setModalOpen] = useState(false);
   const [selectedNomination, _setSelectedNomination] = useState<Nomination | null>(null);
-  const [successMessage, setSuccessMessage] = useState("");
+  const [_successMessage, setSuccessMessage] = useState("");
   const navigate = useNavigate();
   const { authToken, userId } = useAuth();
   const [expandedRow, setExpandedRow] = useState<number | null>(null);
-  const [tab, setTab] = useState("others");
+  
+     const [totalCount, setTotalCount] = useState(0); 
   
  const fetchNominations = async () => {
       try {
@@ -94,6 +95,7 @@ const NominationTable: React.FC = () => {
                   headers: { Authorization: `Bearer ${authToken}`,},
                 });
         setData(res.data);
+         setTotalCount(res.data.length);
       } catch (err) {
         console.error("❌ Error fetching nominations:", err);
       } finally {
@@ -154,8 +156,7 @@ const NominationTable: React.FC = () => {
        },  
      {
         header: "Actions",
-        cell: ({ row }) => {  
-         const item = row.original;    
+        cell: ({ row }) => { 
          const handleDetailsView = (item: Nomination) => {
           navigate(`/nomination-detail/${item.NominationID}`, {
             state: { from: "other-nominations", tab: "form" }
@@ -267,6 +268,7 @@ const NominationTable: React.FC = () => {
             </tbody>  
           </table>
         </div>
+         <Pagination table={table}  totalCount={totalCount}/>
         {/* 📄 Pagination */}
         {/* <div className="flex items-center justify-between mt-4">
           <div className="text-sm text-gray-600">
@@ -302,15 +304,7 @@ const NominationTable: React.FC = () => {
         />
       )}
 
-      {/* 🔍 Modal */}
-      {/* {selectedNomination && (
-        <NominationDetailsModal
-          isOpen={modalOpen}
-          onClose={() => setModalOpen(false)}
-          data={selectedNomination}
-        />
-      )} */}
-
+      
       <Outlet />
     </>
   );

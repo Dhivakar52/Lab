@@ -228,25 +228,25 @@ const PostCard: React.FC<PostCardProps> = ({ posts, setPosts }) => {
     if (!text) return;
 
     try {
-      const res = await axios.post(
-        `${apiUrl}/api/nominationcomments`,
-        {
-          nominationID: post.NominationID,
-          commentedBy: userId,
-          commentsText: text,
-          active: true,
-          submittedBy: userId,
-        },
-        {
-          params: {
-            id: post.NominationID,
-          },
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${authToken}`,
-          },
-        }
-      );
+      // const res = await axios.post(
+      //   `${apiUrl}/api/nominationcomments`,
+      //   {
+      //     nominationID: post.NominationID,
+      //     commentedBy: userId,
+      //     commentsText: text,
+      //     active: true,
+      //     submittedBy: userId,
+      //   },
+      //   {
+      //     params: {
+      //       id: post.NominationID,
+      //     },
+      //     headers: {
+      //       "Content-Type": "application/json",
+      //       Authorization: `Bearer ${authToken}`,
+      //     },
+      //   }
+      // );
 
       //const newID = res.data;
 
@@ -457,42 +457,42 @@ const PostCard: React.FC<PostCardProps> = ({ posts, setPosts }) => {
 
 
 
-  const buildCommentTree = (flatComments: any[]) => {
-    // First, remove any duplicates
-    const uniqueComments = flatComments.filter((comment, index, self) =>
-      index === self.findIndex(c =>
-        c.NominationCommentsID === comment.NominationCommentsID
-      )
-    );
+  // const buildCommentTree = (flatComments: any[]) => {
+  //   // First, remove any duplicates
+  //   const uniqueComments = flatComments.filter((comment, index, self) =>
+  //     index === self.findIndex(c =>
+  //       c.NominationCommentsID === comment.NominationCommentsID
+  //     )
+  //   );
 
-    const map: Record<number, any> = {};
-    const roots: any[] = [];
+  //   const map: Record<number, any> = {};
+  //   const roots: any[] = [];
 
-    uniqueComments.forEach((c) => {
-      map[c.NominationCommentsID] = { ...c, ChildComments: c.ChildComments || [] };
-    });
+  //   uniqueComments.forEach((c) => {
+  //     map[c.NominationCommentsID] = { ...c, ChildComments: c.ChildComments || [] };
+  //   });
 
-    uniqueComments.forEach((c) => {
-      if (c.ParentCommentID && map[c.ParentCommentID]) {
-        // Check if child is not already in the array
-        const existingChild = map[c.ParentCommentID].ChildComments.find(
-          (child: any) => child.NominationCommentsID === c.NominationCommentsID
-        );
-        if (!existingChild) {
-          map[c.ParentCommentID].ChildComments.push(map[c.NominationCommentsID]);
-        }
-      } else {
-        // Check if root is not already in the array
-        const existingRoot = roots.find(
-          root => root.NominationCommentsID === c.NominationCommentsID
-        );
-        if (!existingRoot) {
-          roots.push(map[c.NominationCommentsID]);
-        }
-      }
-    });
-    return roots;
-  };
+  //   uniqueComments.forEach((c) => {
+  //     if (c.ParentCommentID && map[c.ParentCommentID]) {
+  //       // Check if child is not already in the array
+  //       const existingChild = map[c.ParentCommentID].ChildComments.find(
+  //         (child: any) => child.NominationCommentsID === c.NominationCommentsID
+  //       );
+  //       if (!existingChild) {
+  //         map[c.ParentCommentID].ChildComments.push(map[c.NominationCommentsID]);
+  //       }
+  //     } else {
+  //       // Check if root is not already in the array
+  //       const existingRoot = roots.find(
+  //         root => root.NominationCommentsID === c.NominationCommentsID
+  //       );
+  //       if (!existingRoot) {
+  //         roots.push(map[c.NominationCommentsID]);
+  //       }
+  //     }
+  //   });
+  //   return roots;
+  // };
 
 
   const handleReply = async (postId: number, text: string, parentId: number) => {

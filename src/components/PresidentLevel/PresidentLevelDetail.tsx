@@ -22,12 +22,13 @@ type ApprovalFlowItem = {
   status: string;
   level: string;
   comments?: string;
+  //approvedAt:string;
 };
-interface ReferralItem {
-  ReferralID: number;
-}
+// interface ReferralItem {
+//   ReferralID: number;
+// }
 const PresidentLevelDetail: React.FC<PresidentLevelDetailProps> = ({
- isOpen, onClose, onRefresh}) => {
+ isOpen, onClose}) => {
   const { nominationId } = useParams<{ nominationId: string }>();
   const navigate = useNavigate();
   const { authToken, userId } = useAuth();
@@ -38,7 +39,7 @@ const PresidentLevelDetail: React.FC<PresidentLevelDetailProps> = ({
   const [errorMessage, setErrorMessage] = useState("");
   const [data, setData] = useState<any>(null);
   const [referrals, setReferrals] = useState<any[]>([]);
-  const [documents, setDocuments] = useState<any[]>([]);
+  const [_documents, setDocuments] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [expanded, setExpanded] = useState(false);
   const [successMessage, setSuccessMessage] = useState("");
@@ -133,7 +134,9 @@ const description =
     status: a.Status,
     level: a.ApprovalFlow,
     comments: a.ApprovalComments,
+    //approvedAt: a.ApprovedDate || "" 
   })
+  
 );
 
 const hasFinalStatus: boolean = approvalFlow.some(
@@ -282,78 +285,7 @@ const generalScoreD = generalEntry?.GeneralJuryScore ?? null;
   }
 };
 
-   const handleWithdraw1 = async () => {
-  try {
-    const payload = {
-    "nomination": {
-    "cycleID": 0,
-    "awardCategoryID": 0,
-    "nominationTitle": "string",
-    "userID": userId,
-    "isSelf": true,
-    "nominationCreatedBy": 0,
-    "descriptions": "string",
-    "approvalTypeID": 0,
-    "isManagerApproved": true,
-    "approvalComments": "string",
-    "statusID": 0,
-    "active": false,
-    "businessJuryID": 0,
-    "createdBy": 0,
-    "updatedBy": userId
-  },
-  "referralIDs": [
-    {
-      "referralID": 0,
-      "nominationID": 0,
-      "referralUserID": 0,
-      "isReferralApproved": true,
-      "approvalComments": "string",
-      "active": true,
-      "createdBy": 0,
-      "updatedBy": 0
-    }
-  ],
-  "documents": [
-    {
-      "nominationFileID": 0,
-      "nominationID": 0,
-      "originalFileName": "string",
-      "fileType": "string",
-      "fileSize": "string",
-      "fileNameGUID": "string",
-      "filePath": "string",
-      "active": true,
-      "createdBy": 0,
-      "updatedBy": 0
-    }
-  ]
-};
-    const res = await axios.delete(
-      `${apiUrl}/api/nominations/${data.NominationID}`,
-      // `http://172.16.5.106:5195/api/nominations/${data.nominationId}`,
-      {
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${authToken}`,
-        },
-        data: payload
-      }
-    );
-
-    console.log("Withdraw success", res.data);
-    setIsWithdrawDialogOpen(false);
-    onClose?.();
-    setSuccessMessage("Nomination Withdrawn Successfully!");
-    setTimeout(() => setSuccessMessage(""), 3000);
-    //setShowSuccessModal(true);
-
-  } catch (error) {
-    console.error("Withdraw failed:", error);
-    alert("Failed to withdraw nomination");
-  }
-};
-
+  
 //Ganga
 
   const baseClasses = "px-2 py-2 text-white rounded-md shadow transition flex items-center";
@@ -398,7 +330,7 @@ const openPopup = (type: "approve" | "reject") => {
     setPopupErrors(errs);
     return ok;
   };
-    const onApprove = async (approve: boolean) => {
+    const onApprove = async () => {
     if (!data) return;
     if (!validatePopup()) return;
 
@@ -665,7 +597,7 @@ const openPopup = (type: "approve" | "reject") => {
                       headers: {
                         Authorization: `Bearer ${authToken}`,
                       },
-                    });
+                    });8
 
                     const blob = response.data;
                     const blobUrl = window.URL.createObjectURL(blob);

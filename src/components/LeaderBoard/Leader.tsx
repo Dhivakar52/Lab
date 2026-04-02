@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState, useCallback, useRef } from "react";
+import  { useEffect, useMemo, useState, useCallback, useRef } from "react";
 import axios from "axios";
 import {
   useReactTable,
@@ -7,7 +7,7 @@ import {
   flexRender,
 } from "@tanstack/react-table";
 import type { ColumnDef } from "@tanstack/react-table";
-import { Heart, MessageCircle, Eye, Users, ArrowUpDown, Crown, Medal, Sparkles, Award } from "lucide-react";
+import { Heart, MessageCircle, Eye, Users, ArrowUpDown } from "lucide-react";
 import { useAuth } from "../ContextAPI/AuthContext";
 import Pagination from "../Pagination";
 

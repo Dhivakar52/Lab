@@ -5,8 +5,6 @@ import { FileText ,ArrowLeft } from "lucide-react";
 import { useAuth } from "../ContextAPI/AuthContext";
 import axios from "axios";
 import ReferralReasonPanel from "./ReferralReasonpanel";
-//import {  useNavigate } from "react-router-dom";
-
 
 interface ReferralDetail {
   NominationID: number;
@@ -45,6 +43,14 @@ interface ReferralDetail {
   Department: string;
   BusinessJuryStatus: string;
 }
+// type ApprovalFlowItem = {
+//   type: string;
+//   status: string;
+//   level: string;
+//   comments?: string;
+// };
+
+
 const statusColors: Record<string, string> = {
   Pending: "bg-orange-100 text-orange-800 border-orange-300",
   Approved: "bg-green-100 text-green-800 border-green-300",
@@ -63,6 +69,16 @@ const ReferralDetailView: React.FC = () => {
   const { state } = useLocation();
   const data = state as ReferralDetail;
    const navigate = useNavigate();
+
+//    const approvalFlow: ApprovalFlowItem[] = (data?.ApprovalStatus || []).map(
+//   (a: any) => ({
+
+//     type: a.ApprovalType,
+//     status: a.Status,
+//     level: a.ApprovalFlow,
+//     comments: a.ApprovalComments,
+//   })
+// );
 
   const handleBackward = () => {
     navigate("/referral-approval");   // ⬅ go to referral approval page
@@ -95,7 +111,6 @@ const ReferralDetailView: React.FC = () => {
       setIsPanelOpen(false);
       setReason("");
     } catch (err) {
-      console.error(err);
       alert(`${type === "approve" ? "Approval" : "Reject"} failed`);
     }
   };
