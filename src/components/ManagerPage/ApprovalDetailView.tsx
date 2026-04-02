@@ -5,7 +5,6 @@ import { ArrowLeft, FileText } from "lucide-react";
 import ApprovalReasonPanel from "./ApproveReasonPanel";
 import axios from "axios";
 import { useAuth } from "../ContextAPI/AuthContext";
-import StatusFlow from "../StatusFlow";
 
 const apiUrl = import.meta.env.VITE_API_URL;
 
@@ -56,12 +55,7 @@ const statusColors: Record<string, string> = {
   Rejected: "bg-red-100 text-red-800 border-red-300",
   "Under Review": "bg-yellow-100 text-yellow-800 border-yellow-300",
 };
-const statusColors1: Record<ApprovalView["status"], string> = {
-  Pending: "bg-orange-100 text-orange-800",
-  Approved: "bg-green-100 text-green-800",
-  Rejected: "bg-red-100 text-red-800",
-   //"Under Review": "bg-yellow-100 text-yellow-800",
-};
+
 
 const ApprovalDetailView: React.FC = () => {
   const navigate = useNavigate();
@@ -132,11 +126,8 @@ const ApprovalDetailView: React.FC = () => {
           },
         }
       );
-
-     // alert("Rejected Successfully!");
       navigate("/approvals");
     } catch (error) {
-      console.error("Reject error:", error);
       alert("Reject failed");
     }
   };
@@ -194,7 +185,7 @@ const ApprovalDetailView: React.FC = () => {
               <div className="grid grid-cols-1 gap-4">
                 <div className="space-y-1">
                   <div className="text-sm font-medium text-gray-900"></div>
-                  <StatusFlow steps={approvalFlow} />
+                  {/* <StatusFlow steps={approvalFlow} /> */}
                 </div>
               </div>
           {/* Referrals */}

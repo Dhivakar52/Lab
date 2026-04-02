@@ -34,7 +34,7 @@ const NotificationModal: React.FC<NotificationModalProps> = ({
 }) => {
     const [isPanelOpen, setIsPanelOpen] = useState(false);
       const [selectedNominee, setSelectedNominee] = useState<Notification | null>(null);
-        const [data, setData] = useState<Notification[]>([]);
+        const [_data, setData] = useState<Notification[]>([]);
 
     // Ref for the close button so we can control focus when dialog opens
     const closeBtnRef = useRef<HTMLButtonElement | null>(null);
@@ -105,7 +105,6 @@ const NotificationModal: React.FC<NotificationModalProps> = ({
 
   try {
     await Promise.all(requests);
-    console.log("✅ All notifications marked as read successfully.");
     await notificationcount();
     onClose();
   } catch (err) {

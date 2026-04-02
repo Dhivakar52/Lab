@@ -4,8 +4,6 @@ import { X } from 'lucide-react';
 import { useState, useEffect } from "react";
 import { useAuth } from "../ContextAPI/AuthContext";
 import axios from "axios";
-import StatusFlow from "../StatusFlow";
-
 //import { data } from 'react-router-dom';
 
 interface NominationDetailsProps {
@@ -95,7 +93,7 @@ const NominationDetailsModal: React.FC<NominationDetailsProps> = ({ isOpen, onCl
     createdBy: 0,
     updatedBy: userId
   },
-  referralIDs: data["Referrals ID"]?.map(ref => ({
+  referralIDs: data["Referrals ID"]?.map(_ref => ({
     referralID: 0,
     nominationID: 0,
     referralUserID:  0,
@@ -106,7 +104,7 @@ const NominationDetailsModal: React.FC<NominationDetailsProps> = ({ isOpen, onCl
     updatedBy: 0
   })) || [],
   
-  documents: data["Supporting Documents"]?.map(doc => ({
+  documents: data["Supporting Documents"]?.map(_doc => ({
     nominationFileID:  0,
     nominationID: 0,
     originalFileName: 0,
@@ -130,8 +128,6 @@ const NominationDetailsModal: React.FC<NominationDetailsProps> = ({ isOpen, onCl
         data: payload    
       }
     );
-
-    console.log("Withdraw success", res.data);
     setIsWithdrawDialogOpen(false); 
     onClose(); 
     setSuccessMessage("Nomination Withdrawn Successfully!");
@@ -140,7 +136,6 @@ const NominationDetailsModal: React.FC<NominationDetailsProps> = ({ isOpen, onCl
     //setShowSuccessModal(true); 
 
   } catch (error) {
-    console.error("Withdraw failed:", error);
     alert("Failed to withdraw nomination");
   }
 };
@@ -167,7 +162,7 @@ const getFileIcon = (fileName: string) => {
       return "https://img.icons8.com/color/48/file.png";
   }
 };
-    const fallbackUrl = "File not found"; 
+  
 
 const approvalFlow = data?.ApprovalStatus?.map(a => ({
   type: a.ApprovalType,

@@ -1,7 +1,7 @@
 import { useEffect, useState, useRef } from "react";
 import * as Label from "@radix-ui/react-label";
 import { Outlet } from "react-router-dom";
-import axios, { all } from "axios";
+import axios, {  } from "axios";
 import { ArrowLeft } from "lucide-react";
 import { useAuth } from "../ContextAPI/AuthContext";
 import type { AddNominationState } from "../../dataTypes/nomination";
@@ -46,10 +46,10 @@ export default function OtherNomination() {
   const [filteredDepartments, setFilteredDepartments] = useState<DepartmentType[]>([]); 
   const [allUsers, setAllUsers] = useState<UserType[]>([]); 
   const [filteredUsers, setFilteredUsers] = useState<UserType[]>([]); 
-  const [users, setUsers] = useState<any[]>([]);
+  const [_users, setUsers] = useState<any[]>([]);
   const [referrals, setReferrals] = useState<any[]>([]);
   // const [entitydropdown, setEntityName] = useState<any[]>([]);
-  const [successMsg, setSuccessMsg] = useState("");
+  const [successMsg, _setSuccessMsg] = useState("");
   const [searchText, setSearchText] = useState("");
   const [results, setResults] = useState<SearchResult[]>([]);
   const [showList, setShowList] = useState(false);
@@ -57,7 +57,6 @@ export default function OtherNomination() {
   const [selectedTenantID, setSelectedTenantID] = useState<number | null>(null);
   const [showSuccessModal, setShowSuccessModal] = useState(false);
   const [entitydropdown, setEntityName] = useState<any[]>([]);
-  const [nomineeEmail, setNomineeEmail] = useState("");
   const [form, setForm] = useState<AddNominationState>({
     title: "",
     nomineeName: "",
@@ -313,17 +312,7 @@ const handleNomineeChange = (selected: any) => {
   }));
 };
 
-  const handleSelectReferral = (selected: { value: string; label: string } | null) => {
-  if (!selected) return;
-  if (!referrals.some((r) => r.UserID === selected.value)) {
-    setReferrals([...referrals, { UserID: selected.value, UserInfo: selected.label }]);
-  }
-};
-
-  const removeReferral = (userID: number) => {
-    setReferrals(referrals.filter((r) => r.UserID !== userID));
-  };
-  //const [tab, setTab] = useState<"table" | "form">("table");
+  
   const handleBackward = () => {
   navigate("/my-nominations", { state: { tab: "form" } });
   };
@@ -429,10 +418,6 @@ const handleNomineeChange = (selected: any) => {
         }
       );
       setShowSuccessModal(true);
-      console.log("✅ Success:", res.data);
-    
-      // alert("Nomination submitted successfully!");
-      // navigate("/my-nominations");
     } catch (err) {
       console.error("❌ Error submitting nomination:", err);
      setShowErrorModal(true);

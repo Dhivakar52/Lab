@@ -5,9 +5,6 @@ import { FileText ,ArrowLeft } from "lucide-react";
 import { useAuth } from "../ContextAPI/AuthContext";
 import axios from "axios";
 import ReferralReasonPanel from "./ReferralReasonpanel";
-//import {  useNavigate } from "react-router-dom";
-
-import StatusFlow from "../StatusFlow";
 
 interface ReferralDetail {
   NominationID: number;
@@ -53,11 +50,7 @@ type ApprovalFlowItem = {
   comments?: string;
 };
 
-const statusColors1: Record<ReferralDetail["status"], string> = {
-  Pending: "bg-orange-100 text-orange-800",
-  Approved: "bg-green-100 text-green-800",
-  Rejected: "bg-red-100 text-red-800",
-};
+
 const statusColors: Record<string, string> = {
   Pending: "bg-orange-100 text-orange-800 border-orange-300",
   Approved: "bg-green-100 text-green-800 border-green-300",
@@ -117,7 +110,6 @@ const ReferralDetailView: React.FC = () => {
       setIsPanelOpen(false);
       setReason("");
     } catch (err) {
-      console.error(err);
       alert(`${type === "approve" ? "Approval" : "Reject"} failed`);
     }
   };
