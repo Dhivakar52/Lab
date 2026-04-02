@@ -8,7 +8,7 @@ import {
   flexRender,
 } from "@tanstack/react-table";
 import type { ColumnDef } from "@tanstack/react-table";
-import { Search, Plus, Menu , Edit2, Trash2 } from "lucide-react";
+import { Search, Plus,  Edit2, Trash2 } from "lucide-react";
 import BackToSetting from "../BackToSetting";
 import AddJuryMemberPanel from "./AddJuryMemberPanel";
 import { useAuth } from "../ContextAPI/AuthContext";
@@ -35,7 +35,6 @@ const JuryPanelSetup: React.FC = () => {
 
   // Side panel
   const [isPanelOpen, setIsPanelOpen] = useState(false);
-  const [actionOpen, setActionOpen] = useState<number | null>(null);
 const [selectedMember, setSelectedMember] = useState<JuryMember | null>(null);
  const [totalCount, setTotalCount] = useState(0); 
 

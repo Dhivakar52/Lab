@@ -11,7 +11,7 @@ import { useAuth } from "../ContextAPI/AuthContext";
 import { ColorBadge } from "../TenantBadges";
 import { useNavigate } from "react-router-dom";
 import Pagination from "../Pagination";
-import {DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger,
+import {DropdownMenu, DropdownMenuTrigger
 } from "@radix-ui/react-dropdown-menu";
 import StatusFlow from "../CommonStatusFlow"; 
 import { levelColors, levelTextColors } from "../../statusColors.ts";
@@ -72,7 +72,7 @@ const apiUrl = import.meta.env.VITE_API_URL;
   const [globalFilter, setGlobalFilter] = useState("");
   const [expandedRow, setExpandedRow] = useState<number | null>(null);
   const navigate = useNavigate();
-  const [refreshKey, setRefreshKey] = useState(0);
+  const [refreshKey, _setRefreshKey] = useState(0);
   const { authToken, userId } = useAuth();
   // const [tab, setTab] = useState("my");
   const location = useLocation();
@@ -90,29 +90,9 @@ const apiUrl = import.meta.env.VITE_API_URL;
     setInitialized(true);
   }, [location.state]);
 
-//   const refreshNominations = async () => {
-//   setLoading(true);
-//   await fetchNominations();  // this updates `data`
-//   setLoading(false);
-// };
 
- const fetchNominations1 = async () => {
-      try {
-         const res = await axios.get(`${apiUrl}/api/nominationsbyuser`, {
-          params: {
-            userID: userId,
-            NominatedBy: 0,
-          },
-          headers: { Authorization: `Bearer ${authToken}`,},
-        });
-        setData(res.data);
-        console.log("Nomination Table", res.data)
-      } catch (err) {
-        console.error("❌ Error fetching nominations:", err);
-      } finally {
-        setLoading(false);
-      }
-    };
+
+ 
   const fetchNominations = async () => {
     setLoading(true);
     try {
@@ -134,11 +114,7 @@ const apiUrl = import.meta.env.VITE_API_URL;
     }
     setExpandedRow(null);
   };
-  const getCleanStatus = (status?: string) => {
-    if (!status) return "";
-    const parts = status.split("-");
-    return parts.length > 1 ? parts[1].trim() : status.trim();
-  };
+ 
 
   useEffect(() => {
   const handleClickOutside = (event: MouseEvent) => {
@@ -167,11 +143,7 @@ const apiUrl = import.meta.env.VITE_API_URL;
     setInitialized(true);
   }, []);
 
-  const handleStatusClick = (nominationID: number) => {
-      setExpandedRow(prev =>
-        prev === nominationID ? null : nominationID
-      );
-    };
+  
   const handleForm=()=>{
     navigate("add-nomination");
   }

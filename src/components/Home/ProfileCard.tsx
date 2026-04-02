@@ -1,5 +1,5 @@
 import React from 'react';
-import { Heart, MessageCircle,Eye, Trophy, UsersRound } from 'lucide-react';
+import { Heart, MessageCircle, Trophy, UsersRound } from 'lucide-react';
 import avatar from '../../assets/images/profile.png';
 
 import "swiper/css";
@@ -7,7 +7,7 @@ import "swiper/css/pagination";
 import "swiper/css/navigation";
 
 import { Swiper, SwiperSlide } from "swiper/react";
-import { Keyboard, Pagination, Autoplay, Navigation } from "swiper/modules";
+import {  Pagination, Autoplay } from "swiper/modules";
 
 interface Feed {
   UserID: number;

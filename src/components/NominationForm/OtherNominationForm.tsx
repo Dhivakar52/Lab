@@ -2,7 +2,6 @@ import * as Label from "@radix-ui/react-label";
 import { useEffect, useState} from "react";
 import { Outlet } from "react-router-dom";
 import axios from "axios";
-import { ArrowLeft } from "lucide-react";
 import { useAuth } from "../ContextAPI/AuthContext";
 import type { AddNominationState } from "../../dataTypes/nomination";
 import Select from "react-select";
@@ -223,9 +222,7 @@ export default function OtherNominationForm() {
     setReferrals(referrals.filter((r) => r.UserID !== userID));
   };
 
-  const handleBackward = () => {
-    window.history.back();
-  }
+ 
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -282,26 +279,21 @@ export default function OtherNominationForm() {
         : [],
     };
 
-    console.log("📦 Sending payload:", payload);
-
     try {
-      const res = await axios.post(
-        `${apiUrl}/api/nomination`,
-        payload,
-        {
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${authToken}`,
-          },
-        }
-      );
-
-      console.log("✅ Success:", res.data);
+      // const res = await axios.post(
+      //   `${apiUrl}/api/nomination`,
+      //   payload,
+      //   {
+      //     headers: {
+      //       "Content-Type": "application/json",
+      //       Authorization: `Bearer ${authToken}`,
+      //     },
+      //   }
+      // );
       setSuccessMsg("Nomination submitted successfully!");
       setTimeout(() => setSuccessMsg(""), 3000);
       //navigate("/my-nominations");
     } catch (err) {
-      console.error("❌ Error submitting nomination:", err);
       alert("Failed to submit nomination. Please check the console.");
     }
   };

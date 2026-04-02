@@ -129,7 +129,7 @@ const ApprovalReasonPanel: React.FC<ApprovalReasonPanelProps> = ({
                   setErrorMsg("Please enter a reason");
                   return;
                 }
-                  const categoryName = approvalData?.AwardCategory ;
+                 // const categoryName = approvalData?.AwardCategory ;
 
                 if (actionType === "Approved") {
                   onApprove();

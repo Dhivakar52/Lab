@@ -19,7 +19,6 @@ import Pagination from "../Pagination";
 import StatusFlow from "../CommonStatusFlow"; 
 import { Flag } from "lucide-react";
 import { ChevronDown, ChevronUp, Menu } from "lucide-react";
-import { levelColors, levelTextColors } from "../../statusColors.ts";
 
 export interface PresidentLevelNominee {
   id: number;
@@ -46,7 +45,7 @@ const PresidentLevel: React.FC = () => {
   const [data, setData] = useState<PresidentLevelNominee[]>([]);
   const [loading, setLoading] = useState(true);
   const [globalFilter, setGlobalFilter] = useState("");
-  const [flagReason, setFlagReason] = useState<Record<number, string>>({});
+  const [flagReason, _setFlagReason] = useState<Record<number, string>>({});
   const [expandedRow, setExpandedRow] = useState<ExpandedRow>(null);
   const tableWrapperRef = useRef<HTMLDivElement | null>(null);
    const [totalCount, setTotalCount] = useState(0); 
@@ -176,7 +175,7 @@ const PresidentLevel: React.FC = () => {
        {
             header: "Actions",
             cell: ({ row }) => {
-              const item = row.original;
+              // const item = row.original;
               const handleDetailsView = (item: PresidentLevelNominee) => {
             navigate(`/businessjury-detail/${item.NominationID}`, {
               state: { from: "president-level" }
@@ -339,7 +338,7 @@ const PresidentLevel: React.FC = () => {
 
       {/* 🔹 Pagination */}
         <Pagination  table={table}  totalCount={ globalFilter  ? table.getFilteredRowModel().rows.length : totalCount }  />
-      <PresidentSidePanel isOpen={false} nominee={null} onClose={() => {}} />
+    
     </div>
   );
 };

@@ -65,9 +65,9 @@ const BusinessJury: React.FC = () => {
   const [data, setData] = useState<BusinessJury[]>([]);
   const [loading, setLoading] = useState(true);
   const [globalFilter, setGlobalFilter] = useState("");
-  const [selectedNomination, setSelectedNomination] = useState<BusinessJury | null>(null);
+  const [selectedNomination, _setSelectedNomination] = useState<BusinessJury | null>(null);
   const [isPanelOpen, setIsPanelOpen] = useState(false);
-  const [flagReason, setFlagReason] = useState<Record<number, string>>({});
+  const [flagReason, _setFlagReason] = useState<Record<number, string>>({});
   const [expandedRow, setExpandedRow] = useState<ExpandedRow>(null);
   const tableWrapperRef = useRef<HTMLDivElement | null>(null);
    const [totalCount, setTotalCount] = useState(0); 
@@ -111,22 +111,7 @@ const BusinessJury: React.FC = () => {
       document.addEventListener("click", handleClickOutside);
       return () => document.removeEventListener("click", handleClickOutside);
     }, []);
-  const handleFlagClick = (item: any) => {
-    setExpandedRow(prev => {
-      if (prev?.id === item.NominationID && prev?.type === "flag") {
-        return null;
-      }
-      return { id: item.NominationID, type: "flag" };
-    });
-  };
-  const handleStatusClick = (item: any) => {
-    setExpandedRow(prev => {
-      if (prev?.id === item.NominationID && prev?.type === "status") {
-        return null;
-      }
-      return { id: item.NominationID, type: "status" };
-    });
-  };
+  
   const columns = useMemo<ColumnDef<BusinessJury>[]>(
       () => [
         //{ accessorKey: "Nomination", header: "Nomination" },
@@ -160,45 +145,7 @@ const BusinessJury: React.FC = () => {
           );
         },
       },
-      //   {
-      //     accessorKey: "BusinessJuryScore",
-      //     header: () => <div className="text-center">Score</div>,
-      //     cell: ({ getValue }) => (
-      //       <div className="text-center pr-4">
-      //         {getValue() as number}
-      //       </div>
-      //     ),
-      //   },
-      //   {
-      //       accessorKey: "Status",
-      //       header: "Status",
-      //       cell: ({ row, getValue }) => {
-      //         const status = getValue() as string;
-      //         const isOpen =
-      //           expandedRow?.id === row.original.NominationID &&
-      //           expandedRow?.type === "status";
-
-      //         const bgClass = levelColors[status] || "bg-gray-100 border-gray-300";
-      //         const textClass = levelTextColors[status] || "text-gray-700";
-
-      //         return (
-      //           <div
-      //             className={`inline-flex items-center border rounded overflow-hidden ${bgClass} ${textClass}`}>
-      //             <button
-      //               onClick={(e) =>{ e.stopPropagation(); handleStatusClick(row.original);}}
-      //               className="px-3 py-1 text-sm font-medium flex-1 text-left">
-      //               {status}
-      //             </button>
-      //             <span className="w-px self-stretch bg-current opacity-30" />
-      //             <button
-      //               onClick={(e) =>{ e.stopPropagation(); handleStatusClick(row.original);}}
-      //               className="px-2 flex items-center justify-center" >
-      //              {isOpen ? <ChevronUp size={18} /> : <ChevronDown size={18} />}
-      //             </button>
-      //           </div>
-      //         );
-      //       },
-      //  },
+      
        {
             header: "Flag",
             cell: ({ row }) => {
@@ -222,7 +169,7 @@ const BusinessJury: React.FC = () => {
         {
             header: "Actions",
             cell: ({ row }) => {
-              const item = row.original;
+              //const item = row.original;
               const handleDetailsView = (item: BusinessJury) => {
             navigate(`/businessjury-detail/${item.NominationID}`, {
               state: { from: "business-jury" }
