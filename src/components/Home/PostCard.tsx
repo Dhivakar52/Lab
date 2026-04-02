@@ -228,25 +228,25 @@ const PostCard: React.FC<PostCardProps> = ({ posts, setPosts }) => {
     if (!text) return;
 
     try {
-      const res = await axios.post(
-        `${apiUrl}/api/nominationcomments`,
-        {
-          nominationID: post.NominationID,
-          commentedBy: userId,
-          commentsText: text,
-          active: true,
-          submittedBy: userId,
-        },
-        {
-          params: {
-            id: post.NominationID,
-          },
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${authToken}`,
-          },
-        }
-      );
+      // const res = await axios.post(
+      //   `${apiUrl}/api/nominationcomments`,
+      //   {
+      //     nominationID: post.NominationID,
+      //     commentedBy: userId,
+      //     commentsText: text,
+      //     active: true,
+      //     submittedBy: userId,
+      //   },
+      //   {
+      //     params: {
+      //       id: post.NominationID,
+      //     },
+      //     headers: {
+      //       "Content-Type": "application/json",
+      //       Authorization: `Bearer ${authToken}`,
+      //     },
+      //   }
+      // );
 
       //const newID = res.data;
 

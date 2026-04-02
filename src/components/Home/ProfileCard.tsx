@@ -66,7 +66,7 @@ const ProfileCard: React.FC<ProfileCardProps> = ({ profile, userDetail }) => {
             centeredSlides={true}
             pagination={{
               clickable: true,
-              renderBullet: (index, className) => {
+              renderBullet: ( className) => {
                 return `<span class="${className} custom-dot"></span>`;
               },
             }}
@@ -76,7 +76,7 @@ const ProfileCard: React.FC<ProfileCardProps> = ({ profile, userDetail }) => {
             }}
             modules={[Pagination, Autoplay]}
             className="mt-4 exactSwiper pb-8">
-           {profile.map((cat: Feed, index) => (
+           {profile.map((cat: Feed) => (
              <SwiperSlide>
               <div className="exact-card">
 

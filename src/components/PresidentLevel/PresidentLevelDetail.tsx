@@ -330,7 +330,7 @@ const openPopup = (type: "approve" | "reject") => {
     setPopupErrors(errs);
     return ok;
   };
-    const onApprove = async (approve: boolean) => {
+    const onApprove = async () => {
     if (!data) return;
     if (!validatePopup()) return;
 

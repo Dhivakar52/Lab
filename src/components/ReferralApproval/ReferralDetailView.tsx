@@ -43,12 +43,12 @@ interface ReferralDetail {
   Department: string;
   BusinessJuryStatus: string;
 }
-type ApprovalFlowItem = {
-  type: string;
-  status: string;
-  level: string;
-  comments?: string;
-};
+// type ApprovalFlowItem = {
+//   type: string;
+//   status: string;
+//   level: string;
+//   comments?: string;
+// };
 
 
 const statusColors: Record<string, string> = {
@@ -70,14 +70,15 @@ const ReferralDetailView: React.FC = () => {
   const data = state as ReferralDetail;
    const navigate = useNavigate();
 
-   const approvalFlow: ApprovalFlowItem[] = (data?.ApprovalStatus || []).map(
-  (a: any) => ({
-    type: a.ApprovalType,
-    status: a.Status,
-    level: a.ApprovalFlow,
-    comments: a.ApprovalComments,
-  })
-);
+//    const approvalFlow: ApprovalFlowItem[] = (data?.ApprovalStatus || []).map(
+//   (a: any) => ({
+
+//     type: a.ApprovalType,
+//     status: a.Status,
+//     level: a.ApprovalFlow,
+//     comments: a.ApprovalComments,
+//   })
+// );
 
   const handleBackward = () => {
     navigate("/referral-approval");   // ⬅ go to referral approval page

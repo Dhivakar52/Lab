@@ -232,52 +232,52 @@ export default function OtherNominationForm() {
       return;
     }
 
-    const payload = {
-      nomination: {
-        cycleID: 1,
-        awardCategoryID: Number(form.contestType),
-        userID: Number(userId),
-        nominationTitle: form.title,
-        isSelf: false,
-        nominationCreatedBy: Number(userId),
-        descriptions: form.description,
-        approvalTypeID: 1,
-        isManagerApproved: true,
-        approvalComments: "Submitted via UI",
-        statusID: 1,
-        active: true,
-        businessJuryID: 0,
-        createdBy: Number(userId),
-        updatedBy: Number(userId),
-      },
-      referralIDs: referrals.map((ref) => ({
-        referralID: ref.UserID,
-        nominationID: 0,
-        referralUserID: ref.UserID,
-        isReferralApproved: true,
-        approvalComments: "",
-        active: true,
-        createdBy: Number(userId),
-        updatedBy: Number(userId),
-        referralEmail: ref.UserInfo
-      })),
-      documents: form.file
-        ? [
-            {
-              nominationFileID: Number(userId),
-              nominationID: Number(userId),
-              originalFileName: form.file.name,
-              fileType: form.file.type,
-              fileSize: `${(form.file.size / 1024).toFixed(2)} KB`,
-              fileNameGUID: crypto.randomUUID(),
-              filePath: `/uploads/${form.file.name}`,
-              active: true,
-              createdBy: Number(userId),
-              updatedBy: Number(userId),
-            },
-          ]
-        : [],
-    };
+    // const payload = {
+    //   nomination: {
+    //     cycleID: 1,
+    //     awardCategoryID: Number(form.contestType),
+    //     userID: Number(userId),
+    //     nominationTitle: form.title,
+    //     isSelf: false,
+    //     nominationCreatedBy: Number(userId),
+    //     descriptions: form.description,
+    //     approvalTypeID: 1,
+    //     isManagerApproved: true,
+    //     approvalComments: "Submitted via UI",
+    //     statusID: 1,
+    //     active: true,
+    //     businessJuryID: 0,
+    //     createdBy: Number(userId),
+    //     updatedBy: Number(userId),
+    //   },
+    //   referralIDs: referrals.map((ref) => ({
+    //     referralID: ref.UserID,
+    //     nominationID: 0,
+    //     referralUserID: ref.UserID,
+    //     isReferralApproved: true,
+    //     approvalComments: "",
+    //     active: true,
+    //     createdBy: Number(userId),
+    //     updatedBy: Number(userId),
+    //     referralEmail: ref.UserInfo
+    //   })),
+    //   documents: form.file
+    //     ? [
+    //         {
+    //           nominationFileID: Number(userId),
+    //           nominationID: Number(userId),
+    //           originalFileName: form.file.name,
+    //           fileType: form.file.type,
+    //           fileSize: `${(form.file.size / 1024).toFixed(2)} KB`,
+    //           fileNameGUID: crypto.randomUUID(),
+    //           filePath: `/uploads/${form.file.name}`,
+    //           active: true,
+    //           createdBy: Number(userId),
+    //           updatedBy: Number(userId),
+    //         },
+    //       ]
+    //     : [],
+    // };
 
     try {
       // const res = await axios.post(
