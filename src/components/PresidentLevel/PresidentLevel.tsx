@@ -53,6 +53,9 @@ const PresidentLevel: React.FC = () => {
    const [totalCount, setTotalCount] = useState(0); 
   const [tenants, setTenants] = useState<string[]>([]);
   const [selectedTenant, setSelectedTenant] = useState<string>("All");
+  const [categories, setCategories] = useState<string[]>([]);
+  const [selectedCategory, setSelectedCategory] = useState<string>("All");
+
 
   useEffect(() => {
     const fetchData = async () => {
@@ -87,13 +90,28 @@ const PresidentLevel: React.FC = () => {
       }
     }, [data]);
 
-    const filteredData = useMemo(() => {
-      if (selectedTenant === "All") return data;
+    useEffect(() => {
+      if (data.length > 0) {
+        const uniqueCategories = Array.from(
+          new Set(data.map((item) => item.CategoryName))
+        );
+        setCategories(["All", ...uniqueCategories]);
+      }
+    }, [data]);
 
-      return data.filter(
-        (item) => item.Tenant === selectedTenant
-      );
-    }, [data, selectedTenant]);
+    const filteredData = useMemo(() => {
+      return data.filter((item) => {
+        const tenantMatch =
+          selectedTenant === "All" || item.Tenant === selectedTenant;
+
+        const categoryMatch =
+          selectedCategory === "All" ||
+          item.CategoryName === selectedCategory;
+
+        return tenantMatch && categoryMatch;
+      });
+    }, [data, selectedTenant, selectedCategory]);
+
 
    useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -160,7 +178,7 @@ const PresidentLevel: React.FC = () => {
       },
       {
         accessorKey: "PresidentScore",
-        header: "President Score",
+        header: "Grand Jury Score",
         cell: ({ getValue }) => {
           const value = getValue() as number | null | undefined;
           return (
@@ -214,33 +232,47 @@ const PresidentLevel: React.FC = () => {
   return (
     <div className="p-6 m-5 bg-white rounded-xl shadow-md">
       {/* 🔹 Header */}
-      <div className="mb-4 flex justify-between items-center">
+      <div className="flex justify-between items-start gap-4 mb-4 flex-wrap">
         {/* <h2 className="text-xl font-semibold">
           President Evaluation
         </h2> */}
 
-        <div className="flex gap-2 mb-4 flex-wrap">
-          {tenants.map((tenant) => (
-            <button
-              key={tenant}
-              onClick={() => setSelectedTenant(tenant)}
-              className={`px-4 py-2 rounded-md text-sm font-medium border transition
-                ${
-                  selectedTenant === tenant
-                    ? "bg-blue-600 text-white"
-                    : "bg-white text-blue-600 border-gray-300 hover:bg-gray-100"
-                }`}
-            >
-              {tenant}
-            </button>
-          ))}
+        <div className="flex flex-wrap gap-2 max-w-[60%] flex-grow">
+            {tenants.map((tenant) => (
+              <button
+                key={tenant}
+                onClick={() => setSelectedTenant(tenant)}
+                className={`px-1 py-1 rounded-md transition
+                  ${selectedTenant === tenant ? "opacity-100" : "opacity-70 hover:opacity-100"}
+                `}
+              >
+                {tenant === "All" ? (
+                  <span className="px-3 py-1 rounded-md text-xs font-semibold border ">All</span>
+                ) : (
+                  <ColorBadge label={tenant} />
+                )}
+              </button>
+            ))}
         </div>
-        <input
-          value={globalFilter}
-          onChange={(e) => setGlobalFilter(e.target.value)}
-          placeholder="Search..."
-          className="border border-gray-300 rounded-md px-4 py-2 w-1/3 text-sm"
-        />
+        <div className="flex gap-3 items-center flex-shrink-0">
+            <select
+              value={selectedCategory}
+              onChange={(e) => setSelectedCategory(e.target.value)}
+              className="border border-gray-300 rounded-md px-3 py-2 text-sm"
+            >
+              {categories.map((cat) => (
+                <option key={cat} value={cat}>
+                  {cat}
+                </option>
+              ))}
+            </select>
+            <input
+              value={globalFilter}
+              onChange={(e) => setGlobalFilter(e.target.value)}
+              placeholder="Search..."
+              className="border border-gray-300 rounded-md px-4 py-2 text-sm w-64 min-w-[200px]"
+            />
+        </div>
       </div>
 
       {/* 🔹 Table */}
