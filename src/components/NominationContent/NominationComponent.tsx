@@ -53,7 +53,7 @@ const NominationComponent = () => {
                      <div>
 
           </div>
-        <OtherNominationTable  />
+        {/* <OtherNominationTable  /> */}
         </Tabs.Content>
         </div>
         

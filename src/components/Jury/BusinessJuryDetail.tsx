@@ -6,7 +6,6 @@ import { X, ArrowLeft,Menu, Eye } from "lucide-react";
 import { useAuth } from "../ContextAPI/AuthContext";
 import * as Dialog from "@radix-ui/react-dialog";
 import { useLocation } from "react-router-dom";
-//import Swal from "sweetalert2";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger,
 } from "@radix-ui/react-dropdown-menu";
 import { Flag ,User, Building2, Tag, 
@@ -67,20 +66,18 @@ interface ApprovalItem {
   JuryMember?: string;
 }
 const BusinessJuryDetail: React.FC<BusinessJuryDetailProps> = ({
- isOpen, onClose}) => {
+ isOpen}) => {
   const { nominationId } = useParams<{ nominationId: string }>();
   const navigate = useNavigate();
-  const { authToken, userId,userRole,primaryfield } = useAuth();
+  const { authToken, userId,primaryfield } = useAuth();
   const [previewOpen, setPreviewOpen] = useState(false);
-  const[juryMemName,setJuryMemName]=useState("");
-  const[juryMemDept,setJuryMemDept]=useState("");
   const [previewFile, setPreviewFile] = useState<string | null>(null);
   const [previewType, setPreviewType] = useState<string | null>(null);
   const [errorMessage, setErrorMessage] = useState("");
   const [data, setData] = useState<any>(null);
   const [referrals, setReferrals] = useState<any[]>([]);
   const [isEditMode, setIsEditMode] = useState(false);
-  const [documents, setDocuments] = useState<any[]>([]);
+  const [_documents, setDocuments] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [expanded, setExpanded] = useState(false);
   const [successMessage, setSuccessMessage] = useState("");
@@ -90,7 +87,7 @@ const BusinessJuryDetail: React.FC<BusinessJuryDetailProps> = ({
   const visibleReferrals = expanded ? referrals : referrals.slice(0, 3);
   const location1 = useLocation();
   const from = location1.state?.from;
-  const [attachmentMode, setAttachmentMode] = useState<"approval" | "flag"
+  const [_attachmentMode, setAttachmentMode] = useState<"approval" | "flag"
    |"referral" |"juryApproval"|"grandApproval"|"juryFlag"|"grandFlag"| null>("approval");
   const [approvalFiles, setApprovalFiles] = useState<File[]>([]);
   const [flagFiles, setFlagFiles] = useState<File[]>([]);
@@ -115,8 +112,7 @@ const BusinessJuryDetail: React.FC<BusinessJuryDetailProps> = ({
   const [juryApprovalFileError, setJuryApprovalFileError] = useState("");
   const [grandApprovalFileError, setGrandApprovalFileError] = useState(""); 
   const [juryFlagFileError, setJuryFlagFileError] = useState(""); 
-  const [grandFlagFileError, setGrandFlagFileError] = useState(""); 
-  const [popupScore,setPopupScore]=useState("");
+  const [_grandFlagFileError, setGrandFlagFileError] = useState(""); 
   const [popupComments, setPopupComments] = useState("");
   const[popupCommentsJury,setPopupCommentsJury]=useState("");
   const [popupCommentsGrand,setPopupCommentsGrand]=useState("");
@@ -151,7 +147,7 @@ const BusinessJuryDetail: React.FC<BusinessJuryDetailProps> = ({
   const [openGrandJuryEvaluation,setOpenGrandJuryEvaluation]=useState(false);
   const [openScore, setOpenScore] = useState(false);
   const [openCard, setOpenCard] = useState<number | null>(null);
-  const [existingDocs, setExistingDocs] = useState<any[]>([]);
+  const [_existingDocs, setExistingDocs] = useState<any[]>([]);
   const [isFlagged, setIsFlagged] = useState(false);
   const [flagComment, setFlagComment] = useState("");
   const [status, setStatus] = useState<"Approved" | "Rejected">("Approved");
@@ -162,14 +158,14 @@ const BusinessJuryDetail: React.FC<BusinessJuryDetailProps> = ({
   const [isJuryFlagged, setIsJuryFlagged] = useState(false);
   const [isGrandFlagged, setIsGrandFlagged] = useState(false);
   const [juryStatus, setJuryStatus] = useState<"Approved" | "Rejected">("Approved");
-  const [juryScore, setJuryScore] = useState("");
+  const [_juryScore, setJuryScore] = useState("");
   const [juryErrors, setJuryErrors] = useState<any>({});
   const [juryFlagComment, setJuryFlagComment] = useState("");
   const [grandStatus, setGrandStatus] = useState<"Approved" | "Rejected">("Approved");
   const [grandScore, setGrandScore] = useState("");
-  const [grandErrors, setGrandErrors] = useState<any>({});
+  const [_grandErrors, setGrandErrors] = useState<any>({});
   const [grandFlagComment, setGrandFlagComment] = useState("");
-  const [form, setForm] = useState<FormState>({
+  const [_form, setForm] = useState<FormState>({
       title: "",
       nomineeName:"",
       department: "",
@@ -182,21 +178,6 @@ const BusinessJuryDetail: React.FC<BusinessJuryDetailProps> = ({
       files: [], 
       file: null as File | null,
     });
-
-const currentStage =
-  from === "referral-approval"
-    ? "referral"
-    : from === "approvals"
-    ? "manager"
-    : from === "business-jury"
-    ? "jury"
-    : from === "president-level"
-    ? "grand"
-    : "";
-
-
-    
-    
     const getTruncatedText = (text: string,expanded: boolean,limit: number = 160) => {
       if (!text) return "";
       return expanded || text.length <= limit
@@ -785,16 +766,36 @@ const approvalData = data?.ApprovalStatus || [];
 const level1 = approvalData?.find((l: ApprovalItem) => l.ApprovalFlow === "Level-1");
 const level2 = approvalData?.find((l: ApprovalItem) => l.ApprovalFlow === "Level-2");
 const level3 = approvalData?.find((l: ApprovalItem) => l.ApprovalFlow === "Level-3");
-const showReferral = currentStage === "referral";
+type StageType = "referral" | "manager" | "jury" | "grand";
 
-const showManager =
-  currentStage === "manager" || level1?.Status === "Approved" || level1?.Status === "Rejected";
+const stageMap: Record<string, StageType> = {
+  "referral-approval": "referral",
+  "approvals": "manager",
+  "business-jury": "jury",
+  "president-level": "grand"
+};
+
+const currentStage = stageMap[from] || "referral";
+
+const stageOrder: Record<StageType, number> = {
+  referral: 0,
+  manager: 1,
+  jury: 2,
+  grand: 3
+};
+
+const currentLevel = stageOrder[currentStage];
+const isL1Approved = level1?.Status === "Approved";
+const isL2Approved = level2?.Status === "Approved";
+
+const showManager = true; 
 
 const showJury =
-  currentStage === "jury" || level2?.Status === "Approved"  || level2?.Status === "Rejected";;
+  currentLevel >= 2 && isL1Approved;
 
 const showGrand =
-  currentStage === "grand" || level3?.Status === "Approved"  || level3?.Status === "Rejected";;
+  currentLevel >= 3 && isL1Approved && isL2Approved;
+const showReferral = currentStage === "referral";
 
   const isBusinesJuryDisplay = currentStage === "jury" 
   ? level2.BusinessJuryAttributeScore!== "[]" 
@@ -821,14 +822,14 @@ if (primaryfield === "IsPrimary" || currentStage==="grand") {
 const isReferralEditable = (ref: any) =>
   currentStage === "referral" && ref.ReferralUserID === userId;
 
-const isManagerEditable =
-  currentStage === "manager" && level1?.ApprovalNameID === userId;
+// const isManagerEditable =
+//   currentStage === "manager" && level1?.ApprovalNameID === userId;
 
-const isJuryEditable =
-  currentStage === "jury" && userRole === "Business Jury";
+// const isJuryEditable =
+//   currentStage === "jury" && userRole === "Business Jury";
 
-const isGrandEditable =
-  currentStage === "grand" && userRole === "President";
+// const isGrandEditable =
+//   currentStage === "grand" && userRole === "President";
 
 const isManagerDisabled = currentStage !== "manager" || level2?.Status === "Approved";
 const isJuryDisabled = currentStage !== "jury" ||level1?.Status === "Not Started" 
@@ -841,9 +842,7 @@ const GrandJuryflagDetails =safeParse(level3?.Flagdetails);
 const flagData = flagDetails?.[0]; 
 const flagBusinessJuryData=juryFlagDetails?.[0];
 const flagGrandJuryData=GrandJuryflagDetails?.[0];
-// const approvalCommentText = approvalData?.[0]?.ApprovalComments || "";
-// const juryApprovalCommentText=approvalData?.[1]?.ApprovalComments||"";
-// const GrandJuryCommentText = level3?.ApprovalComments || "";
+
 const level1Comment = level1?.ApprovalComments || "";
 const level2Comment = level2?.ApprovalComments || "";
 const level3Comment = level3?.ApprovalComments || "";
@@ -911,25 +910,27 @@ const avgScore = avgScoreData?.[0]?.JuryMemberAvgScore || 0;
 const attributeData = level2;
 
 const juryList: JuryItem[] = getBusinessJuryEvaluations().map((j: any) => {
+  const submittedDate =
+    j.AttributeScore && j.AttributeScore.length > 0
+      ? j.AttributeScore[0].CreatedAt  
+      : "-";
   return {
     Juryname: j.JuryMemberName || "-",
-    SubmittedDate: j.SubmittedDate || "-",
+    SubmittedDate: submittedDate,
     Score:
-       j.ApprovalScore || 
+      j.ApprovalScore || 
       j.TotalScore ||
       j.AttributeAvg?.[0]?.JuryIntegrativeScore || 0,
     Flag: Array.isArray(j.FlagDetails) && j.FlagDetails.length > 0 ? 1 : 0,
-    Attributes: (j.BusinessJuryAttributeScore || []).map((a: any) => ({
-      
-      AttributeName: a.AttributeName || a.WeightageName || "-",
+    Attributes: (j.AttributeScore  || []).map((a: any) => ({
+      AttributeName: a.AttributeName || "-",
       Score: a.Score ?? 0,
       Comments: a.Comments || a.Comment || "-"
     })),
     FlagReason: j.FlagDetails?.[0]?.FlagReason || ""
   };
 });
-
-
+console.log("jury Data",juryList)
 
 const getCleanStatus = (status?: string) => {
   if (!status) return "";

@@ -1,12 +1,13 @@
 import { useEffect, useState, useRef } from "react";
 import * as Label from "@radix-ui/react-label";
 import { Outlet } from "react-router-dom";
-import axios, {  } from "axios";
+import axios, { all } from "axios";
 import { ArrowLeft } from "lucide-react";
 import { useAuth } from "../ContextAPI/AuthContext";
 import type { AddNominationState } from "../../dataTypes/nomination";
 import Select from "react-select";
 import { useNavigate } from "react-router-dom";
+import type { ClearIndicatorProps } from "react-select";
 
 // interface OptionType {
 //   value: number;
@@ -45,10 +46,10 @@ export default function OtherNomination() {
   const [filteredDepartments, setFilteredDepartments] = useState<DepartmentType[]>([]); 
   const [allUsers, setAllUsers] = useState<UserType[]>([]); 
   const [filteredUsers, setFilteredUsers] = useState<UserType[]>([]); 
-  const [_users, setUsers] = useState<any[]>([]);
+  const [users, setUsers] = useState<any[]>([]);
   const [referrals, setReferrals] = useState<any[]>([]);
   // const [entitydropdown, setEntityName] = useState<any[]>([]);
-  const [successMsg, _setSuccessMsg] = useState("");
+  const [successMsg, setSuccessMsg] = useState("");
   const [searchText, setSearchText] = useState("");
   const [results, setResults] = useState<SearchResult[]>([]);
   const [showList, setShowList] = useState(false);
@@ -56,6 +57,7 @@ export default function OtherNomination() {
   const [selectedTenantID, setSelectedTenantID] = useState<number | null>(null);
   const [showSuccessModal, setShowSuccessModal] = useState(false);
   const [entitydropdown, setEntityName] = useState<any[]>([]);
+  const [nomineeEmail, setNomineeEmail] = useState("");
   const [form, setForm] = useState<AddNominationState>({
     title: "",
     nomineeName: "",
@@ -100,7 +102,7 @@ useEffect(() => {
   }
 }, [form.email]); // runs whenever emails change
 
-const NoClearIndicator = () => {
+const NoClearIndicator = (props: ClearIndicatorProps<any, true>) => {
   return null;
 };
     console.log("Form Submitted");
@@ -311,7 +313,17 @@ const handleNomineeChange = (selected: any) => {
   }));
 };
 
-  
+  const handleSelectReferral = (selected: { value: string; label: string } | null) => {
+  if (!selected) return;
+  if (!referrals.some((r) => r.UserID === selected.value)) {
+    setReferrals([...referrals, { UserID: selected.value, UserInfo: selected.label }]);
+  }
+};
+
+  const removeReferral = (userID: number) => {
+    setReferrals(referrals.filter((r) => r.UserID !== userID));
+  };
+  //const [tab, setTab] = useState<"table" | "form">("table");
   const handleBackward = () => {
   navigate("/my-nominations", { state: { tab: "form" } });
   };
@@ -406,17 +418,21 @@ const handleNomineeChange = (selected: any) => {
     console.log("📦 Sending payload:", payload);
 
     try {
-      // const res = await axios.post(
-      //   "http://172.16.5.106:5195/api/nomination",
-      //   payload,
-      //   {
-      //     headers: {
-      //       "Content-Type": "application/json",
-      //       Authorization: `Bearer ${authToken}`,
-      //     },
-      //   }
-      // );
+      const res = await axios.post(
+        "http://172.16.5.106:5195/api/nomination",
+        payload,
+        {
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${authToken}`,
+          },
+        }
+      );
       setShowSuccessModal(true);
+      console.log("✅ Success:", res.data);
+    
+      // alert("Nomination submitted successfully!");
+      // navigate("/my-nominations");
     } catch (err) {
       console.error("❌ Error submitting nomination:", err);
      setShowErrorModal(true);
