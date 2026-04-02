@@ -31,6 +31,8 @@ type PopupErrors = {
   comment: Record<number, string>;
   comments: string;
   flagComment: string;
+  juryFlagComment: string;
+  grandFlagComment: string;
 };
 type ScoreItem = {
   weightId: number;
@@ -69,7 +71,7 @@ const BusinessJuryDetail: React.FC<BusinessJuryDetailProps> = ({
  isOpen, onClose}) => {
   const { nominationId } = useParams<{ nominationId: string }>();
   const navigate = useNavigate();
-  const { authToken, userId,userRole } = useAuth();
+  const { authToken, userId,userRole,primaryfield } = useAuth();
   const [previewOpen, setPreviewOpen] = useState(false);
   const [previewFile, setPreviewFile] = useState<string | null>(null);
   const [previewType, setPreviewType] = useState<string | null>(null);
@@ -95,14 +97,12 @@ const BusinessJuryDetail: React.FC<BusinessJuryDetailProps> = ({
   const [juryFlagFiles, setJuryFlagFiles] = useState<File[]>([]);
   const [grandApprovalFiles, setGrandApprovalFiles] = useState<File[]>([]);
   const [grandFlagFiles, setGrandFlagFiles] = useState<File[]>([]);
-
   const [existingApprovalDocs, setExistingApprovalDocs] = useState<any[]>([]);
   const [existingFlagDocs, setExistingFlagDocs] = useState<any[]>([]);
   const [existingJuryApprovalDocs, setExistingJuryApprovalDocs] = useState<any[]>([]);
   const [existingJuryFlagDocs, setExistingJuryFlagDocs] = useState<any[]>([]);
   const [existingGrandApprovalDocs, setExistingGrandApprovalDocs] = useState<any[]>([]);
   const [existingGrandFlagDocs, setExistingGrandFlagDocs] = useState<any[]>([]);
-
   const approvalFileRef = useRef<HTMLInputElement | null>(null);
   const flagFileRef = useRef<HTMLInputElement | null>(null);
   const juryApprovalFileRef = useRef<HTMLInputElement | null>(null);
@@ -115,7 +115,6 @@ const BusinessJuryDetail: React.FC<BusinessJuryDetailProps> = ({
   const [grandApprovalFileError, setGrandApprovalFileError] = useState(""); 
   const [juryFlagFileError, setJuryFlagFileError] = useState(""); 
   const [grandFlagFileError, setGrandFlagFileError] = useState(""); 
-
   const [popupScore,setPopupScore]=useState("");
   const [popupComments, setPopupComments] = useState("");
   const[popupCommentsJury,setPopupCommentsJury]=useState("");
@@ -131,7 +130,9 @@ const BusinessJuryDetail: React.FC<BusinessJuryDetailProps> = ({
     score: {},
     comment: {},
     comments: "",
-    flagComment: ""
+    flagComment: "",
+    juryFlagComment: "",
+    grandFlagComment: ""
   });
   const [openCommentsPopup, setOpenCommentsPopup] = useState(false);
   const [selectedComment, setSelectedComment] = useState("");
@@ -156,9 +157,7 @@ const BusinessJuryDetail: React.FC<BusinessJuryDetailProps> = ({
   const [openDocPopup, setOpenDocPopup] = useState(false);
   const [selectedDocs, setSelectedDocs] = useState<any[]>([]);
   const [isFlowStopped, setIsFlowStopped] = useState(false);
-  const [juryComments, setJuryComments] = useState("");
   const [isJuryFlagged, setIsJuryFlagged] = useState(false);
-  const [grandComments, setGrandComments] = useState("");
   const [isGrandFlagged, setIsGrandFlagged] = useState(false);
   const [juryStatus, setJuryStatus] = useState<"Approved" | "Rejected">("Approved");
   const [juryScore, setJuryScore] = useState("");
@@ -168,35 +167,6 @@ const BusinessJuryDetail: React.FC<BusinessJuryDetailProps> = ({
   const [grandScore, setGrandScore] = useState("");
   const [grandErrors, setGrandErrors] = useState<any>({});
   const [grandFlagComment, setGrandFlagComment] = useState("");
-  // Manager
-const [managerData, setManagerData] = useState({
-  status: "Approved",
-  comments: "",
-  flag: false,
-  flagComment: "",
-  approvalDocs: [],
-  flagDocs: []
-});
-
-const [juryData, setJuryData] = useState({
-  status: "Approved",
-  score: "",
-  comments: "",
-  flag: false,
-  flagComment: "",
-  approvalDocs: [],
-  flagDocs: []
-});
-
-const [grandData, setGrandData] = useState({
-  status: "Approved",
-  score: "",
-  comments: "",
-  flag: false,
-  flagComment: "",
-  approvalDocs: [],
-  flagDocs: []
-});
   const [form, setForm] = useState<FormState>({
       title: "",
       nomineeName:"",
@@ -210,6 +180,18 @@ const [grandData, setGrandData] = useState({
       files: [], 
       file: null as File | null,
     });
+
+const currentStage =
+  from === "referral-approval"
+    ? "referral"
+    : from === "approvals"
+    ? "manager"
+    : from === "business-jury"
+    ? "jury"
+    : from === "president-level"
+    ? "grand"
+    : "";
+    
     const getTruncatedText = (text: string,expanded: boolean,limit: number = 160) => {
       if (!text) return "";
       return expanded || text.length <= limit
@@ -242,7 +224,6 @@ const [grandData, setGrandData] = useState({
  
   const fetchNominationDetails = async () => {
     try {
-      debugger;
       const res = await axios.get(
     `${apiUrl}/api/jurylevelnomination/${nominationId}/${userId}`, 
       {
@@ -251,7 +232,6 @@ const [grandData, setGrandData] = useState({
         },
       }
     );
-    debugger;
       const result = Array.isArray(res.data)
         ? res.data[0] : res.data;
  
@@ -263,7 +243,6 @@ const [grandData, setGrandData] = useState({
         (r: any) =>
           r.ReferralUserID === userId && r.Status === "Rejected"
       );
-      debugger;
       setIsFlowStopped(hasRejectedReferral);
       setData(result);
       setReferrals(result.Referrals || []);
@@ -332,13 +311,6 @@ const handleBackward = () => {
       navigate(-1); 
   }
 };
-const openPreview = (file: Blob, ext: string) => {
-  const blobUrl = URL.createObjectURL(file);
-  setPreviewType(ext);
-  setPreviewFile(blobUrl);
-  setPreviewOpen(true);
-};
-
 const referralDocuments = [
   ...existingRefDocs
     .filter((doc) => !doc.isDeleted)
@@ -459,6 +431,7 @@ const flagGrandDocuments = [
     file
   }))
 ];
+
 const removeFile = (doc: any, index: number, type: "approval" | "flag" |"referral" |"juryApproval"|
   "grandApproval"|"juryFlag"|"grandFlag") => {
   if (doc.source === "api") {
@@ -677,6 +650,7 @@ const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>,
     if (refFileRef.current) refFileRef.current.value = "";
   }
 };
+
 const uploadFilesToServer = async (files: File[]) => {
   const formData = new FormData();
 
@@ -693,12 +667,15 @@ const uploadFilesToServer = async (files: File[]) => {
 
   return res.data; 
 };
+
   const validateEvaluation = (mode: "manager" | "jury" | "grandJury") => {
   const errs: PopupErrors = {
     score: {},
     comment: {},
     comments: "",
-    flagComment: ""
+    flagComment: "",
+    juryFlagComment:"",
+    grandFlagComment:""
   };
 
   let ok = true;
@@ -718,14 +695,6 @@ const uploadFilesToServer = async (files: File[]) => {
         errs.comment[i] = "Comment required";
         ok = false;
       }
-      if (!popupCommentsJury?.trim()) {
-      errs.comments = "Comments are required!";
-      ok = false;
-    }
-    else if (popupCommentsJury.trim().length > 500) {
-      errs.comments = "Max 500 characters allowed";
-      ok = false;
-    }
     });
   }
 
@@ -753,14 +722,23 @@ const uploadFilesToServer = async (files: File[]) => {
     }
   }
 
-  if (isFlagged && !flagComment.trim()) {
+  if (isFlagged  && !flagComment.trim()) {
     errs.flagComment = "Flag reason required";
+    ok = false;
+  }
+else if (isJuryFlagged && !juryFlagComment.trim()) {
+    errs.juryFlagComment = "Flag reason required";
+    ok = false;
+  }
+  else if (isGrandFlagged && !grandFlagComment.trim()) {
+    errs.grandFlagComment = "Flag reason required";
     ok = false;
   }
 
   setPopupErrors(errs);
   return ok;
 };
+
   useEffect(() => {
     if (nominationId && authToken) {
       fetchNominationDetails();
@@ -800,36 +778,63 @@ const approvalData = data?.ApprovalStatus || [];
 const level1 = approvalData?.find((l: ApprovalItem) => l.ApprovalFlow === "Level-1");
 const level2 = approvalData?.find((l: ApprovalItem) => l.ApprovalFlow === "Level-2");
 const level3 = approvalData?.find((l: ApprovalItem) => l.ApprovalFlow === "Level-3");
+const showReferral = currentStage === "referral";
 
-const showLevel2 = level1?.Status === "Approved";
-const showLevel3 = level2?.Status === "Approved";
+const showManager =
+  currentStage === "manager" || level1?.Status === "Approved" || level1?.Status === "Rejected";
+
+const showJury =
+  currentStage === "jury" || level2?.Status === "Approved"  || level2?.Status === "Rejected";;
+
+const showGrand =
+  currentStage === "grand" || level3?.Status === "Approved"  || level3?.Status === "Rejected";;
+
+const isReferralEditable = (ref: any) =>
+  currentStage === "referral" && ref.ReferralUserID === userId;
+
+const isManagerEditable =
+  currentStage === "manager" && level1?.ApprovalNameID === userId;
+
+const isJuryEditable =
+  currentStage === "jury" && userRole === "Business Jury";
+
+const isGrandEditable =
+  currentStage === "grand" && userRole === "President";
+
+const isManagerDisabled = currentStage !== "manager" || level2?.Status === "Approved";
+const isJuryDisabled = currentStage !== "jury" ||level1?.Status === "Not Started" 
+|| level3?.Status === "Approved" || level1?.Status === "Rejected";
+const isGrandDisabled = currentStage !== "grand" || level2?.Status === "Not Started" || level2?.Status === "Rejected";
+
 const flagDetails =safeParse(level1?.Flagdetails);
 const juryFlagDetails =safeParse(level2?.Flagdetails);
 const GrandJuryflagDetails =safeParse(level3?.Flagdetails);
 const flagData = flagDetails?.[0]; 
 const flagBusinessJuryData=juryFlagDetails?.[0];
 const flagGrandJuryData=GrandJuryflagDetails?.[0];
-const approvalCommentText = approvalData?.[0]?.ApprovalComments || "";
-const juryApprovalCommentText=approvalData?.[1]?.ApprovalComments||"";
-const GrandJuryCommentText = approvalData?.[2]?.ApprovalComments || "";
+// const approvalCommentText = approvalData?.[0]?.ApprovalComments || "";
+// const juryApprovalCommentText=approvalData?.[1]?.ApprovalComments||"";
+// const GrandJuryCommentText = level3?.ApprovalComments || "";
+const level1Comment = level1?.ApprovalComments || "";
+const level2Comment = level2?.ApprovalComments || "";
+const level3Comment = level3?.ApprovalComments || "";
 
-const isApprovalTruncated = approvalCommentText.length > 160;
-const isJuryApprovalTruncated=juryApprovalCommentText.length>160;
-const isGrandJuryTruncated = GrandJuryCommentText.length > 160;
+const isApprovalTruncated = level1Comment.length > 160;
+const isJuryApprovalTruncated=level2Comment.length>160;
+const isGrandJuryTruncated = level3Comment.length > 160;
 
 const displayApprovalComment = getTruncatedText(
-  approvalCommentText,
+  level1Comment,
   expandedApprovalComments,
   160
 );
 const displayJuryApprovalComment = getTruncatedText(
-  juryApprovalCommentText,
+  level2Comment,
   expandedApprovalComments,
   160
 );
-
 const displayGrandJuryComment = getTruncatedText(
-  GrandJuryCommentText,
+  level3Comment,
   expandedApprovalComments,
   160
 );
@@ -875,16 +880,7 @@ const avgScoreData = safeParse(level2?.JuryMemberAvgScore);
 const avgScore = avgScoreData?.[0]?.JuryMemberAvgScore || 0;
 const attributeData = level2;
 
-// const juryList: JuryItem[] = getBusinessJuryEvaluations().map((j: any) => ({
-//   Juryname: j.JuryMemberName,
-//   SubmittedDate: "-",
-//   Score: j.AttributeAvg?.[0]?.TotalScore || 0,
-//   Flag: j.FlagDetails?.length > 0 ? 1 : 0,
-//   Attributes: j.AttributeScore || [],
-//   FlagReason: j.FlagDetails?.[0]?.FlagReason || ""
-// }));
 const juryList: JuryItem[] = getBusinessJuryEvaluations().map((j: any) => {
-  console.log("JURY RAW 👉", j); 
   return {
     Juryname: j.JuryMemberName || "-",
     SubmittedDate: j.SubmittedDate || "-",
@@ -893,7 +889,7 @@ const juryList: JuryItem[] = getBusinessJuryEvaluations().map((j: any) => {
       j.AttributeAvg?.[0]?.TotalScore ||
       j.Score ||0,
     Flag: Array.isArray(j.FlagDetails) && j.FlagDetails.length > 0 ? 1 : 0,
-    Attributes: (j.AttributeScore || []).map((a: any) => ({
+    Attributes: (j.BusinessJuryAttributeScore || []).map((a: any) => ({
       AttributeName: a.AttributeName || a.WeightageName || "-",
       Score: a.Score ?? 0,
       Comments: a.Comments || a.Comment || "-"
@@ -901,6 +897,7 @@ const juryList: JuryItem[] = getBusinessJuryEvaluations().map((j: any) => {
     FlagReason: j.FlagDetails?.[0]?.FlagReason || ""
   };
 });
+
 const getCleanStatus = (status?: string) => {
   if (!status) return "";
   const dashIndex = status.indexOf("-");
@@ -916,6 +913,8 @@ const resetApproveDrawer = () => {
   setPopupComments("");
   setIsFlagged(false);
   setFlagComment("");
+  setJuryFlagComment("");
+  setGrandFlagComment("");
   setApprovalFiles([]);
   setJuryApprovalFiles([]);
   setGrandApprovalFiles([]);
@@ -933,12 +932,20 @@ const resetApproveDrawer = () => {
     score: {},
     comment:{},
     comments: "",
-    flagComment: ""
+    flagComment: "",
+    juryFlagComment:"",
+    grandFlagComment:""
   });
+  setPopupCommentsJury("");
+  setPopupCommentsGrand("");
+  setJuryFlagComment("");
+  setGrandFlagComment("");
   setStatus("Approved");
   setPopupComments("");
   setIsFlagged(false);
   setFlagComment("");
+  setJuryFlagComment("");
+  setGrandFlagComment("");
   setDocuments([]);         
   setExistingDocs([]); 
   setRefStatus("Approved");
@@ -1060,14 +1067,103 @@ const handleManagerApprove = () => {
   setOpenApprove(true);
 };
 
+const handleJuryApprove = () => {
+  if (!level2) return;
+
+  const isAlreadySaved = level2.BusinessJuryAttributeScore&& level2.BusinessJuryAttributeScore !== "[]";
+  console.log("isAlreadySaved", isAlreadySaved);
+  setIsEditMode(isAlreadySaved);
+
+  setJuryStatus(level2.Status === "Rejected" ? "Rejected" : "Approved");
+  setPopupCommentsJury(level2.ApprovalComments || "");
+  setJuryScore(level2.ApprovalScore || "");
+
+  let parsedJuryFlag = null;
+  try {
+    const parsed = level2.Flagdetails ? JSON.parse(level2.Flagdetails) : [];
+    parsedJuryFlag = parsed?.[0];
+  } catch {
+    parsedJuryFlag = null;
+  }
+
+  const isJuryFlag = Number(parsedJuryFlag?.Flag) === 1;
+  setIsJuryFlagged(isJuryFlag);
+  setJuryFlagComment(parsedJuryFlag?.FlagReason || "");
+
+  let parsedJuryApprovalAttachments: any[] = [];
+  try {
+    parsedJuryApprovalAttachments = level2.ApprovalAttachment
+      ? JSON.parse(level2.ApprovalAttachment)
+      : [];
+  } catch {
+    parsedJuryApprovalAttachments = [];
+  }
+
+
+  const approvalJuryDocs = parsedJuryApprovalAttachments.map((file: any) => ({
+    source: "api",
+    AttachmentID: file.AttachmentsID,
+    fileNameGUID: file.AttachmentNameGUID,
+    originalFileName: file.OriginalAttachmentName,
+    fileType: file.AttachmentFileType,
+    fileUrl: file.AttachmentPath,
+    fileSize: file.AttachmentSize
+  }));
+
+  setExistingJuryApprovalDocs(approvalJuryDocs);
+  let parsedFlagAttachments: any[] = [];
+  try {
+    parsedFlagAttachments = level2.FlagAttachment
+      ? JSON.parse(level2.FlagAttachment)
+      : [];
+  } catch {
+    parsedFlagAttachments = [];
+  }
+
+  const flagJuryDocs = parsedFlagAttachments.map((file: any) => ({
+    source: "api",
+    AttachmentID: file.AttachmentsID,
+    fileNameGUID: file.AttachmentNameGUID,
+    originalFileName: file.OriginalAttachmentName,
+    fileType: file.AttachmentFileType,
+    fileUrl: file.AttachmentPath,
+    fileSize: file.AttachmentSize
+  }));
+
+  setExistingJuryFlagDocs(flagJuryDocs);
+  try {
+    
+        
+  const parsed = safeParse(level2?.BusinessJuryAttributeScore);
+
+  if (parsed.length > 0) {
+    const mappedScores = parsed.map((a: any) => ({
+      weightId: a.ScoreWeightageID,
+      title: a.AttributeName,
+      score: a.Score,
+      comment: a.Comments || ""
+    }));
+
+    setScores(mappedScores);
+  } else {
+    setScores(structuredClone(DEFAULT_SCORE_ITEMS));
+  }
+
+  } catch {
+    setScores(structuredClone(DEFAULT_SCORE_ITEMS));
+  }
+
+  setOpenScore(true);
+};
+
 const handleGrandJuryApprove = () => {
   if (!level3) return;
   const isAlreadySaved = !!level3.ApprovedAt;
 
   setIsEditMode(isAlreadySaved);
-  setStatus(level3.Status === "Rejected" ? "Rejected" : "Approved");
+  setGrandStatus(level3.Status === "Rejected" ? "Rejected" : "Approved");
   setPopupCommentsGrand(level3.ApprovalComments || "");
-  setPopupScore(level3.ApprovalScore || "");
+  setGrandScore(level3.ApprovalScore || "");
 
   let parsedGrandFlag = null;
   try {
@@ -1078,8 +1174,8 @@ const handleGrandJuryApprove = () => {
   }
 
   const isFlag = Number(parsedGrandFlag?.Flag) === 1;
-  setIsFlagged(isFlag);
-  setFlagComment(parsedGrandFlag?.FlagReason || "");
+  setIsGrandFlagged(isFlag);
+  setGrandFlagComment(parsedGrandFlag?.FlagReason || "");
 
   let parsedGrandFlagAttachments: any[] = [];
   try {
@@ -1266,102 +1362,22 @@ const submitManagerApproval = async () => {
   }
 };
 
-const handleJuryApprove = () => {
-  if (!level2) return;
-
-  const isAlreadySaved = !!level2?.ApprovedAt;
-  setIsEditMode(isAlreadySaved);
-
-  setStatus(level2.Status === "Rejected" ? "Rejected" : "Approved");
-  setPopupCommentsJury(level2.ApprovalComments || "");
-  setPopupScore(level2.ApprovalScore || "");
-
-  let parsedFlag = null;
-  try {
-    const parsed = level2.Flagdetails ? JSON.parse(level2.Flagdetails) : [];
-    parsedFlag = parsed?.[0];
-  } catch {
-    parsedFlag = null;
-  }
-
-  const isFlag = Number(parsedFlag?.Flag) === 1;
-  setIsFlagged(isFlag);
-  setFlagComment(parsedFlag?.FlagReason || "");
-
-  let parsedApprovalAttachments: any[] = [];
-  try {
-    parsedApprovalAttachments = level2.ApprovalAttachment
-      ? JSON.parse(level2.ApprovalAttachment)
-      : [];
-  } catch {
-    parsedApprovalAttachments = [];
-  }
-
-  const approvalDocs = parsedApprovalAttachments.map((file: any) => ({
-    source: "api",
-    AttachmentID: file.AttachmentsID,
-    fileNameGUID: file.AttachmentNameGUID,
-    originalFileName: file.OriginalAttachmentName,
-    fileType: file.AttachmentFileType,
-    fileUrl: file.AttachmentPath,
-    fileSize: file.AttachmentSize
-  }));
-
-  setExistingJuryApprovalDocs(approvalDocs);
-  let parsedFlagAttachments: any[] = [];
-  try {
-    parsedFlagAttachments = level2.FlagAttachment
-      ? JSON.parse(level2.FlagAttachment)
-      : [];
-  } catch {
-    parsedFlagAttachments = [];
-  }
-
-  const flagDocs = parsedFlagAttachments.map((file: any) => ({
-    source: "api",
-    AttachmentID: file.AttachmentsID,
-    fileNameGUID: file.AttachmentNameGUID,
-    originalFileName: file.OriginalAttachmentName,
-    fileType: file.AttachmentFileType,
-    fileUrl: file.AttachmentPath,
-    fileSize: file.AttachmentSize
-  }));
-
-  setExistingJuryFlagDocs(flagDocs);
-  try {
-    const bj = approvalData.find(
-      (a: any) => a.ApprovalType === "Business Jury"
-    );
-
-    const parsed = bj?.JuryMember ? JSON.parse(bj.JuryMember) : [];
-
-    const currentUser = parsed.find(
-      (j: any) => j.BusinessJuryID === userId
-    );
-
-    if (currentUser?.AttributeScore) {
-      const mappedScores = currentUser.AttributeScore.map((s: any) => ({
-        weightId: s.WeightageID,
-        title: s.AttributeName,
-        score: s.Score,
-        comment: s.Comments,
-        juryScoresID: s.JuryScoresID
-      }));
-
-      setScores(mappedScores);
-    } else {
-      setScores(structuredClone(DEFAULT_SCORE_ITEMS));
-    }
-  } catch {
-    setScores(structuredClone(DEFAULT_SCORE_ITEMS));
-  }
-
-  setOpenScore(true);
-};
 
 const submitJuryApproval = async () => {
-  if (!validateEvaluation("jury")) return;
+   if (!validateEvaluation("jury")) return;
 
+   const level2 = approvalData?.[1];
+  const evaluatedCount = level2?.EvaluatedJuries || 0;
+
+  if (primaryfield === "IsPrimary" && evaluatedCount < 3) {
+    setErrorMessage("Minimum 3 Jury Member evaluations required to approve at this level.");
+     handleCloseDrawer(); 
+
+  setTimeout(() => {
+    setErrorMessage("");
+  }, 3000);
+    return;
+  }
   try{
   let uploadedJuryApprovalDocs: any[] = [];
     let uploadedJuryFlagDocs: any[] = [];
@@ -1377,23 +1393,23 @@ const submitJuryApproval = async () => {
     const FlagsPayload = {
       NominationFlagsID: flagBusinessJuryData?.NominationFlagsID || 0,
       NominationID: Number(nominationId),
-      IsFlag: isFlagged ? true: false,
-      FlagReason: isFlagged ? flagComment : "",
+      IsFlag: isJuryFlagged ? true: false,
+      FlagReason: isJuryFlagged ? juryFlagComment : "",
       CreatedBy: userId,
       UpdatedBy: userId
     };
 
-    const approvalPayload = {
-      JuryApprovalsID:level2.JuryApprovalsID || 0,
-      NominationID: Number(nominationId),
-      BusinessJuryID:userId,
-      IsBusinessJuryApproved: status === "Approved",
-      BusinessJuryComments: popupCommentsJury,
-      BusinessJuryScore:popupScore,
-      Active:true,
-      CreatedBy: userId,
-      UpdatedBy: userId
-    };
+     const approvalPayload = {
+       JuryApprovalsID: level2?.JuryApprovalsID || 0,  
+       NominationID: Number(nominationId),
+       BusinessJuryID: userId,
+       IsBusinessJuryApproved: status === "Approved", 
+       BusinessJuryComments: popupCommentsJury.trim(), 
+       BusinessJuryScore: juryScore,
+       Active: true,
+       CreatedBy: userId,
+       UpdatedBy: userId
+     };
 
    
     const attachmentsPayload = [
@@ -1425,7 +1441,7 @@ const submitJuryApproval = async () => {
         UpdatedBy: userId
       })),
 
-      ...(isFlagged
+      ...(isJuryFlagged
         ? existingJuryFlagDocs
             .filter(doc => !doc.isDeleted)
             .map(doc => ({  
@@ -1442,7 +1458,7 @@ const submitJuryApproval = async () => {
             }))
         : []),
 
-      ...(isFlagged
+      ...(isJuryFlagged
         ? uploadedJuryFlagDocs.map(f => ({
             AttachmentsID: 0,
             NominationID: Number(nominationId),
@@ -1460,7 +1476,7 @@ const submitJuryApproval = async () => {
 
     const finalPayload = {
     Scores: scores.map(s => ({
-    JuryScoresID: s.juryScoresID || 0, 
+    // JuryScoresID: s.juryScoresID || 0, 
     NominationID: Number(nominationId),
     WeightageID: s.weightId,
     Score: Number(s.score),
@@ -1470,11 +1486,11 @@ const submitJuryApproval = async () => {
   })),
     Flags: FlagsPayload,
     Attachments: attachmentsPayload,
-    Approval:approvalPayload
+    ...(primaryfield === "IsPrimary" && { Approval: approvalPayload }),
   };
   console.log("Jury Final",finalPayload);
 
-    const isUpdate = isEditMode;
+  const isUpdate = isEditMode;
 
     let res = await axios({
       method: isUpdate ? "put" : "post",
@@ -1486,7 +1502,7 @@ const submitJuryApproval = async () => {
         "Content-Type": "application/json",
         Authorization: `Bearer ${authToken}`
       },
-      params: { EvalutionType: 1 }
+      params: {  EvalutionType: (primaryfield === "IsPrimary") ? 1 : 2  }
     });
     if (res.data > 0) {
         setSuccessMessage(
@@ -1528,8 +1544,8 @@ const submitGrandJuryApproval = async () => {
     const flags = {
       NominationFlagsID: flagGrandJuryData?.NominationFlagsID || 0,
       NominationID: Number(nominationId),
-      IsFlag: isFlagged ? true: false,
-      FlagReason: isFlagged ? flagComment : "",
+      IsFlag: isGrandFlagged  ? true: false,
+      FlagReason: isGrandFlagged  ? grandFlagComment  : "",
       CreatedBy: userId,
       UpdatedBy: userId
     };
@@ -1540,7 +1556,7 @@ const submitGrandJuryApproval = async () => {
       PresidentID:userId,
       IsPresidentApproved: status === "Approved",
       PresidentComments: popupCommentsGrand,
-      PresidentScore:popupScore,
+      PresidentScore: grandScore ? Number(grandScore) : 0,
       Active:true,
       CreatedBy: userId,
       UpdatedBy: userId
@@ -1575,7 +1591,7 @@ const submitGrandJuryApproval = async () => {
         UpdatedBy: userId
       })),
 
-      ...(isFlagged
+      ...(isGrandFlagged
         ? existingGrandFlagDocs
             .filter(doc => !doc.isDeleted)
             .map(doc => ({  
@@ -1592,7 +1608,7 @@ const submitGrandJuryApproval = async () => {
             }))
         : []),
 
-      ...(isFlagged
+      ...(isGrandFlagged
         ? uploadedGrandFlagDocs.map(f => ({
             AttachmentsID: 0,
             NominationID: Number(nominationId),
@@ -2051,7 +2067,6 @@ return (
           <th className="px-4 py-3 text-left">Department</th>
           <th className="px-4 py-3 text-left">Email ID</th>
           <th className="px-4 py-3 text-left">Approved Date</th>
-          {/* <th className="px-4 py-3 text-left">Comments</th> */}
           <th className="px-4 py-3 text-left">Status</th>
           <th className="px-4 py-3 text-left">Action</th>
         </tr>
@@ -2064,11 +2079,11 @@ return (
             <td className="px-4 py-3">{ref.ReferralName}</td>
             <td className="px-4 py-3">{ref.TenantName}</td>
             <td className="px-4 py-3">{ref.DeptName}</td>
-            <td className="px-4 py-s3">{ref.Email}</td>
+            <td className="px-4 py-3">{ref.Email}</td>
             <td className="px-4 py-3">{ref.ApprovedAt}</td>
-            {/* <td className="px-4 py-3">{ref.ApprovalComments}</td> */}
             <td><button
-                  onClick={() => handleReferralApprove(ref)}
+                  disabled={!isReferralEditable(ref)}
+                  onClick={() => isReferralEditable(ref) && handleReferralApprove(ref)}
                   className={`px-4 py-1.5 rounded-lg text-sm border 
                   ${levelColors[ref.Status] || "bg-gray-50 border-gray-300"} 
                   ${levelTextColors[ref.Status] || "text-gray-700"}`}>
@@ -2133,19 +2148,19 @@ return (
     <p className="text-gray-500 text-sm">No referral details</p>
   )}
   </div>
-  {!isFlowStopped && (
+  {!isFlowStopped && !showReferral && (
     <div className="bg-white rounded-xl border border-gray-200 shadow-sm p-6 mt-6">
       <h2 className="text-base font-semibold mb-6">
         Nomination Status Flow
       </h2>
       {/* ================= LEVEL 1 ================= */}
-      {level1 && (
+      {showManager && level1 && (
         <div className="flex gap-4 relative">
           <div className="flex flex-col items-center">
             <div className="w-7 h-7 rounded-full bg-green-500 flex items-center justify-center">
               <Check size={16} className="text-white" />
             </div>
-            {approvalData[0].ApprovedAt==""?"": <div className="w-[2px] h-full bg-gray-300 mt-1"></div>} 
+            {approvalData?.[0].ApprovedAt==""?"": <div className="w-[2px] h-full bg-gray-300 mt-1"></div>} 
          </div>
           <div className="flex-1 pb-8">
             <div className="flex justify-between items-center mb-2">
@@ -2153,14 +2168,15 @@ return (
                 {approvalData[0].ApprovalFlow} - {approvalData[0].ApprovalType}
               </p>
               <button
-                  onClick={handleManagerApprove}
+                  disabled={isManagerDisabled}
+                  onClick={() => !isManagerDisabled && handleManagerApprove()}
                   className={`px-4 py-1.5 rounded-lg text-sm border 
                   ${levelColors[level1.Status] || "bg-gray-50 border-gray-300"} 
                   ${levelTextColors[level1.Status] || "text-gray-700"}`}>
                   {level1.Status}
                 </button>
             </div>
-            {approvalData[0].ApprovedAt==""?"":
+            {approvalData?.[0].ApprovedAt==""?"":
             <div className="bg-gray-50 rounded-lg p-4 text-sm text-gray-700 space-y-2">
               <div className="flex gap-12">
                 <div>
@@ -2171,7 +2187,7 @@ return (
                 </div>
                 <div>
                   <span className="text-gray-500">Approved Date :</span>{" "}
-                  <span className="font-medium">{approvalData[0].ApprovedAt}</span>
+                  <span className="font-medium">{approvalData?.[0].ApprovedAt}</span>
                 </div>
                 <div className="flex items-start gap-2">
                   <span className="text-gray-500">{Number(flagData?.Flag) === 1 ? "Flagged :" : "Not Flagged :"}</span>
@@ -2260,7 +2276,7 @@ return (
         </div>
       )}
       {/* ================= LEVEL 2 ================= */}
-      {showLevel2 && level2 && (
+      {showJury && level2 && (
         <div className="flex gap-4 relative">
           <div className="flex flex-col items-center">
             <div className="w-7 h-7 rounded-full bg-green-500 flex items-center justify-center">
@@ -2282,7 +2298,8 @@ return (
                   </button>
                 )}
                 <button
-                  onClick={handleJuryApprove}
+                  disabled={isJuryDisabled}
+                  onClick={() => !isJuryDisabled && handleJuryApprove()}
                   className={`px-4 py-1.5 rounded-lg text-sm border 
                   ${levelColors[approvalData[1].Status] || "bg-gray-50 border-gray-300"} 
                   ${levelTextColors[approvalData[1].Status] || "text-gray-700"}`}>
@@ -2290,7 +2307,8 @@ return (
                 </button>
               </div>
             </div>
-             {approvalData[1].ApprovedAt==""?"":
+
+             {approvalData[1].EvaluatedJuries==0?"":
             <div className="bg-gray-50 rounded-lg p-4 text-sm text-gray-700 space-y-2">
               <div className="flex gap-12">
                 <div>
@@ -2299,34 +2317,47 @@ return (
                     {approvalData[1].ApprovalName} ({approvalData[1].ApprovalDepartment})
                   </span>
                 </div>
-                <div>
-                  <span className="text-gray-500">Approved Date :</span>{" "}
-                  <span className="font-medium">{approvalData[1].ApprovedAt}</span>
-                </div>
-                <div>
-                  <span className="text-gray-500">Total Jury Evaluations :</span>{" "}
-                  <span className="font-medium">
-                    {approvalData[1].TotalEvalutions}
-                  </span>
-                </div>
-                <div>
-                  <span className="text-gray-500">Average Score :</span>{" "}
-                  <span className="font-medium">
-                    {avgScore}
-                  </span>
-                </div>
+               
+                {primaryfield=="IsPrimary" &&
+                <div className="flex gap-12">
+                  {approvalData[1].ApprovedAt==""?"":(
+                    <div>
+                      <span className="text-gray-500">Approved Date :</span>{" "}
+                      <span className="font-medium">{approvalData[1].ApprovedAt}</span>
+                    </div>
+                  )}
+
+                  <div>
+                    <span className="text-gray-500">Total Jury Evaluations :</span>{" "}
+                    <span className="font-medium">
+                      {approvalData[1].EvaluatedJuries}/{approvalData[1].TotalEvalutions}
+                    </span>
+                  </div>
+
+                  <div>
+                    <span className="text-gray-500">Average Score :</span>{" "}
+                    <span className="font-medium">
+                      {avgScore}
+                    </span>
+                  </div>
+
                  <div>
                   <span className="text-gray-500">Total Flag :</span>{" "}
                   <span className="font-medium">
                     {approvalData[1].TotalFlagCount}
                   </span>
                 </div>
+
+                </div>
+                }
               </div>
               <div className="flex gap-12">
+                 {approvalData[1].ApprovedAt&&
                 <div>
                   <span className="text-gray-500">Score :</span>{" "}
                   <span className="font-medium">{approvalData[1].ApprovalScore}</span>
                 </div>
+                }
                   <div className="flex gap-12">
                 <div className="flex items-start gap-2">
                   <span className="text-gray-500">{Number(flagBusinessJuryData?.Flag) === 1 ? "Flagged :" : "Not Flagged :"}</span>
@@ -2378,19 +2409,31 @@ return (
                 </div>
               </div>
               </div>
-              <div>
-                <span className="text-gray-500">Comments :</span>
-                <p className="font-medium mt-1 leading-relaxed">
-                  {approvalData[1].ApprovalComments}
-                </p>
+
+            {approvalData[1].ApprovedAt !="" &&
+              <div className="flex gap-12">
+                  <div>
+                  <span className="text-gray-500">Approval Comments :</span>
+                  <div className="font-medium mt-1 text-sm text-gray-600">
+                    {displayJuryApprovalComment}
+                    {isJuryApprovalTruncated && (
+                      <button
+                        onClick={() => setApprovalComments(!expandedApprovalComments)}
+                        className="ml-1 text-blue-600 underline text-sm">
+                        {expandedApprovalComments ? "Show less" : "Show more"}
+                      </button>
+                    )}
+                  </div>
               </div>
+            </div>
+            }
             </div>
             }
           </div>
         </div>
       )}
       {/* ================= LEVEL 3 ================= */}
-      {showLevel3 && level3 && (
+      {showGrand && level3 && (
         <div className="flex gap-4">
           <div className="flex flex-col items-center">
             <div className="w-7 h-7 rounded-full bg-green-500 flex items-center justify-center">
@@ -2403,8 +2446,9 @@ return (
                 {approvalData[2].ApprovalFlow} - {approvalData[2].ApprovalType}
               </p>
               <button
-                 onClick={handleGrandJuryApprove}
-                className={`px-4 py-1.5 rounded-lg text-sm border 
+                 disabled={isGrandDisabled}
+                 onClick={() => !isGrandDisabled && handleGrandJuryApprove()}
+                 className={`px-4 py-1.5 rounded-lg text-sm border 
                   ${levelColors[approvalData[2].Status] || "bg-gray-50 border-gray-300"} 
                   ${levelTextColors[approvalData[2].Status] || "text-gray-700"}`}>
                 {approvalData[2].Status}
@@ -2841,6 +2885,8 @@ return (
       </div>
       {/* <div className="px-6 py-6 space-y-6 text-sm"> */}
       <div className="flex-1 overflow-y-auto px-6 py-6 space-y-6 text-sm">
+        {primaryfield=="IsPrimary" &&
+        <div>
         <div className="mb-[18px] flex gap-4 items-end">
           <div className="flex-1">
             <label className="block mb-2 font-medium">
@@ -2865,7 +2911,7 @@ return (
                 const val = e.target.value;
                 setJuryScore(val);
                 if(val.trim()){
-                  setJuryErrors(prev=>({
+                  setJuryErrors((prev:any)=>({
                     ...prev,
                     score:""
                   }));
@@ -2879,12 +2925,12 @@ return (
           <label className="block mb-2 font-medium">
             Comments
           </label>
-          <textarea rows={3} value={juryComments}
+          <textarea rows={3} value={popupCommentsJury}
             onChange={(e) => {
               const value = e.target.value;
-              setJuryComments(value);
+              setPopupCommentsJury(value);
               if (value.trim()) {
-                setJuryErrors(prev => ({
+                setJuryErrors((prev:any) => ({
                   ...prev,
                   comments: ""
                 }));
@@ -2897,6 +2943,48 @@ return (
             <p className="text-red-600 text-xs mt-1">{juryErrors.comments}</p>
           )}
         </div>
+         <div className="mt-4">
+              <Label.Root className="block text-sm font-medium">
+                Supporting Documents 
+                <span className="text-red-500">(Maximum 5 files allowed & File must be below 2 MB)</span>
+              </Label.Root>
+              <label
+                htmlFor="juryUpload"
+                className="inline-block bg-gray-100 text-gray-700 border border-gray-300 px-6 py-2 rounded cursor-pointer mt-2 hover:bg-gray-200">
+                Choose File
+              </label>
+              <input
+                id="juryUpload"
+                ref={juryApprovalFileRef}
+                type="file"
+                multiple
+                onChange={(e) => handleFileUpload(e, "juryApproval")}
+                className="hidden" />
+              {juryApprovalFileError && <p className="text-red-500 text-sm mt-1">{juryApprovalFileError}</p>}
+         </div>  
+
+          <div className="mt-3 flex flex-wrap gap-2">
+              {approvalJuryDocuments.map((doc: any, index: number) => (
+                <div
+                  key={doc.source === "api" ? doc.fileNameGUID : index}
+                  className="flex items-center gap-2 bg-gray-100 px-3 py-1 rounded-lg shadow-sm border">
+                  <span
+                    className="text-sm truncate max-w-[180px] cursor-pointer text-blue-600 hover:underline"
+                    onClick={() => handleFilePreview(doc)}>
+                    {doc.originalFileName || doc.name}
+                  </span>
+
+                  <button
+                    type="button"
+                    onClick={() => removeFile(doc, index, "juryApproval")}
+                    className="text-red-500 hover:text-red-700 font-bold text-lg leading-none">
+                    ×
+                  </button>
+                </div>
+              ))}
+          </div>  
+        </div>
+        }
         {scores.map((item, i) => (
           <div key={i}>
             <div className="flex items-center gap-6 mb-2">
@@ -2946,45 +3034,7 @@ return (
               )}        
           </div>
          ))}
-         <div className="mt-4">
-              <Label.Root className="block text-sm font-medium">
-                Supporting Documents 
-                <span className="text-red-500">(Maximum 5 files allowed & File must be below 2 MB)</span>
-              </Label.Root>
-              <label
-                htmlFor="juryUpload"
-                className="inline-block bg-gray-100 text-gray-700 border border-gray-300 px-6 py-2 rounded cursor-pointer mt-2 hover:bg-gray-200">
-                Choose File
-              </label>
-              <input
-                id="juryUpload"
-                ref={juryApprovalFileRef}
-                type="file"
-                multiple
-                onChange={(e) => handleFileUpload(e, "juryApproval")}
-                className="hidden" />
-              {juryApprovalFileError && <p className="text-red-500 text-sm mt-1">{juryApprovalFileError}</p>}
-            </div>         
-            <div className="mt-3 flex flex-wrap gap-2">
-              {approvalJuryDocuments.map((doc: any, index: number) => (
-                <div
-                  key={doc.source === "api" ? doc.fileNameGUID : index}
-                  className="flex items-center gap-2 bg-gray-100 px-3 py-1 rounded-lg shadow-sm border">
-                  <span
-                    className="text-sm truncate max-w-[180px] cursor-pointer text-blue-600 hover:underline"
-                    onClick={() => handleFilePreview(doc)}>
-                    {doc.originalFileName || doc.name}
-                  </span>
 
-                  <button
-                    type="button"
-                    onClick={() => removeFile(doc, index, "juryApproval")}
-                    className="text-red-500 hover:text-red-700 font-bold text-lg leading-none">
-                    ×
-                  </button>
-                </div>
-              ))}
-            </div>  
          <div className="flex items-center gap-2 mb-[18px]">
             <Flag size={18} className={isJuryFlagged ? "text-red-600" : "text-gray-400"}/>
             <span className="font-medium">Flag :</span>
@@ -3073,7 +3123,9 @@ return (
               Cancel
             </button>
             <button  onClick={submitJuryApproval}
-             className="h-[44px] px-8 rounded-md shadow btn-theme"> Submit </button>
+              className="h-[44px] px-8 rounded-md shadow btn-theme">                
+              {isEditMode ? "Update" : "Save"}
+            </button>
         </div>
       </div>
     </div>
@@ -3118,7 +3170,7 @@ return (
                   const val = e.target.value;
                   setGrandScore(val);
                   if(val.trim()){
-                    setGrandErrors(prev=>({
+                    setGrandErrors((prev:any)=>({
                       ...prev,
                       score:""
                     }));
@@ -3133,10 +3185,10 @@ return (
             <label className="block mb-2 font-medium">
               Comments
             </label>
-            <textarea rows={3} value={grandComments}
+            <textarea rows={3} value={popupCommentsGrand}
               onChange={(e) => {
                 const value = e.target.value;
-                setGrandFlagComment(value); 
+                setPopupCommentsGrand(value); 
               }}
               placeholder="Enter your comments"
               className={`w-full px-3 py-2 border rounded-[6px]
@@ -3145,7 +3197,6 @@ return (
               <p className="text-red-600 text-xs mt-1">{popupErrors.comments}</p>
             )}
           </div>
-
            <div className="mb-[18px]">
             <div className="mt-4">
               <Label.Root className="block text-sm font-medium">
@@ -3187,7 +3238,6 @@ return (
               ))}
             </div>
            </div> 
-           
           <div className="flex items-center gap-2 mb-[18px]">
             <Flag size={18} className={isGrandFlagged ? "text-red-600" : "text-gray-400"}/>
             <span className="font-medium">Flag :</span>
@@ -3209,9 +3259,9 @@ return (
             <textarea ref={textareaRef} rows={3} value={grandFlagComment}
               onChange={(e) => {
                 const value = e.target.value;
-                setGrandComments(value);
+                setGrandFlagComment(value);
                 if (value.trim()) {
-                  setPopupErrors(prev => ({ ...prev, grandFlagComment: "" }));
+                  setPopupErrors(prev => ({ ...prev, flagComment: "" }));
                 }
               }}
               disabled={!isGrandFlagged}

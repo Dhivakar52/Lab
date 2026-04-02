@@ -148,17 +148,14 @@ const BusinessJury: React.FC = () => {
          {
         accessorKey: "AvgIntegrativeScore",
         header: () => (
-          <div className="text-end">Score(Out of 100)</div>
+          <div >Score(Out of 100)</div>
         ),
         cell: ({ getValue }) => {
           const value = getValue() as number | null | undefined;
           return (
             <div className="flex justify-start pr-5">
-              <div
-                className="min-w-[60px] h-[28px] px-2 flex items-center
-                  text-left text-sm font-medium border border-gray-400 rounded-md text-gray-800">
+              
                 {value ?? ""}
-              </div>
             </div>
           );
         },

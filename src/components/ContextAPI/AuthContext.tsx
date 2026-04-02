@@ -9,6 +9,7 @@ interface AuthContextType {
   userRole: string | null;
   username: string | null;
   tenantname: string | null;
+  primaryfield:string|null;
 
   setAuthData: (data: AuthContextType) => void;
   clearAuthData: () => void;
@@ -29,6 +30,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const [userId, setUserId] = useState<number | null>(parseInt(localStorage.getItem("userId") || "0"));
   const [userRole, setUserRole] = useState<string | null>(localStorage.getItem("userRole"));
   const [username, setUsername] = useState<string | null>(localStorage.getItem("username"));
+  const [primaryfield, setPrimaryfield] = useState<string | null>(localStorage.getItem("primaryfield"));
    const [tenantname, setTenantname] = useState<string | null>(
     localStorage.getItem("tenantname")
   );
@@ -42,6 +44,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     setUserRole(data.userRole);
     setUsername(data.username);
       setTenantname(data.tenantname);
+      setPrimaryfield(data.primaryfield);
 
 
     // Save to localStorage
@@ -52,6 +55,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     localStorage.setItem("userRole", data.userRole || "");
     localStorage.setItem("username", data.username || "");
      localStorage.setItem("tenantname", data.tenantname || "");
+     localStorage.setItem("primaryfield", data.primaryfield || "");
   };
 
   const clearAuthData = () => {
@@ -62,6 +66,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     setUserRole(null);
     setUsername(null);
      setTenantname(null);
+     setPrimaryfield(null);
 
     localStorage.removeItem("authToken");
     localStorage.removeItem("email");
@@ -69,11 +74,12 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     localStorage.removeItem("userId");
     localStorage.removeItem("userRole");
     localStorage.removeItem("username");
-     localStorage.removeItem("tenantname");
+    localStorage.removeItem("tenantname");
+    localStorage.removeItem("primaryfield");
   };
 
   return (
-    <AuthContext.Provider value={{ authToken, email, refreshToken, userId, userRole, username,tenantname, setAuthData, clearAuthData }}>
+    <AuthContext.Provider value={{ authToken, email, refreshToken, userId, userRole, username,tenantname,primaryfield, setAuthData, clearAuthData }}>
       {children}  
     </AuthContext.Provider>
   );
