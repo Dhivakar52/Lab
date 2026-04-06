@@ -3,7 +3,7 @@ import NominationTable from './NominationTable';
 import * as Tabs from '@radix-ui/react-tabs';
 import { useLocation } from "react-router-dom";
 import React, { useEffect } from "react";
-import OtherNominationTable from "./OtherNominationTable"
+//import OtherNominationTable from "./OtherNominationTable"
 
 
 const NominationComponent = () => {

@@ -25,6 +25,8 @@ import {
 import StatusFlow from "../CommonStatusFlow"; 
 import { levelColors, levelTextColors } from "../../statusColors.ts";
 
+import Pagination from "../Pagination";
+
 interface Nomination {
   TotalRowCount: number;
   NominationID: number;

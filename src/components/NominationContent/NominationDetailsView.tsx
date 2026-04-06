@@ -22,14 +22,14 @@ interface SupportingDocument {
   FileNameGUID: string;
   FilePath: string;
 }
-type ApprovalFlowItem = {
-  type: string;
-  status: string;
-  level: string;
-  comments?: string;
-  approvedAt:string;
-  score:string;
-};
+// type ApprovalFlowItem = {
+//   type: string;
+//   status: string;
+//   level: string;
+//   comments?: string;
+//   approvedAt:string;
+//   score:string;
+// };
 
 const NominationDetailView: React.FC<NominationDetailViewProps> = ({
  isOpen}) => {

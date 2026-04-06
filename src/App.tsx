@@ -35,7 +35,7 @@ import ResetPassword from './pages/auth/Login/ResetPassword';
 import NominationFullDetails from './components/NominationFullDetails.tsx';
 import ApprovalDetailView from './components/ManagerPage/ApprovalDetailView.tsx';
 import OtherNomination from './components/NominationContent/OtherNomination.tsx';
-import PresidentLevelDetail from './components/PresidentLevel/PresidentLevelDetail.tsx';
+//import PresidentLevelDetail from './components/PresidentLevel/PresidentLevelDetail.tsx';
 import BusinessJuryDetail from './components/Jury/BusinessJuryDetail.tsx';
 import Leader from './components/LeaderBoard/Leader.tsx';
 
@@ -265,14 +265,14 @@ const App: React.FC = () => {
             </ProtectedRoute>
           }
         />
-        <Route
+        {/* <Route
           path="/presidentlevel-detail/:nominationId"
           element={
             <ProtectedRoute userRole={userRole} allowedRoles={getAllowedRoles('President Details')}>
               <PresidentLevelDetail />
             </ProtectedRoute>
           }
-        />
+        /> */}
        {/* Fallback */}
         <Route path="/forgot" element={<ForgotPassword/>} />
        <Route path="*" element={<Navigate to="/home" replace />} />
