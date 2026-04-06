@@ -2657,7 +2657,7 @@ return (
           </div>
           <div className="mb-[18px]">
             <label className="block mb-2 font-medium">
-              Comments
+              Comments <span className="text-red-500"> *</span>
             </label>
             <textarea rows={3} value={popupComments}
               onChange={(e) => {
@@ -2964,7 +2964,7 @@ return (
         </div>
         <div className="mb-[18px]">
           <label className="block mb-2 font-medium">
-            Comments
+            Comments <span className="text-red-500"> *</span>
           </label>
           <textarea rows={3} value={popupCommentsJury}
             onChange={(e) => {
@@ -3034,7 +3034,7 @@ return (
                 <span className="text-gray-400 text-xs">ⓘ</span>
               </div>
               <div className="flex items-center gap-2">
-                <span className="text-gray-500 text-sm">Score</span>
+                <span className="text-gray-500 text-sm">Score</span><span className="text-red-500"> *</span>
                 <input type="number" min={1} max={100} value={item.score}
                   onChange={(e) => {
                     const val = Number(e.target.value);
@@ -3054,7 +3054,7 @@ return (
               )}
             </div>
              <label className="block text-gray-500 text-sm mb-1">
-                  Comments
+                  Comments <span className="text-red-500"> *</span>
              </label>
             <textarea rows={3} value={item.comment}
               onChange={(e) => {
@@ -3224,7 +3224,7 @@ return (
           
           <div className="mb-[18px]">
             <label className="block mb-2 font-medium">
-              Comments
+              Comments <span className="text-red-500"> *</span>
             </label>
             <textarea rows={3} value={popupCommentsGrand}
               onChange={(e) => {
@@ -3523,6 +3523,7 @@ return (
       juryList={juryList}
       attributeData={attributeData}
       avgScore={avgScore}
+      level={level2.FlagAttachment}
     />
 {/* ================= Document Preview Dialog ================= */}
       <Dialog.Root
@@ -3562,3 +3563,4 @@ return (
   };
  
 export default BusinessJuryDetail;
+
