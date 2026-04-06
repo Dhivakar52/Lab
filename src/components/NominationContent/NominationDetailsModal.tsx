@@ -128,6 +128,7 @@ const NominationDetailsModal: React.FC<NominationDetailsProps> = ({ isOpen, onCl
         data: payload    
       }
     );
+    console.log(res);
     setIsWithdrawDialogOpen(false); 
     onClose(); 
     setSuccessMessage("Nomination Withdrawn Successfully!");
