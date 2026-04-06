@@ -12,6 +12,7 @@ import { Flag ,User, Building2, Tag,
   CalendarDays, FileText, Mail, BadgeCheck, Check } from "lucide-react";
 import type { FormState } from "../../dataTypes/nomination";
 import { levelColors, levelTextColors } from "../../statusColors.ts";
+import BusinessJuryEvaluation from "./BusinessJuryEvaluation.tsx";
 
 interface BusinessJuryDetailProps {
   isOpen: boolean;
@@ -65,6 +66,11 @@ interface ApprovalItem {
   TotalFlagCount?: number;
   JuryMember?: string;
 }
+// type BusinessJuryState = {
+//   juryList: JuryItem[];
+//   attributeData: any;
+//   avgScore: number;
+// };
 const BusinessJuryDetail: React.FC<BusinessJuryDetailProps> = ({
  isOpen}) => {
   const { nominationId } = useParams<{ nominationId: string }>();
@@ -146,7 +152,7 @@ const BusinessJuryDetail: React.FC<BusinessJuryDetailProps> = ({
   const [openEvaluation, setOpenEvaluation] = useState(false);
   const [openGrandJuryEvaluation,setOpenGrandJuryEvaluation]=useState(false);
   const [openScore, setOpenScore] = useState(false);
-  const [openCard, setOpenCard] = useState<number | null>(null);
+  //const [openCard, setOpenCard] = useState<number | null>(null);
   const [_existingDocs, setExistingDocs] = useState<any[]>([]);
   const [isFlagged, setIsFlagged] = useState(false);
   const [flagComment, setFlagComment] = useState("");
@@ -165,6 +171,8 @@ const BusinessJuryDetail: React.FC<BusinessJuryDetailProps> = ({
   const [grandScore, setGrandScore] = useState("");
   const [_grandErrors, setGrandErrors] = useState<any>({});
   const [grandFlagComment, setGrandFlagComment] = useState("");
+  //const { state } = useLocation();
+  //////const { juryList, attributeData, avgScore } = state || {};
   const [_form, setForm] = useState<FormState>({
       title: "",
       nomineeName:"",
@@ -2323,8 +2331,10 @@ return (
               <div className="flex gap-3">
                 {(primaryfield==="IsPrimary" || currentStage==="grand")&& (
                   <button
-                    onClick={() => setOpenEvaluation(true)}
-                    className="px-4 py-1.5 rounded-lg border border-blue-500 text-blue-600 text-sm hover:bg-blue-50">
+                   // onClick={() => setOpenEvaluation(true)}
+                   onClick={() => setOpenEvaluation(true)}
+                   
+                   className="px-4 py-1.5 rounded-lg border border-blue-500 text-blue-600 text-sm hover:bg-blue-50">
                     View Business Jury Evaluations
                   </button>
                 )}
@@ -2795,7 +2805,7 @@ return (
           </div>
         </div>
       </div>
-     <div
+     {/* <div
       className={`fixed top-0 right-0 h-full w-[720px] bg-white shadow-2xl z-50
       transform transition-transform duration-300
       ${openEvaluation ? "translate-x-0" : "translate-x-full"}`}>
@@ -2914,7 +2924,7 @@ return (
           );
         })}
       </div>
-    </div>   
+    </div>    */}
     <div className={`fixed top-0 right-0 h-screen w-[650px] bg-white z-50 shadow-xl
         transform transition-transform duration-500 ease-in-out
         ${openScore ? "translate-x-0" : "translate-x-full"}
@@ -3501,6 +3511,13 @@ return (
         </div>
       </div>
     )}
+    <BusinessJuryEvaluation
+      openEvaluation={openEvaluation}
+      setOpenEvaluation={setOpenEvaluation}
+      juryList={juryList}
+      attributeData={attributeData}
+      avgScore={avgScore}
+    />
 {/* ================= Document Preview Dialog ================= */}
       <Dialog.Root
         open={previewOpen}
