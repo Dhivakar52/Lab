@@ -241,6 +241,8 @@ const ApprovalTable: React.FC = () => {
         return <ColorBadge label={tenant} />;
       },
     },
+   { accessorKey: "AwardCategory", header: "Category" },
+
       { accessorKey: "NominatedBy", header: "Nominated By" },
       // { accessorKey: "AwardCategory", header: "AwardCategory" },
     { accessorKey: "SubmittedDate", header: "Submitted Date" },

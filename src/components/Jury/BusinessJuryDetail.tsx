@@ -66,6 +66,11 @@ interface ApprovalItem {
   TotalFlagCount?: number;
   JuryMember?: string;
 }
+// type BusinessJuryState = {
+//   juryList: JuryItem[];
+//   attributeData: any;
+//   avgScore: number;
+// };
 const BusinessJuryDetail: React.FC<BusinessJuryDetailProps> = ({
  isOpen}) => {
   const { nominationId } = useParams<{ nominationId: string }>();
@@ -166,6 +171,8 @@ const BusinessJuryDetail: React.FC<BusinessJuryDetailProps> = ({
   const [grandScore, setGrandScore] = useState("");
   const [_grandErrors, setGrandErrors] = useState<any>({});
   const [grandFlagComment, setGrandFlagComment] = useState("");
+  //const { state } = useLocation();
+  //////const { juryList, attributeData, avgScore } = state || {};
   const [_form, setForm] = useState<FormState>({
       title: "",
       nomineeName:"",
@@ -2369,7 +2376,7 @@ return (
                   </div>
 
                   <div>
-                    <span className="text-gray-500">Average Score :</span>{" "}
+                    <span className="text-gray-500">Total Average Score :</span>{" "}
                     <span className="font-medium">
                       {avgScore}
                     </span>
@@ -2387,6 +2394,12 @@ return (
               </div>
               <div className="flex gap-12">
                   <div className="flex gap-12">
+                    <div>
+                    <span className="text-gray-500">Score :</span>{" "}
+                    <span className="font-medium">
+                      {approvalData[1].ApprovalScore}
+                    </span>
+                  </div>
                 <div className="flex items-start gap-2">
                   <span className="text-gray-500">{Number(flagBusinessJuryData?.Flag) === 1 ? "Flagged :" : "Not Flagged :"}</span>
                   <div className="flex items-center gap-2">
@@ -3510,7 +3523,6 @@ return (
       juryList={juryList}
       attributeData={attributeData}
       avgScore={avgScore}
-       level={level2.FlagAttachment}
     />
 {/* ================= Document Preview Dialog ================= */}
       <Dialog.Root
