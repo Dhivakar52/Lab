@@ -253,7 +253,7 @@ const App: React.FC = () => {
           path="/nomination-detail/:nominationId"
           element={
             <ProtectedRoute userRole={userRole} allowedRoles={getAllowedRoles('')}>
-              <NominationDetailView />
+              <NominationDetailView isOpen={true}  onClose={() => {}}/>
             </ProtectedRoute>
           }
         />
@@ -261,7 +261,7 @@ const App: React.FC = () => {
           path="/businessjury-detail/:nominationId"
           element={
             <ProtectedRoute userRole={userRole} allowedRoles={getAllowedRoles('Business Jury Details')}>
-              <BusinessJuryDetail />
+              <BusinessJuryDetail isOpen={true}  onClose={() => {}}/>
             </ProtectedRoute>
           }
         />

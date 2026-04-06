@@ -43,12 +43,12 @@ interface ApprovalView {
   ApprovalComments: string;
   BusinessJuryStatus: string;
 }
-type ApprovalFlowItem = {
-  type: string;
-  status: string;
-  level: string;
-  comments?: string;
-};
+// type ApprovalFlowItem = {
+//   type: string;
+//   status: string;
+//   level: string;
+//   comments?: string;
+// };
 const statusColors: Record<string, string> = {
   Pending: "bg-orange-100 text-orange-800 border-orange-300",
   Approved: "bg-green-100 text-green-800 border-green-300",
@@ -70,14 +70,14 @@ const ApprovalDetailView: React.FC = () => {
   // --------------------------
   // APPROVE FUNCTION
   // --------------------------
- const approvalFlow: ApprovalFlowItem[] = (approval?.ApprovalStatus || []).map(
-  (a: any) => ({
-    type: a.ApprovalType,
-    status: a.Status,
-    level: a.ApprovalFlow,
-    comments: a.ApprovalComments,
-  })
-);
+//  const approvalFlow: ApprovalFlowItem[] = (approval?.ApprovalStatus || []).map(
+//   (a: any) => ({
+//     type: a.ApprovalType,
+//     status: a.Status,
+//     level: a.ApprovalFlow,
+//     comments: a.ApprovalComments,
+//   })
+// );
   const handleApprove = async () => {
     try {
       await axios.put(
