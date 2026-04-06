@@ -121,7 +121,7 @@ const BusinessJuryEvaluation = ({
           <div className="border border-gray-300 rounded-lg p-4 text-center bg-green-50 text-green-700">
            <div className="text-sm">Total Evaluations</div>
             <div className="text-xl font-semibold">
-              {attributeData?.EvaluatedJuries || 0}
+             {attributeData  ? `${attributeData.EvaluatedJuries}/${attributeData.TotalEvalutions}` : "0"}
             </div>
           </div>
           <div className="border border-gray-300 rounded-lg p-4 text-center bg-blue-50 text-blue-700">
