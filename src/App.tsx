@@ -38,6 +38,8 @@ import OtherNomination from './components/NominationContent/OtherNomination.tsx'
 //import PresidentLevelDetail from './components/PresidentLevel/PresidentLevelDetail.tsx';
 import BusinessJuryDetail from './components/Jury/BusinessJuryDetail.tsx';
 import Leader from './components/LeaderBoard/Leader.tsx';
+import BusinessJuryEvaluation from './components/Jury/BusinessJuryEvaluation.tsx';
+
 
 // -------------------------
 // Main page components
@@ -264,6 +266,10 @@ const App: React.FC = () => {
               <BusinessJuryDetail isOpen={true}  onClose={() => {}}/>
             </ProtectedRoute>
           }
+        />
+        <Route
+          path="/business-jury-evaluation"
+          element={<BusinessJuryEvaluation />}
         />
         {/* <Route
           path="/presidentlevel-detail/:nominationId"
