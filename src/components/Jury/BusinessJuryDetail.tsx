@@ -66,11 +66,6 @@ interface ApprovalItem {
   TotalFlagCount?: number;
   JuryMember?: string;
 }
-// type BusinessJuryState = {
-//   juryList: JuryItem[];
-//   attributeData: any;
-//   avgScore: number;
-// };
 const BusinessJuryDetail: React.FC<BusinessJuryDetailProps> = ({
  isOpen}) => {
   const { nominationId } = useParams<{ nominationId: string }>();
@@ -171,8 +166,6 @@ const BusinessJuryDetail: React.FC<BusinessJuryDetailProps> = ({
   const [grandScore, setGrandScore] = useState("");
   const [_grandErrors, setGrandErrors] = useState<any>({});
   const [grandFlagComment, setGrandFlagComment] = useState("");
-  //const { state } = useLocation();
-  //////const { juryList, attributeData, avgScore } = state || {};
   const [_form, setForm] = useState<FormState>({
       title: "",
       nomineeName:"",
@@ -3517,6 +3510,7 @@ return (
       juryList={juryList}
       attributeData={attributeData}
       avgScore={avgScore}
+       level={level2.FlagAttachment}
     />
 {/* ================= Document Preview Dialog ================= */}
       <Dialog.Root
