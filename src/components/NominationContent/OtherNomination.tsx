@@ -1,13 +1,13 @@
 import { useEffect, useState, useRef } from "react";
 import * as Label from "@radix-ui/react-label";
 import { Outlet } from "react-router-dom";
-import axios, { all } from "axios";
+import axios from "axios";
 import { ArrowLeft } from "lucide-react";
 import { useAuth } from "../ContextAPI/AuthContext";
 import type { AddNominationState } from "../../dataTypes/nomination";
 import Select from "react-select";
 import { useNavigate } from "react-router-dom";
-import type { ClearIndicatorProps } from "react-select";
+//import type { ClearIndicatorProps } from "react-select";
 
 // interface OptionType {
 //   value: number;
@@ -46,10 +46,10 @@ export default function OtherNomination() {
   const [filteredDepartments, setFilteredDepartments] = useState<DepartmentType[]>([]); 
   const [allUsers, setAllUsers] = useState<UserType[]>([]); 
   const [filteredUsers, setFilteredUsers] = useState<UserType[]>([]); 
-  const [users, setUsers] = useState<any[]>([]);
+  const [_users, setUsers] = useState<any[]>([]);
   const [referrals, setReferrals] = useState<any[]>([]);
   // const [entitydropdown, setEntityName] = useState<any[]>([]);
-  const [successMsg, setSuccessMsg] = useState("");
+  const [successMsg, _setSuccessMsg] = useState("");
   const [searchText, setSearchText] = useState("");
   const [results, setResults] = useState<SearchResult[]>([]);
   const [showList, setShowList] = useState(false);
@@ -57,7 +57,7 @@ export default function OtherNomination() {
   const [selectedTenantID, setSelectedTenantID] = useState<number | null>(null);
   const [showSuccessModal, setShowSuccessModal] = useState(false);
   const [entitydropdown, setEntityName] = useState<any[]>([]);
-  const [nomineeEmail, setNomineeEmail] = useState("");
+  const [_nomineeEmail, _setNomineeEmail] = useState("");
   const [form, setForm] = useState<AddNominationState>({
     title: "",
     nomineeName: "",
@@ -102,7 +102,7 @@ useEffect(() => {
   }
 }, [form.email]); // runs whenever emails change
 
-const NoClearIndicator = (props: ClearIndicatorProps<any, true>) => {
+const NoClearIndicator = () => {
   return null;
 };
     console.log("Form Submitted");
@@ -313,16 +313,7 @@ const handleNomineeChange = (selected: any) => {
   }));
 };
 
-  const handleSelectReferral = (selected: { value: string; label: string } | null) => {
-  if (!selected) return;
-  if (!referrals.some((r) => r.UserID === selected.value)) {
-    setReferrals([...referrals, { UserID: selected.value, UserInfo: selected.label }]);
-  }
-};
-
-  const removeReferral = (userID: number) => {
-    setReferrals(referrals.filter((r) => r.UserID !== userID));
-  };
+ 
   //const [tab, setTab] = useState<"table" | "form">("table");
   const handleBackward = () => {
   navigate("/my-nominations", { state: { tab: "form" } });

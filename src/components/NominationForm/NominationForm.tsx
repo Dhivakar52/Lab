@@ -3,7 +3,7 @@
  import * as Tabs from '@radix-ui/react-tabs';
 // import {  useNavigate } from "react-router-dom";
 import SelfNominationComponent from '../SelfNomination/SelfNominationComponent'
-import OtherNominationForm from './OtherNominationForm';
+//import OtherNominationForm from './OtherNominationForm';
 
 
 
@@ -49,7 +49,7 @@ const NominationComponent = () => {
 
         <Tabs.Content value="form" >
           
-        <OtherNominationForm/>
+        {/* <OtherNominationForm/> */}
         </Tabs.Content>
         </div>
         
