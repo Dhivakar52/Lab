@@ -29,7 +29,7 @@ const BusinessJuryEvaluation = ({
     const [openDocPopup, setOpenDocPopup] = useState(false);
     const [selectedDocs, setSelectedDocs] = useState<any[]>([]);
     
-      const { authToken } = useAuth();
+      const { authToken,primaryfield } = useAuth();
    
     const safeParse = (value: any) => {
     try {
@@ -121,7 +121,9 @@ const BusinessJuryEvaluation = ({
           <div className="border border-gray-300 rounded-lg p-4 text-center bg-green-50 text-green-700">
            <div className="text-sm">Total Evaluations</div>
             <div className="text-xl font-semibold">
-             {attributeData  ? `${attributeData.EvaluatedJuries}/${attributeData.TotalEvalutions}` : "0"}
+            {primaryfield==="IsPrimary"? <div>{attributeData?.EvaluationJuriesMember || 0}/{attributeData?.TotalEvaluationMembers || 0}</div>:
+              <div>{attributeData?.EvaluatedJuries || 0}/{attributeData?.TotalEvalutions || 0}</div>
+      }
             </div>
           </div>
           <div className="border border-gray-300 rounded-lg p-4 text-center bg-blue-50 text-blue-700">
@@ -133,7 +135,7 @@ const BusinessJuryEvaluation = ({
           <div className="border border-gray-300 rounded-lg p-4 text-center bg-red-50 text-red-700">
            <div className="text-sm">Flagged</div>
             <div className="text-xl font-semibold">
-              {attributeData?.TotalFlagCount || 0}
+              {primaryfield === "IsPrimary" ? attributeData?.TotalFlagCountMember || 0 : attributeData?.TotalFlagCount || 0}
             </div>
           </div>
         </div>

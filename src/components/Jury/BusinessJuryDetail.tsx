@@ -2371,12 +2371,18 @@ return (
                   <div>
                     <span className="text-gray-500">Total Jury Evaluations :</span>{" "}
                     <span className="font-medium">
-                      {approvalData[1].EvaluatedJuries}/{approvalData[1].TotalEvalutions}
-                    </span>
+          {currentStage === "grand"? <>{approvalData[1]?.EvaluatedJuries || 0}/{approvalData[1]?.TotalEvalutions || 0}</>:
+              <>{approvalData[1]?.EvaluationJuriesMember || 0}/{approvalData[1]?.TotalEvaluationMembers || 0}</>
+            }    
+                      </span>
                   </div>
 
                   <div>
-                    <span className="text-gray-500">Total Average Score :</span>{" "}
+                    {currentStage === "grand" ? (
+                      <span className="text-gray-500">Total Member Average Score :</span>
+                    ) : (
+                      <span className="text-gray-500">Total Average Score :</span>
+                    )}
                     <span className="font-medium">
                       {avgScore}
                     </span>
@@ -2385,7 +2391,7 @@ return (
                  <div>
                   <span className="text-gray-500">Total Flag :</span>{" "}
                   <span className="font-medium">
-                    {approvalData[1].TotalFlagCount}
+                    {currentStage === "grand" ? attributeData?.TotalFlagCount || 0 : attributeData?.TotalFlagCountMember || 0}
                   </span>
                 </div>
 
@@ -2397,7 +2403,7 @@ return (
                     <div>
                     <span className="text-gray-500">Score :</span>{" "}
                     <span className="font-medium">
-                      {approvalData[1].ApprovalScore}
+                      {currentStage === "grand" ? approvalData[1].LeadAvgScore : approvalData[1].ApprovalScore}
                     </span>
                   </div>
                 <div className="flex items-start gap-2">
