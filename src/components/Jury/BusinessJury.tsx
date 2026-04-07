@@ -147,25 +147,26 @@ const BusinessJury: React.FC = () => {
       },
       
        {
-            header: "Flag",
-            cell: ({ row }) => {
-              const item = row.original as any;
-              const flagStatus = Number(item.FlagStatus);
-              if (flagStatus < 0) return null;
-              if (flagStatus === 1) {
+                header: "Flag",
+                cell: ({ row }) => {
+                  const item = row.original as any;
+                  const flagStatus = Number(item.FlagDetails[0]?.Flag);
+        
+                  if (flagStatus < 0) return null;
+                  const isRed = flagStatus === 1;
                   return (
-                   <button>
-                    {/* // onClick={(e) =>{ e.stopPropagation(); handleFlagClick(item);}}
-                    // className="p-1" title="Flagged"> */}
-                   <Flag
-                    size={18} className="text-red-600 fill-red-600" /></button>
-                );
-              }
-                return (
-                  <span className="text-green-600 text-xl leading-none"  title="Not Flagged">✔</span>
-                );
+                    <span>
+                      <Flag
+                        size={18}
+                        className={
+                          isRed
+                            ? "text-red-600 fill-red-600"
+                            : "text-gray-400 fill-gray-400"
+                        }/>
+                    </span>
+                  );
+                },
               },
-        },  
         {
             header: "Actions",
             cell: ({ row }) => {
