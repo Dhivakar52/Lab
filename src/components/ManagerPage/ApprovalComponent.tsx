@@ -15,7 +15,7 @@ import ApprovalPanel from "./ApprovalPanel";
 import { ColorBadge } from "../TenantBadges";
 import { useNavigate } from "react-router-dom";
 import Pagination from "../Pagination";
-import StatusFlow from "../CommonStatusFlow"; 
+ import StatusFlow from "../CommonStatusFlow"; 
 import { Flag } from "lucide-react";
 import { ChevronDown, ChevronUp } from "lucide-react";
 import { levelColors, levelTextColors } from "../../statusColors.ts";
@@ -241,10 +241,9 @@ const ApprovalTable: React.FC = () => {
         return <ColorBadge label={tenant} />;
       },
     },
-   { accessorKey: "AwardCategory", header: "Category" },
-
+      { accessorKey: "AwardCategory", header: "Category" },
       { accessorKey: "NominatedBy", header: "Nominated By" },
-      // { accessorKey: "AwardCategory", header: "AwardCategory" },
+     
     { accessorKey: "SubmittedDate", header: "Submitted Date" },
     {
         id: "Levels",
@@ -388,7 +387,17 @@ const ApprovalTable: React.FC = () => {
               ))}
             </thead>
              <tbody className="divide-y divide-gray-100">
-              {table.getRowModel().rows.map((row) => {
+              {table.getRowModel().rows.length === 0 ? (
+                <tr>
+                  <td
+                    colSpan={columns.length}
+                    className="px-4 py-6 text-center text-gray-500 text-sm"
+                  >
+                    No data found
+                  </td>
+                </tr>
+              ) : (
+              table.getRowModel().rows.map((row) => {
                 const item = row.original as any;
                 const isFlagExpanded =
                   expandedRow?.id === item.NominationID &&
@@ -533,8 +542,10 @@ const ApprovalTable: React.FC = () => {
                   )}
                   </React.Fragment>
                 );
-              })}
+              })
+              )}
             </tbody>
+
           </table>
            <Pagination  table={table}  totalCount={ globalFilter  ? table.getFilteredRowModel().rows.length : totalCount }  />
           </div>

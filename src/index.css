@@ -189,3 +189,7 @@ th{
   width: 26px;          
   background: #16a34a;  
 }
+thead th{
+        font-size: 13px !important;
+    color: #6d6d6d !important;
+}

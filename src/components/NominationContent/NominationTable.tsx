@@ -363,7 +363,17 @@ const apiUrl = import.meta.env.VITE_API_URL;
               ))}
             </thead>
             <tbody className="divide-y divide-gray-100">
-              {table.getRowModel().rows.map((row) => {
+              {table.getRowModel().rows.length === 0 ? (
+                <tr>
+                  <td
+                    colSpan={columns.length}
+                    className="px-4 py-6 text-center text-gray-500 text-sm"
+                  >
+                    No data found
+                  </td>
+                </tr>
+              ) : (
+              table.getRowModel().rows.map((row) => {
                 const item = row.original as any;
                 const isExpanded = expandedRow === item.NominationID;
                 return (
@@ -391,7 +401,8 @@ const apiUrl = import.meta.env.VITE_API_URL;
                   )}
                   </React.Fragment>
                 );
-              })}
+              })
+              )}
             </tbody>  
           </table>
             <Pagination  table={table}  totalCount={ globalFilter  ? table.getFilteredRowModel().rows.length : totalCount }  />
