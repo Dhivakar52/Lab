@@ -12,6 +12,7 @@ interface Props {
   juryList?: any[];
   attributeData?: any;
   avgScore?: number;
+  avgMemLeadScore?: number;
   level?: any[];
 }
 
@@ -21,6 +22,7 @@ const BusinessJuryEvaluation = ({
   juryList = [],
   attributeData,
   avgScore = 0,
+  avgMemLeadScore = 0,
   level=[]
 }: Props) => {
 
@@ -129,7 +131,7 @@ const BusinessJuryEvaluation = ({
           <div className="border border-gray-300 rounded-lg p-4 text-center bg-blue-50 text-blue-700">
            <div className="text-sm">Average Score</div>
             <div className="text-xl font-semibold">
-             {avgScore || 0}
+            {primaryfield==="IsPrimary"? <div>{avgScore || 0}</div>: <div>{avgMemLeadScore || 0}</div>  }
             </div>
           </div>
           <div className="border border-gray-300 rounded-lg p-4 text-center bg-red-50 text-red-700">

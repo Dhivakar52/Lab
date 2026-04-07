@@ -912,9 +912,10 @@ const getBusinessJuryEvaluations = () => {
     return [];
   }
 };
-
 const avgScoreData = safeParse(level2?.JuryMemberAvgScore);
+const avgScoreMemLeadData = safeParse(level2?.JuryMemberLeadAvgScore);
 const avgScore = avgScoreData?.[0]?.JuryMemberAvgScore || 0;
+const avgScoreMemLead = avgScoreMemLeadData?.[0]?.JuryMemberLeadAvgScore|| 0;
 const attributeData = level2;
 
 const juryList: JuryItem[] = getBusinessJuryEvaluations().map((j: any) => {
@@ -2378,13 +2379,11 @@ return (
                   </div>
 
                   <div>
-                    {currentStage === "grand" ? (
-                      <span className="text-gray-500">Total Member Average Score :</span>
-                    ) : (
+                    
                       <span className="text-gray-500">Total Average Score :</span>
-                    )}
+                    
                     <span className="font-medium">
-                      {avgScore}
+                     {currentStage==="grand"?avgScoreMemLead: avgScore}
                     </span>
                   </div>
 
@@ -3529,6 +3528,7 @@ return (
       juryList={juryList}
       attributeData={attributeData}
       avgScore={avgScore}
+      avgMemLeadScore={avgScoreMemLead}
       level={level2.FlagAttachment}
     />
 {/* ================= Document Preview Dialog ================= */}
