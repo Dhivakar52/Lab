@@ -193,3 +193,36 @@ thead th{
         font-size: 13px !important;
     color: #6d6d6d !important;
 }
+
+@keyframes highlightPulse {
+  0% {
+    background-color: rgba(59, 130, 246, 0);
+    border-left: 4px solid transparent;
+  }
+  25% {
+    background-color: rgba(59, 130, 246, 0.1);
+    border-left: 4px solid #3b82f6;
+  }
+  50% {
+    background-color: rgba(59, 130, 246, 0.15);
+    border-left: 4px solid #3b82f6;
+  }
+  75% {
+    background-color: rgba(59, 130, 246, 0.1);
+    border-left: 4px solid #3b82f6;
+  }
+  100% {
+    background-color: rgba(59, 130, 246, 0);
+    border-left: 4px solid transparent;
+  }
+}
+
+.highlight-pulse {
+  animation: highlightPulse 2s ease-in-out;
+  border-radius: 8px;
+}
+
+[data-post-id] {
+  scroll-margin-top: 80px;
+  transition: all 0.3s ease;
+}
