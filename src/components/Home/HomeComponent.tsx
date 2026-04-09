@@ -1,5 +1,6 @@
 import React, { useEffect, useState, useReducer, useMemo, useRef, useCallback } from "react";
 import { useAuth } from "../ContextAPI/AuthContext";
+import { useLocation } from "react-router-dom";
 import axios from "axios";
 import homelogo from "../../assets/images/home_bg.png";
 import TabsSection from "./TabsSection";
@@ -16,6 +17,12 @@ import {
   initialFilterState,
 } from "../../dataTypes/feedfilter";
 import FilterFeed from "./FilterFeed";
+
+declare global {
+  interface Window {
+    scrollTimeout: number | undefined;
+  }
+}
 
 const HomeComponent: React.FC = () => {
   const [activeTab, setActiveTab] = useState<"Feeds" | "My Lists" | "My Business">("Feeds");
@@ -41,7 +48,137 @@ const HomeComponent: React.FC = () => {
   );
 
   const filterRef = useRef<HTMLDivElement>(null);
+  const deepLinkProcessed = useRef(false);
+  const location = useLocation();
 
+  // ========== SCROLL TO POST FUNCTION ==========
+  const scrollToPost = useCallback((postId: number) => {
+    console.log("📜 scrollToPost called once for postId:", postId);
+    
+    if (window.scrollTimeout) {
+      clearTimeout(window.scrollTimeout);
+    }
+    
+    let retryCount = 0;
+    const maxRetries = 25;
+    let found = false;
+    
+    const attemptScroll = () => {
+      if (found) return;
+      
+      const postElement = document.querySelector(`[data-post-id="${postId}"]`);
+      
+      if (postElement) {
+        found = true;
+        console.log(`✅ Found post ${postId}, scrolling...`);
+        
+        postElement.scrollIntoView({
+          behavior: 'smooth',
+          block: 'center',
+        });
+        
+        postElement.classList.add('highlight-pulse');
+        setTimeout(() => {
+          postElement.classList.remove('highlight-pulse');
+        }, 3000);
+        
+        // Clear sessionStorage after successful scroll
+        sessionStorage.removeItem('scrollToPost');
+        sessionStorage.removeItem('scrollToPostSource');
+      } else if (retryCount < maxRetries) {
+        const delay = Math.min(200 * Math.pow(1.1, retryCount), 3000);
+        console.log(`⏳ Post ${postId} not found, retry ${retryCount + 1} in ${delay}ms`);
+        retryCount++;
+        window.scrollTimeout = setTimeout(attemptScroll, delay);
+      } else {
+        console.error(`❌ Failed to find post ${postId} after ${maxRetries} attempts`);
+        sessionStorage.removeItem('scrollToPost');
+        sessionStorage.removeItem('scrollToPostSource');
+      }
+    };
+    
+    window.scrollTimeout = setTimeout(attemptScroll, 500);
+  }, []);
+
+  // ========== DEEP LINK HANDLER FOR URL PARAMS ==========
+  useEffect(() => {
+    const params = new URLSearchParams(location.search);
+    const postId = params.get('postId');
+    const scrollTo = params.get('scrollTo');
+    
+    console.log("🔍 HomeComponent - URL params:", { postId, scrollTo, processed: deepLinkProcessed.current });
+    
+    if (postId && scrollTo === 'post' && !deepLinkProcessed.current) {
+      deepLinkProcessed.current = true;
+      const postIdNumber = parseInt(postId, 10);
+      if (!isNaN(postIdNumber)) {
+        console.log("🎯 Found postId in URL, scrolling to:", postIdNumber);
+        
+        // Clean URL without reload
+        const cleanUrl = window.location.pathname;
+        window.history.replaceState({}, '', cleanUrl);
+        
+        // Switch to Feeds tab if needed
+        if (activeTab !== "Feeds") {
+          setActiveTab("Feeds");
+          setTimeout(() => scrollToPost(postIdNumber), 800);
+        } else {
+          scrollToPost(postIdNumber);
+        }
+      }
+    }
+  }, [location.search, activeTab, scrollToPost]);
+
+  // ========== SESSION STORAGE CHECK (Backup Method) ==========
+  useEffect(() => {
+    let checked = false;
+    
+    const checkSessionStorage = () => {
+      if (checked) return;
+      
+      const postId = sessionStorage.getItem('scrollToPost');
+      const source = sessionStorage.getItem('scrollToPostSource');
+      
+      console.log("📱 Checking sessionStorage:", { postId, source, processed: deepLinkProcessed.current });
+      
+      if (postId && source === 'notification' && !deepLinkProcessed.current) {
+        checked = true;
+        deepLinkProcessed.current = true;
+        console.log("📱 Processing sessionStorage deep link for post:", postId);
+        
+        sessionStorage.removeItem('scrollToPost');
+        sessionStorage.removeItem('scrollToPostSource');
+        
+        const postIdNumber = parseInt(postId, 10);
+        
+        if (activeTab !== "Feeds") {
+          setActiveTab("Feeds");
+          setTimeout(() => scrollToPost(postIdNumber), 800);
+        } else {
+          scrollToPost(postIdNumber);
+        }
+      }
+    };
+    
+    const timer = setTimeout(() => {
+      if (posts.length > 0) {
+        checkSessionStorage();
+      }
+    }, 1000);
+    
+    return () => clearTimeout(timer);
+  }, [posts, activeTab, scrollToPost]);
+
+  // ========== CLEAN URL ON MOUNT ==========
+  useEffect(() => {
+    const params = new URLSearchParams(location.search);
+    if (params.has('postId') || params.has('scrollTo')) {
+      const cleanUrl = window.location.pathname;
+      window.history.replaceState({}, '', cleanUrl);
+    }
+  }, []);
+
+  // ========== RESET FILTERS ON TAB CHANGE ==========
   useEffect(() => {
     setShowDropdown(false);
 
@@ -50,18 +187,21 @@ const HomeComponent: React.FC = () => {
     if (activeTab === "My Business") businessDispatch({ type: "RESET" });
   }, [activeTab]);
 
+  // ========== CLICK OUTSIDE HANDLER ==========
   const handleClickOutside = useCallback((event: MouseEvent) => {
     if (filterRef.current && !filterRef.current.contains(event.target as Node)) {
       setShowDropdown(false);
     }
   }, []);
 
+  // ========== LOADER COMPONENT ==========
   const Loader = () => (
     <div className="flex justify-center items-center h-[300px]">
       <div className="h-10 w-10 border-4 border-gray-300 border-t-blue-600 rounded-full animate-spin"></div>
     </div>
   );
 
+  // ========== FETCH FEEDS ==========
   useEffect(() => {
     const fetchFeeds = async () => {
       try {
@@ -96,7 +236,7 @@ const HomeComponent: React.FC = () => {
         setProfile(filtered);
 
         const listCard = await axios.get(`${apiUrl}/api/nomiantionmylist/0`, {
-           params: { userId: userId },
+          params: { userId: userId },
           headers: {
             "Content-Type": "application/json",
             Authorization: `Bearer ${authToken}`,
@@ -111,6 +251,7 @@ const HomeComponent: React.FC = () => {
     fetchFeeds();
   }, [authToken, apiUrl, userId, tenantname]);
 
+  // ========== FETCH BUSINESS ==========
   useEffect(() => {
     if (activeTab !== "My Business" || business.length > 0) return;
 
@@ -136,7 +277,7 @@ const HomeComponent: React.FC = () => {
     fetchBusiness();
   }, [activeTab, tenantname, authToken, apiUrl, business.length]);
 
-
+  // ========== SORTING FUNCTIONS ==========
   const sortFeeds = (data: Feed[], sortBy: string) => {
     const sorted = [...data];
 
@@ -154,6 +295,7 @@ const HomeComponent: React.FC = () => {
     }
   };
 
+  // ========== FILTERED DATA ==========
   const filteredPosts = useMemo(() => {
     let data = [...posts];
 
@@ -210,6 +352,7 @@ const HomeComponent: React.FC = () => {
     return sortFeeds(data, businessState.sortBy);
   }, [businessState, business]);
 
+  // ========== DROPDOWN CLICK OUTSIDE ==========
   useEffect(() => {
     if (showDropdown) {
       document.addEventListener("mousedown", handleClickOutside);
@@ -222,12 +365,37 @@ const HomeComponent: React.FC = () => {
     };
   }, [showDropdown, handleClickOutside]);
 
+  // ========== GET FILTER PROPS ==========
   const getFilterProps = () => {
     if (activeTab === "Feeds")
       return { ...feedsState, dispatch: feedsDispatch };
     if (activeTab === "My Lists")
       return { ...listsState, dispatch: listsDispatch };
     return { ...businessState, dispatch: businessDispatch };
+  };
+
+  // ========== DEBUG BUTTON (Remove in production) ==========
+  const addTestNotification = () => {
+    const firstPostId = posts[0]?.NominationID;
+    if (!firstPostId) {
+      alert("No posts loaded yet!");
+      return;
+    }
+    
+    const test = {
+      NotificationID: Date.now(),
+      Title: "DEBUG TEST - Click to see post",
+      NotificationContent: `Test seeking notification for post: ${posts[0]?.Nominee}`,
+      Type: "Seeking Request",
+      ReferenceIdPK: firstPostId,
+      DeepLink: `/home?postId=${firstPostId}&scrollTo=post`,
+      IsRead: false,
+      Time: new Date().toLocaleString()
+    };
+    const existing = JSON.parse(localStorage.getItem('mock_notifications') || '[]');
+    existing.push(test);
+    localStorage.setItem('mock_notifications', JSON.stringify(existing));
+    alert(`Test notification added for post ID: ${firstPostId}! Check bell icon`);
   };
 
   return (
@@ -308,6 +476,14 @@ const HomeComponent: React.FC = () => {
           </div>
         </div>
       </div>
+
+      {/* Debug Button - Remove in production */}
+      {/* <button 
+        onClick={addTestNotification}
+        className="fixed bottom-20 right-4 z-50 bg-red-600 text-white px-4 py-2 rounded shadow-lg hover:bg-red-700 text-sm"
+      >
+        Add Test Notification
+      </button> */}
     </div>
   );
 };
