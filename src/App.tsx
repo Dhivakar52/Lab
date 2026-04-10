@@ -1,5 +1,6 @@
 // src/App.tsx
 import React, { useState, useEffect } from 'react';
+import { useLocation } from 'react-router-dom';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import Layout from './layout/Layout';
 import HomePage from './pages/HomePage';
@@ -44,8 +45,14 @@ import Leader from './components/LeaderBoard/Leader.tsx';
 // -------------------------
 // Main page components
 // -------------------------
+const HomeWithKey = () => {
+  const location = useLocation();
+  return <HomePage key={location.key} />;
+};
+
+
 const pageComponents: Record<string, React.ReactNode> = {
-  'Home': <HomePage />,
+  'Home': <HomeWithKey  />,
   'Notifications': <NotificationsPage />,
   'Self Nominations': <SelfNominationPage />,
   // 'My Nominations': <NominationPage />,

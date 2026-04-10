@@ -4,7 +4,7 @@ import { useNavigate } from "react-router-dom";
 import SrmLogo from "../../../assets/images/srm_login_logo.png";
 import TrophyImage from "../../../assets/images/login_cup_img.png";
 import loginBg from "../../../assets/images/login_left_img.png";
-import { Eye, EyeClosed, Mail, Lock, Fingerprint, LogIn, Shield, ArrowLeft, CheckCircle } from "lucide-react";
+import { Eye, EyeClosed, Mail, Lock, Fingerprint, LogIn, Shield, ArrowLeft, CheckCircle , MessageSquareLock } from "lucide-react";
 import { USER_ROLES, type UserRole } from "../../../dataTypes/roles";
 import  Tree from "../../../assets/images/tree.png"
 
@@ -292,7 +292,7 @@ export default function Login({ setUserRole }: LoginProps) {
                     : "text-gray-600 hover:text-green-600"
                 }`}
               >
-                <Fingerprint className="w-4 h-4" />
+                <MessageSquareLock  className="w-4 h-4" />
                 OTP Login
               </button>
             </div>
