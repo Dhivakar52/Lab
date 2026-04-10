@@ -1,6 +1,6 @@
 import React, { useEffect, useState, useReducer, useMemo, useRef, useCallback } from "react";
 import { useAuth } from "../ContextAPI/AuthContext";
-import { useLocation } from "react-router-dom";
+
 import axios from "axios";
 import homelogo from "../../assets/images/home_bg.png";
 import TabsSection from "./TabsSection";
@@ -49,139 +49,165 @@ const HomeComponent: React.FC = () => {
 
   const filterRef = useRef<HTMLDivElement>(null);
   const deepLinkProcessed = useRef(false);
-  const location = useLocation();
+  // const location = useLocation();
 
   // ========== SCROLL TO POST FUNCTION ==========
   const scrollToPost = useCallback((postId: number) => {
-    console.log("📜 scrollToPost called once for postId:", postId);
+    console.log("📜 scrollToPost called for postId:", postId);
     
     if (window.scrollTimeout) {
       clearTimeout(window.scrollTimeout);
     }
     
+    const postElement = document.querySelector(`[data-post-id="${postId}"]`);
+    
+    if (postElement) {
+      console.log(`✅ Found post ${postId}, scrolling...`);
+      postElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      postElement.classList.add('highlight-pulse');
+      setTimeout(() => postElement.classList.remove('highlight-pulse'), 3000);
+      return;
+    }
+    
+    // Retry logic
     let retryCount = 0;
-    const maxRetries = 25;
-    let found = false;
+    const maxRetries = 30;
     
     const attemptScroll = () => {
-      if (found) return;
-      
-      const postElement = document.querySelector(`[data-post-id="${postId}"]`);
-      
-      if (postElement) {
-        found = true;
-        console.log(`✅ Found post ${postId}, scrolling...`);
-        
-        postElement.scrollIntoView({
-          behavior: 'smooth',
-          block: 'center',
-        });
-        
-        postElement.classList.add('highlight-pulse');
-        setTimeout(() => {
-          postElement.classList.remove('highlight-pulse');
-        }, 3000);
-        
-        // Clear sessionStorage after successful scroll
-        sessionStorage.removeItem('scrollToPost');
-        sessionStorage.removeItem('scrollToPostSource');
+      const element = document.querySelector(`[data-post-id="${postId}"]`);
+      if (element) {
+        console.log(`✅ Found post ${postId} after retry, scrolling...`);
+        element.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        element.classList.add('highlight-pulse');
+        setTimeout(() => element.classList.remove('highlight-pulse'), 3000);
       } else if (retryCount < maxRetries) {
         const delay = Math.min(200 * Math.pow(1.1, retryCount), 3000);
-        console.log(`⏳ Post ${postId} not found, retry ${retryCount + 1} in ${delay}ms`);
         retryCount++;
         window.scrollTimeout = setTimeout(attemptScroll, delay);
-      } else {
-        console.error(`❌ Failed to find post ${postId} after ${maxRetries} attempts`);
-        sessionStorage.removeItem('scrollToPost');
-        sessionStorage.removeItem('scrollToPostSource');
       }
     };
     
-    window.scrollTimeout = setTimeout(attemptScroll, 500);
+    window.scrollTimeout = setTimeout(attemptScroll, 100);
   }, []);
 
-  // ========== DEEP LINK HANDLER FOR URL PARAMS ==========
-  useEffect(() => {
-    const params = new URLSearchParams(location.search);
-    const postId = params.get('postId');
-    const scrollTo = params.get('scrollTo');
+  // ========== FETCH AND SCROLL TO POST ==========
+  const fetchAndScrollToPost = useCallback(async (postId: number) => {
+    console.log("🔍 fetchAndScrollToPost called for postId:", postId);
     
-    console.log("🔍 HomeComponent - URL params:", { postId, scrollTo, processed: deepLinkProcessed.current });
+    let postElement = document.querySelector(`[data-post-id="${postId}"]`);
     
-    if (postId && scrollTo === 'post' && !deepLinkProcessed.current) {
-      deepLinkProcessed.current = true;
-      const postIdNumber = parseInt(postId, 10);
-      if (!isNaN(postIdNumber)) {
-        console.log("🎯 Found postId in URL, scrolling to:", postIdNumber);
-        
-        // Clean URL without reload
-        const cleanUrl = window.location.pathname;
-        window.history.replaceState({}, '', cleanUrl);
-        
-        // Switch to Feeds tab if needed
-        if (activeTab !== "Feeds") {
-          setActiveTab("Feeds");
-          setTimeout(() => scrollToPost(postIdNumber), 800);
-        } else {
-          scrollToPost(postIdNumber);
-        }
-      }
+    if (postElement) {
+      console.log("✅ Post already in DOM, scrolling...");
+      scrollToPost(postId);
+      return;
     }
-  }, [location.search, activeTab, scrollToPost]);
-
-  // ========== SESSION STORAGE CHECK (Backup Method) ==========
-  useEffect(() => {
-    let checked = false;
     
-    const checkSessionStorage = () => {
-      if (checked) return;
+    console.log("📡 Post not in DOM, fetching from API...");
+    
+    try {
+      const response = await axios.get(`${apiUrl}/api/nominationfeeds/${postId}`, {
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${authToken}`,
+        },
+      });
       
+      if (response.data && response.data.length > 0) {
+        const fetchedPost = response.data[0];
+        console.log("✅ Post fetched successfully:", fetchedPost);
+        
+        const newPost: Feed = {
+          UserID: fetchedPost.UserID,
+          LikedBy: fetchedPost.LikedBy || [],
+          Nominee: fetchedPost.Nominee,
+          NominationID: fetchedPost.NominationID,
+          Tenant: fetchedPost.Tenant,
+          AwardCategory: fetchedPost.AwardCategory,
+          NominatedCount: fetchedPost.NominatedCount || 1,
+          Description: fetchedPost.Description || "",
+          Likes: fetchedPost.Likes || 0,
+          Comments: fetchedPost.Comments || 0,
+          Views: fetchedPost.Views || 0,
+          CommentsData: fetchedPost.CommentsData || []
+        };
+        
+        setPosts(prev => {
+          if (prev.some(p => p.NominationID === postId)) return prev;
+          return [newPost, ...prev];
+        });
+        
+        setTimeout(() => scrollToPost(postId), 500);
+      }
+    } catch (error) {
+      console.error("❌ Error fetching post:", error);
+    }
+  }, [apiUrl, authToken, scrollToPost]);
+
+  // ========== IMPROVED SESSION STORAGE CHECK (Works on page refresh) ==========
+  useEffect(() => {
+    const checkAndScroll = () => {
       const postId = sessionStorage.getItem('scrollToPost');
       const source = sessionStorage.getItem('scrollToPostSource');
       
       console.log("📱 Checking sessionStorage:", { postId, source, processed: deepLinkProcessed.current });
       
       if (postId && source === 'notification' && !deepLinkProcessed.current) {
-        checked = true;
         deepLinkProcessed.current = true;
-        console.log("📱 Processing sessionStorage deep link for post:", postId);
+        console.log("📱 Found deep link, processing post:", postId);
         
+        // Clear sessionStorage immediately
         sessionStorage.removeItem('scrollToPost');
         sessionStorage.removeItem('scrollToPostSource');
         
         const postIdNumber = parseInt(postId, 10);
         
+        // Function to attempt scroll with retry
+        const attemptScrollWithRetry = (retryCount = 0) => {
+          const postElement = document.querySelector(`[data-post-id="${postIdNumber}"]`);
+          
+          if (postElement) {
+            console.log(`✅ Found post on attempt ${retryCount + 1}, scrolling...`);
+            postElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            postElement.classList.add('highlight-pulse');
+            setTimeout(() => postElement.classList.remove('highlight-pulse'), 3000);
+          } else if (retryCount < 20) {
+            const delay = (retryCount + 1) * 200;
+            console.log(`⏳ Post not found, retry ${retryCount + 1} in ${delay}ms`);
+            setTimeout(() => attemptScrollWithRetry(retryCount + 1), delay);
+          } else {
+            console.error(`❌ Failed to find post after 20 attempts`);
+            // Try to fetch from API
+            fetchAndScrollToPost(postIdNumber);
+          }
+        };
+        
+        // Switch to Feeds tab if needed
         if (activeTab !== "Feeds") {
           setActiveTab("Feeds");
-          setTimeout(() => scrollToPost(postIdNumber), 800);
+          setTimeout(() => attemptScrollWithRetry(), 500);
         } else {
-          scrollToPost(postIdNumber);
+          attemptScrollWithRetry();
         }
       }
     };
     
-    const timer = setTimeout(() => {
-      if (posts.length > 0) {
-        checkSessionStorage();
-      }
-    }, 1000);
+    // Run multiple times to ensure it triggers
+    checkAndScroll();
     
-    return () => clearTimeout(timer);
-  }, [posts, activeTab, scrollToPost]);
-
-  // ========== CLEAN URL ON MOUNT ==========
-  useEffect(() => {
-    const params = new URLSearchParams(location.search);
-    if (params.has('postId') || params.has('scrollTo')) {
-      const cleanUrl = window.location.pathname;
-      window.history.replaceState({}, '', cleanUrl);
-    }
-  }, []);
+    const timer1 = setTimeout(() => checkAndScroll(), 500);
+    const timer2 = setTimeout(() => checkAndScroll(), 1000);
+    const timer3 = setTimeout(() => checkAndScroll(), 2000);
+    
+    return () => {
+      clearTimeout(timer1);
+      clearTimeout(timer2);
+      clearTimeout(timer3);
+    };
+  }, [posts, activeTab, fetchAndScrollToPost]);
 
   // ========== RESET FILTERS ON TAB CHANGE ==========
   useEffect(() => {
     setShowDropdown(false);
-
     if (activeTab === "Feeds") feedsDispatch({ type: "RESET" });
     if (activeTab === "My Lists") listsDispatch({ type: "RESET" });
     if (activeTab === "My Business") businessDispatch({ type: "RESET" });
@@ -194,7 +220,6 @@ const HomeComponent: React.FC = () => {
     }
   }, []);
 
-  // ========== LOADER COMPONENT ==========
   const Loader = () => (
     <div className="flex justify-center items-center h-[300px]">
       <div className="h-10 w-10 border-4 border-gray-300 border-t-blue-600 rounded-full animate-spin"></div>
@@ -277,192 +302,82 @@ const HomeComponent: React.FC = () => {
     fetchBusiness();
   }, [activeTab, tenantname, authToken, apiUrl, business.length]);
 
-  // ========== SORTING FUNCTIONS ==========
   const sortFeeds = (data: Feed[], sortBy: string) => {
     const sorted = [...data];
-
     switch (sortBy) {
-      case "likes":
-        return sorted.sort(
-          (a, b) => (b.LikedBy?.length || 0) - (a.LikedBy?.length || 0)
-        );
-      case "comments":
-        return sorted.sort((a, b) => b.Comments - a.Comments);
-      case "views":
-        return sorted.sort((a, b) => b.Views - a.Views);
-      default:
-        return sorted;
+      case "likes": return sorted.sort((a, b) => (b.LikedBy?.length || 0) - (a.LikedBy?.length || 0));
+      case "comments": return sorted.sort((a, b) => b.Comments - a.Comments);
+      case "views": return sorted.sort((a, b) => b.Views - a.Views);
+      default: return sorted;
     }
   };
 
-  // ========== FILTERED DATA ==========
   const filteredPosts = useMemo(() => {
     let data = [...posts];
-
-    if (feedsState.search) {
-      data = data.filter((p) =>
-        p.Nominee.toLowerCase().includes(feedsState.search.toLowerCase())
-      );
-    }
-    if (feedsState.category) {
-      data = data.filter((p) => p.AwardCategory === feedsState.category);
-    }
-    if (feedsState.tenant) {
-      data = data.filter((p) => p.Tenant === feedsState.tenant);
-    }
-
+    if (feedsState.search) data = data.filter((p) => p.Nominee.toLowerCase().includes(feedsState.search.toLowerCase()));
+    if (feedsState.category) data = data.filter((p) => p.AwardCategory === feedsState.category);
+    if (feedsState.tenant) data = data.filter((p) => p.Tenant === feedsState.tenant);
     return sortFeeds(data, feedsState.sortBy);
   }, [feedsState, posts]);
 
   const filteredList = useMemo(() => {
     let data = [...list];
-
-    if (listsState.search) {
-      data = data.filter((p) =>
-        p.Nominee.toLowerCase().includes(listsState.search.toLowerCase())
-      );
-    }
-    if (listsState.category) {
-      data = data.filter((p) => p.AwardCategory === listsState.category);
-    }
-    if (listsState.tenant) {
-      data = data.filter((p) => p.Tenant === listsState.tenant);
-    }
-
+    if (listsState.search) data = data.filter((p) => p.Nominee.toLowerCase().includes(listsState.search.toLowerCase()));
+    if (listsState.category) data = data.filter((p) => p.AwardCategory === listsState.category);
+    if (listsState.tenant) data = data.filter((p) => p.Tenant === listsState.tenant);
     return sortFeeds(data, listsState.sortBy);
   }, [listsState, list]);
 
   const filteredBusiness = useMemo(() => {
     let data = [...business];
-
-    if (businessState.search) {
-      data = data.filter((p) =>
-        p.Nominee.toLowerCase().includes(businessState.search.toLowerCase())
-      );
-    }
-
-    if (businessState.category) {
-      data = data.filter((p) => p.AwardCategory === businessState.category);
-    }
-
-    if (businessState.tenant) {
-      data = data.filter((p) => p.Tenant === businessState.tenant);
-    }
-
+    if (businessState.search) data = data.filter((p) => p.Nominee.toLowerCase().includes(businessState.search.toLowerCase()));
+    if (businessState.category) data = data.filter((p) => p.AwardCategory === businessState.category);
+    if (businessState.tenant) data = data.filter((p) => p.Tenant === businessState.tenant);
     return sortFeeds(data, businessState.sortBy);
   }, [businessState, business]);
 
-  // ========== DROPDOWN CLICK OUTSIDE ==========
   useEffect(() => {
     if (showDropdown) {
       document.addEventListener("mousedown", handleClickOutside);
     } else {
       document.removeEventListener("mousedown", handleClickOutside);
     }
-
-    return () => {
-      document.removeEventListener("mousedown", handleClickOutside);
-    };
+    return () => document.removeEventListener("mousedown", handleClickOutside);
   }, [showDropdown, handleClickOutside]);
 
-  // ========== GET FILTER PROPS ==========
   const getFilterProps = () => {
-    if (activeTab === "Feeds")
-      return { ...feedsState, dispatch: feedsDispatch };
-    if (activeTab === "My Lists")
-      return { ...listsState, dispatch: listsDispatch };
+    if (activeTab === "Feeds") return { ...feedsState, dispatch: feedsDispatch };
+    if (activeTab === "My Lists") return { ...listsState, dispatch: listsDispatch };
     return { ...businessState, dispatch: businessDispatch };
-  };
-
-  // ========== DEBUG BUTTON (Remove in production) ==========
-  const addTestNotification = () => {
-    const firstPostId = posts[0]?.NominationID;
-    if (!firstPostId) {
-      alert("No posts loaded yet!");
-      return;
-    }
-    
-    const test = {
-      NotificationID: Date.now(),
-      Title: "DEBUG TEST - Click to see post",
-      NotificationContent: `Test seeking notification for post: ${posts[0]?.Nominee}`,
-      Type: "Seeking Request",
-      ReferenceIdPK: firstPostId,
-      DeepLink: `/home?postId=${firstPostId}&scrollTo=post`,
-      IsRead: false,
-      Time: new Date().toLocaleString()
-    };
-    const existing = JSON.parse(localStorage.getItem('mock_notifications') || '[]');
-    existing.push(test);
-    localStorage.setItem('mock_notifications', JSON.stringify(existing));
-    alert(`Test notification added for post ID: ${firstPostId}! Check bell icon`);
   };
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <div
-        style={{
-          backgroundImage: `url(${homelogo})`,
-          backgroundSize: "cover",
-          backgroundPosition: "center",
-          height: "200px",
-        }}
-      >
+      <div style={{ backgroundImage: `url(${homelogo})`, backgroundSize: "cover", backgroundPosition: "center", height: "200px" }}>
         <div className="px-4 sm:px-6 lg:px-8 h-full">
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 pt-10 h-full">
             <div className="lg:col-span-8 h-full pr-2">
               <div className="bg-white rounded-lg shadow-sm relative">
-                <TabsSection
-                  activeTab={activeTab}
-                  setActiveTab={setActiveTab}
-                  onFilterClick={() => setShowDropdown((prev) => !prev)}
-                />
+                <TabsSection activeTab={activeTab} setActiveTab={setActiveTab} onFilterClick={() => setShowDropdown((prev) => !prev)} />
 
                 {showDropdown && (
-                  <div
-                    ref={filterRef}
-                    className="absolute top-[42px] right-4 mt-2 z-50 w-72"
-                  >
-                    <FilterFeed
-                      {...getFilterProps()}
-                      categories={categories}
-                      tenants={tenants}
-                    />
+                  <div ref={filterRef} className="absolute top-[42px] right-4 mt-2 z-50 w-72">
+                    <FilterFeed {...getFilterProps()} categories={categories} tenants={tenants} />
                   </div>
                 )}
 
                 <div className="divide-y divide-gray-100">
                   {activeTab === "Feeds" && (
-                    filteredPosts.length === 0 ? (
-                      <div className="p-8 text-center">No matching data found</div>
-                    ) : (
-                      <div className="overflow-y-auto h-[550px] min-h-screen">
-                        <PostCard posts={filteredPosts} setPosts={setPosts} />
-                      </div>
-                    )
+                    filteredPosts.length === 0 ? <div className="p-8 text-center">No matching data found</div> :
+                    <div className="overflow-y-auto h-[550px] min-h-screen"><PostCard posts={filteredPosts} setPosts={setPosts} /></div>
                   )}
-
                   {activeTab === "My Lists" && (
-                    filteredList.length === 0 ? (
-                      <div className="p-8 text-center">No matching data found</div>
-                    ) : (
-                      <div className="overflow-y-auto h-[550px] min-h-screen">
-                        <ListCard list={filteredList} setList={setList} />
-                      </div>
-                    )
+                    filteredList.length === 0 ? <div className="p-8 text-center">No matching data found</div> :
+                    <div className="overflow-y-auto h-[550px] min-h-screen"><ListCard list={filteredList} setList={setList} /></div>
                   )}
-
                   {activeTab === "My Business" && (
-                    businessLoading ? (
-                      <Loader />
-                    ) : (
-                      <div className="overflow-y-auto h-[550px] min-h-screen">
-                        <BusinessCard
-                          business={filteredBusiness}
-                          setBusiness={setBusiness}
-                        />
-                      </div>
-                    )
+                    businessLoading ? <Loader /> :
+                    <div className="overflow-y-auto h-[550px] min-h-screen"><BusinessCard business={filteredBusiness} setBusiness={setBusiness} /></div>
                   )}
                 </div>
               </div>
@@ -476,14 +391,6 @@ const HomeComponent: React.FC = () => {
           </div>
         </div>
       </div>
-
-      {/* Debug Button - Remove in production */}
-      {/* <button 
-        onClick={addTestNotification}
-        className="fixed bottom-20 right-4 z-50 bg-red-600 text-white px-4 py-2 rounded shadow-lg hover:bg-red-700 text-sm"
-      >
-        Add Test Notification
-      </button> */}
     </div>
   );
 };

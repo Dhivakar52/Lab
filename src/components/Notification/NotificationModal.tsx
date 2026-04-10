@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef } from 'react';
 import * as Dialog from '@radix-ui/react-dialog';
 import { Bell, X, FileText } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
@@ -7,23 +7,22 @@ import axios from "axios";
 import NotificationDetailPanel from './NotificationDetailPanel';
 
 interface Notification {
-  id: string;
-  type: 'referral' | 'approval' | 'approved' | 'seeking' | 'Seeking Request';
-  title: string;
-  message: string;
-  time: string;
-  IsRead?: boolean;
   NotificationID: number;
+  ReferenceIdPK?: number;
+  NominationID?: number;
+  Type?: string;
   Title: string;
   NotificationContent: string;
-  Time: string;
-  DeepLink?: string;
-  ReferenceID?: number;
-  ReferenceIdPK?: number;
-  Type?: string;
+  Time?: string;
+  IsRead?: boolean;
   FromUser?: string;
   ToUser?: string;
   CreatedAt?: string;
+  Nomination?: {
+    NominationID: number;
+    Nominee: string;
+    AwardCategory: string;
+  } | null;
 }
 
 interface NotificationModalProps {
@@ -41,33 +40,12 @@ const NotificationModal: React.FC<NotificationModalProps> = ({
 }) => {
   const [isPanelOpen, setIsPanelOpen] = useState(false);
   const [selectedNominee, setSelectedNominee] = useState<Notification | null>(null);
-  const [mergedNotifications, setMergedNotifications] = useState<Notification[]>([]);
   
   const closeBtnRef = useRef<HTMLButtonElement | null>(null);
   const { authToken, userId } = useAuth();
   const apiUrl = import.meta.env.VITE_API_URL;
   const navigate = useNavigate();
   const clickProcessed = useRef(false);
-
-  useEffect(() => {
-    if (!isOpen) return;
-    
-    try {
-      const mockNotifs = JSON.parse(localStorage.getItem('mock_notifications') || '[]');
-      const allNotifs = [...notifications, ...mockNotifs];
-      
-      const sorted = allNotifs.sort((a, b) => {
-        const timeA = new Date(a.Time || a.CreatedAt || 0).getTime();
-        const timeB = new Date(b.Time || b.CreatedAt || 0).getTime();
-        return timeB - timeA;
-      });
-      
-      setMergedNotifications(sorted);
-    } catch (error) {
-      console.error("Error loading notifications:", error);
-      setMergedNotifications(notifications);
-    }
-  }, [isOpen, notifications]);
 
   const handleView = () => {
     onClose();   
@@ -77,18 +55,11 @@ const NotificationModal: React.FC<NotificationModalProps> = ({
   const handleSidePanelView = (notification: Notification) => {
     setSelectedNominee(notification);
     setIsPanelOpen(true);
-    // DO NOT close the modal - keep it open
   };
 
   const handleSingleRead = async (notificationID: number) => {
     try {
       console.log("Marking notification as read:", notificationID);
-      
-      const mockNotifs = JSON.parse(localStorage.getItem('mock_notifications') || '[]');
-      const updatedMockNotifs = mockNotifs.map((notif: any) =>
-        notif.NotificationID === notificationID ? { ...notif, IsRead: true } : notif
-      );
-      localStorage.setItem('mock_notifications', JSON.stringify(updatedMockNotifs));
       
       await axios.put(
         `${apiUrl}/api/notificationread/notification`,
@@ -117,10 +88,6 @@ const NotificationModal: React.FC<NotificationModalProps> = ({
     };
 
     try {
-      const mockNotifs = JSON.parse(localStorage.getItem('mock_notifications') || '[]');
-      const updatedMockNotifs = mockNotifs.map((notif: any) => ({ ...notif, IsRead: true }));
-      localStorage.setItem('mock_notifications', JSON.stringify(updatedMockNotifs));
-
       const requests = notifications.map((post) => {
         return axios.put(
           `${apiUrl}/api/notificationread/notification`,
@@ -140,9 +107,7 @@ const NotificationModal: React.FC<NotificationModalProps> = ({
     }
   };
 
-  // ========== FIXED: Modal stays open for side panel, closes only for navigation ==========
   const handleNotificationClick = async (notification: Notification) => {
-    // Prevent double clicks
     if (clickProcessed.current) {
       console.log("Already processing, ignoring...");
       return;
@@ -150,37 +115,34 @@ const NotificationModal: React.FC<NotificationModalProps> = ({
     clickProcessed.current = true;
     
     console.log("🔔 Clicked notification:", notification);
-    console.log("Notification Type:", notification.Type);
+    console.log("Type:", notification.Type);
     console.log("ReferenceIdPK:", notification.ReferenceIdPK);
+    console.log("NominationID:", notification.NominationID);
     
-    // Mark as read
     await handleSingleRead(notification.NotificationID);
     
-    // Check if it's a Seeking Request notification
-    const isSeekingRequest = notification.Type === "Seeking Request" || notification.Type === "seeking";
+    const isSeekingRequest = notification.Type === "Seeking Request";
     
     if (isSeekingRequest) {
-      // For Seeking Request: Close modal and navigate to home
-      const postId = notification.ReferenceIdPK || notification.ReferenceID;
+      // Use NominationID first, fallback to ReferenceIdPK
+      const postId = notification.NominationID || notification.ReferenceIdPK;
       
       if (postId) {
         console.log("✅ SEEKING REQUEST - Navigating to post ID:", postId);
         sessionStorage.setItem('scrollToPost', postId.toString());
         sessionStorage.setItem('scrollToPostSource', 'notification');
-        onClose(); // Close modal only for navigation
+        onClose();
         navigate(`/home?postId=${postId}&scrollTo=post`);
       } else {
-        console.log("No post ID found in seeking notification - showing side panel instead");
-        handleSidePanelView(notification); // Keep modal open
+        console.log("No post ID found - showing side panel");
+        handleSidePanelView(notification);
       }
     } 
     else {
-      // For ALL OTHER notification types: Show side panel, KEEP MODAL OPEN
-      console.log("REGULAR NOTIFICATION - Showing side panel (modal stays open)");
-      handleSidePanelView(notification); // Do NOT close the modal
+      console.log("REGULAR NOTIFICATION - Showing side panel");
+      handleSidePanelView(notification);
     }
     
-    // Reset after 1 second to allow new clicks
     setTimeout(() => {
       clickProcessed.current = false;
     }, 1000);
@@ -191,14 +153,14 @@ const NotificationModal: React.FC<NotificationModalProps> = ({
       <Dialog.Portal>
         <Dialog.Overlay className="fixed inset-0 bg-black/20 backdrop-blur-sm z-40" />
 
-        <Dialog.Content className="fixed top-0 right-0 h-full w-full max-w-md bg-white shadow-2xl border-l border-gray-200 overflow-y-auto z-50">
+        <Dialog.Content className="fixed top-0 right-0 h-full  w-[30%] bg-white shadow-2xl border-l border-gray-200 overflow-y-auto z-50">
           <div className="flex items-center justify-between px-6 py-4 border-b border-gray-200 bg-white sticky top-0 z-10">
-            <div className="flex items-center space-x-2">
+            <div className="flex items-center space-x-4">
               <Bell className="w-5 h-5 text-gray-600" />
               <Dialog.Title className="text-lg font-semibold text-gray-900">
-                Notifications ({mergedNotifications.length})
+                Notifications 
               </Dialog.Title>
-              {mergedNotifications.length > 0 && (
+              {notifications.length > 0 && (
                 <button
                   onClick={handleMarkAllRead}
                   className="text-sm font-medium text-blue-600 hover:underline"
@@ -214,8 +176,8 @@ const NotificationModal: React.FC<NotificationModalProps> = ({
           </div>
 
           <div className="flex flex-col pb-16">
-            {mergedNotifications.length > 0 ? (
-              mergedNotifications.map((n) => (
+            {notifications.length > 0 ? (
+              notifications.map((n) => (
                 <div
                   key={n.NotificationID}
                   className={`px-6 py-4 border-b border-gray-100 hover:bg-gray-50 cursor-pointer transition-colors ${
@@ -226,10 +188,10 @@ const NotificationModal: React.FC<NotificationModalProps> = ({
                   <div className="flex space-x-3">
                     <div className="flex-shrink-0">
                       <div className={`w-8 h-8 rounded-lg flex items-center justify-center ${
-                        n.Type === "Seeking Request" || n.Type === "seeking" ? 'bg-green-100' : 'bg-blue-100'
+                        n.Type === "Seeking Request" ? 'bg-green-100' : 'bg-blue-100'
                       }`}>
                         <FileText className={`w-4 h-4 ${
-                          n.Type === "Seeking Request" || n.Type === "seeking" ? 'text-green-600' : 'text-blue-600'
+                          n.Type === "Seeking Request" ? 'text-green-600' : 'text-blue-600'
                         }`} />
                       </div>
                     </div>
@@ -247,7 +209,7 @@ const NotificationModal: React.FC<NotificationModalProps> = ({
                       {n.FromUser && (
                         <p className="text-xs text-gray-400 mt-1">From: {n.FromUser}</p>
                       )}
-                      {(n.Type === "Seeking Request" || n.Type === "seeking") && (
+                      {n.Type === "Seeking Request" && (
                         <p className="text-xs text-green-600 mt-1 font-medium">
                           📍 Click to view post
                         </p>

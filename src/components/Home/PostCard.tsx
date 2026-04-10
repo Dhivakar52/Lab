@@ -272,58 +272,99 @@ const PostCard: React.FC<PostCardProps> = ({ posts, setPosts }) => {
     }
   };
 
-  const sendSeekingUser = async () => {
-    if (selectedUsers.length === 0) {
-      alert("Select at least one user");
-      return;
-    }
+  // const sendSeekingUser = async () => {
+  //   if (selectedUsers.length === 0) {
+  //     alert("Select at least one user");
+  //     return;
+  //   }
 
-    try {
-      for (const id of selectedUsers) {
-        const payload = {
-          nominationID: selectedPost?.NominationID,
-          seekingUserID: id,
-          active: true,
-          submittedBy: userId,
-        };
+  //   try {
+  //     for (const id of selectedUsers) {
+  //       const payload = {
+  //         nominationID: selectedPost?.NominationID,
+  //         seekingUserID: id,
+  //         active: true,
+  //         submittedBy: userId,
+  //       };
 
-        await axios.post(`${apiUrl}/api/seeking`, payload, {
-          headers: { Authorization: `Bearer ${authToken}` },
-        });
+  //       await axios.post(`${apiUrl}/api/seeking`, payload, {
+  //         headers: { Authorization: `Bearer ${authToken}` },
+  //       });
 
-        const mockNotification = {
-          NotificationID: Date.now() + Math.random() * 1000,
-          Title: "Post shared with you",
-          // NotificationContent: `${username} shared "${selectedPost?.Nominee}" with you`,
-          Type: "Seeking Request",
-          ReferenceIdPK: selectedPost?.NominationID,
-          DeepLink: `/home?postId=${selectedPost?.NominationID}&scrollTo=post`,
-          IsRead: false,
-          Time: new Date().toLocaleString(),
-        };
+  //       const mockNotification = {
+  //         NotificationID: Date.now() + Math.random() * 1000,
+  //         Title: "Post shared with you",
+  //         // NotificationContent: `${username} shared "${selectedPost?.Nominee}" with you`,
+  //         Type: "Seeking Request",
+  //         ReferenceIdPK: selectedPost?.NominationID,
+  //         DeepLink: `/home?postId=${selectedPost?.NominationID}&scrollTo=post`,
+  //         IsRead: false,
+  //         Time: new Date().toLocaleString(),
+  //       };
 
-        const existingNotifications = JSON.parse(localStorage.getItem('mock_notifications') || '[]');
-        existingNotifications.push(mockNotification);
-        localStorage.setItem('mock_notifications', JSON.stringify(existingNotifications));
+  //       const existingNotifications = JSON.parse(localStorage.getItem('mock_notifications') || '[]');
+  //       existingNotifications.push(mockNotification);
+  //       localStorage.setItem('mock_notifications', JSON.stringify(existingNotifications));
         
-        console.log('📝 Mock notification created:', mockNotification);
-      }
+  //       console.log('📝 Mock notification created:', mockNotification);
+  //     }
 
-      if (selectedPost?.NominationID) {
-        await fetchSeekingUsercount(selectedPost.NominationID);
-      }
+  //     if (selectedPost?.NominationID) {
+  //       await fetchSeekingUsercount(selectedPost.NominationID);
+  //     }
 
-      setSuccessMsg(`Shared with ${selectedUsers.length} user${selectedUsers.length > 1 ? 's' : ''}!`);
-      setSelectedUsers([]);
-      setSearch("");
-      setSeekingOpen(false);
+  //     setSuccessMsg(`Shared with ${selectedUsers.length} user${selectedUsers.length > 1 ? 's' : ''}!`);
+  //     setSelectedUsers([]);
+  //     setSearch("");
+  //     setSeekingOpen(false);
 
-    } catch (err) {
-      console.error("Error:", err);
-      alert("Failed to share");
+  //   } catch (err) {
+  //     console.error("Error:", err);
+  //     alert("Failed to share");
+  //   }
+  // };
+
+ 
+ 
+ // Updated sendSeekingUser function - NO MORE MOCK NOTIFICATIONS
+const sendSeekingUser = async () => {
+  if (selectedUsers.length === 0) {
+    alert("Select at least one user");
+    return;
+  }
+
+  try {
+    for (const id of selectedUsers) {
+      const payload = {
+        nominationID: selectedPost?.NominationID,
+        seekingUserID: id,
+        active: true,
+        submittedBy: userId,
+      };
+
+      // Backend creates notification automatically
+      await axios.post(`${apiUrl}/api/seeking`, payload, {
+        headers: { Authorization: `Bearer ${authToken}` },
+      });
+      
+      console.log(`✅ Shared post with user ${id}`);
     }
-  };
 
+    if (selectedPost?.NominationID) {
+      await fetchSeekingUsercount(selectedPost.NominationID);
+    }
+
+    setSuccessMsg(`Shared with ${selectedUsers.length} user${selectedUsers.length > 1 ? 's' : ''}!`);
+    setSelectedUsers([]);
+    setSearch("");
+    setSeekingOpen(false);
+
+  } catch (err) {
+    console.error("Error:", err);
+    alert("Failed to share");
+  }
+};
+ 
   const resetSeekingPopup = () => {
     setSeekingOpen(false);
     setSearch("");
@@ -408,10 +449,10 @@ const PostCard: React.FC<PostCardProps> = ({ posts, setPosts }) => {
 
           return (
             <div
-              key={index}
-              data-post-id={post.NominationID}
-              className="p-4 sm:p-4 bg-white border-b-2 border-b-gray-100 hover:shadow-md transition"
-            >
+  key={index}
+  data-post-id={post.NominationID}
+  className="p-4 sm:p-4 bg-white border-b-2 border-b-gray-100 hover:shadow-md transition"
+>
               <div className="flex space-x-3">
                 <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-blue-100 flex items-center justify-center text-blue-600 font-semibold">
                   {post.Nominee?.charAt(0).toUpperCase()}
