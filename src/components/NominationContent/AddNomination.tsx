@@ -372,7 +372,7 @@ useEffect(() => {
 
   const handleModalOk = () => {
     setShowSuccessModal(false);
-    navigate("/my-nominations", { state: { tab: "form" } });
+    navigate("/my-nominations", { state: { tab: "others" } });
   };
   const handleClear = () => {
   // Reset main form fields
