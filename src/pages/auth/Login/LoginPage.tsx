@@ -7,6 +7,8 @@ import loginBg from "../../../assets/images/login_left_img.png";
 import { Eye, EyeClosed, Mail, Lock, Fingerprint, LogIn, Shield, ArrowLeft, CheckCircle , MessageSquareLock } from "lucide-react";
 import { USER_ROLES, type UserRole } from "../../../dataTypes/roles";
 import  Tree from "../../../assets/images/tree.png"
+import axios from "axios";
+import { useAuth } from "../../../components/ContextAPI/AuthContext";
 
 interface LoginProps {
   setUserRole: React.Dispatch<React.SetStateAction<UserRole | null | undefined>>;
@@ -15,6 +17,7 @@ interface LoginProps {
 const apiUrl = import.meta.env.VITE_API_URL;
 
 export default function Login({ setUserRole }: LoginProps) {
+    const { authToken } = useAuth();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [otp, setOtp] = useState("");
@@ -133,6 +136,18 @@ export default function Login({ setUserRole }: LoginProps) {
     setIsLoading(true);
     
     try {
+
+      await axios.put(
+          `${apiUrl}/api/generateotp`,
+          {},
+          {
+            params: {
+              UserEmail: email,
+              IsResendOTP: false,
+            },
+          headers: { Authorization: `Bearer ${authToken}`,},   
+          }
+        );
       await new Promise(resolve => setTimeout(resolve, 1000));
       showMessage(`OTP sent to ${email}`, "success");
       setOtpStep("enterOtp");
