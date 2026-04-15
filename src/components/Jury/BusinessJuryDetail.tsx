@@ -1,4 +1,3 @@
-import * as Label from "@radix-ui/react-label";
 import { useEffect, useState, useRef } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import axios from "axios";
@@ -11,9 +10,19 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigge
 import { Flag ,User, Building2, Tag, 
   CalendarDays, FileText, Mail, BadgeCheck, Check } from "lucide-react";
 import type { FormState } from "../../dataTypes/nomination";
-import { levelColors, levelTextColors } from "../../statusColors.ts";
-import BusinessJuryEvaluation from "./BusinessJuryEvaluation.tsx";
-
+import { levelColors, levelTextColors } from "../../statusColors";
+import BusinessJuryEvaluation from "./BusinessJuryEvaluation";
+import type { PopupErrors } from "../../dataTypes/nomination";
+import ManagerApprovalDrawer from "../Jury/ManagerApprovalDrawer";
+import JuryApprovalDrawer from "../Jury/JuryApprovalDrawer";
+import GrandJuryApprovalDrawer from "../Jury/GrandJuryApprovalDrawer";
+import ReferralApprovalDrawer from "../Jury/ReferralApprovalDrawer";
+import DocumentPopup from "../Jury/DocumentPopup";
+import CommentsPopup from "../Jury/CommentsPopup";
+import {getNominationDetails,saveManagerApproval,updateManagerApproval,uploadFiles,downloadFile,
+  saveBusinessJuryApproval,updateBusinessJuryApproval,saveGrandJuryApproval,updateGrandJuryApproval,
+  saveReferralApproval,updateReferralApproval
+} from "../../services/nominationService"
 interface BusinessJuryDetailProps {
   isOpen: boolean;
   onClose: () => void;
@@ -25,15 +34,16 @@ interface SupportingDocument {
   FileNameGUID: string;
   FilePath: string;
 }
-type PopupErrors = {
-  score: Record<number, string>;
-  comment: Record<number, string>;
-  comments: string;
-  flagComment: string;
-  juryFlagComment: string;
-  grandFlagComment: string;
-};
+// type PopupErrors = {
+//   score: Record<number, string>;
+//   comment: Record<number, string>;
+//   comments: string;
+//   flagComment: string;
+//   juryFlagComment: string;
+//   grandFlagComment: string;
+// };
 type ScoreItem = {
+  scoreId : number;
   weightId: number;
   title: string;
   score: number | "";
@@ -66,11 +76,6 @@ interface ApprovalItem {
   TotalFlagCount?: number;
   JuryMember?: string;
 }
-// type BusinessJuryState = {
-//   juryList: JuryItem[];
-//   attributeData: any;
-//   avgScore: number;
-// };
 const BusinessJuryDetail: React.FC<BusinessJuryDetailProps> = ({
  isOpen}) => {
   const { nominationId } = useParams<{ nominationId: string }>();
@@ -93,8 +98,8 @@ const BusinessJuryDetail: React.FC<BusinessJuryDetailProps> = ({
   const visibleReferrals = expanded ? referrals : referrals.slice(0, 3);
   const location1 = useLocation();
   const from = location1.state?.from;
-  const [_attachmentMode, setAttachmentMode] = useState<"approval" | "flag"
-   |"referral" |"juryApproval"|"grandApproval"|"juryFlag"|"grandFlag"| null>("approval");
+  // const [attachmentMode, setAttachmentMode] = useState<"approval" | "flag"
+  //  |"referral" |"juryApproval"|"grandApproval"|"juryFlag"|"grandFlag"| null>("approval");
   const [approvalFiles, setApprovalFiles] = useState<File[]>([]);
   const [flagFiles, setFlagFiles] = useState<File[]>([]);
   const [juryApprovalFiles, setJuryApprovalFiles] = useState<File[]>([]);
@@ -113,21 +118,21 @@ const BusinessJuryDetail: React.FC<BusinessJuryDetailProps> = ({
   const grandApprovalFileRef = useRef<HTMLInputElement | null>(null);
   const juryFlagFileRef = useRef<HTMLInputElement | null>(null);
   const grandFlagFileRef = useRef<HTMLInputElement | null>(null);
-  const [approvalFileError, setApprovalFileError] = useState("");
-  const [flagFileError, setFlagFileError] = useState(""); 
-  const [juryApprovalFileError, setJuryApprovalFileError] = useState("");
+  const [_approvalFileError, setApprovalFileError] = useState("");
+  const [_flagFileError, setFlagFileError] = useState(""); 
+  const [_juryApprovalFileError, setJuryApprovalFileError] = useState("");
   const [grandApprovalFileError, setGrandApprovalFileError] = useState(""); 
-  const [juryFlagFileError, setJuryFlagFileError] = useState(""); 
-  const [_grandFlagFileError, setGrandFlagFileError] = useState(""); 
+  const [_juryFlagFileError, setJuryFlagFileError] = useState(""); 
+  const [grandFlagFileError, setGrandFlagFileError] = useState(""); 
   const [popupComments, setPopupComments] = useState("");
   const[popupCommentsJury,setPopupCommentsJury]=useState("");
   const [popupCommentsGrand,setPopupCommentsGrand]=useState("");
 
   const DEFAULT_SCORE_ITEMS: ScoreItem[] = [
-  { weightId: 1, title: "Integrity", score: "", comment: "" },
-  { weightId: 2, title: "Idea", score: "", comment: "" },
-  { weightId: 3, title: "Efforts", score: "", comment: "" },
-  { weightId: 4, title: "Outcome", score: "", comment: "" }
+  { scoreId: 0, weightId: 1, title: "Integrity", score: "", comment: "" },
+  { scoreId: 0, weightId: 2, title: "Idea", score: "", comment: "" },
+  { scoreId :0, weightId: 3, title: "Efforts", score: "", comment: "" },
+  { scoreId: 0, weightId: 4, title: "Outcome", score: "", comment: "" }
 ];
   const [scores, setScores] = useState<ScoreItem[]>(DEFAULT_SCORE_ITEMS);
   const [popupErrors, setPopupErrors] = useState<PopupErrors>({
@@ -152,7 +157,6 @@ const BusinessJuryDetail: React.FC<BusinessJuryDetailProps> = ({
   const [openEvaluation, setOpenEvaluation] = useState(false);
   const [openGrandJuryEvaluation,setOpenGrandJuryEvaluation]=useState(false);
   const [openScore, setOpenScore] = useState(false);
-  //const [openCard, setOpenCard] = useState<number | null>(null);
   const [_existingDocs, setExistingDocs] = useState<any[]>([]);
   const [isFlagged, setIsFlagged] = useState(false);
   const [flagComment, setFlagComment] = useState("");
@@ -165,14 +169,12 @@ const BusinessJuryDetail: React.FC<BusinessJuryDetailProps> = ({
   const [isGrandFlagged, setIsGrandFlagged] = useState(false);
   const [juryStatus, setJuryStatus] = useState<"Approved" | "Rejected">("Approved");
   const [_juryScore, setJuryScore] = useState("");
-  const [juryErrors, setJuryErrors] = useState<any>({});
+  // const [juryErrors, setJuryErrors] = useState<any>({});
   const [juryFlagComment, setJuryFlagComment] = useState("");
   const [grandStatus, setGrandStatus] = useState<"Approved" | "Rejected">("Approved");
   const [grandScore, setGrandScore] = useState("");
-  const [_grandErrors, setGrandErrors] = useState<any>({});
+  // const [grandErrors, setGrandErrors] = useState<any>({});
   const [grandFlagComment, setGrandFlagComment] = useState("");
-  //const { state } = useLocation();
-  //////const { juryList, attributeData, avgScore } = state || {};
   const [_form, setForm] = useState<FormState>({
       title: "",
       nomineeName:"",
@@ -218,14 +220,15 @@ const BusinessJuryDetail: React.FC<BusinessJuryDetailProps> = ({
  
   const fetchNominationDetails = async () => {
     try {
-      const res = await axios.get(
-    `${apiUrl}/api/jurylevelnomination/${nominationId}/${userId}`, 
-      {
-        headers: {
-          Authorization: `Bearer ${authToken}`,
-        },
-      }
-    );
+    //   const res = await axios.get(
+    // `${apiUrl}/api/jurylevelnomination/${nominationId}/${userId}`, 
+    //   {
+    //     headers: {
+    //       Authorization: `Bearer ${authToken}`,
+    //     },
+    //   }
+    // );
+     const res = await getNominationDetails(Number(nominationId),Number(userId));
       const result = Array.isArray(res.data)
         ? res.data[0] : res.data;
  
@@ -248,8 +251,6 @@ const BusinessJuryDetail: React.FC<BusinessJuryDetailProps> = ({
       setLoading(false);
     }
   };
-
-  
 
   const getFileIcon = (fileName: string) => {
   const ext = fileName.split('.').pop()?.toLowerCase();
@@ -330,14 +331,14 @@ const approvalDocuments = [
   ...existingApprovalDocs
     .filter((doc) => !doc.isDeleted)
     .map((doc) => ({
-      source: "api",
+      source: "api" as const,
       originalFileName: doc.originalFileName,
       fileNameGUID: doc.fileNameGUID,
       fileType: doc.fileType
     })),
 
   ...approvalFiles.map((file) => ({
-    source: "local",
+    source: "local" as const,
     originalFileName: file.name,
     file
   }))
@@ -381,14 +382,14 @@ const flagDocuments = [
   ...existingFlagDocs
     .filter((doc) => !doc.isDeleted)
     .map((doc) => ({
-      source: "api",
+      source: "api" as const,
       originalFileName: doc.originalFileName,
       fileNameGUID: doc.fileNameGUID,
       fileType: doc.fileType
     })),
 
   ...flagFiles.map((file) => ({
-    source: "local",
+    source: "local" as const,
     originalFileName: file.name,
     file
   }))
@@ -654,13 +655,13 @@ const uploadFilesToServer = async (files: File[]) => {
     formData.append("files", file);
   });
 
-  const res = await axios.post(`${apiUrl}/api/upload`, formData, {
-    headers: {
-      "Content-Type": "multipart/form-data",
-      Authorization: `Bearer ${authToken}`,
-    },
-  });
-
+  // const res = await axios.post(`${apiUrl}/api/upload`, formData, {
+  //   headers: {
+  //     "Content-Type": "multipart/form-data",
+  //     Authorization: `Bearer ${authToken}`,
+  //   },
+  // });
+  const res = await uploadFiles(files);
   return res.data; 
 };
 
@@ -829,15 +830,6 @@ if (primaryfield === "IsPrimary" || currentStage==="grand") {
 
 const isReferralEditable = (ref: any) =>
   currentStage === "referral" && ref.ReferralUserID === userId;
-
-// const isManagerEditable =
-//   currentStage === "manager" && level1?.ApprovalNameID === userId;
-
-// const isJuryEditable =
-//   currentStage === "jury" && userRole === "Business Jury";
-
-// const isGrandEditable =
-//   currentStage === "grand" && userRole === "President";
 
 const isManagerDisabled = currentStage !== "manager" || level2?.Status === "Approved";
 const isJuryDisabled = currentStage !== "jury" ||level1?.Status === "Not Started" 
@@ -1179,6 +1171,7 @@ const handleJuryApprove = () => {
 
   if (parsed.length > 0) {
     const mappedScores = parsed.map((a: any) => ({
+      scoreId: a.JuryScoresID,
       weightId: a.ScoreWeightageID,
       title: a.AttributeName,
       score: a.Score,
@@ -1369,17 +1362,24 @@ const submitManagerApproval = async () => {
 
     const isUpdate = isEditMode;
 
-    let res = await axios({
-      method: isUpdate ? "put" : "post",
-      url: isUpdate
-        ? `${apiUrl}/api/managerlevelnomination/${nominationId}`
-        : `${apiUrl}/api/managerlevelnomination`,
-      data: payload,
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${authToken}`
-      }
-    });
+    let res;
+
+if (isUpdate) {
+  res = await updateManagerApproval(Number(nominationId), payload);
+} else {
+  res = await saveManagerApproval(payload);
+}
+    // let res = await axios({
+    //   method: isUpdate ? "put" : "post",
+    //   url: isUpdate
+    //     ? `${apiUrl}/api/managerlevelnomination/${nominationId}`
+    //     : `${apiUrl}/api/managerlevelnomination`,
+    //   data: payload,
+    //   headers: {
+    //     "Content-Type": "application/json",
+    //     Authorization: `Bearer ${authToken}`
+    //   }
+    // });
     if (res.data > 0) {
         setSuccessMessage(
           isUpdate ? "Manager level updated successfully!" : "Manager level added successfully!"
@@ -1450,7 +1450,6 @@ const submitJuryApproval = async () => {
        UpdatedBy: userId
      };
 
-   
     const attachmentsPayload = [
       ...existingJuryApprovalDocs
         .filter(doc => !doc.isDeleted)
@@ -1515,7 +1514,7 @@ const submitJuryApproval = async () => {
 
     const finalPayload = {
     Scores: scores.map(s => ({
-    // JuryScoresID: s.juryScoresID || 0, 
+    JuryScoresID: s.scoreId || 0, 
     NominationID: Number(nominationId),
     WeightageID: s.weightId,
     Score: Number(s.score),
@@ -1530,19 +1529,26 @@ const submitJuryApproval = async () => {
   console.log("Jury Final",finalPayload);
 
   const isUpdate = isEditMode;
+  const evalutionType = primaryfield === "IsPrimary" ? 1 : 2;
+  let res;
 
-    let res = await axios({
-      method: isUpdate ? "put" : "post",
-      url: isUpdate
-        ? `${apiUrl}/api/businessjurylevelnomination/${nominationId}`
-        : `${apiUrl}/api/businessjurylevelnomination`,
-      data: finalPayload,
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${authToken}`
-      },
-      params: {  EvalutionType: (primaryfield === "IsPrimary") ? 1 : 2  }
-    });
+if (isUpdate) {
+  res = await updateBusinessJuryApproval(Number(nominationId),finalPayload,evalutionType);
+} else {
+  res = await saveBusinessJuryApproval(finalPayload, evalutionType);
+}
+    // let res = await axios({
+    //   method: isUpdate ? "put" : "post",
+    //   url: isUpdate
+    //     ? `${apiUrl}/api/businessjurylevelnomination/${nominationId}`
+    //     : `${apiUrl}/api/businessjurylevelnomination`,
+    //   data: finalPayload,
+    //   headers: {
+    //     "Content-Type": "application/json",
+    //     Authorization: `Bearer ${authToken}`
+    //   },
+    //   params: {  EvalutionType: (primaryfield === "IsPrimary") ? 1 : 2  }
+    // });
     if (res.data > 0) {
         setSuccessMessage(
           isUpdate ? "Business Jury level updated successfully!" : "Business Jury level added successfully!"
@@ -1672,18 +1678,24 @@ const submitGrandJuryApproval = async () => {
     console.log("Grand Jury Payload", payload);
 
     const isUpdate = isEditMode;
+    let res;
 
-    let res = await axios({
-      method: isUpdate ? "put" : "post",
-      url: isUpdate
-        ? `${apiUrl}/api/grandjurylevelnomination/${nominationId}`
-        : `${apiUrl}/api/grandjurylevelnomination`,
-      data: payload,
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${authToken}`
-      }
-    });
+if (isUpdate) {
+  res = await updateGrandJuryApproval(Number(nominationId), payload);
+} else {
+  res = await saveGrandJuryApproval(payload);
+}
+    // let res = await axios({
+    //   method: isUpdate ? "put" : "post",
+    //   url: isUpdate
+    //     ? `${apiUrl}/api/grandjurylevelnomination/${nominationId}`
+    //     : `${apiUrl}/api/grandjurylevelnomination`,
+    //   data: payload,
+    //   headers: {
+    //     "Content-Type": "application/json",
+    //     Authorization: `Bearer ${authToken}`
+    //   }
+    // });
     if (res.data > 0) {
         setSuccessMessage(
           isUpdate ? "Grand Jury level updated successfully!" : "Grand Jury level added successfully!"
@@ -1709,6 +1721,9 @@ const submitGrandJuryApproval = async () => {
 
 const handleReferralApprove = (ref: any) => {
   setSelectedReferral(ref);
+  setExistingRefDocs([]);
+  setRefFiles([]); 
+  setRefFileError("");
 
   const isEdit = !!ref.ApprovedAt;
   setIsEditMode(isEdit);
@@ -1717,11 +1732,21 @@ const handleReferralApprove = (ref: any) => {
 
   let parsedDocs: any[] = [];
   try {
-    parsedDocs = ref.ApprovalAttachment || [];
+    parsedDocs =
+      typeof ref.ApprovalAttachment === "string"
+        ? JSON.parse(ref.ApprovalAttachment)
+        : ref.ApprovalAttachment || [];
   } catch {
     parsedDocs = [];
   }
-  const docs = parsedDocs.map((file: any) => ({
+  const uniqueDocs = parsedDocs.filter(
+    (doc: any, index: number, self: any[]) =>
+      index ===
+      self.findIndex(
+        (d) => d.AttachmentNameGUID === doc.AttachmentNameGUID
+      )
+  );
+  const docs = uniqueDocs.map((file: any) => ({
     source: "api",
     AttachmentID: file.AttachmentsID,
     fileNameGUID: file.AttachmentNameGUID,
@@ -1800,18 +1825,24 @@ const submitReferral = async () => {
     };
 
     console.log("REFERRAL PAYLOAD 👉", payload);
+      let res;
 
-    const res = await axios({
-      method: isEditMode ? "put" : "post",
-      url: isEditMode
-        ? `${apiUrl}/api/referrallevel/${selectedReferral.ReferralID}`
-        : `${apiUrl}/api/referrallevel`,
-      data: payload,
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${authToken}`
-      }
-    });
+if (isEditMode) {
+  res = await updateReferralApproval(Number(selectedReferral.ReferralID), payload);
+} else {
+  res = await saveReferralApproval(payload);
+}
+    // const res = await axios({
+    //   method: isEditMode ? "put" : "post",
+    //   url: isEditMode
+    //     ? `${apiUrl}/api/referrallevel/${selectedReferral.ReferralID}`
+    //     : `${apiUrl}/api/referrallevel`,
+    //   data: payload,
+    //   headers: {
+    //     "Content-Type": "application/json",
+    //     Authorization: `Bearer ${authToken}`
+    //   }
+    // });
 
     if (res.data > 0) {
       setSuccessMessage(isEditMode ? "Referral Updated!" : "Referral Saved!");
@@ -1839,14 +1870,14 @@ const handleFilePreview = async (doc: any) => {
 
   try {
     if (doc.source === "api") {
-      const response = await axios.get(
-        `${apiUrl}/api/download?fileName=${doc.fileNameGUID}`,
-        {
-          responseType: "blob",
-          headers: { Authorization: `Bearer ${authToken}` },
-        }
-      );
-
+      // const response = await axios.get(
+      //   `${apiUrl}/api/download?fileName=${doc.fileNameGUID}`,
+      //   {
+      //     responseType: "blob",
+      //     headers: { Authorization: `Bearer ${authToken}` },
+      //   }
+      // );
+      const response = await downloadFile(doc.fileNameGUID);
       const blob = response.data;
 
       if (["jpg", "jpeg", "png", "gif"].includes(ext)) {
@@ -2627,7 +2658,7 @@ return (
         </div>
       )}
     </div>
-    )}
+  )}
     <div className="fixed bottom-0 left-0 w-full h-15 bg-white border-t border-gray-200 flex items-center pl-[260px] pr-6">
       <div className="flex justify-end space-x-4 ml-auto" >  
          <button onClick={handleBackward} className="flex items-center text-blue-600 bg-white border rounded-sm px-2 py-1 font-medium">
@@ -2635,748 +2666,6 @@ return (
           </button>
         </div>
     </div>
-      <div className={`fixed top-0 right-0 h-full w-[680px] bg-white shadow-2xl z-50
-          transform transition-transform duration-300 ease-in-out
-          ${openApprove ? "translate-x-0" : "translate-x-full"}
-        `}>
-        <div className="flex justify-between items-center px-6 py-4 border-b border-gray-200">
-          <h2 className="text-[16px] font-semibold text-gray-900">
-            Level 1 - Manager Approval
-          </h2>
-          <button onClick={closeApproveDrawer}>
-            <X size={20} />
-          </button>
-        </div>
-        {/* <div className="px-6 py-6 text-sm text-gray-800"> */}
-        <div className="px-6 py-6 text-sm text-gray-800 overflow-y-auto h-[calc(100%-70px)]">
-          <div className="mb-[18px]">
-            <label className="block mb-2 font-medium">
-              Status
-            </label>
-            <select value={status}
-              onChange={(e) => setStatus(e.target.value as "Approved" | "Rejected")}
-              className="w-full h-[42px] px-3 border border-gray-300 rounded-[6px]">
-              <option value="Approved">Approved</option>
-              <option value="Rejected">Rejected</option>
-            </select>
-          </div>
-          <div className="mb-[18px]">
-            <label className="block mb-2 font-medium">
-              Comments <span className="text-red-500"> *</span>
-            </label>
-            <textarea rows={3} value={popupComments}
-              onChange={(e) => {
-                const value = e.target.value;
-                setPopupComments(value);
-                if (value.trim()) {
-                  setPopupErrors(prev => ({
-                    ...prev,
-                    comments: ""
-                  }));
-                }
-              }}
-              placeholder="Enter your comments"
-              className={`w-full px-3 py-2 border rounded-[6px]
-                ${popupErrors.comments ? "border-red-500" : "border-gray-300"}`}/>
-            {popupErrors.comments && (
-              <p className="text-red-600 text-xs mt-1">{popupErrors.comments}</p>
-            )}
-          </div>
-           <div className="mb-[18px]">
-            <div className="mt-4">
-              <Label.Root className="block text-sm font-medium">
-                Supporting Documents 
-                <span className="text-red-500">(Maximum 5 files allowed & File must be below 2 MB)</span>
-              </Label.Root>
-              <label
-                htmlFor="approvalUpload"
-                className="inline-block bg-gray-100 text-gray-700 border border-gray-300 px-6 py-2 rounded cursor-pointer mt-2 hover:bg-gray-200">
-                Choose File
-              </label>
-              <input
-                id="approvalUpload"
-                ref={approvalFileRef}
-                type="file"
-                multiple
-                onChange={(e) => handleFileUpload(e, "approval")}
-                className="hidden" />
-              {approvalFileError  && <p className="text-red-500 text-sm mt-1">{approvalFileError }</p>}
-            </div>         
-           <div className="mt-3 flex flex-wrap gap-2">
-              {approvalDocuments.map((doc: any, index: number) => (
-                <div
-                  key={doc.source === "api" ? doc.fileNameGUID : index}
-                  className="flex items-center gap-2 bg-gray-100 px-3 py-1 rounded-lg shadow-sm border">
-                  <span
-                    className="text-sm truncate max-w-[180px] cursor-pointer text-blue-600 hover:underline"
-                    onClick={() => handleFilePreview(doc)}>
-                    {doc.originalFileName || doc.name}
-                  </span>
-
-                  <button
-                    type="button"
-                    onClick={() => removeFile(doc, index, "approval")}
-                    className="text-red-500 hover:text-red-700 font-bold text-lg leading-none">
-                    ×
-                  </button>
-                </div>
-              ))}
-            </div>
-             </div> 
-          <div className="flex items-center gap-2 mb-[18px]">
-            <Flag size={18} className={isFlagged ? "text-red-600" : "text-gray-400"}/>
-            <span className="font-medium">Flag :</span>
-            <input type="checkbox" checked={isFlagged}
-              onChange={(e) => {
-                const checked = e.target.checked;
-                setIsFlagged(checked);
-                if (checked) {
-                  setAttachmentMode("flag");
-                  setTimeout(() => textareaRef.current?.focus(), 100);
-                } else {
-                  setFlagComment("");
-                  setAttachmentMode("approval");
-                  setPopupErrors(prev => ({ ...prev, flagComment: "" }));
-                }
-              }}
-              className="w-4 h-4 mt-[1px] accent-red-600 cursor-pointer"/>
-          </div>
-            <textarea ref={textareaRef} rows={3} value={flagComment}
-              onChange={(e) => {
-                const value = e.target.value;
-                setFlagComment(value);
-                if (value.trim()) {
-                  setPopupErrors(prev => ({ ...prev, flagComment: "" }));
-                }
-              }}
-              disabled={!isFlagged}
-              placeholder="Flagged reason here"
-              className={`w-full px-3 py-2 rounded-[6px]
-                ${isFlagged
-                  ? "border border-red-300 bg-red-50"
-                  : "border border-gray-200 bg-gray-100 cursor-not-allowed"}`}/>
-            {popupErrors.flagComment && (
-              <p className="text-red-600 text-xs mt-1">
-                {popupErrors.flagComment}
-              </p>
-            )}
-            {isFlagged && (
-          <>
-          <div className="mt-4">
-              <Label.Root className="block text-sm font-medium">
-                Flag Documents 
-                <span className="text-red-500">(Maximum 5 files allowed & File must be below 2 MB)</span>
-              </Label.Root>
-              <label
-                htmlFor="flagUpload"
-                className="inline-block bg-gray-100 text-gray-700 border border-gray-300 px-6 py-2 rounded cursor-pointer mt-2 hover:bg-gray-200">
-                Choose File
-              </label>
-              <input
-                id="flagUpload"
-                ref={flagFileRef}
-                type="file"
-                multiple
-                onChange={(e) => handleFileUpload(e, "flag")}
-                className="hidden" />
-              {flagFileError && <p className="text-red-500 text-sm mt-1">{flagFileError}</p>}
-            </div>         
-           <div className="mt-3 flex flex-wrap gap-2">
-              {flagDocuments.map((doc: any, index: number) => (
-                <div
-                  key={doc.source === "api" ? doc.fileNameGUID : index}
-                  className="flex items-center gap-2 bg-gray-100 px-3 py-1 rounded-lg shadow-sm border">
-                  <span
-                    className="text-sm truncate max-w-[180px] cursor-pointer text-blue-600 hover:underline"
-                    onClick={() => handleFilePreview(doc)}>
-                    {doc.originalFileName || doc.name}
-                  </span>
-
-                  <button
-                    type="button"
-                    onClick={() => removeFile(doc, index, "flag")}
-                    className="text-red-500 hover:text-red-700 font-bold text-lg leading-none">
-                    ×
-                  </button>
-                </div>
-              ))}
-            </div>
-            </>
-          )}        
-          <div className="flex justify-end gap-4 mt-6">
-            <button
-              onClick={closeApproveDrawer} 
-              className="h-[42px] px-6 border border-gray-300 rounded-[6px] text-gray-700">
-              Cancel
-            </button>
-            <button onClick={submitManagerApproval}
-              className="h-[44px] px-8 rounded-md shadow btn-theme">
-               {isEditMode ? "Update" : "Save"}
-            </button>
-          </div>
-        </div>
-      </div>
-     {/* <div
-      className={`fixed top-0 right-0 h-full w-[720px] bg-white shadow-2xl z-50
-      transform transition-transform duration-300
-      ${openEvaluation ? "translate-x-0" : "translate-x-full"}`}>
-      <div className="relative px-6 py-4 border-b border-gray-300">
-        <h2 className="text-[16px] font-semibold text-gray-900">
-          Level 2 - All Business Jury Overview
-        </h2>
-        <button
-         onClick={() => {
-          setOpenEvaluation(false);
-          setOpenCard(null); 
-        }}
-          className="absolute right-6 top-4">
-          <X size={20} />
-        </button>
-      </div>
-      <div className="px-6 py-6 space-y-4 overflow-y-auto h-[calc(100vh-70px)]">
-        <div className="grid grid-cols-3 gap-4">
-          <div className="border border-gray-300 rounded-lg p-4 text-center bg-green-50 text-green-700">
-           <div className="text-sm">Total Evaluations</div>
-            <div className="text-xl font-semibold">
-              {attributeData?.EvaluatedJuries || 0}
-            </div>
-          </div>
-          <div className="border border-gray-300 rounded-lg p-4 text-center bg-blue-50 text-blue-700">
-           <div className="text-sm">Average Score</div>
-            <div className="text-xl font-semibold">
-             {avgScore || 0}
-            </div>
-          </div>
-          <div className="border border-gray-300 rounded-lg p-4 text-center bg-red-50 text-red-700">
-           <div className="text-sm">Flagged</div>
-            <div className="text-xl font-semibold">
-              {attributeData?.TotalFlagCount || 0}
-            </div>
-          </div>
-        </div>
-        {juryList.map((e: any, index: number) => {
-          const expanded = openCard === index;
-          return (
-            <div
-             key={index}
-             onClick={() => setOpenCard(prev => (prev === index ? null : index))}
-              className="border border-gray-300 rounded-lg cursor-pointer">
-              <div className="p-4 flex justify-between items-center">
-                <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-full themeColor flex items-center justify-center text-white">
-                    <User size={18} />
-                  </div>
-                  <div>
-                    <p className="font-medium text-gray-900">{e.Juryname}</p>
-                    <p className="text-sm text-gray-500">
-                      Submitted: {e.SubmittedDate}
-                    </p>
-                  </div>
-                </div>
-                <div className="flex items-center gap-3">
-                  {e.Flag == 1 && (
-                    <Flag size={22} className="text-red-600 fill-red-600" />
-                  )}
-                  <div className="border border-gray-300 bg-green-50 text-green-700 px-4 py-2 rounded-md text-center min-w-[70px]">
-                    <div className="text-lg font-semibold">
-                      {e.Score}
-                    </div>
-                    <div className="text-xs">Score</div>
-                  </div>
-                </div>
-              </div>
-              {expanded && (
-                <div className="px-4 pb-4">
-                  <div className="border border-gray-300 rounded-md overflow-hidden mt-2">
-                    <table className="w-full text-sm">
-                      <thead className="bg-gray-50">
-                        <tr>
-                          <th className="px-4 py-2 text-left"></th>
-                          <th className="px-4 py-2 text-left">Score</th>
-                          <th className="px-4 py-2 text-left">Comments</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {e.Attributes?.map((s: any, i: number) => (
-                          <tr
-                            key={i}
-                            className="border-t border-gray-300">
-                            <td className="px-4 py-2 font-medium">
-                              {s.AttributeName}
-                            </td>
-                            <td className="px-4 py-2">{s.Score}</td>
-                            <td className="px-4 py-2 text-gray-600">
-                               {s.Comments || "-"}
-                            </td>
-                          </tr>
-                        ))}
-                      </tbody>
-                    </table>
-                  </div>
-                  {e.Flag === 1 && (
-                    <>
-                      <div className="flex items-center gap-2 mt-3 text-sm">
-                        <Flag size={16} className="text-red-600" />
-                        <span className="font-medium">Flagged :</span>
-                        <input
-                          type="checkbox"
-                          checked
-                          readOnly
-                          className="w-4 h-4 accent-red-600"/>
-                      </div>
-                      <div className="mt-2 border border-gray-300 bg-red-50 rounded-md px-4 py-3 text-sm text-gray-700">
-                        {e.FlagReason || "No reason provided"}
-                      </div>
-                    </>
-                  )}
-                </div>
-              )}
-            </div>
-          );
-        })}
-      </div>
-    </div>    */}
-    <div className={`fixed top-0 right-0 h-screen w-[650px] bg-white z-50 shadow-xl
-        transform transition-transform duration-500 ease-in-out
-        ${openScore ? "translate-x-0" : "translate-x-full"}
-        flex flex-col`}>
-      <div className="flex justify-between items-center px-6 py-4 border-b border-gray-200">
-        <h2 className="text-lg font-semibold">
-          Level 2 - Business Jury
-        </h2>
-        <X
-          className="cursor-pointer text-gray-600"
-          onClick={handleCloseDrawer}/>
-      </div>
-      {/* <div className="px-6 py-6 space-y-6 text-sm"> */}
-      <div className="flex-1 overflow-y-auto px-6 py-6 space-y-6 text-sm">
-        {primaryfield=="IsPrimary" &&
-        <div>
-        <div className="mb-[18px] flex gap-4 items-end">
-          <div className="flex-1">
-            <label className="block mb-2 font-medium">
-              Status
-            </label>
-            <select 
-              value={juryStatus}
-              onChange={(e) => setJuryStatus(e.target.value as "Approved" | "Rejected")}
-              className="w-full h-[42px] px-3 border border-gray-300 rounded-[6px]">
-              <option value="Approved">Approved</option>
-              <option value="Rejected">Rejected</option>
-            </select>
-          </div>
-
-        </div>
-        <div className="mb-[18px]">
-          <label className="block mb-2 font-medium">
-            Comments <span className="text-red-500"> *</span>
-          </label>
-          <textarea rows={3} value={popupCommentsJury}
-            onChange={(e) => {
-              const value = e.target.value;
-              setPopupCommentsJury(value);
-              if (value.trim()) {
-                setJuryErrors((prev:any) => ({
-                  ...prev,
-                  comments: ""
-                }));
-              }
-            }}
-            placeholder="Enter your comments"
-            className={`w-full px-3 py-2 border rounded-[6px]
-              ${juryErrors.comments ? "border-red-500" : "border-gray-300"}`}/>
-          {juryErrors.comments && (
-            <p className="text-red-600 text-xs mt-1">{juryErrors.comments}</p>
-          )}
-        </div>
-         <div className="mt-4">
-              <Label.Root className="block text-sm font-medium">
-                Supporting Documents 
-                <span className="text-red-500">(Maximum 5 files allowed & File must be below 2 MB)</span>
-              </Label.Root>
-              <label
-                htmlFor="juryUpload"
-                className="inline-block bg-gray-100 text-gray-700 border border-gray-300 px-6 py-2 rounded cursor-pointer mt-2 hover:bg-gray-200">
-                Choose File
-              </label>
-              <input
-                id="juryUpload"
-                ref={juryApprovalFileRef}
-                type="file"
-                multiple
-                onChange={(e) => handleFileUpload(e, "juryApproval")}
-                className="hidden" />
-              {juryApprovalFileError && <p className="text-red-500 text-sm mt-1">{juryApprovalFileError}</p>}
-         </div>  
-
-          <div className="mt-3 flex flex-wrap gap-2">
-              {approvalJuryDocuments.map((doc: any, index: number) => (
-                <div
-                  key={doc.source === "api" ? doc.fileNameGUID : index}
-                  className="flex items-center gap-2 bg-gray-100 px-3 py-1 rounded-lg shadow-sm border">
-                  <span
-                    className="text-sm truncate max-w-[180px] cursor-pointer text-blue-600 hover:underline"
-                    onClick={() => handleFilePreview(doc)}>
-                    {doc.originalFileName || doc.name}
-                  </span>
-
-                  <button
-                    type="button"
-                    onClick={() => removeFile(doc, index, "juryApproval")}
-                    className="text-red-500 hover:text-red-700 font-bold text-lg leading-none">
-                    ×
-                  </button>
-                </div>
-              ))}
-          </div>  
-        </div>
-        }
-        {scores.map((item, i) => (
-          <div key={i}>
-            <div className="flex items-center gap-6 mb-2">
-              <div className="flex items-center gap-1 font-medium">
-                {item.title}
-                <span className="text-gray-400 text-xs">ⓘ</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <span className="text-gray-500 text-sm">Score</span><span className="text-red-500"> *</span>
-                <input type="number" min={1} max={100} value={item.score}
-                  onChange={(e) => {
-                    const val = Number(e.target.value);
-                    setScores(prev =>
-                      prev.map((s, idx) =>
-                        idx === i ? { ...s, score: val } : s
-                      )
-                    );
-                  }}
-              className={`w-[90px] h-[36px] px-3 border rounded-md text-sm outline-none
-              ${popupErrors.score[i] ? "border-red-500" : "border-gray-300"}`}/>
-              </div>
-              {popupErrors.score[i] && (
-                <p className="text-red-600 text-xs mt-1">
-                  {popupErrors.score[i]}
-                </p>
-              )}
-            </div>
-             <label className="block text-gray-500 text-sm mb-1">
-                  Comments <span className="text-red-500"> *</span>
-             </label>
-            <textarea rows={3} value={item.comment}
-              onChange={(e) => {
-                const val = e.target.value;
-                setScores(prev =>
-                  prev.map((s, idx) =>
-                    idx === i ? { ...s, comment: val } : s
-                  )
-                );
-              }}
-              className={`w-full px-3 py-2 border rounded-md text-sm resize-none outline-none
-                ${popupErrors.comment[i] ? "border-red-500" : "border-gray-300"}`}/>
-
-              {popupErrors.comment[i] && (
-                <p className="text-red-600 text-xs mt-1">
-                  {popupErrors.comment[i]}
-                </p>
-              )}        
-          </div>
-         ))}
-
-         <div className="flex items-center gap-2 mb-[18px]">
-            <Flag size={18} className={isJuryFlagged ? "text-red-600" : "text-gray-400"}/>
-            <span className="font-medium">Flag :</span>
-            <input type="checkbox" checked={isJuryFlagged}
-              onChange={(e) => {
-                const checked = e.target.checked;
-                setIsJuryFlagged(checked);
-                if (checked) {
-                  setAttachmentMode("juryFlag");
-                  setTimeout(() => textareaRef.current?.focus(), 100);
-                } else {
-                  setJuryFlagComment("");
-                  setAttachmentMode("juryApproval");
-                  setPopupErrors(prev => ({ ...prev, flagComment: "" }));
-                }
-              }}
-              className="w-4 h-4 mt-[1px] accent-red-600 cursor-pointer"/>
-          </div>
-            <textarea ref={textareaRef} rows={3} value={juryFlagComment}
-              onChange={(e) => {
-                const value = e.target.value;
-                setJuryFlagComment(value);
-                if (value.trim()) {
-                  setPopupErrors(prev => ({ ...prev, juryFlagComment: "" }));
-                }
-              }}
-              disabled={!isJuryFlagged}
-              placeholder="Flagged reason here"
-              className={`w-full px-3 py-2 rounded-[6px]
-                ${isJuryFlagged
-                  ? "border border-red-300 bg-red-50"
-                  : "border border-gray-200 bg-gray-100 cursor-not-allowed"}`}/>
-            {juryErrors.comments && (
-              <p className="text-red-600 text-xs mt-1">
-                {juryErrors.comments}
-              </p>
-            )}
-            {isJuryFlagged && (
-          <>
-          <div className="mt-4">
-              <Label.Root className="block text-sm font-medium">
-                Flag Documents 
-                <span className="text-red-500">(Maximum 5 files allowed & File must be below 2 MB)</span>
-              </Label.Root>
-              <label
-                htmlFor="juryflagUpload"
-                className="inline-block bg-gray-100 text-gray-700 border border-gray-300 px-6 py-2 rounded cursor-pointer mt-2 hover:bg-gray-200">
-                Choose File
-              </label>
-              <input
-                id="juryflagUpload"
-                ref={juryFlagFileRef}
-                type="file"
-                multiple
-                onChange={(e) => handleFileUpload(e, "juryFlag")}
-                className="hidden" />
-              {juryFlagFileError && <p className="text-red-500 text-sm mt-1">{juryFlagFileError}</p>}
-            </div>         
-           <div className="mt-3 flex flex-wrap gap-2">
-              {flagJuryDocuments.map((doc: any, index: number) => (
-                <div
-                  key={doc.source === "api" ? doc.fileNameGUID : index}
-                  className="flex items-center gap-2 bg-gray-100 px-3 py-1 rounded-lg shadow-sm border">
-                  <span
-                    className="text-sm truncate max-w-[180px] cursor-pointer text-blue-600 hover:underline"
-                    onClick={() => handleFilePreview(doc)}>
-                    {doc.originalFileName || doc.name}
-                  </span>
-
-                  <button
-                    type="button"
-                    onClick={() => removeFile(doc, index, "juryFlag")}
-                    className="text-red-500 hover:text-red-700 font-bold text-lg leading-none">
-                    ×
-                  </button>
-                </div>
-              ))}
-            </div>
-            </>
-          )} 
-            
-        <div className="flex justify-end gap-3 pt-6">
-           <button
-              onClick={handleCloseDrawer} 
-              className="h-[42px] px-6 border border-gray-300 rounded-[6px] text-gray-700">
-              Cancel
-            </button>
-            <button  onClick={submitJuryApproval}
-              className="h-[44px] px-8 rounded-md shadow btn-theme">                
-              {isEditMode ? "Update" : "Save"}
-            </button>
-        </div>
-      </div>
-    </div>
-     <div className={`fixed top-0 right-0 h-full w-[680px] bg-white shadow-2xl z-50
-          transform transition-transform duration-300 ease-in-out
-          ${openGrandJuryEvaluation ? "translate-x-0" : "translate-x-full"}
-        `}>
-        <div className="flex justify-between items-center px-6 py-4 border-b border-gray-200">
-          <h2 className="text-[16px] font-semibold text-gray-900">
-            Level 3 - Grand Jury
-          </h2>
-          <button onClick={closeGrandJuryDrawer}>
-            <X size={20} />
-          </button>
-        </div>
-        {/* <div className="px-6 py-6 text-sm text-gray-800"> */}
-        <div className="px-6 py-6 text-sm text-gray-800 overflow-y-auto h-[calc(100%-70px)]">
-          <div className="mb-[18px] flex gap-4 items-end">
-            {/* Status - Left Side */}
-            <div className="flex-1">
-              <label className="block mb-2 font-medium">
-                Status
-              </label>
-              <select 
-                value={grandStatus}
-                onChange={(e) => setGrandStatus(e.target.value as "Approved" | "Rejected")}
-                className="w-full h-[42px] px-3 border border-gray-300 rounded-[6px]">
-                <option value="Approved">Approved</option>
-                <option value="Rejected">Rejected</option>
-              </select>
-            </div>
-
-            {/* Score - Right Side */}
-            <div className="w-[120px]">
-              <span className="text-gray-500 text-sm">Score</span>
-              <input
-                type="number"
-                min={1}
-                max={100}
-                value={grandScore}
-                onChange={(e) => {
-                  const val = e.target.value;
-                  setGrandScore(val);
-                  if(val.trim()){
-                    setGrandErrors((prev:any)=>({
-                      ...prev,
-                      score:""
-                    }));
-                  }
-                }}
-                className="w-full h-[42px] px-3 border border-gray-300 rounded-[6px] text-center"
-              />
-            </div>
-          </div>
-          
-          <div className="mb-[18px]">
-            <label className="block mb-2 font-medium">
-              Comments <span className="text-red-500"> *</span>
-            </label>
-            <textarea rows={3} value={popupCommentsGrand}
-              onChange={(e) => {
-                const value = e.target.value;
-                setPopupCommentsGrand(value); 
-              }}
-              placeholder="Enter your comments"
-              className={`w-full px-3 py-2 border rounded-[6px]
-                ${popupErrors.comments ? "border-red-500" : "border-gray-300"}`}/>
-            {popupErrors.comments && (
-              <p className="text-red-600 text-xs mt-1">{popupErrors.comments}</p>
-            )}
-          </div>
-           <div className="mb-[18px]">
-            <div className="mt-4">
-              <Label.Root className="block text-sm font-medium">
-                Supporting Documents 
-                <span className="text-red-500">(Maximum 5 files allowed & File must be below 2 MB)</span>
-              </Label.Root>
-              <label
-                htmlFor="grandUpload"
-                className="inline-block bg-gray-100 text-gray-700 border border-gray-300 px-6 py-2 rounded cursor-pointer mt-2 hover:bg-gray-200">
-                Choose File
-              </label>
-              <input
-                id="grandUpload"
-                ref={grandApprovalFileRef}
-                type="file"
-                multiple
-                onChange={(e) => handleFileUpload(e, "grandApproval")}
-                className="hidden" />
-              {grandApprovalFileError  && <p className="text-red-500 text-sm mt-1">{grandApprovalFileError }</p>}
-            </div>         
-           <div className="mt-3 flex flex-wrap gap-2">
-              {approvalGrandDocuments.map((doc: any, index: number) => (
-                <div
-                  key={doc.source === "api" ? doc.fileNameGUID : index}
-                  className="flex items-center gap-2 bg-gray-100 px-3 py-1 rounded-lg shadow-sm border">
-                  <span
-                    className="text-sm truncate max-w-[180px] cursor-pointer text-blue-600 hover:underline"
-                    onClick={() => handleFilePreview(doc)}>
-                    {doc.originalFileName || doc.name}
-                  </span>
-
-                  <button
-                    type="button"
-                    onClick={() => removeFile(doc, index, "grandApproval")}
-                    className="text-red-500 hover:text-red-700 font-bold text-lg leading-none">
-                    ×
-                  </button>
-                </div>
-              ))}
-            </div>
-           </div> 
-          <div className="flex items-center gap-2 mb-[18px]">
-            <Flag size={18} className={isGrandFlagged ? "text-red-600" : "text-gray-400"}/>
-            <span className="font-medium">Flag :</span>
-            <input type="checkbox" checked={isGrandFlagged}
-              onChange={(e) => {
-                const checked = e.target.checked;
-                setIsGrandFlagged(checked);
-                if (checked) {
-                  setAttachmentMode("grandFlag");
-                  setTimeout(() => textareaRef.current?.focus(), 100);
-                } else {
-                  setGrandFlagComment("");
-                  setAttachmentMode("grandApproval");
-                  setPopupErrors(prev => ({ ...prev, flagComment: "" }));
-                }
-              }}
-              className="w-4 h-4 mt-[1px] accent-red-600 cursor-pointer"/>
-          </div>
-            <textarea ref={textareaRef} rows={3} value={grandFlagComment}
-              onChange={(e) => {
-                const value = e.target.value;
-                setGrandFlagComment(value);
-                if (value.trim()) {
-                  setPopupErrors(prev => ({ ...prev, flagComment: "" }));
-                }
-              }}
-              disabled={!isGrandFlagged}
-              placeholder="Flagged reason here"
-              className={`w-full px-3 py-2 rounded-[6px]
-                ${isGrandFlagged
-                  ? "border border-red-300 bg-red-50"
-                  : "border border-gray-200 bg-gray-100 cursor-not-allowed"}`}/>
-            {popupErrors.flagComment && (
-              <p className="text-red-600 text-xs mt-1">
-                {popupErrors.flagComment}
-              </p>
-            )}
-            {isGrandFlagged && (
-          <>
-          <div className="mt-4">
-              <Label.Root className="block text-sm font-medium">
-                Flag Documents 
-                <span className="text-red-500">(Maximum 5 files allowed & File must be below 2 MB)</span>
-              </Label.Root>
-              <label
-                htmlFor="grandflagUpload"
-                className="inline-block bg-gray-100 text-gray-700 border border-gray-300 px-6 py-2 rounded cursor-pointer mt-2 hover:bg-gray-200">
-                Choose File
-              </label>
-              <input
-                id="grandflagUpload"
-                ref={grandFlagFileRef}
-                type="file"
-                multiple
-                onChange={(e) => handleFileUpload(e, "grandFlag")}
-                className="hidden" />
-              {flagFileError && <p className="text-red-500 text-sm mt-1">{flagFileError}</p>}
-            </div>         
-           <div className="mt-3 flex flex-wrap gap-2">
-              {flagGrandDocuments.map((doc: any, index: number) => (
-                <div
-                  key={doc.source === "api" ? doc.fileNameGUID : index}
-                  className="flex items-center gap-2 bg-gray-100 px-3 py-1 rounded-lg shadow-sm border">
-                  <span
-                    className="text-sm truncate max-w-[180px] cursor-pointer text-blue-600 hover:underline"
-                    onClick={() => handleFilePreview(doc)}>
-                    {doc.originalFileName || doc.name}
-                  </span>
-
-                  <button
-                    type="button"
-                    onClick={() => removeFile(doc, index, "grandFlag")}
-                    className="text-red-500 hover:text-red-700 font-bold text-lg leading-none">
-                    ×
-                  </button>
-                </div>
-              ))}
-            </div>
-            </>
-          )}        
-          <div className="flex justify-end gap-4 mt-6">
-            <button
-              onClick={closeGrandJuryDrawer} 
-              className="h-[42px] px-6 border border-gray-300 rounded-[6px] text-gray-700">
-              Cancel
-            </button>
-            <button onClick={submitGrandJuryApproval}
-              className="h-[44px] px-8 rounded-md shadow btn-theme">
-               {isEditMode ? "Update" : "Save"}
-            </button>
-          </div>
-        </div>
-      </div>
     {successMessage && (
       <div className="fixed top-5 right-5 z-[9999] bg-green-600 text-white px-5 py-3
       rounded-lg shadow-xl text-sm font-medium animate-slide-in">
@@ -3389,139 +2678,18 @@ return (
         {errorMessage}
       </div>
     )}
-    {openReferralPopup && (
-      <div
-        className={`fixed top-0 right-0 h-full w-[680px] bg-white shadow-2xl z-50
-        transform transition-transform duration-300 ease-in-out
-        ${openReferralPopup ? "translate-x-0" : "translate-x-full"}`}>
-        <div className="flex justify-between items-center px-6 py-4 border-b border-gray-200">
-          <h2 className="text-[16px] font-semibold text-gray-900">
-            Referral Approval
-          </h2>
-          <button onClick={closeApproveDrawer}>
-            <X size={20} />
-          </button>
-        </div>
-        <div className="px-6 py-6 text-sm text-gray-800 overflow-y-auto h-[calc(100%-70px)]">
-          <div className="mb-[18px]">
-            <label className="block mb-2 font-medium">Status</label>
-            <select
-              value={refStatus}
-              onChange={(e) =>
-                setRefStatus(e.target.value as "Approved" | "Rejected")
-              }
-              className="w-full h-[42px] px-3 border border-gray-300 rounded-[6px]">
-              <option value="Approved">Approved</option>
-              <option value="Rejected">Rejected</option>
-            </select>
-          </div>
-          <div className="mb-[18px]">
-            <label className="block mb-2 font-medium">Comments</label>
-            <textarea
-              rows={3}
-              value={refComments}
-              onChange={(e) => setRefComments(e.target.value)}
-              placeholder="Enter your comments"
-              className="w-full px-3 py-2 border rounded-[6px] border-gray-300"/>
-          </div>
-          <div className="mb-[18px]">
-            <Label.Root className="block text-sm font-medium">
-              Supporting Documents
-              <span className="text-red-500">
-                (Max 5 files & below 2MB)
-              </span>
-            </Label.Root>
-            <label
-              htmlFor="refUpload"
-              className="inline-block bg-gray-100 text-gray-700 border border-gray-300 px-6 py-2 rounded cursor-pointer mt-2 hover:bg-gray-200">
-              Choose File
-            </label>
-            <input
-              id="refUpload"
-              ref={refFileRef}
-              type="file"
-              multiple
-              onChange={(e) => handleFileUpload(e, "referral")}
-              className="hidden"/>
-              {refFileError && <p className="text-red-500 text-sm mt-1">{refFileError}</p>}
-           <div className="mt-3 flex flex-wrap gap-2">
-              {referralDocuments.map((doc: any, index: number) => (
-                <div
-                  key={doc.source === "api" ? doc.fileNameGUID : index}
-                  className="flex items-center gap-2 bg-gray-100 px-3 py-1 rounded-lg shadow-sm border">
-                  <span
-                    className="text-sm truncate max-w-[180px] cursor-pointer text-blue-600 hover:underline"
-                    onClick={() => handleFilePreview(doc)}>
-                    {doc.originalFileName || doc.name}
-                  </span>
-                  <button
-                    type="button"
-                    onClick={() => removeFile(doc, index, "referral")}
-                    className="text-red-500 hover:text-red-700 font-bold text-lg leading-none">
-                    ×
-                  </button>
-                </div>
-              ))}
-            </div>
-          </div>
-          <div className="flex justify-end gap-4 mt-6">
-            <button
-              onClick={closeApproveDrawer}
-              className="h-[42px] px-6 border border-gray-300 rounded-[6px]">
-              Cancel
-            </button>
-            <button
-              onClick={submitReferral}
-              className="h-[44px] px-8 rounded-md shadow btn-theme">
-              {isEditMode ? "Update" : "Save"}
-            </button>
-          </div>
-        </div>
-      </div>
-    )}
-   {openDocPopup && (
-      <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50">
-        <div className="bg-white w-[500px] rounded-lg shadow-lg p-5">
-          
-          <div className="flex justify-between items-center mb-4">
-            <h3 className="font-semibold">Documents</h3>
-            <button onClick={() => setOpenDocPopup(false)}>✕</button>
-          </div>
+    <DocumentPopup
+  open={openDocPopup}
+  docs={selectedDocs}
+  onClose={() => setOpenDocPopup(false)}
+  onPreview={handleFilePreview}
+/>
 
-          <div className="space-y-2 max-h-[300px] overflow-auto">
-            {selectedDocs.map((doc: any) => (
-              <div
-                key={doc.fileNameGUID}
-                className="border rounded px-3 py-2 hover:bg-gray-50">
-                
-                <span
-                  onClick={() => handleFilePreview(doc)}
-                  className="text-blue-600 cursor-pointer hover:underline">
-                  {doc.originalFileName}
-                </span>
-
-              </div>
-            ))}
-          </div>
-
-        </div>
-      </div>
-    )}
-    {openCommentsPopup && (
-      <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50">
-        <div className="bg-white w-[500px] rounded-lg shadow-lg p-5">
-          <div className="flex justify-between items-center mb-4">
-            <h3 className="font-semibold">Comments</h3>
-            <button onClick={() => setOpenCommentsPopup(false)}>✕</button>
-          </div>
-          <div className="max-h-[300px] overflow-auto border rounded p-3 bg-gray-50">
-            <p className="text-sm text-gray-800 whitespace-pre-wrap">
-              {selectedComment}
-            </p>
-          </div>
-        </div>
-      </div>
-    )}
+<CommentsPopup
+  open={openCommentsPopup}
+  comment={selectedComment}
+  onClose={() => setOpenCommentsPopup(false)}
+/>
     <BusinessJuryEvaluation
       openEvaluation={openEvaluation}
       setOpenEvaluation={setOpenEvaluation}
@@ -3531,6 +2699,101 @@ return (
       avgMemLeadScore={avgScoreMemLead}
       level={level2.FlagAttachment}
     />
+<ManagerApprovalDrawer
+  openApprove={openApprove}
+  closeApproveDrawer={closeApproveDrawer}
+  status={status}
+  setStatus={setStatus}
+  popupComments={popupComments}
+  setPopupComments={setPopupComments}
+  popupErrors={popupErrors}
+  setPopupErrors={setPopupErrors}
+  approvalDocuments={approvalDocuments}
+  handleFileUpload={handleFileUpload}
+  removeFile={removeFile}
+  handleFilePreview={handleFilePreview}
+  submitManagerApproval={submitManagerApproval}
+  isEditMode={isEditMode}
+  isFlagged={isFlagged}
+  setIsFlagged={setIsFlagged}
+  flagComment={flagComment}
+  setFlagComment={setFlagComment}
+  flagDocuments={flagDocuments}
+/>
+<JuryApprovalDrawer
+  openScore={openScore}
+  handleCloseDrawer={handleCloseDrawer}
+  juryStatus={juryStatus}
+  setJuryStatus={setJuryStatus}
+  popupCommentsJury={popupCommentsJury}
+  setPopupCommentsJury={setPopupCommentsJury}
+  popupErrors={popupErrors}
+  setPopupErrors={setPopupErrors}
+  scores={scores}
+  setScores={setScores}
+  submitJuryApproval={submitJuryApproval}
+  isEditMode={isEditMode}
+  isJuryFlagged={isJuryFlagged}
+  setIsJuryFlagged={setIsJuryFlagged}
+  juryFlagComment={juryFlagComment}
+  setJuryFlagComment={setJuryFlagComment}
+  approvalJuryDocuments={approvalJuryDocuments}
+  flagJuryDocuments={flagJuryDocuments}
+  handleFileUpload={handleFileUpload}
+  removeFile={removeFile}
+  handleFilePreview={handleFilePreview}
+  primaryfield={primaryfield}
+/>
+<GrandJuryApprovalDrawer
+  openGrandJuryEvaluation={openGrandJuryEvaluation}
+  closeGrandJuryDrawer={closeGrandJuryDrawer}
+
+  grandStatus={grandStatus}
+  setGrandStatus={setGrandStatus}
+
+  popupCommentsGrand={popupCommentsGrand}
+  setPopupCommentsGrand={setPopupCommentsGrand}
+
+  grandScore={grandScore}
+  setGrandScore={setGrandScore}
+
+  popupErrors={popupErrors}
+  setPopupErrors={setPopupErrors}
+
+  submitGrandJuryApproval={submitGrandJuryApproval}
+  isEditMode={isEditMode}
+
+  isGrandFlagged={isGrandFlagged}
+  setIsGrandFlagged={setIsGrandFlagged}
+
+  grandFlagComment={grandFlagComment}
+  setGrandFlagComment={setGrandFlagComment}
+
+  approvalGrandDocuments={approvalGrandDocuments}
+  flagGrandDocuments={flagGrandDocuments}
+
+  handleFileUpload={handleFileUpload}
+  removeFile={removeFile}
+  handleFilePreview={handleFilePreview}
+
+  grandApprovalFileError={grandApprovalFileError}
+  grandFlagFileError={grandFlagFileError}
+/>
+<ReferralApprovalDrawer
+  openReferralPopup={openReferralPopup}
+  closeApproveDrawer={closeApproveDrawer}
+  refStatus={refStatus}
+  setRefStatus={setRefStatus}
+  refComments={refComments}
+  setRefComments={setRefComments}
+  referralDocuments={referralDocuments}
+  handleFileUpload={handleFileUpload}
+  removeFile={removeFile}
+  handleFilePreview={handleFilePreview}
+  submitReferral={submitReferral}
+  isEditMode={isEditMode}
+  refFileError={refFileError}
+/>
 {/* ================= Document Preview Dialog ================= */}
       <Dialog.Root
         open={previewOpen}
