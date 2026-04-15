@@ -49,6 +49,7 @@ const navigationItems: NavigationItem[] = [
   { icon: Settings, label: 'Admin Setting', path: '/admin-setting',pageKey:'Admin Setting' },
  
   //{ icon: UserPlus, label: 'Other Nomination', path: '/other-nomination' },
+    { icon: FileText, label: 'Category Wise Nomination', path: '/report', pageKey: 'Category Wise Nomination' }, 
 ];
 
 

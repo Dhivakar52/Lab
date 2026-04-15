@@ -23,6 +23,6 @@ export const ROLE_PAGES: Record<UserRole, string[]> = {
      'Business Jury', 'President Unit', 
      'President Level','Award Management',
      'Grand Jury','Primary Business Jury','Leader Board',
-     'Admin Setting'],
+     'Admin Setting','Category Wise Nomination'],
 };
 

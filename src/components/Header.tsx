@@ -155,6 +155,8 @@ const headerTitleMap: Record<string, string> = {
         return "jury Panel";
       case "/leader-board":
         return "LeaderBoard";
+        case "/report":
+          return "Category Wise Nomination";
       default:
         return "Nomination Management";
     }
