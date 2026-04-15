@@ -65,6 +65,9 @@ const NominationDetailView: React.FC<NominationDetailViewProps> = ({
     const [openCommentsPopup, setOpenCommentsPopup] = useState(false);
 
    const [IsSelf, setIsSelf] = useState<boolean | null>(null);
+
+const [isAuditDialogOpen, setIsAuditDialogOpen] = useState(false);
+const [auditLogs, setAuditLogs] = useState<any[]>([]);
   //const fileInputRef = useRef<HTMLInputElement | null>(null);
 
   //const textareaRef = useRef<HTMLTextAreaElement | null>(null);
@@ -80,7 +83,37 @@ const NominationDetailView: React.FC<NominationDetailViewProps> = ({
   //     description: "",
   //     files: [], 
   //     file: null as File | null,
-  //   });    
+  //   });  
+  
+const fetchAuditLogs = async () => {
+  try {
+    const res = await axios.get(`${apiUrl}/api/logs/auditlog`, {
+      headers: {
+        Authorization: `Bearer ${authToken}`,
+      },
+      params: {
+        pPageNo: 1,
+        pRecordCount: 100,
+        nominationId: nominationId, // ✅ IMPORTANT (if API supports)
+      },
+    });
+
+    let raw = res.data?.auditLog || res.data;
+
+    let result =
+      typeof raw === "string"
+        ? JSON.parse(raw)
+        : raw;
+
+    console.log("Audit Logs:", result);
+
+    setAuditLogs(Array.isArray(result) ? result : []);
+  } catch (err) {
+    console.error("Audit log fetch failed", err);
+    setAuditLogs([]);
+  }
+};
+
   const toggleExpanded = () => setExpanded(!expanded);
     useEffect(() => {
       if (isOpen) {
@@ -654,6 +687,17 @@ return (
             Withdraw
           </button>
         )}
+          {showWithdrawButton && (
+      <button
+  onClick={() => {
+    fetchAuditLogs();
+    setIsAuditDialogOpen(true);
+  }}
+  className="px-4 py-2 btn-theme-reject"
+>
+  Auditlog
+</button>
+        )}
         </div>
     </div> 
     {successMessage && (
@@ -670,6 +714,155 @@ return (
     )}
 
 
+
+// ================= AUDIT LOG DRAWER =================
+{/* ================= AUDIT LOG DRAWER ================= */}
+{isAuditDialogOpen && (
+  <div className="fixed inset-0 z-50 flex justify-end bg-black/40 backdrop-blur-sm">
+
+    {/* Drawer */}
+    <div className="w-[900px] h-full bg-white shadow-2xl border-l border-gray-200 flex flex-col animate-slide-in-right">
+
+      {/* Header */}
+      <div className="flex justify-between items-center px-6 py-4 border-b">
+        <h2 className="text-lg font-semibold">Audit Log</h2>
+
+        <button
+          onClick={() => setIsAuditDialogOpen(false)}
+          className="p-2 hover:bg-gray-100 rounded"
+        >
+          <X size={20} />
+        </button>
+      </div>
+
+      {/* Content */}
+      <div className="p-6 overflow-y-auto flex-1">
+
+        <div className="bg-white rounded-xl border border-gray-200 shadow-sm p-6">
+
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm border-collapse">
+
+              {/* HEADER */}
+              <thead className="bg-gray-50">
+                <tr>
+                  <th className="px-4 py-3 text-left">Old Value</th>
+                  <th className="px-4 py-3 text-left">New Value</th>
+                  <th className="px-4 py-3 text-left">Changed By</th>
+                  <th className="px-4 py-3 text-left">Modified At</th>
+                  <th className="px-4 py-3 text-left">Action</th>
+                </tr>
+              </thead>
+
+              {/* BODY */}
+              <tbody>
+                {auditLogs.length > 0 ? (
+                  auditLogs.map((log, index) => {
+                    let oldParsed: any = {};
+                    let newParsed: any = {};
+
+                    try {
+                      oldParsed = log.OldValue ? JSON.parse(log.OldValue) : {};
+                    } catch {}
+
+                    try {
+                      newParsed = log.NewValue ? JSON.parse(log.NewValue) : {};
+                    } catch {}
+
+                  const renderValues = (data: any) => {
+  if (!data || typeof data !== "object" || Object.keys(data).length === 0) {
+    return "-";
+  }
+
+  return Object.entries(data).map(([key, value]) => {
+    if (["createdBy", "updatedBy"].includes(key)) return null;
+
+    const displayValue =
+      value === null || value === undefined || value === ""
+        ? "-"
+        : typeof value === "object"
+        ? JSON.stringify(value)
+        : String(value);
+
+    return (
+      <div key={key} className="mb-1 leading-5">
+        <span className="font-medium text-gray-700">{key}:</span>{" "}
+        <span className="text-gray-600 break-words">
+          {displayValue}
+        </span>
+      </div>
+    );
+  });
+};
+
+                    return (
+                      <tr key={index} className="border-b hover:bg-gray-50 align-top">
+                        
+                        {/* OLD */}
+                        <td className="px-4 py-3">
+                          {renderValues(oldParsed?.nomination || oldParsed)}
+                        </td>
+
+                        {/* NEW */}
+                        <td className="px-4 py-3">
+                          {renderValues(newParsed?.nomination || newParsed)}
+                        </td>
+
+                        {/* USER */}
+                        <td className="px-4 py-3 font-medium">
+                          {log.UserName || "-"}
+                        </td>
+
+                      <td className="px-4 py-3 text-gray-600">
+  {log.ModifiedAt
+    ? new Date(log.ModifiedAt)
+        .toLocaleDateString("en-GB", {
+          day: "2-digit",
+          month: "2-digit",
+          year: "numeric",
+        })
+        .replace(/\//g, "-") // 👉 12-04-2026
+    : "-"}
+</td>
+
+                        {/* ACTION */}
+                        <td className="px-4 py-3">
+                          <span
+                            className={`px-2 py-1 text-xs rounded-md font-medium
+                              ${
+                                log.ActionName === "Update"
+                                  ? "bg-blue-100 text-blue-700"
+                                  : log.ActionName === "Create"
+                                  ? "bg-green-100 text-green-700"
+                                  : log.ActionName === "Delete"
+                                  ? "bg-red-100 text-red-700"
+                                  : "bg-gray-100 text-gray-700"
+                              }`}
+                          >
+                            {log.ActionName || "-"}
+                          </span>
+                        </td>
+                      </tr>
+                    );
+                  })
+                ) : (
+                  <tr>
+                    <td colSpan={5} className="text-center py-6 text-gray-500">
+                      No audit logs found
+                    </td>
+                  </tr>
+                )}
+              </tbody>
+
+            </table>
+          </div>
+
+        </div>
+
+      </div>
+    </div>
+  </div>
+)}
 {/* ================= Withdraw Confirmation Dialog ================= */}
       <Dialog.Root
         open={isWithdrawDialogOpen}

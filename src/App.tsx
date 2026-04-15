@@ -40,7 +40,7 @@ import BusinessJuryDetail from './components/Jury/BusinessJuryDetail.tsx';
 import Leader from './components/LeaderBoard/Leader.tsx';
 //import BusinessJuryEvaluation from './components/Jury/BusinessJuryEvaluation.tsx';
 
-
+import Report from './components/Report/Report.tsx';
 // -------------------------
 // Main page components
 // -------------------------
@@ -59,6 +59,7 @@ const pageComponents: Record<string, React.ReactNode> = {
   'Referral Approval': <ReferralComponent />,
   'Other Nomination':<OtherNomination/>,
   'Leader Board': <Leader/>,
+  'Report': <Report/>
 };
 
 
@@ -74,6 +75,7 @@ const adminSubPages: Record<string, React.ReactNode> = {
   'jury-evaluation-settings': <JuryEvaluationConfiguration />,
   'jury-role-mapping': <JuryRoleMapping />,
   'role-list': <RoleAccessLevels />,
+  
 };
 
 // -------------------------
@@ -87,6 +89,7 @@ const adminSubPageRoles: Record<string, UserRole[]> = {
   'jury-evaluation-settings': ['admin'],
   'jury-role-mapping': ['admin'],
   'role-list': ['admin'],
+  
 };
 
 // -------------------------
