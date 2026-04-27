@@ -22,7 +22,7 @@ import CommentsPopup from "../Jury/CommentsPopup";
 import {getNominationDetails,saveManagerApproval,updateManagerApproval,uploadFiles,downloadFile,
   saveBusinessJuryApproval,updateBusinessJuryApproval,saveGrandJuryApproval,updateGrandJuryApproval,
   saveReferralApproval,updateReferralApproval
-} from "../../services/nominationService"
+} from "../../services/nominationService";
 interface BusinessJuryDetailProps {
   isOpen: boolean;
   onClose: () => void;
@@ -1827,11 +1827,11 @@ const submitReferral = async () => {
     console.log("REFERRAL PAYLOAD 👉", payload);
       let res;
 
-if (isEditMode) {
-  res = await updateReferralApproval(Number(selectedReferral.ReferralID), payload);
-} else {
-  res = await saveReferralApproval(payload);
-}
+    if (isEditMode) {
+      res = await updateReferralApproval(Number(selectedReferral.ReferralID), payload);
+    } else {
+      res = await saveReferralApproval(payload);
+    }
     // const res = await axios({
     //   method: isEditMode ? "put" : "post",
     //   url: isEditMode
@@ -2084,6 +2084,7 @@ return (
                       onClick={async () => {
                         const ext =
                           doc.OriginalFileName.split(".").pop()?.toLowerCase() || "";
+                        
                         const downloadApiUrl = `${apiUrl}/api/download?fileName=${doc.FileNameGUID}`;
                         try {
                           const response = await axios.get(downloadApiUrl, {

@@ -1,7 +1,6 @@
 import React, { useRef,useState,useEffect,useMemo } from "react";
 import {ChevronDown, ChevronUp, Menu,  } from "lucide-react";
 import BusinessPanel from "./BusinessPanel"; 
-import axios from "axios";
 import { useAuth } from "../ContextAPI/AuthContext";
 import {
   useReactTable,
@@ -19,8 +18,7 @@ import { useNavigate } from "react-router-dom";
 import Pagination from "../Pagination";
 import StatusFlow from "../CommonStatusFlow"; 
 import { Flag } from "lucide-react";
-// import { levelColors, levelTextColors } from "../../statusColors.ts";
-
+import{getBusinessJuryEvaluations}from "../../services/nominationService";
 
 export interface BusinessJury {
   id: number;
@@ -58,7 +56,7 @@ type ExpandedRow = {
 } | null;
 //api/businessjuryevaluation
 
-const apiUrl = import.meta.env.VITE_API_URL;
+// const apiUrl = import.meta.env.VITE_API_URL;
 
 const BusinessJury: React.FC = () => {
   const { authToken, userId } = useAuth();
@@ -80,10 +78,10 @@ const BusinessJury: React.FC = () => {
         //const token = localStorage.getItem("authToken");
         if (!authToken) throw new Error("No auth token found");
 
-        const res = await axios.get(`${apiUrl}/api/businessjuryevaluation/${userId}`, {
-          headers: { Authorization: `Bearer ${authToken}` },
-        });
-        
+        // const res = await axios.get(`${apiUrl}/api/businessjuryevaluation/${userId}`, {
+        //   headers: { Authorization: `Bearer ${authToken}` },
+        // });
+        const res = await getBusinessJuryEvaluations(Number(userId));
        //setTotalCount(res.data[0]?.TotalCount || 0);
         setTotalCount(res.data.length);
          setData(res.data);

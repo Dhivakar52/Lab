@@ -10,6 +10,7 @@ import { User, Building2, Tag,
 import { levelColors, levelTextColors } from "../../statusColors.ts";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger,
 } from "@radix-ui/react-dropdown-menu";
+import{getNominationAuditLogs,getNomination,deleteNomination}from "../../services/nominationService";
 
 interface NominationDetailViewProps {
   isOpen: boolean;
@@ -87,17 +88,17 @@ const [auditLogs, setAuditLogs] = useState<any[]>([]);
   
 const fetchAuditLogs = async () => {
   try {
-    const res = await axios.get(`${apiUrl}/api/logs/auditlog`, {
-      headers: {
-        Authorization: `Bearer ${authToken}`,
-      },
-      params: {
-        pPageNo: 1,
-        pRecordCount: 100,
-        nominationId: nominationId, // ✅ IMPORTANT (if API supports)
-      },
-    });
-
+    // const res = await axios.get(`${apiUrl}/api/logs/auditlog`, {
+    //   headers: {
+    //     Authorization: `Bearer ${authToken}`,
+    //   },
+    //   params: {
+    //     pPageNo: 1,
+    //     pRecordCount: 100,
+    //     nominationId: nominationId,
+    //   },
+    // });
+    const res = await getNominationAuditLogs(Number(nominationId));
     let raw = res.data?.auditLog || res.data;
 
     let result =
@@ -125,15 +126,16 @@ const fetchAuditLogs = async () => {
  
   const fetchNominationDetails = async () => {
     try {
-      const res = await axios.get(
-      `${apiUrl}/api/nominations/${nominationId}`,
-    // `${apiUrl}/api/jurylevelnomination/${nominationId}/${userId}`, 
-      {
-        headers: {
-          Authorization: `Bearer ${authToken}`,
-        },
-      }
-    );
+     const res = await getNomination(Number(nominationId));
+
+    //   const res = await axios.get(
+    //   `${apiUrl}/api/nominations/${nominationId}`,
+    //   {
+    //     headers: {
+    //       Authorization: `Bearer ${authToken}`,
+    //     },
+    //   }
+    // );
       const result = Array.isArray(res.data)
         ? res.data[0] : res.data;
  
@@ -292,16 +294,17 @@ const description =
     }
   ]
 };
-    const res = await axios.delete(
-      `${apiUrl}/api/nominations/${data.NominationID}`,
-      {
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${authToken}`,
-        },
-        data: payload
-      }
-    );
+    const res = await deleteNomination(data.NominationID, payload);
+    // const res = await axios.delete(
+    //   `${apiUrl}/api/nominations/${data.NominationID}`,
+    //   {
+    //     headers: {
+    //       "Content-Type": "application/json",
+    //       Authorization: `Bearer ${authToken}`,
+    //     },
+    //     data: payload
+    //   }
+    // );
  
    const returnVal = res.data?.nominationID ?? res.data;
    console.log("return",returnVal)
@@ -693,8 +696,7 @@ return (
     fetchAuditLogs();
     setIsAuditDialogOpen(true);
   }}
-  className="px-4 py-2 btn-theme-reject"
->
+  className="px-4 py-2 btn-theme-reject">
   Auditlog
 </button>
         )}
@@ -715,8 +717,6 @@ return (
 
 
 
-// ================= AUDIT LOG DRAWER =================
-{/* ================= AUDIT LOG DRAWER ================= */}
 {isAuditDialogOpen && (
   <div className="fixed inset-0 z-50 flex justify-end bg-black/40 backdrop-blur-sm">
 
@@ -863,7 +863,6 @@ return (
     </div>
   </div>
 )}
-{/* ================= Withdraw Confirmation Dialog ================= */}
       <Dialog.Root
         open={isWithdrawDialogOpen}
         onOpenChange={setIsWithdrawDialogOpen}>
@@ -906,7 +905,6 @@ return (
         </div>
       </div>
     )}
-{/* ================= Document Preview Dialog ================= */}
       <Dialog.Root
         open={previewOpen}
         onOpenChange={setPreviewOpen}>

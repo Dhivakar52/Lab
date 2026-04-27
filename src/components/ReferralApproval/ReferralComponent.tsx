@@ -1,5 +1,4 @@
 import React, { useRef, useEffect, useMemo, useState } from "react";
-import axios from "axios";
 import {
   useReactTable,
   getCoreRowModel,
@@ -11,7 +10,6 @@ import {
 import type { ColumnDef } from "@tanstack/react-table";
 import { useAuth } from "../ContextAPI/AuthContext";
 // Correct Component Import
-import ReferralPanel from "./ReferralPanel";
 import { useNavigate } from "react-router-dom";
 // Components
 import { ColorBadge } from "../TenantBadges";
@@ -20,7 +18,7 @@ import StatusFlow from "../CommonStatusFlow";
 import { ChevronDown, ChevronUp, Menu } from "lucide-react";
 import { levelColors, levelTextColors } from "../../statusColors.ts";
 import ProgressSidePanel from "../ProgressSidePanel";
-
+import{getReferralEvaluations}from "../../services/nominationService";
 
 interface ReferralData {
   id: number;
@@ -62,58 +60,16 @@ interface ReferralData {
   BusinessJuryStatus: string;
 }
 
-interface ReferralView {
-  NominationID: number;
-  ReferralUserID:number;
-  nominee: string | null;
-  entity: string | null;
-  contest: string | null;
-  date: string;
-  status: "Pending" | "Approved" | "Rejected";
-  AwardCategory: string;
-  NominatedBy: string;
-  ManagerEmailID: string;
-  
-   Comments: string | null;
-  //"Referrals ID": { Email: string }[];
-  "Referrals ID": {
-  Email: string;
-  TenantName: string;
-  DeptName: string;
-  ReferralName:string;
-}[];
-  "Supporting Documents": {
-    OriginalFileName: string;
-    FileType: string;
-    FileNameGUID: string;
-    FilePath: string;
-  }[];
-   "ApprovalStatus": {
-  Status: string;
-  ApprovalType: string;
-  }[];
-  Descriptions: string;
-  ReferralID: number;
-  ManagerName: string;
-  BusinessJuryStatus: string;
-}
 // interface ReferralView extends ReferralData {}
-const apiUrl = import.meta.env.VITE_API_URL;
+// const apiUrl = import.meta.env.VITE_API_URL;
 
 const ReferralTable: React.FC = () => {
-  const [isPanelOpen, setIsPanelOpen] = useState(false);
-  const [selectedNomination, _setSelectedNomination] =
-    useState<ReferralView | null>(null);
-
   const [data, setData] = useState<ReferralData[]>([]);
   const [_resvalue, _setApproveData] = useState<ReferralData[]>([]);
   const [loading, setLoading] = useState(true);
   const [globalFilter, setGlobalFilter] = useState("");
   const { userId, authToken } = useAuth();
-  const [_successMessage, setSuccessMessage] = useState("");
-  const [reason, setReason] = useState("");
   const navigate = useNavigate();
-  const [_toastType, setToastType] = useState<"success" | "error">("success");
   const [_flagReason, _setFlagReason] = useState<Record<number, string>>({});
   const [expandedRow, setExpandedRow] = useState<number | null>(null);
   const tableWrapperRef = useRef<HTMLDivElement | null>(null);
@@ -126,10 +82,10 @@ const ReferralTable: React.FC = () => {
       try {
         if (!authToken) throw new Error("No auth token found");
 
-        const res = await axios.get(`${apiUrl}/api/referralvaluations/${userId}`, {
-          headers: { Authorization: `Bearer ${authToken}` },
-        });
-       
+        // const res = await axios.get(`${apiUrl}/api/referralvaluations/${userId}`, {
+        //   headers: { Authorization: `Bearer ${authToken}` },
+        // });
+        const res = await getReferralEvaluations(Number(userId));
          //setTotalCount(res.data[0]?.TotalCount || 0);
         setTotalCount(res.data.length);
          setData(res.data);
@@ -158,92 +114,6 @@ const ReferralTable: React.FC = () => {
       return () => document.removeEventListener("click", handleClickOutside);
     }, []);
   
-  const handleApprove = async (nominationID: number) => {
-     if (!selectedNomination) return;
-    try {
-      await axios.put(
-        `${apiUrl}/api/referralvaluations/${selectedNomination.ReferralID}`,
-        {
-          
-            referralUserID: selectedNomination.ReferralUserID,
-            nominationID: nominationID,
-            isReferralApproved: true,       // REJECT
-            approvalComments: reason,
-            active: true,
-            submittedBy: userId
-        },
-        {
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${authToken}`,
-          },
-        }
-      );
-
-      setData((prev) =>
-        prev.map((item) =>
-          item.NominationID === nominationID
-            ? { ...item, Status: "Approved" }
-            : item
-        )
-      );
-
-      setToastType("success");
-      setSuccessMessage("Nomination Approved Successfully!");
-     // setTimeout(() => setSuccessMessage(""), 3000);
-       setTimeout(() => {
-      setSuccessMessage("");
-      navigate("/referral-approval"); // redirect after showing toast
-    }, 2000); // show toast for 1.5s
-      setIsPanelOpen(false);
-    } catch (error) {
-      console.error("Approve Error:", error);
-      alert("Approval failed");
-    }
-  };
-
-  const handleReject = async (nominationID: number) => {
-     if (!selectedNomination) return;
-    try {
-      await axios.put(
-        `${apiUrl}/api/referralvaluations/${selectedNomination.ReferralID}`,
-        {
-          referralUserID: selectedNomination.ReferralUserID,
-            nominationID: nominationID,
-            isReferralApproved: false,       // REJECT
-            approvalComments: reason,
-            active: true,
-            submittedBy: userId
-        },
-        {
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${authToken}`,
-          },
-        }
-      );
-
-      setData((prev) =>
-        prev.map((item) =>
-          item.NominationID === nominationID
-            ? { ...item, Status: "Rejected" }
-            : item
-        )
-      );
-
-      setToastType("error");
-      setSuccessMessage("Nomination Rejected Successfully!");
-       setTimeout(() => {
-      setSuccessMessage("");
-      navigate("/referral-approval"); // redirect after showing toast
-    }, 1500); // show toast for 1.5s
-     // setTimeout(() => setSuccessMessage(""), 3000);
-      setIsPanelOpen(false);
-    } catch (error) {
-      console.error("Reject Error:", error);
-      alert("Reject failed");
-    }
-  };
 
   const columns = useMemo<ColumnDef<ReferralData>[]>(() => {
     return [
@@ -427,20 +297,6 @@ const ReferralTable: React.FC = () => {
         </div>
        </div>
       </div>
-      {/* Final Correct Component */}
-      <ReferralPanel
-        isOpen={isPanelOpen}
-        onClose={() => setIsPanelOpen(false)}
-        nomination={selectedNomination}
-        onApprove={() =>
-          selectedNomination && handleApprove(selectedNomination.NominationID)
-        }
-        onReject={() =>
-          selectedNomination && handleReject(selectedNomination.NominationID)
-        }
-         reason={reason}
-        setReason={setReason}
-      />
       <ProgressSidePanel
           isOpen={isLevelPanelOpen}
           data={selectedLevelRow}

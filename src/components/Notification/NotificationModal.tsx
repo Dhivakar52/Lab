@@ -59,7 +59,6 @@ const NotificationModal: React.FC<NotificationModalProps> = ({
 
   const handleSingleRead = async (notificationID: number) => {
     try {
-      console.log("Marking notification as read:", notificationID);
       
       await axios.put(
         `${apiUrl}/api/notificationread/notification`,
@@ -124,11 +123,9 @@ const NotificationModal: React.FC<NotificationModalProps> = ({
     const isSeekingRequest = notification.Type === "Seeking Request";
     
     if (isSeekingRequest) {
-      // Use NominationID first, fallback to ReferenceIdPK
       const postId = notification.NominationID || notification.ReferenceIdPK;
       
       if (postId) {
-        console.log("✅ SEEKING REQUEST - Navigating to post ID:", postId);
         sessionStorage.setItem('scrollToPost', postId.toString());
         sessionStorage.setItem('scrollToPostSource', 'notification');
         onClose();
