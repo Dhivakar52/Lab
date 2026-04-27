@@ -1,6 +1,5 @@
 import * as Label from "@radix-ui/react-label";
 import { useEffect, useState,useRef } from "react";
-import axios from "axios";
 import type { FormState } from "../../dataTypes/nomination";
 import { useAuth } from "../ContextAPI/AuthContext";
 import Select from "react-select";
@@ -8,8 +7,8 @@ import { useNavigate } from "react-router-dom";
 import { useParams } from "react-router-dom";
 import * as Dialog from "@radix-ui/react-dialog";
 import { X, User, Building2, Mail,Phone } from "lucide-react";
-
-
+import {getNomination,getNominationsByUser,uploadFiles,getUserById,getAwardCategories,getUsersByName,
+  downloadFile,saveNomination,updateNomination} from "../../services/nominationService"
 
 interface UploadedDocument {
   originalFileName: string;
@@ -19,8 +18,7 @@ interface UploadedDocument {
   fileUrl: string;
 }
 
-
-const apiUrl = import.meta.env.VITE_API_URL;
+// const apiUrl = import.meta.env.VITE_API_URL;
 
 export default function AddNomination() {
   // const [referrals, setReferrals] = useState([
@@ -96,14 +94,15 @@ useEffect(() => {
 
   const fetchNominationById = async () => {
     try {
-      const res = await axios.get(
-        `${apiUrl}/api/nominations/${nominationId}`,
-        {
-          headers: {
-            Authorization: `Bearer ${authToken}`,
-          },
-        }
-      );
+      // const res = await axios.get(
+      //   `${apiUrl}/api/nominations/${nominationId}`,
+      //   {
+      //     headers: {
+      //       Authorization: `Bearer ${authToken}`,
+      //     },
+      //   }
+      // );
+      const res = await getNomination(Number(nominationId));
       const data = res.data[0];
       console.log("sucess",res.data)
 
@@ -170,10 +169,11 @@ const allDocuments = [
 useEffect(() => {
   const fetchSelfNominationsCount = async () => {
     try {
-      const res = await axios.get(`${apiUrl}/api/nominationsbyuser`, {
-        params: { userID: userId, NominatedBy: 0 },
-        headers: { Authorization: `Bearer ${authToken}` },
-      });
+      const res = await getNominationsByUser(Number(userId));
+      // const res = await axios.get(`${apiUrl}/api/nominationsbyuser`, {
+      //   params: { userID: userId, NominatedBy: 0 },
+      //   headers: { Authorization: `Bearer ${authToken}` },
+      // });
       setTotalSelfNominations(res.data[0]?.TotalRowCount || 0);
       setDoj(res.data[0]?.DateOfJoining || "");
       setSrmExperience(res.data[0]?.SRMExperience || "");
@@ -234,46 +234,46 @@ const uploadFilesToServer = async (files: File[]) => {
   files.forEach((file) => {
     formData.append("files", file);
   });
-
-  const res = await axios.post(`${apiUrl}/api/upload`, formData, {
-    headers: {
-      "Content-Type": "multipart/form-data",
-      Authorization: `Bearer ${authToken}`,
-    },
-  });
-
-  return res.data; // backend returns uploaded file info
+  const res = await uploadFiles(files);
+  // const res = await axios.post(`${apiUrl}/api/upload`, formData, {
+  //   headers: {
+  //     "Content-Type": "multipart/form-data",
+  //     Authorization: `Bearer ${authToken}`,
+  //   },
+  // });
+  return res.data;
 };
-
 
 useEffect(() => {
   const fetchUser = async () => {
     try {
-      const res2 = await axios.get(
-        `${apiUrl}/api/users?userId=${userId}`,
-        {
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${authToken}`,
-          },
-        }
-      );
-     const user = res2.data[0]; 
-const res3 = await axios.get(`${apiUrl}/api/awardCategory`, {
-  headers: {
-    "Content-Type": "application/json",
-    Authorization: `Bearer ${authToken}`,
-  },
-});
+      // const res2 = await axios.get(
+      //   `${apiUrl}/api/users?userId=${userId}`,
+      //   {
+      //     headers: {
+      //       "Content-Type": "application/json",
+      //       Authorization: `Bearer ${authToken}`,
+      //     },
+      //   }
+      // );
+    const res2 = await getUserById(Number(userId));
+    const user = res2.data[0]; 
+    const res3 = await getAwardCategories();
+//     const res3 = await axios.get(`${apiUrl}/api/awardCategory`, {
+//       headers: {
+//         "Content-Type": "application/json",
+//         Authorization: `Bearer ${authToken}`,
+//       },
+// });
 
 setContest(res3.data); 
-
-const res4 = await axios.get(`${apiUrl}/api/usersbyname?pageNumber=1&pageSize=100`, {
-  headers: {
-    "Content-Type": "application/json",
-    Authorization: `Bearer ${authToken}`,
-  },
-});
+const res4 = await getUsersByName();
+// const res4 = await axios.get(`${apiUrl}/api/usersbyname?pageNumber=1&pageSize=100`, {
+//   headers: {
+//     "Content-Type": "application/json",
+//     Authorization: `Bearer ${authToken}`,
+//   },
+// });
 setUsers(res4.data.Users || []); 
  setForm((prev) => ({
         ...prev,
@@ -425,28 +425,31 @@ const referralPayload = referrals.map(ref => ({
     },
     referralIDs: referralPayload,
     documents: documentsPayload,
-    
-    
   };
 
- 
   try {
     
-     const url = isEditMode
-      ? `${apiUrl}/api/nominations/${nominationId}`
-      : `${apiUrl}/api/nomination`;
+    // const url = isEditMode
+    //   ? `${apiUrl}/api/nominations/${nominationId}`
+    //   : `${apiUrl}/api/nomination`;
 
-    const method = isEditMode ? "put" : "post";
+    // const method = isEditMode ? "put" : "post";
+    let res;
 
-    const res = await axios({
-      method,
-      url,
-      data: payload,
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${authToken}`,
-      },
-    });
+    if (isEditMode) {
+      res = await updateNomination(Number(nominationId), payload);
+    } else {
+      res = await saveNomination(payload);
+    }
+    // const res = await axios({
+    //   method,
+    //   url,
+    //   data: payload,
+    //   headers: {
+    //     "Content-Type": "application/json",
+    //     Authorization: `Bearer ${authToken}`,
+    //   },
+    // });
     const returnVal = res.data?.nominationID ?? res.data;
     
     if (returnVal === -100) {
@@ -643,13 +646,14 @@ const referralPayload = referrals.map(ref => ({
 
                       if (doc.source === "api") {
                         try {
-                          const response = await axios.get(
-                            `${apiUrl}/api/download?fileName=${doc.fileNameGUID}`,
-                            {
-                              responseType: "blob",
-                              headers: { Authorization: `Bearer ${authToken}` },
-                            }
-                          );
+                          const response = await downloadFile(doc.fileNameGUID);
+                          // const response = await axios.get(
+                          //   `${apiUrl}/api/download?fileName=${doc.fileNameGUID}`,
+                          //   {
+                          //     responseType: "blob",
+                          //     headers: { Authorization: `Bearer ${authToken}` },
+                          //   }
+                          // );
                         //  const blobUrl = URL.createObjectURL(response.data);
                           if (["jpg", "jpeg", "png", "gif"].includes(ext)) {
                             openPreview(response.data, ext);

@@ -28,13 +28,9 @@ import { ROLE_PAGES } from './dataTypes/roles';
 import { AuthProvider } from './components/ContextAPI/AuthContext.tsx';
 import ForgotPassword from './pages/auth/Login/ForgotPassword.tsx';
 import ReferralComponent from './components/ReferralApproval/ReferralComponent.tsx';
-import ReferralDetailView from './components/ReferralApproval/ReferralDetailView.tsx';
 import NominationDetailView from './components/NominationContent/NominationDetailsView.tsx';
-
 import VerifyOtp from './pages/auth/Login/VerifyOtp';
 import ResetPassword from './pages/auth/Login/ResetPassword';
-import NominationFullDetails from './components/NominationFullDetails.tsx';
-import ApprovalDetailView from './components/ManagerPage/ApprovalDetailView.tsx';
 import OtherNomination from './components/NominationContent/OtherNomination.tsx';
 //import PresidentLevelDetail from './components/PresidentLevel/PresidentLevelDetail.tsx';
 import BusinessJuryDetail from './components/Jury/BusinessJuryDetail.tsx';
@@ -233,34 +229,6 @@ const App: React.FC = () => {
               </ProtectedRoute>
             } 
         />
-
-        {/* ✔️ Referral Detail route OUTSIDE layout */}
-        <Route
-          path="/referral-detail"
-          element={
-            <ProtectedRoute userRole={userRole} allowedRoles={getAllowedRoles('Referral Approval')}>
-              <ReferralDetailView />
-            </ProtectedRoute>
-          }
-        />
-         <Route
-          path="/approve-detail"
-          element={
-            <ProtectedRoute userRole={userRole} allowedRoles={getAllowedRoles('Manager Page')}>
-              <ApprovalDetailView />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/nomination-details/:nominationID"
-          element={
-            <ProtectedRoute 
-                userRole={userRole}
-                allowedRoles={getAllowedRoles('View Nomination Details')}            >
-              <NominationFullDetails/>
-            </ProtectedRoute>
-          }
-          />
         <Route
           path="/nomination-detail/:nominationId"
           element={

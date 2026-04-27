@@ -1,5 +1,4 @@
 import React, { useRef, useState, useEffect, useMemo } from "react";
-import axios from "axios";
 import {
   useReactTable,
   getCoreRowModel,
@@ -19,6 +18,7 @@ import Pagination from "../Pagination";
 import StatusFlow from "../CommonStatusFlow"; 
 import { Flag } from "lucide-react";
 import { ChevronDown, ChevronUp, Menu } from "lucide-react";
+import{getPresidentEvaluations}from "../../services/nominationService";
 
 export interface PresidentLevelNominee {
   id: number;
@@ -36,7 +36,7 @@ type ExpandedRow = {
   id: number;
   type: "flag" | "status";
 } | null;
-const apiUrl = import.meta.env.VITE_API_URL;
+// const apiUrl = import.meta.env.VITE_API_URL;
 
 const PresidentLevel: React.FC = () => {
   const { authToken } = useAuth();
@@ -59,12 +59,13 @@ const PresidentLevel: React.FC = () => {
       try {
         if (!authToken) return;
 
-        const res = await axios.get(
-          `${apiUrl}/api/presidentevaluation`,
-          {
-            headers: { Authorization: `Bearer ${authToken}` },
-          }
-        );
+        // const res = await axios.get(
+        //   `${apiUrl}/api/presidentevaluation`,
+        //   {
+        //     headers: { Authorization: `Bearer ${authToken}` },
+        //   }
+        // );
+        const res = await getPresidentEvaluations();
         //setTotalCount(res.data[0]?.TotalCount || 0);
         setTotalCount(res.data.length);
         setData(res.data);

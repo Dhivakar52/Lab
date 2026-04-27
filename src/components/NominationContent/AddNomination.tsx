@@ -7,6 +7,7 @@ import { useAuth } from "../ContextAPI/AuthContext";
 import type { AddNominationState } from "../../dataTypes/nomination";
 import Select from "react-select";
 import { useParams,useNavigate } from "react-router-dom";
+import {searchUsers} from "../../services/nominationService";
 
 // interface OptionType {
 //   value: number;
@@ -123,15 +124,16 @@ useEffect(() => {
       }
 
       try {
-        const response = await axios.get(
-        `${apiUrl}/api/users?searchText=${searchText}`,
-          {
-            headers: {
-              "Content-Type": "application/json",
-              Authorization: `Bearer ${authToken}`,
-            },
-          }
-        );
+        const response = await searchUsers(searchText);
+        // const response = await axios.get(
+        // `${apiUrl}/api/users?searchText=${searchText}`,
+        //   {
+        //     headers: {
+        //       "Content-Type": "application/json",
+        //       Authorization: `Bearer ${authToken}`,
+        //     },
+        //   }
+        // );
     console.log("Search", response.data);
        const filteredResults = (response.data || []).filter(
           (user: any) => Number(user.UserID) !== Number(userId)

@@ -1,5 +1,4 @@
 import React, { useRef, useEffect, useMemo, useState } from "react";
-import axios from "axios";
 import {
   useReactTable,
   getCoreRowModel,
@@ -11,7 +10,6 @@ import {
 import type { ColumnDef } from "@tanstack/react-table";
 import { useAuth } from "../ContextAPI/AuthContext";
 import { Menu } from "lucide-react";
-import ApprovalPanel from "./ApprovalPanel";
 import { ColorBadge } from "../TenantBadges";
 import { useNavigate } from "react-router-dom";
 import Pagination from "../Pagination";
@@ -20,7 +18,7 @@ import { Flag } from "lucide-react";
 import { ChevronDown, ChevronUp } from "lucide-react";
 import { levelColors, levelTextColors } from "../../statusColors.ts";
 import ProgressSidePanel from "../ProgressSidePanel";
-
+import{getManagerEvaluations}from "../../services/nominationService";
 
 interface ApprovalData {
   id: number;
@@ -65,54 +63,17 @@ interface ApprovalData {
   }[];
 }
 
-interface ApprovalView {
-  NominationID: number;
-  nominee: string | null;
-  entity: string | null;
-  contest: string | null;
-  date: string;
-  status: "Pending" | "Approved" | "Rejected";
-  AwardCategory: string;
-  NominatedBy: string;
-  ManagerEmailID: string;
-  ManagerName: string;
-  "Referrals ID": {
-    Email: string;
-    TenantName: string;
-    DeptName: string;
-    ReferralName: string;
-  }[];
-  "Supporting Documents": {
-    OriginalFileName: string;
-    FileType: string;
-    FileNameGUID: string;
-    FilePath: string;
-  }[];
-  Descriptions: string;
-  ApprovalComments: string;
-  Department: string;
-  BusinessJuryStatus: string;
-   "ApprovalStatus": {
-  Status: string;
-  ApprovalType: string;
-  }[];
-}
 type ExpandedRow = {
   id: number;
   type: "flag" | "status";
 } | null;
-const apiUrl = import.meta.env.VITE_API_URL;
+// const apiUrl = import.meta.env.VITE_API_URL;
 
 const ApprovalTable: React.FC = () => {
-  const [isPanelOpen, setIsPanelOpen] = useState(false);
-  const [selectedNomination, _setSelectedNomination] = useState<ApprovalView | null>(null);
   const [data, setData] = useState<ApprovalData[]>([]);
   const [loading, setLoading] = useState(true);
   const [globalFilter, setGlobalFilter] = useState("");
   const { userId, authToken } = useAuth();
-  const [_successMessage, setSuccessMessage] = useState("");
-  const [reason, setReason] = useState("");
-  const [_toastType, setToastType] = useState<"success" | "error">("success");
   const [flagReason, setFlagReason] = useState<Record<number, string>>({});
   const [flagError, setFlagError] = useState<Record<number, string>>({});
   const [_expandedFlagRow, setExpandedFlagRow] = useState<number | null>(null);
@@ -128,10 +89,10 @@ const ApprovalTable: React.FC = () => {
     const fetchApprovals = async () => {
       try {
         if (!authToken) throw new Error("No auth token found");
-
-        const res = await axios.get(`${apiUrl}/api/managerevaluation?ManagerID=${userId}`, {
-          headers: { Authorization: `Bearer ${authToken}` },
-        });
+        const res = await getManagerEvaluations(Number(userId));
+        // const res = await axios.get(`${apiUrl}/api/managerevaluation?ManagerID=${userId}`, {
+        //   headers: { Authorization: `Bearer ${authToken}` },
+        // });
         //setTotalCount(res.data[0]?.TotalCount || 0);
         setTotalCount(res.data.length);
          setData(res.data);
@@ -160,75 +121,6 @@ const ApprovalTable: React.FC = () => {
      return () => document.removeEventListener("click", handleClickOutside);
    }, []);
 
-  const handleApprove = async (nominationID: number) => {
-    try {
-      await axios.put(
-        `${apiUrl}/api/managerevaluation/${nominationID}`,
-        {
-          nominationID,
-          isManagerApproved: true,
-          approvalComments: reason,
-          submittedBy: userId,
-          active: true,
-        },
-        {
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${authToken}`,
-          },
-        }
-      );
-
-      setData((prev) =>
-        prev.map((item) =>
-          item.NominationID === nominationID ? { ...item, Status: "Approved" } : item
-        )
-      );
-
-      setToastType("success");
-      setSuccessMessage("Nomination Approved Successfully!");
-      setTimeout(() => setSuccessMessage(""), 3000);
-      setIsPanelOpen(false);
-    } catch (error) {
-      console.error("Approve Error:", error);
-      alert("Approval failed");
-    }
-  };
-
-  const handleReject = async (nominationID: number) => {
-    try {
-      await axios.put(
-        `${apiUrl}/api/managerevaluation/${nominationID}`,
-        {
-          nominationID,
-          isManagerApproved: false,
-          approvalComments: reason,
-          submittedBy: userId,
-          active: true,
-        },
-        {
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${authToken}`,
-          },
-        }
-      );
-
-      setData((prev) =>
-        prev.map((item) =>
-          item.NominationID === nominationID ? { ...item, Status: "Rejected" } : item
-        )
-      );
-
-      setToastType("error");
-      setSuccessMessage("Nomination Rejected Successfully!");
-      setTimeout(() => setSuccessMessage(""), 3000);
-      setIsPanelOpen(false);
-    } catch (error) {
-      console.error("Reject Error:", error);
-      alert("Reject failed");
-    }
-  };
 
   const columns = useMemo<ColumnDef<ApprovalData>[]>(() => [
     // { accessorKey: "NominationID", header: "Nomination ID" },
@@ -427,20 +319,20 @@ const ApprovalTable: React.FC = () => {
                   [nominationID]: ""
                 }));
                   try {
-                    await axios.put(
-                      `${apiUrl}/api/nominationflag/${nominationID}`,
-                      {
-                        isFlag: isFlag === 1,
-                        flagReason: isFlag === 1 ? reason : "",
-                        updatedBy: userId,
-                      },
-                      {
-                        headers: {
-                          "Content-Type": "application/json",
-                          Authorization: `Bearer ${authToken}`,
-                        },
-                      }
-                    );
+                    // await axios.put(
+                    //   `${apiUrl}/api/nominationflag/${nominationID}`,
+                    //   {
+                    //     isFlag: isFlag === 1,
+                    //     flagReason: isFlag === 1 ? reason : "",
+                    //     updatedBy: userId,
+                    //   },
+                    //   {
+                    //     headers: {
+                    //       "Content-Type": "application/json",
+                    //       Authorization: `Bearer ${authToken}`,
+                    //     },
+                    //   }
+                    // );
                     setData((prev) =>
                       prev.map((item: any) =>
                         item.NominationID === nominationID
@@ -551,21 +443,6 @@ const ApprovalTable: React.FC = () => {
           </div>
         </div>
       </div>
-
-      {/* APPROVAL POPUP PANEL */}
-      <ApprovalPanel
-        isOpen={isPanelOpen}
-        onClose={() => setIsPanelOpen(false)}
-        nomination={selectedNomination}
-        reason={reason}
-        setReason={setReason}
-        onApprove={() =>
-          selectedNomination && handleApprove(selectedNomination.NominationID)
-        }
-        onReject={() =>
-          selectedNomination && handleReject(selectedNomination.NominationID)
-        }
-      />
       <ProgressSidePanel
           isOpen={isLevelPanelOpen}
           data={selectedLevelRow}
