@@ -2,17 +2,17 @@ import React from 'react';
 
 import {
   Home,
-  Bell,
-  User,
-  FileText,
-  Settings,
-  CircleCheckBig,
-  Gavel,
-  Users,
-  ClipboardList,
+  // Bell,
+  // User,
+  // FileText,
+  // Settings,
+  // CircleCheckBig,
+  // Gavel,
+  // Users,
+  // ClipboardList,
   ChevronLeft,
   LogOut,X,
-  TrophyIcon
+  // TrophyIcon
 } from "lucide-react";
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import logo from '../assets/images/layout_logo.png';
@@ -75,11 +75,11 @@ const allowedPages = userRole ? ROLE_PAGES[userRole] : [];
    navigate('/');
 };
 
-  const activeStyle = {
-    background: 'linear-gradient(90deg, rgba(8, 128, 94, 1) 16%, rgba(24, 97, 174, 1) 100%)',
-    borderLeft: '4px solid white',
-    color: 'white',
-  };
+  // const activeStyle = {
+  //   background: 'linear-gradient(90deg, rgba(8, 128, 94, 1) 16%, rgba(24, 97, 174, 1) 100%)',
+  //   borderLeft: '4px solid white',
+  //   color: 'white',
+  // };
 
 //   const filteredNavItems = navigationItems.filter(item =>
 //   allowedPages.some(page => page.trim() === item.label.trim())

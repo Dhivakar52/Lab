@@ -289,8 +289,8 @@ export default function Login({ setUserRole }: LoginProps) {
                 }}
                 className={`flex-1 flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg transition-all duration-200 ${
                   loginMethod === "password"
-                    ? "bg-white text-green-700 shadow-sm font-medium ring-1 ring-green-100"
-                    : "text-gray-600 hover:text-green-600"
+                    ? "bg-white textColor shadow-sm font-medium ring-1 ring-green-100"
+                    : "text-gray-600 "
                 }`}
               >
                 <Lock className="w-4 h-4" />
@@ -303,8 +303,8 @@ export default function Login({ setUserRole }: LoginProps) {
                 }}
                 className={`flex-1 flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg transition-all duration-200 ${
                   loginMethod === "otp"
-                    ? "bg-white text-green-700 shadow-sm font-medium ring-1 ring-green-100"
-                    : "text-gray-600 hover:text-green-600"
+                    ? "bg-white textColor shadow-sm font-medium ring-1 ring-green-100"
+                    : "text-gray-600 "
                 }`}
               >
                 <MessageSquareLock  className="w-4 h-4" />
@@ -351,14 +351,14 @@ export default function Login({ setUserRole }: LoginProps) {
                       setLoginMethod("otp");
                       setOtpStep("enterEmail");
                     }}
-                    className="text-green-700 hover:text-green-800 font-medium transition-colors flex items-center gap-1"
+                    className="textColor font-medium transition-colors flex items-center gap-1"
                   >
                     <Fingerprint className="w-4 h-4" />
                     Login with OTP
                   </button>
                   <button
                     onClick={handleForgotPassword}
-                    className="text-green-700 hover:text-green-800 font-medium transition-colors"
+                    className="textColor font-medium transition-colors"
                   >
                     Forgot Password?
                   </button>
@@ -368,7 +368,7 @@ export default function Login({ setUserRole }: LoginProps) {
                 <button
                   onClick={handleLoginWithPassword}
                   disabled={isLoading}
-                  className="w-full bg-gradient-to-r from-green-600 to-green-700 hover:from-green-700 hover:to-green-800 text-white py-3 rounded-xl font-medium transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 shadow-md"
+                  className="w-full  themeColor text-white py-3 rounded-xl font-medium transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 shadow-md"
                 >
                   {isLoading ? (
                     <>
@@ -402,7 +402,7 @@ export default function Login({ setUserRole }: LoginProps) {
                     <button
                       onClick={handleGenerateOtp}
                       disabled={isLoading}
-                      className="w-full bg-gradient-to-r from-green-600 to-green-700 hover:from-green-700 hover:to-green-800 text-white py-3 rounded-xl font-medium transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 shadow-md"
+                      className="w-full  themeColor  py-3 rounded-xl font-medium transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 shadow-md"
                     >
                       {isLoading ? (
                         <>
@@ -464,7 +464,7 @@ export default function Login({ setUserRole }: LoginProps) {
                     <div className="flex gap-2">
                       <button
                         onClick={handleGenerateOtp}
-                        className="flex-1 text-green-700 hover:text-green-800 text-sm font-medium transition-colors"
+                        className="flex-1 textColor hover:text-green-800 text-sm font-medium transition-colors"
                       >
                         Resend OTP
                       </button>

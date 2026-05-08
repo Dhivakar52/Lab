@@ -1,9 +1,9 @@
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import { Bell, Menu } from "lucide-react";
 
-import { useAuth } from "./ContextAPI/AuthContext";
+// import { useAuth } from "./ContextAPI/AuthContext";
 import { useLocation } from "react-router-dom";
-import axios from "axios";
+// import axios from "axios";
  
 // Header Component
 interface HeaderProps {
@@ -16,80 +16,30 @@ interface NotificationCount {
   UserID?: number;
 }
  
-const apiUrl = import.meta.env.VITE_API_URL;
+// const apiUrl = import.meta.env.VITE_API_URL;
  
 const Header: React.FC<HeaderProps> = ({ onMobileMenuToggle }) => {
-  const [isNotificationOpen, setIsNotificationOpen] = useState(false);
-  const [notificationCount, setNotificationCount] =
+  // const [isNotificationOpen, setIsNotificationOpen] = useState(false);
+  const [notificationCount, _setNotificationCount] =
     useState<NotificationCount | null>(null);
-  const [headerNotification, setHeaderNotification] = useState<any[]>([]);
-  const { userId } = useAuth();
+  // const [headerNotification, setHeaderNotification] = useState<any[]>([]);
+  // const { userId } = useAuth();
  
   // const username = localStorage.getItem("username");
   // const email = localStorage.getItem("email");
   const location = useLocation();
-const [userDetail, setUserDetail] = useState<any>(null);
+const [userDetail, _setUserDetail] = useState<any>(null);
  
 const username = userDetail?.[0]?.UserName || localStorage.getItem("username");
 const email = userDetail?.[0]?.Email || localStorage.getItem("email");
   // ----------------------------
   // FETCH NOTIFICATIONS
-  // ----------------------------
-  const fetchUserDetail = async () => {
-  try {
-    const token = localStorage.getItem("authToken");
- 
-    const res = await axios.get(
-      `${apiUrl}/api/users?userId=${userId}`,
-      {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      }
-    );
- 
-    setUserDetail(res.data);
-  } catch (err) {
-    console.error("❌ Error fetching user detail:", err);
-  }
-};
-  const fetchNotifications = async () => {
-    try {
-      const token = localStorage.getItem("authToken");
-      if (!token) throw new Error("No auth token found");
- 
-      const res = await axios.get(
-        `${apiUrl}/api/notificationcount/${userId}`,
-        {
-          headers: { Authorization: `Bearer ${token}` },
-        }
-      );
- 
-      setNotificationCount(res.data[0]);
- 
-      // Notification List API
-      const notificationList = await axios.get(
-        `${apiUrl}/api/notificationlog/${userId}`,
-        {
-          headers: { Authorization: `Bearer ${token}` },
-        }
-      );
- 
-      setHeaderNotification(notificationList.data);
-    } catch (err) {
-      console.error("❌ Error fetching notifications:", err);
-    }
-  };
+
 //  useEffect(() => {
 //    fetchNotifications();
 //   }, []);
   // Run only when userId is available (NO infinite loop)
-useEffect(() => {
-  if (userId) {
-    fetchNotifications();
-    fetchUserDetail();
-  }
-}, [userId]);
+
 const headerTitleMap: Record<string, string> = {
   // "my-nominations": "My Nomination Details",
   // "other-nominations": "Other Nomination Details",
@@ -183,7 +133,7 @@ const headerTitleMap: Record<string, string> = {
         {/* Notification Icon */}
         <div
           className="relative cursor-pointer"
-          onClick={() => setIsNotificationOpen(true)}
+          
         >
          
             <Bell size={20} className="text-gray-600" />

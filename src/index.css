@@ -8,11 +8,15 @@
   font-family: 'Roboto', sans-serif !important;
 }
 :root{
---dashboard-theme-color:linear-gradient(90deg, rgb(8, 128, 94) 16%, rgb(24, 97, 174) 100%);
+/* --dashboard-theme-color:linear-gradient(90deg, rgb(8, 128, 94) 16%, rgb(24, 97, 174) 100%); */
+--dashboard-theme-color:#87CEEB;
 }
 .themeColor{
   background: var(--dashboard-theme-color);
   color: white;
+}
+.textColor{
+  color:var(--dashboard-theme-color);
 }
 
 .nominate-form,

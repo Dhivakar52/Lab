@@ -67,7 +67,7 @@ const Pagination: React.FC<PaginationProps> = ({ table, totalCount }) => {
             onClick={() => table.setPageIndex(p - 1)}
             className={`px-3 py-1 mx-1 rounded ${
               p === currentPage
-                ? "bg-blue-500 text-white"
+                ? "themeColor"
                 : "bg-gray-200"
             }`}
           >

@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import  { useState } from "react";
 import {
   useReactTable,
   getCoreRowModel,
@@ -58,10 +58,10 @@ const HomeComponent = () => {
               <div className="overflow-x-auto bg-white shadow-md rounded-lg p-6">
                        <DataTable table={table} columns={columns} />
    
-           {/* <Pagination
+           <Pagination
              table={table}
              totalCount={data.length}
-           /> */}
+           />
          </div>
        </div>
   )
