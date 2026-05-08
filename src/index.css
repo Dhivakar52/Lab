@@ -12,6 +12,7 @@
 }
 .themeColor{
   background: var(--dashboard-theme-color);
+  color: white;
 }
 
 .nominate-form,

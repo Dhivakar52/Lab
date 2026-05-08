@@ -1,3 +1,4 @@
+
 import React, { useState } from "react";
 import {
   useReactTable,
@@ -9,13 +10,14 @@ import type { ColumnDef } from "@tanstack/react-table";
 
 import { DataTable } from "../../common/DataTable";
 import Pagination from "../../common/Pagination";
+
 type User = {
   id: number;
   name: string;
   email: string;
 };
 
-const HomeComponent = () => {
+const Dashboard = () => {
 
   const data: User[] = Array.from({ length: 20 }, (_, i) => ({
     id: i + 1,
@@ -27,8 +29,6 @@ const HomeComponent = () => {
     { accessorKey: "id", header: "ID" },
     { accessorKey: "name", header: "Name" },
     { accessorKey: "email", header: "Email" },
-
-    
   ];
 
   const [pagination, setPagination] = useState({
@@ -46,25 +46,18 @@ const HomeComponent = () => {
     getPaginationRowModel: getPaginationRowModel(),
   });
 
-
-
-
-
-
-
-
   return (
-   <div className="p-6">
-              <div className="overflow-x-auto bg-white shadow-md rounded-lg p-6">
-                       <DataTable table={table} columns={columns} />
-   
-           {/* <Pagination
-             table={table}
-             totalCount={data.length}
-           /> */}
-         </div>
-       </div>
-  )
-}
+    <div className="p-6">
+           <div className="overflow-x-auto bg-white shadow-md rounded-lg p-6">
+                    <DataTable table={table} columns={columns} />
 
-export default HomeComponent
+        {/* <Pagination
+          table={table}
+          totalCount={data.length}
+        /> */}
+      </div>
+    </div>
+  );
+};
+
+export default Dashboard;

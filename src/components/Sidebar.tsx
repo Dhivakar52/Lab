@@ -35,21 +35,25 @@ interface NavigationItem {
 }
 
 const navigationItems: NavigationItem[] = [
+  { icon: Home, label: 'Dashboard', path: '/dashboard', pageKey: 'Dashboard' },
+
+
   { icon: Home, label: 'Home', path: '/home', pageKey: 'Home' },
-  { icon: Bell, label: 'Notifications', path: '/notifications', pageKey:'Notifications' },
-  { icon: User, label: 'Self Nominations', path: '/self-nominations',pageKey:'Self Nominations' },
-  { icon: FileText, label: 'My Nominations', path: '/my-nominations',pageKey:'My Nominations' },
-  { icon: ClipboardList, label: 'Referral Approval', path: '/referral-approval',pageKey:'Referral Approval' },
-  { icon: CircleCheckBig, label: 'Approvals', path: '/approvals',pageKey:'Approvals' },
-  { icon: Gavel, label: 'Business Jury', path: '/business-jury' ,pageKey:'Business Jury'},
-  // { icon: Gavel, label: 'Primary Business Jury', path: '/president-unit',pageKey:'President Unit' },
-  { icon: Gavel, label: 'Grand Jury', path: '/president-level',pageKey:'President Level' },
-  { icon: Users, label: 'Leader Board', path: '/leader-board' ,pageKey:'Leader Board'},
-  { icon: TrophyIcon, label: 'Award Management', path: '/award-management',pageKey:'Award Management' },
-  { icon: Settings, label: 'Admin Setting', path: '/admin-setting',pageKey:'Admin Setting' },
+   
+  // { icon: Bell, label: 'Notifications', path: '/notifications', pageKey:'Notifications' },
+  // { icon: User, label: 'Self Nominations', path: '/self-nominations',pageKey:'Self Nominations' },
+  // { icon: FileText, label: 'My Nominations', path: '/my-nominations',pageKey:'My Nominations' },
+  // { icon: ClipboardList, label: 'Referral Approval', path: '/referral-approval',pageKey:'Referral Approval' },
+  // { icon: CircleCheckBig, label: 'Approvals', path: '/approvals',pageKey:'Approvals' },
+  // { icon: Gavel, label: 'Business Jury', path: '/business-jury' ,pageKey:'Business Jury'},
+  // // { icon: Gavel, label: 'Primary Business Jury', path: '/president-unit',pageKey:'President Unit' },
+  // { icon: Gavel, label: 'Grand Jury', path: '/president-level',pageKey:'President Level' },
+  // { icon: Users, label: 'Leader Board', path: '/leader-board' ,pageKey:'Leader Board'},
+  // { icon: TrophyIcon, label: 'Award Management', path: '/award-management',pageKey:'Award Management' },
+  // { icon: Settings, label: 'Admin Setting', path: '/admin-setting',pageKey:'Admin Setting' },
  
-  //{ icon: UserPlus, label: 'Other Nomination', path: '/other-nomination' },
-    { icon: FileText, label: 'Category Wise Nomination', path: '/report', pageKey: 'Category Wise Nomination' }, 
+  // //{ icon: UserPlus, label: 'Other Nomination', path: '/other-nomination' },
+  //   { icon: FileText, label: 'Category Wise Nomination', path: '/report', pageKey: 'Category Wise Nomination' }, 
 ];
 
 
@@ -141,8 +145,13 @@ const filteredNavItems = navigationItems.filter(item =>
                   key={item.label}
                   to={item.path}
                   onClick={onMobileClose}
-                  className={`flex items-center px-4 py-3 rounded-xl cursor-pointer ${isCollapsed && !isMobileOpen ? 'justify-center px-2' : ''}`}
-                  style={isActive ? activeStyle : {}}
+                  // className={`flex items-center px-4 py-3 rounded-xl cursor-pointer  ${isCollapsed && !isMobileOpen ? 'justify-center px-2' : ''}`}
+                  // style={isActive ? activeStyle : {}}
+                  className={`
+  flex items-center px-4 py-3 rounded-xl cursor-pointer
+  ${isCollapsed && !isMobileOpen ? 'justify-center px-2' : ''}
+  ${isActive ? 'themeColor' : ''}
+`}
                 >
                   <item.icon size={20} className="flex-shrink-0" />
                   {(!isCollapsed || isMobileOpen) && <span className="ml-3 text-sm">{item.label}</span>}

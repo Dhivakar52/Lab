@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { Bell, Menu } from "lucide-react";
-import NotificationModal from "./Notification/NotificationModal";
+
 import { useAuth } from "./ContextAPI/AuthContext";
 import { useLocation } from "react-router-dom";
 import axios from "axios";
@@ -116,8 +116,10 @@ const headerTitleMap: Record<string, string> = {
     }
  
     switch (location.pathname) {
-      case "/home":
+      case "/dashboard":
         return "Dashboard";
+         case "/home":
+        return "Home";
       case "/notifications":
         return "Notifications";
       case "/self-nominations":
@@ -201,10 +203,10 @@ const headerTitleMap: Record<string, string> = {
     className="w-9 h-9 sm:w-11 sm:h-11
                rounded-full flex items-center justify-center
                text-base sm:text-lg font-semibold text-white
-               shrink-0"
-    style={{
-      background: "linear-gradient(90deg, rgb(8,128,94) 16%, rgb(24,97,174) 100%)"
-    }}
+               shrink-0 themeColor"
+    // style={{
+    //   background: "linear-gradient(90deg, rgb(8,128,94) 16%, rgb(24,97,174) 100%)"
+    // }}
   >
     {username ? username.trim().charAt(0).toUpperCase() : ""}
   </div>
@@ -220,13 +222,7 @@ const headerTitleMap: Record<string, string> = {
       </div>
  
       {/* Notification Modal */}
-      <NotificationModal
-        isOpen={isNotificationOpen}
-        onClose={() => setIsNotificationOpen(false)}
-        notifications={headerNotification}
-        notificationcount={fetchNotifications} // fix part
-        // notificationcount={fetchNotifications()}
-      />
+     
     </div>
   );
 };

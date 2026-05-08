@@ -4,40 +4,25 @@ import { useLocation } from 'react-router-dom';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import Layout from './layout/Layout';
 import HomePage from './pages/HomePage';
-import NotificationsPage from './pages/NotificationPage';
-import SelfNominationPage from './pages/SelfNominationPage';
 // import NominationPage from './pages/NominationPage';
-import MyNominationPage from './components/NominationContent/NominationTable.tsx';
-import AddNomination from './components/NominationContent/AddNomination';
-import ApprovalComponent from './components/ManagerPage/ApprovalComponent';
-import BusinessJury from './components/Jury/BusinessJury';
-import PresidentLevel from './components/PresidentLevel/PresidentLevel';
-import AdminInner from './components/AdminSetting/AdminInner';
-import AwardCategories from './components/AdminSetting/AwardCategories';
-import EntitiesDepartments from './components/AdminSetting/EntitiesDepartments';
-import JuryEvaluationConfiguration from './components/AdminSetting/JuryEvaluationConfiguration';
-import JuryRoleMapping from './components/AdminSetting/JuryRoleMapping';
-import RoleAccessLevels from './components/AdminSetting/RoleAccessLevels';
-import NominationCycleMaster from './components/AdminSetting/NominationCycleMaster';
-import JuryPanelSetup from './components/AdminSetting/JuryPanelSetup';
-import AwardManagement from './components/Award/AwardManagement';
+
 import Login from './pages/auth/Login/LoginPage';
 import ProtectedRoute from './components/ProtectedRoute';
 import type { UserRole } from './dataTypes/roles';
 import { ROLE_PAGES } from './dataTypes/roles';
 import { AuthProvider } from './components/ContextAPI/AuthContext.tsx';
 import ForgotPassword from './pages/auth/Login/ForgotPassword.tsx';
-import ReferralComponent from './components/ReferralApproval/ReferralComponent.tsx';
-import NominationDetailView from './components/NominationContent/NominationDetailsView.tsx';
+
 import VerifyOtp from './pages/auth/Login/VerifyOtp';
 import ResetPassword from './pages/auth/Login/ResetPassword';
-import OtherNomination from './components/NominationContent/OtherNomination.tsx';
+
 //import PresidentLevelDetail from './components/PresidentLevel/PresidentLevelDetail.tsx';
-import BusinessJuryDetail from './components/Jury/BusinessJuryDetail.tsx';
-import Leader from './components/LeaderBoard/Leader.tsx';
+
 //import BusinessJuryEvaluation from './components/Jury/BusinessJuryEvaluation.tsx';
 
-import Report from './components/Report/Report.tsx';
+
+
+import Dashboard from './components/Dashboard/Dashboard.tsx';
 // -------------------------
 // Main page components
 // -------------------------
@@ -48,21 +33,11 @@ const HomeWithKey = () => {
 
 
 const pageComponents: Record<string, React.ReactNode> = {
+  'Dashboard': <Dashboard />,
   'Home': <HomeWithKey  />,
-  'Notifications': <NotificationsPage />,
-  'Self Nominations': <SelfNominationPage />,
+
   // 'My Nominations': <NominationPage />,
-  'My Nominations': <MyNominationPage />,
-  'Approvals': <ApprovalComponent />,
-  'Business Jury': <BusinessJury />,
-  'President Level': <PresidentLevel />,
-  'Award Management': <AwardManagement />,
-  'Admin Setting': <AdminInner />,
-  'Forgot Password': <ForgotPassword/>,
-  'Referral Approval': <ReferralComponent />,
-  'Other Nomination':<OtherNomination/>,
-  'Leader Board': <Leader/>,
-  'Report': <Report/>
+  
 };
 
 
@@ -71,13 +46,13 @@ const pageComponents: Record<string, React.ReactNode> = {
 // Admin sub-pages
 // -------------------------
 const adminSubPages: Record<string, React.ReactNode> = {
-  'award-categories': <AwardCategories />,
-  'entities-departments': <EntitiesDepartments />,
-  'nomination-cycle': <NominationCycleMaster />,
-  'jury-panel-setup': <JuryPanelSetup />,
-  'jury-evaluation-settings': <JuryEvaluationConfiguration />,
-  'jury-role-mapping': <JuryRoleMapping />,
-  'role-list': <RoleAccessLevels />,
+  // 'award-categories': <AwardCategories />,
+  // 'entities-departments': <EntitiesDepartments />,
+  // 'nomination-cycle': <NominationCycleMaster />,
+  // 'jury-panel-setup': <JuryPanelSetup />,
+  // 'jury-evaluation-settings': <JuryEvaluationConfiguration />,
+  // 'jury-role-mapping': <JuryRoleMapping />,
+  // 'role-list': <RoleAccessLevels />,
   
 };
 
@@ -170,81 +145,12 @@ const App: React.FC = () => {
        ))}
 
        {/* Add Nomination nested route */}
-       <Route
-         path="/my-nominations/add-nomination"
-         element={
-           <ProtectedRoute
-             userRole={userRole}
-             allowedRoles={getAllowedRoles('Add Nomination')}
-           >
-             <AddNomination />
-           </ProtectedRoute>
-         }
-       />
-
+    
  {/* Self Nomination */}
-       <Route
-         path="/self-nominations"
-         element={
-           <ProtectedRoute
-             userRole={userRole}
-             allowedRoles={getAllowedRoles('Self Nomination')}
-           >
-             <SelfNominationPage />
-           </ProtectedRoute>
-         }
-       />
-        <Route
-            path="/self-nominations/:nominationId"
-            element={
-              <ProtectedRoute
-                userRole={userRole}
-                allowedRoles={getAllowedRoles("Self Nomination")}
-              >
-                <SelfNominationPage />
-              </ProtectedRoute>
-            } 
-        />
+       
 
        {/* Add Nomination nested route */}
-       <Route
-         path="/my-nominations/add-nomination"
-         element={
-           <ProtectedRoute
-             userRole={userRole}
-             allowedRoles={getAllowedRoles('Add Nomination')}
-           >
-             <AddNomination />
-           </ProtectedRoute>
-         }
-       />
-       <Route
-            path="/my-nominations/add-nomination/:nominationId"
-            element={
-              <ProtectedRoute
-                userRole={userRole}
-                allowedRoles={getAllowedRoles("Edit Nomination")}
-              >
-                <AddNomination />
-              </ProtectedRoute>
-            } 
-        />
-        <Route
-          path="/nomination-detail/:nominationId"
-          element={
-            <ProtectedRoute userRole={userRole} allowedRoles={getAllowedRoles('')}>
-              <NominationDetailView isOpen={true}  onClose={() => {}}/>
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/businessjury-detail/:nominationId"
-          element={
-            <ProtectedRoute userRole={userRole} allowedRoles={getAllowedRoles('Business Jury Details')}>
-              <BusinessJuryDetail isOpen={true}  onClose={() => {}}/>
-            </ProtectedRoute>
-          }
-        />
+     
         {/* <Route
           path="/business-jury-evaluation"
           element={<BusinessJuryEvaluation />}

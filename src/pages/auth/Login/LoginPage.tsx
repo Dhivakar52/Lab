@@ -35,96 +35,96 @@ export default function Login({ setUserRole }: LoginProps) {
   };
 
   // ---------------- PASSWORD LOGIN ----------------
-  const handleLoginWithPassword = async () => {
-    if (!email || !password) {
-      showMessage("Please enter both email and password", "error");
+ const handleLoginWithPassword = async () => {
+  if (!email || !password) {
+    showMessage("Please enter both email and password", "error");
+    return;
+  }
+
+  setIsLoading(true);
+
+  try {
+    // 🔐 Hardcoded users
+    const users = [
+      { email: "admin@gmail.com", password: "123", roleid: 6 },
+      { email: "manager@gmail.com", password: "123", roleid: 2 },
+      { email: "user@gmail.com", password: "123", roleid: 1 },
+    ];
+
+    // simulate API delay
+    await new Promise((res) => setTimeout(res, 800));
+
+    const foundUser = users.find(
+      (u) => u.email === email && u.password === password
+    );
+
+    if (!foundUser) {
+      showMessage("Invalid email or password", "error");
+      setIsLoading(false);
       return;
     }
 
-    setIsLoading(true);
+    // ✅ fake response (API response maari)
+    const token = "dummy-token-123";
+    const refreshToken = "dummy-refresh";
+    const roleid = foundUser.roleid;
+    const userid = 1;
+    const username = email.split("@")[0];
+    const userEmail = email;
+    const tenantname = "demo";
+    const primaryfield = "test";
 
-    try {
-      const res = await fetch(`${apiUrl}/api/login`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ 
-          userName: email,
-          password: password ?? "",
-          isEncrypted: false,
-          otp: otp ?? ""
-        }),
-      });
-
-      const data = await res.json();
-      console.log("login Data", data);
-      
-      if (!res.ok) {
-        showMessage(data.message || "Invalid email or password", "error");
-        setIsLoading(false);
-        return;
-      }
-
-      const token = data.token || data.Token || data.accessToken || data.jwtToken || data?.result?.token;
-      const refreshToken = data.refreshToken || data.refreshtoken || data?.result?.refreshToken || "";
-      const roleid = data.roleid || data.RoleId || data?.result?.roleid;
-      const userid = data.userid ?? data.userId ?? data?.result?.userid;
-      const username = data.username ?? data.userName ?? data?.result?.username;
-      const userEmail = data.email ?? data.userEmail ?? data?.result?.email;
-      const tenantname = data.tenantname ?? data.tenantname ?? data?.result?.tenantname;
-      const primaryfield = data.primaryfield ?? data.primaryfield ?? data?.result?.primaryfield;
-
-      if (!token) {
-        showMessage("Login failed. Token missing.", "error");
-        setIsLoading(false);
-        return;
-      }
-      if (!roleid) {
-        showMessage("Your role is not defined. Contact support.", "error");
-        setIsLoading(false);
-        return;
-      }
-
-      let role_user: UserRole;
-      switch (Number(roleid)) {
-        case 1: role_user = USER_ROLES.USER; break;
-        case 2: role_user = USER_ROLES.MANAGER; break;
-        case 3: role_user = USER_ROLES.JURY; break;
-        case 4: role_user = USER_ROLES.PRESIDENT_UNIT; break;
-        case 5: role_user = USER_ROLES.PRESIDENT_LEVEL; break;
-        case 6: role_user = USER_ROLES.ADMIN; break;
-        default: showMessage("Invalid role. Contact support.", "error"); setIsLoading(false); return;
-      }
-
-      localStorage.setItem("authToken", token);
-      localStorage.setItem("refreshToken", refreshToken);
-      localStorage.setItem("userId", userid?.toString() ?? "");
-      localStorage.setItem("username", username ?? "");
-      localStorage.setItem("email", userEmail ?? "");
-      localStorage.setItem("userRole", role_user);
-      localStorage.setItem("tenantname", tenantname);
-      localStorage.setItem("primaryfield", primaryfield);
-
-      setUserRole(role_user);
-      showMessage("Login successful!", "success");
-
-      setTimeout(() => {
-        switch (role_user) {
-          case USER_ROLES.MANAGER: navigate("/approvals"); break;
-          case USER_ROLES.JURY: navigate("/business-jury"); break;
-          case USER_ROLES.PRESIDENT_UNIT: navigate("/president-unit"); break;
-          case USER_ROLES.PRESIDENT_LEVEL: navigate("/president-level"); break;
-          case USER_ROLES.ADMIN: navigate("/admin"); break;
-          default: navigate("/home");
-        }
-        window.location.reload();
-      }, 1000);
-
-    } catch (err) {
-      console.error("Login error:", err);
-      showMessage("Server error. Please try again.", "error");
+    if (!token) {
+      showMessage("Login failed. Token missing.", "error");
       setIsLoading(false);
+      return;
     }
-  };
+
+    let role_user: UserRole;
+    switch (Number(roleid)) {
+      // case 1: role_user = USER_ROLES.USER; break;
+      // case 2: role_user = USER_ROLES.MANAGER; break;
+      // case 3: role_user = USER_ROLES.JURY; break;
+      // case 4: role_user = USER_ROLES.PRESIDENT_UNIT; break;
+      // case 5: role_user = USER_ROLES.PRESIDENT_LEVEL; break;
+      case 6: role_user = USER_ROLES.ADMIN; break;
+      default:
+        showMessage("Invalid role. Contact support.", "error");
+        setIsLoading(false);
+        return;
+    }
+
+    // ✅ same localStorage logic (unchanged)
+    localStorage.setItem("authToken", token);
+    localStorage.setItem("refreshToken", refreshToken);
+    localStorage.setItem("userId", userid.toString());
+    localStorage.setItem("username", username);
+    localStorage.setItem("email", userEmail);
+    localStorage.setItem("userRole", role_user);
+    localStorage.setItem("tenantname", tenantname);
+    localStorage.setItem("primaryfield", primaryfield);
+
+    setUserRole(role_user);
+    showMessage("Login successful!", "success");
+
+    setTimeout(() => {
+      switch (role_user) {
+        // case USER_ROLES.MANAGER: navigate("/approvals"); break;
+        // case USER_ROLES.JURY: navigate("/business-jury"); break;
+        // case USER_ROLES.PRESIDENT_UNIT: navigate("/president-unit"); break;
+        // case USER_ROLES.PRESIDENT_LEVEL: navigate("/president-level"); break;
+        case USER_ROLES.ADMIN: navigate("/admin"); break;
+        default: navigate("/home");
+      }
+      window.location.reload();
+    }, 1000);
+
+  } catch (err) {
+    console.error("Login error:", err);
+    showMessage("Server error. Please try again.", "error");
+    setIsLoading(false);
+  }
+};
 
   // ---------------- OTP FLOW ----------------
   const handleGenerateOtp = async () => {
@@ -206,11 +206,11 @@ export default function Login({ setUserRole }: LoginProps) {
 
       let role_user: UserRole;
       switch (Number(roleid)) {
-        case 1: role_user = USER_ROLES.USER; break;
-        case 2: role_user = USER_ROLES.MANAGER; break;
-        case 3: role_user = USER_ROLES.JURY; break;
-        case 4: role_user = USER_ROLES.PRESIDENT_UNIT; break;
-        case 5: role_user = USER_ROLES.PRESIDENT_LEVEL; break;
+        // case 1: role_user = USER_ROLES.USER; break;
+        // case 2: role_user = USER_ROLES.MANAGER; break;
+        // case 3: role_user = USER_ROLES.JURY; break;
+        // case 4: role_user = USER_ROLES.PRESIDENT_UNIT; break;
+        // case 5: role_user = USER_ROLES.PRESIDENT_LEVEL; break;
         case 6: role_user = USER_ROLES.ADMIN; break;
         default: showMessage("Invalid role. Contact support.", "error"); setIsLoading(false); return;
       }
