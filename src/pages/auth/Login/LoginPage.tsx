@@ -2,8 +2,8 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import SrmLogo from "../../../assets/images/srm_login_logo.png";
-import TrophyImage from "../../../assets/images/login_cup_img.png";
-import loginBg from "../../../assets/images/login_left_img.png";
+// import TrophyImage from "../../../assets/images/login_cup_img.png";
+import loginBg from "../../../assets/images/login_cup_img.png";
 import { Eye, EyeClosed, Mail, Lock, Fingerprint, LogIn, Shield, ArrowLeft, CheckCircle , MessageSquareLock } from "lucide-react";
 import { USER_ROLES, type UserRole } from "../../../dataTypes/roles";
 import  Tree from "../../../assets/images/tree.png"
@@ -247,14 +247,21 @@ export default function Login({ setUserRole }: LoginProps) {
       {/* Left side - Same design */}
       <div className="w-1/2 flex flex-col text-white p-10"
         style={{ 
-          backgroundImage: `linear-gradient(rgba(0,128,0,0.6), rgba(0,128,0,0.6)), url(${loginBg})`,
+    backgroundImage: `linear-gradient(rgba(0,0,0,0.6), rgba(0,0,0,0.6)), url(${loginBg})`,
           backgroundSize: "cover", 
           backgroundPosition: "center" 
         }}>
-        <img src={SrmLogo} className="w-40 mb-6" alt="SRM Logo" />
-        <img src={TrophyImage} className="w-40 mb-6" alt="Trophy" />
-        <h1 className="text-[40px] font-bold mb-4">Welcome to the Excellence <br /> Awards Platform</h1>
-        <p className="max-w-md text-[16px]">Discover, recognize and celebrate outstanding projects. Login to explore and participate.</p>
+          <div className="flex-[0.5]">
+         <img src={SrmLogo} className="w-40 mb-6" alt="SRM Logo" />
+          </div>
+       
+        {/* <img src={TrophyImage} className="w-40 mb-6" alt="Trophy" /> */}
+      <h1 className="text-[40px] font-bold mb-4 text-white drop-shadow-lg">
+  Innovate. Experiment. Excel.
+</h1>
+<p className="max-w-md text-[16px] text-white/90">
+  Explore groundbreaking lab projects, track progress, and celebrate scientific excellence.
+</p>
       </div>
 
       {/* Right side - Professional Card with Box Shadow */}
