@@ -7,17 +7,17 @@ import loginBg from "../../../assets/images/login_cup_img.png";
 import { Eye, EyeClosed, Mail, Lock, Fingerprint, LogIn, Shield, ArrowLeft, CheckCircle , MessageSquareLock } from "lucide-react";
 import { USER_ROLES, type UserRole } from "../../../dataTypes/roles";
 import  Tree from "../../../assets/images/tree.png"
-import axios from "axios";
-import { useAuth } from "../../../components/ContextAPI/AuthContext";
+// import axios from "axios";
+// import { useAuth } from "../../../components/ContextAPI/AuthContext";
 
 interface LoginProps {
   setUserRole: React.Dispatch<React.SetStateAction<UserRole | null | undefined>>;
 }
 
-const apiUrl = import.meta.env.VITE_API_URL;
+// const apiUrl = import.meta.env.VITE_API_URL;
 
 export default function Login({ setUserRole }: LoginProps) {
-    const { authToken } = useAuth();
+    // const { authToken } = useAuth();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [otp, setOtp] = useState("");
@@ -127,116 +127,216 @@ export default function Login({ setUserRole }: LoginProps) {
 };
 
   // ---------------- OTP FLOW ----------------
-  const handleGenerateOtp = async () => {
-    if (!email) {
-      showMessage("Please enter email to receive OTP", "error");
-      return;
-    }
+  // const handleGenerateOtp = async () => {
+  //   if (!email) {
+  //     showMessage("Please enter email to receive OTP", "error");
+  //     return;
+  //   }
 
-    setIsLoading(true);
+  //   setIsLoading(true);
     
-    try {
+  //   try {
 
-      await axios.put(
-          `${apiUrl}/api/generateotp`,
-          {},
-          {
-            params: {
-              UserEmail: email,
-              IsResendOTP: false,
-            },
-          headers: { Authorization: `Bearer ${authToken}`,},   
-          }
-        );
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      showMessage(`OTP sent to ${email}`, "success");
-      setOtpStep("enterOtp");
-    } catch (err) {
-      console.error("Login error:", err);
-      showMessage("Server error. Please try again.", "error");
-    } finally {
+  //     await axios.put(
+  //         `${apiUrl}/api/generateotp`,
+  //         {},
+  //         {
+  //           params: {
+  //             UserEmail: email,
+  //             IsResendOTP: false,
+  //           },
+  //         headers: { Authorization: `Bearer ${authToken}`,},   
+  //         }
+  //       );
+  //     await new Promise(resolve => setTimeout(resolve, 1000));
+  //     showMessage(`OTP sent to ${email}`, "success");
+  //     setOtpStep("enterOtp");
+  //   } catch (err) {
+  //     console.error("Login error:", err);
+  //     showMessage("Server error. Please try again.", "error");
+  //   } finally {
+  //     setIsLoading(false);
+  //   }
+  // };
+
+  // const handleVerifyOtp = async () => {
+  //   if (!otp) {
+  //     showMessage("Please enter OTP", "error");
+  //     return;
+  //   }
+
+  //   if (!/^\d{6}$/.test(otp)) {
+  //     showMessage("OTP must be 6 digits", "error");
+  //     return;
+  //   }
+
+  //   setIsLoading(true);
+
+  //   try {
+  //     const res = await fetch(`${apiUrl}/api/loginbyotp`, {
+  //       method: "POST",
+  //       headers: { "Content-Type": "application/json" },
+  //       body: JSON.stringify({
+  //         userName: email,
+  //         password: password ?? "",
+  //         isEncrypted: false,
+  //         otp: otp ?? ""
+  //       }),
+  //     });
+
+  //     const data = await res.json();
+  //     console.log(data);
+
+  //     if (!res.ok) {
+  //       showMessage(data.message || "Invalid OTP", "error");
+  //       setIsLoading(false);
+  //       return;
+  //     }
+
+  //     showMessage("OTP verified successfully!", "success");
+
+  //     const token = data.token;
+  //     const roleid = data.roleid;
+  //     const userid = data.userid;
+  //     const username = data.username;
+  //     const userEmail = data.email;
+  //     const refreshToken = data.refreshtoken;
+  //     const tenantname = data.tenantname;
+  //     const primaryfield = data.primaryfield;
+
+  //     let role_user: UserRole;
+  //     switch (Number(roleid)) {
+  //       // case 1: role_user = USER_ROLES.USER; break;
+  //       // case 2: role_user = USER_ROLES.MANAGER; break;
+  //       // case 3: role_user = USER_ROLES.JURY; break;
+  //       // case 4: role_user = USER_ROLES.PRESIDENT_UNIT; break;
+  //       // case 5: role_user = USER_ROLES.PRESIDENT_LEVEL; break;
+  //       case 6: role_user = USER_ROLES.ADMIN; break;
+  //       default: showMessage("Invalid role. Contact support.", "error"); setIsLoading(false); return;
+  //     }
+
+  //     localStorage.setItem("authToken", token);
+  //     localStorage.setItem("refreshToken", refreshToken);
+  //     localStorage.setItem("userId", userid?.toString() ?? "");
+  //     localStorage.setItem("username", username ?? "");
+  //     localStorage.setItem("email", userEmail ?? "");
+  //     localStorage.setItem("userRole", role_user);
+  //     localStorage.setItem("tenantname", tenantname);
+  //     localStorage.setItem("primaryfield", primaryfield);
+
+  //     setUserRole(role_user);
+
+  //     setTimeout(() => {
+  //       navigate("/home");
+  //       window.location.reload();
+  //     }, 1000);
+
+  //   } catch (error) {
+  //     console.error(error);
+  //     showMessage("Server error. Please try again.", "error");
+  //     setIsLoading(false);
+  //   }
+  // };
+  const handleGenerateOtp = async () => {
+  if (!email) {
+    showMessage("Please enter email to receive OTP", "error");
+    return;
+  }
+
+  setIsLoading(true);
+
+  try {
+    // ✅ Fake OTP
+    const fakeOtp = "123456";
+
+    // store in localStorage (or state)
+    localStorage.setItem("demoOtp", fakeOtp);
+
+    await new Promise((res) => setTimeout(res, 800));
+
+    console.log("Generated OTP:", fakeOtp); // 🔥 for testing
+
+    showMessage(`OTP sent to ${email}`, "success");
+    setOtpStep("enterOtp");
+
+  } catch (err) {
+    console.error(err);
+    showMessage("Something went wrong", "error");
+  } finally {
+    setIsLoading(false);
+  }
+};
+const handleVerifyOtp = async () => {
+  if (!otp) {
+    showMessage("Please enter OTP", "error");
+    return;
+  }
+
+  if (!/^\d{6}$/.test(otp)) {
+    showMessage("OTP must be 6 digits", "error");
+    return;
+  }
+
+  setIsLoading(true);
+
+  try {
+    const storedOtp = localStorage.getItem("demoOtp");
+
+    await new Promise((res) => setTimeout(res, 800));
+
+    if (otp !== storedOtp) {
+      showMessage("Invalid OTP", "error");
       setIsLoading(false);
-    }
-  };
-
-  const handleVerifyOtp = async () => {
-    if (!otp) {
-      showMessage("Please enter OTP", "error");
       return;
     }
 
-    if (!/^\d{6}$/.test(otp)) {
-      showMessage("OTP must be 6 digits", "error");
-      return;
-    }
+    showMessage("OTP verified successfully!", "success");
 
-    setIsLoading(true);
+    // ✅ Fake user data
+    const token = "dummy-token-otp";
+    const refreshToken = "dummy-refresh";
+    const roleid = 6;
+    const userid = 1;
+    const username = email.split("@")[0];
+    const userEmail = email;
+    const tenantname = "demo";
+    const primaryfield = "test";
 
-    try {
-      const res = await fetch(`${apiUrl}/api/loginbyotp`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          userName: email,
-          password: password ?? "",
-          isEncrypted: false,
-          otp: otp ?? ""
-        }),
-      });
+    let role_user: UserRole;
 
-      const data = await res.json();
-      console.log(data);
-
-      if (!res.ok) {
-        showMessage(data.message || "Invalid OTP", "error");
+    switch (Number(roleid)) {
+      case 6:
+        role_user = USER_ROLES.ADMIN;
+        break;
+      default:
+        showMessage("Invalid role", "error");
         setIsLoading(false);
         return;
-      }
-
-      showMessage("OTP verified successfully!", "success");
-
-      const token = data.token;
-      const roleid = data.roleid;
-      const userid = data.userid;
-      const username = data.username;
-      const userEmail = data.email;
-      const refreshToken = data.refreshtoken;
-      const tenantname = data.tenantname;
-      const primaryfield = data.primaryfield;
-
-      let role_user: UserRole;
-      switch (Number(roleid)) {
-        // case 1: role_user = USER_ROLES.USER; break;
-        // case 2: role_user = USER_ROLES.MANAGER; break;
-        // case 3: role_user = USER_ROLES.JURY; break;
-        // case 4: role_user = USER_ROLES.PRESIDENT_UNIT; break;
-        // case 5: role_user = USER_ROLES.PRESIDENT_LEVEL; break;
-        case 6: role_user = USER_ROLES.ADMIN; break;
-        default: showMessage("Invalid role. Contact support.", "error"); setIsLoading(false); return;
-      }
-
-      localStorage.setItem("authToken", token);
-      localStorage.setItem("refreshToken", refreshToken);
-      localStorage.setItem("userId", userid?.toString() ?? "");
-      localStorage.setItem("username", username ?? "");
-      localStorage.setItem("email", userEmail ?? "");
-      localStorage.setItem("userRole", role_user);
-      localStorage.setItem("tenantname", tenantname);
-      localStorage.setItem("primaryfield", primaryfield);
-
-      setUserRole(role_user);
-
-      setTimeout(() => {
-        navigate("/home");
-        window.location.reload();
-      }, 1000);
-
-    } catch (error) {
-      console.error(error);
-      showMessage("Server error. Please try again.", "error");
-      setIsLoading(false);
     }
-  };
+
+    // ✅ store
+    localStorage.setItem("authToken", token);
+    localStorage.setItem("refreshToken", refreshToken);
+    localStorage.setItem("userId", userid.toString());
+    localStorage.setItem("username", username);
+    localStorage.setItem("email", userEmail);
+    localStorage.setItem("userRole", role_user);
+    localStorage.setItem("tenantname", tenantname);
+    localStorage.setItem("primaryfield", primaryfield);
+
+    setUserRole(role_user);
+
+    setTimeout(() => {
+      navigate("/home");
+      window.location.reload();
+    }, 1000);
+
+  } catch (error) {
+    console.error(error);
+    showMessage("Something went wrong", "error");
+    setIsLoading(false);
+  }
+};
 
   const handleForgotPassword = () => {
     navigate("/forgot-password");
