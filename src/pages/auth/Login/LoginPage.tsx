@@ -114,12 +114,10 @@ export default function Login({ setUserRole }: LoginProps) {
         // case USER_ROLES.PRESIDENT_UNIT: navigate("/president-unit"); break;
         // case USER_ROLES.PRESIDENT_LEVEL: navigate("/president-level"); break;
         case USER_ROLES.ADMIN: navigate("/dashboard"); break;
-        default: navigate("/home");
+        default: navigate("/dashboard");
       }
-      setTimeout(() => {
-  navigate("/home");
-  window.location.reload();
-}, 1000);
+      window.location.reload();
+     
     }, 1000);
 
   } catch (err) {
