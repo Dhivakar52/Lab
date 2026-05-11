@@ -9,7 +9,7 @@
 }
 :root{
 /* --dashboard-theme-color:linear-gradient(90deg, rgb(8, 128, 94) 16%, rgb(24, 97, 174) 100%); */
---dashboard-theme-color:#87CEEB;
+--dashboard-theme-color:#1760b1;
 }
 .themeColor{
   background: var(--dashboard-theme-color);
@@ -18,7 +18,9 @@
 .textColor{
   color:var(--dashboard-theme-color);
 }
-
+.borderColor{
+  border:1px solid var(--dashboard-theme-color)
+}
 .nominate-form,
 .nominate-form input,
 .nominate-form textarea,
@@ -57,8 +59,9 @@
     border-radius: 9px;
 }
 
-table td{
-  font-size: 13px;
+table td {
+    font-size: 13px;
+    padding: 7px 15px;
 }
 th{
   text-transform: capitalize;

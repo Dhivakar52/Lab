@@ -12,6 +12,7 @@ import {
   // ClipboardList,
   ChevronLeft,
   LogOut,X,
+  BrickWallShield,
   // TrophyIcon
 } from "lucide-react";
 import { Link, useLocation, useNavigate } from 'react-router-dom';
@@ -35,10 +36,10 @@ interface NavigationItem {
 }
 
 const navigationItems: NavigationItem[] = [
-  { icon: Home, label: 'Dashboard', path: '/dashboard', pageKey: 'Dashboard' },
-
-
   { icon: Home, label: 'Home', path: '/home', pageKey: 'Home' },
+
+
+  { icon: BrickWallShield, label: 'Admin', path: '/admin', pageKey: 'Admin' },
    
   // { icon: Bell, label: 'Notifications', path: '/notifications', pageKey:'Notifications' },
   // { icon: User, label: 'Self Nominations', path: '/self-nominations',pageKey:'Self Nominations' },

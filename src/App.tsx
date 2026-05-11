@@ -33,7 +33,7 @@ const HomeWithKey = () => {
 
 
 const pageComponents: Record<string, React.ReactNode> = {
-  'Dashboard': <Dashboard />,
+  'Admin': <Dashboard />,
   'Home': <HomeWithKey  />,
 
   // 'My Nominations': <NominationPage />,

@@ -113,8 +113,8 @@ export default function Login({ setUserRole }: LoginProps) {
         // case USER_ROLES.JURY: navigate("/business-jury"); break;
         // case USER_ROLES.PRESIDENT_UNIT: navigate("/president-unit"); break;
         // case USER_ROLES.PRESIDENT_LEVEL: navigate("/president-level"); break;
-        case USER_ROLES.ADMIN: navigate("/dashboard"); break;
-        default: navigate("/dashboard");
+        case USER_ROLES.ADMIN: navigate("/home"); break;
+        default: navigate("/home");
       }
       window.location.reload();
      
@@ -344,30 +344,37 @@ const handleVerifyOtp = async () => {
   };
 
   return (
-    <div className="min-h-screen flex relative">
-      {/* Left side - Same design */}
-      <div className="w-1/2 flex flex-col text-white p-10"
-        style={{ 
-    backgroundImage: `linear-gradient(rgba(0,0,0,0.6), rgba(0,0,0,0.6)), url(${loginBg})`,
-          backgroundSize: "cover", 
-          backgroundPosition: "center" 
-        }}>
-          <div className="flex-[0.5]">
-         <img src={SrmLogo} className="w-40 mb-6" alt="SRM Logo" />
-          </div>
-       
-        {/* <img src={TrophyImage} className="w-40 mb-6" alt="Trophy" /> */}
-      <h1 className="text-[40px] font-bold mb-4 text-white drop-shadow-lg">
-  Innovate. Experiment. Excel.
-</h1>
-<p className="max-w-md text-[16px] text-white/90">
-  Explore groundbreaking lab projects, track progress, and celebrate scientific excellence.
-</p>
-      </div>
+    <div className=" relative">
+      <div className="flex min-h-screen flex-col lg:flex-row">
 
-      {/* Right side - Professional Card with Box Shadow */}
-      <div className="w-1/2 flex flex-col justify-center items-center bg-gradient-to-br from-gray-50 to-white px-12">
-        <div className="max-w-md w-full">
+  {/* LEFT SIDE */}
+  <div
+    className="w-full lg:w-1/2 flex flex-col justify-between text-white p-6 sm:p-10"
+    style={{
+      backgroundImage: `linear-gradient(rgba(0,0,0,0.6), rgba(0,0,0,0.6)), url(${loginBg})`,
+      backgroundSize: "cover",
+      backgroundPosition: "center",
+    }}
+  >
+    <div>
+      <img src={SrmLogo} className="w-32 sm:w-40 mb-6" alt="SRM Logo" />
+    </div>
+
+    <div>
+      <h1 className="text-2xl sm:text-3xl lg:text-[40px] font-bold mb-4 drop-shadow-lg">
+        Innovate. Experiment. Excel.
+      </h1>
+
+      <p className="max-w-md text-sm sm:text-base text-white/90">
+        Explore groundbreaking lab projects, track progress, and celebrate scientific excellence.
+      </p>
+    </div>
+  </div>
+
+  {/* RIGHT SIDE */}
+  <div className="w-full lg:w-1/2 flex justify-center items-center bg-gradient-to-br from-gray-50 to-white px-4 sm:px-8 lg:px-12 py-10">
+
+     <div className="max-w-md w-full">
           {/* Card with professional box-shadow */}
           <div className="bg-white rounded-2xl shadow-2xl shadow-green-900/10 hover:shadow-2xl hover:shadow-green-900/20 transition-shadow duration-300 p-8">
             {/* Header */}
@@ -430,7 +437,7 @@ const handleVerifyOtp = async () => {
                     placeholder="Email address"
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
-                    className="w-full pl-10 pr-4 py-3 border border-gray-200 rounded-xl focus:border-green-500 focus:outline-none focus:ring-2 focus:ring-green-500/20 transition-all bg-white"
+                    className="w-full pl-10 pr-4 py-3 border border-gray-200 rounded-xl focus:borderColor focus:outline-none focus:ring-2 focus:ring-green-500/20 transition-all bg-white"
                   />
                 </div>
 
@@ -442,7 +449,8 @@ const handleVerifyOtp = async () => {
                     placeholder="Password"
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
-                    className="w-full pl-10 pr-10 py-3 border border-gray-200 rounded-xl focus:border-green-500 focus:outline-none focus:ring-2 focus:ring-green-500/20 transition-all bg-white"
+                    className="w-full pl-10 pr-10 py-3 border border-gray-200 rounded-xl focus:borderColor
+ focus:outline-none focus:ring-2 focus:ring-green-500/20 transition-all bg-white"
                   />
                   <button
                     onClick={() => setShowPassword(!showPassword)}
@@ -504,7 +512,8 @@ const handleVerifyOtp = async () => {
                         placeholder="Email address"
                         value={email}
                         onChange={(e) => setEmail(e.target.value)}
-                        className="w-full pl-10 pr-4 py-3 border border-gray-200 rounded-xl focus:border-green-500 focus:outline-none focus:ring-2 focus:ring-green-500/20 transition-all bg-white"
+                        className="w-full pl-10 pr-4 py-3 border border-gray-200 rounded-xl focus:borderColor
+ focus:outline-none focus:ring-2 focus:ring-green-500/20 transition-all bg-white"
                       />
                     </div>
                     <button
@@ -549,7 +558,8 @@ const handleVerifyOtp = async () => {
                         value={otp}
                         onChange={(e) => setOtp(e.target.value)}
                         maxLength={6}
-                        className="w-full pl-10 pr-4 py-3 border border-gray-200 rounded-xl focus:border-green-500 focus:outline-none focus:ring-2 focus:ring-green-500/20 transition-all text-center text-lg tracking-wider bg-white"
+                        className="w-full pl-10 pr-4 py-3 border border-gray-200 rounded-xl focus:borderColor
+ focus:outline-none focus:ring-2 focus:ring-green-500/20 transition-all text-center text-lg tracking-wider bg-white"
                       />
                     </div>
                     <button
@@ -601,7 +611,9 @@ const handleVerifyOtp = async () => {
             </div>
           </div>
         </div>
-      </div>
+  </div>
+</div>
+     
 
       {/* Toast Message */}
       {message && (

@@ -25,6 +25,6 @@ export const ROLE_PAGES: Record<UserRole, string[]> = {
   //    'Grand Jury','Primary Business Jury','Leader Board',
   //    'Admin Setting','Category Wise Nomination'],
       admin: 
-  ['Dashboard','Home', 'Notifications',],
+  ['Dashboard','Home', 'Admin',],
 };
 
