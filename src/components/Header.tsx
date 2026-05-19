@@ -70,12 +70,12 @@ const headerTitleMap: Record<string, string> = {
         return "Dashboard";
          case "/home":
         return "Home";
-      case "/notifications":
-        return "Notifications";
-      case "/self-nominations":
-        return "Self Nominate Form";
-      case "/self-nominations/:nominationId":
-        return "Self Nominate Form";  
+      case "/study/master":
+        return "Study Master";
+      case "/study/amendment":
+        return "Study Amendment";
+      case "/study/site":
+        return "Site Registration";  
       case "/my-nominations":
         return "Nomination Management";
       case "/referral-approval":

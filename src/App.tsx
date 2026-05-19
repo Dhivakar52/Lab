@@ -12,9 +12,11 @@ import type { UserRole } from './dataTypes/roles';
 import { ROLE_PAGES } from './dataTypes/roles';
 import { AuthProvider } from './components/ContextAPI/AuthContext.tsx';
 import ForgotPassword from './pages/auth/Login/ForgotPassword.tsx';
-
+import Study from './components/StudyModule/StudyMasterModule/Study.tsx';
 import VerifyOtp from './pages/auth/Login/VerifyOtp';
 import ResetPassword from './pages/auth/Login/ResetPassword';
+import SiteModule from './components/StudyModule/SiteRegistrationModule/SiteModule.tsx';
+import AmendmentModule from './components/StudyModule/StudyAmendmentModule/AmendmentModule.tsx';
 
 //import PresidentLevelDetail from './components/PresidentLevel/PresidentLevelDetail.tsx';
 
@@ -35,6 +37,9 @@ const HomeWithKey = () => {
 const pageComponents: Record<string, React.ReactNode> = {
   'Admin': <Dashboard />,
   'Home': <HomeWithKey  />,
+  'Study': <Study  />,
+  'AmendmentModule': <AmendmentModule />,
+  'SiteModule': <SiteModule />,
 
   // 'My Nominations': <NominationPage />,
   
@@ -164,6 +169,32 @@ const App: React.FC = () => {
           }
         /> */}
        {/* Fallback */}
+         <Route
+  path="/study/master"
+  element={
+    <ProtectedRoute userRole={userRole} allowedRoles={['admin']}>
+      <Study />
+    </ProtectedRoute>
+  }
+/>
+
+<Route
+  path="/study/amendment"
+  element={
+    <ProtectedRoute userRole={userRole} allowedRoles={['admin']}>
+      <AmendmentModule />
+    </ProtectedRoute>
+  }
+/>
+
+<Route
+  path="/study/site"
+  element={
+    <ProtectedRoute userRole={userRole} allowedRoles={['admin']}>
+      <SiteModule />
+    </ProtectedRoute>
+  }
+/>
         <Route path="/forgot" element={<ForgotPassword/>} />
        <Route path="*" element={<Navigate to="/home" replace />} />
      </Route>

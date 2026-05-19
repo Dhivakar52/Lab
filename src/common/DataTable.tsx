@@ -20,7 +20,7 @@ export function DataTable<T>({
   const skeletonRows = Array.from({ length: 5 });
 
   return (
-    <div ref={tableWrapperRef} className="overflow-x-auto">
+    <div ref={tableWrapperRef} className="overflow-x-auto overflow-y-visible">
       <table className="min-w-full border border-gray-200">
 
         {/* Header */}

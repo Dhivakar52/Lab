@@ -15,6 +15,9 @@
   background: var(--dashboard-theme-color);
   color: white;
 }
+.tabPadding{
+  padding: 15px 15px;
+}
 .textColor{
   color:var(--dashboard-theme-color);
 }
