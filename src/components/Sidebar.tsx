@@ -7,6 +7,21 @@ import {
   X,
   BrickWallShield,
   ChevronDown,
+   FileText,
+  ClipboardList,
+  Calendar,
+  User,
+
+   
+  FileEdit,
+  Building2,
+  Users,
+  UserPlus,
+  
+  CalendarDays,
+  AlertTriangle,
+
+  
 } from "lucide-react";
 import { useLocation, useNavigate } from 'react-router-dom';
 import logo from '../assets/images/layout_logo.png';
@@ -32,17 +47,45 @@ interface NavigationItem {
 
 const navigationItems: NavigationItem[] = [
   { icon: Home, label: 'Home', path: '/home', pageKey: 'Home' },
+
+  // ✅ STUDY
   {
     icon: SquareLibrary,
     label: 'Study',
     pageKey: 'Study',
     children: [
-      { label: 'Study Master', path: '/study/master', pageKey: 'Study' },
-      { label: 'Study Amendment', path: '/study/amendment', pageKey: 'AmendmentModule' },
-      { label: 'Site Registration', path: '/study/site', pageKey: 'Site Registration' },
+      { icon: FileText, label: 'Study Master', path: '/study/master', pageKey: 'Study' },
+      { icon: FileEdit, label: 'Study Amendment', path: '/study/amendment', pageKey: 'AmendmentModule' },
+      { icon: Building2, label: 'Site Registration', path: '/study/site', pageKey: 'Site Registration' },
     ],
   },
-  { icon: BrickWallShield, label: 'Admin', path: '/admin', pageKey: 'Admin' },
+
+  // ✅ SUBJECT
+  {
+    icon: Users,
+    label: 'Subject',
+    pageKey: 'Subject',
+    children: [
+      { icon: UserPlus, label: 'Subject Enrollment', path: '/subject/enrollment', pageKey: 'Enrollment' },
+      { icon: AlertTriangle, label: 'Adverse Events', path: '/subject/adverse', pageKey: 'Adverse' },
+    ],
+  },
+
+  // ✅ VISIT
+  {
+    icon: CalendarDays,
+    label: 'Visit Schedule',
+    path: '/visit',
+    pageKey: 'Visit',
+  },
+
+  // ✅ ADMIN
+  {
+    icon: BrickWallShield,
+    label: 'Admin',
+    path: '/admin',
+    pageKey: 'Admin',
+  },
 ];
 
 // -------------------------
@@ -67,40 +110,59 @@ const NavItem = ({
 
   const hasChildren = item.children && item.children.length > 0;
 
-  const isActive = item.path ? location.pathname === item.path : false;
+  // ✅ FIXED: Check if this item or any of its children is active
+  const isActive = () => {
+    // If current item has a path and matches exactly
+    if (item.path && location.pathname === item.path) {
+      return true;
+    }
+    
+    // If current item has children and any child path matches
+    if (hasChildren) {
+      return item.children!.some((child) => location.pathname === child.path);
+    }
+    
+    return false;
+  };
 
-  const isParentOfActive =
-    hasChildren &&
+  const isParentOfActive = hasChildren && 
     item.children!.some((child) => location.pathname === child.path);
 
-  // 🔥 Auto expand parent if child is active
+  // Auto expand parent if child is active
   useEffect(() => {
     if (isParentOfActive) {
       setIsExpanded(true);
     }
-  }, [location.pathname]);
+  }, [location.pathname, isParentOfActive]);
 
   // 🎯 Active class logic
   const getActiveClass = () => {
-    if (isActive && depth === 0) {
-      return 'bg-blue-100 text-blue-600'; // Main menu active
+    const active = isActive();
+    
+    // Main menu item (depth === 0)
+    if (depth === 0) {
+      if (active) {
+        return 'bg-blue-100 text-blue-600'; // Active main menu
+      }
+      return 'hover:bg-gray-100';
     }
-
-    if (isActive && depth > 0) {
-      return 'bg-gray-400 text-white'; // Sub menu active
+    
+    // Sub menu item (depth > 0)
+    if (active) {
+      return 'bg-gray-400 text-white'; // Active sub menu
     }
-
-    if (isParentOfActive && depth === 0) {
-      return 'bg-blue-100 text-blue-600'; // Parent of active child
-    }
-
+    
     return 'hover:bg-gray-100';
   };
 
   const handleClick = () => {
-    if (hasChildren && !isCollapsed) {
-      setIsExpanded(!isExpanded);
+    if (hasChildren) {
+      // If has children, just toggle expansion
+      if (!isCollapsed || isMobileOpen) {
+        setIsExpanded(!isExpanded);
+      }
     } else if (item.path) {
+      // If no children and has path, navigate
       navigate(item.path);
       onMobileClose();
     }
@@ -222,7 +284,7 @@ const Sidebar: React.FC<SidebarProps> = ({
         </button>
 
         {/* Logo */}
-        <div className="p-5 flex items-center border-b shadow-lg min-h-[70px]">
+        <div className="p-5 flex items-center border-b border-white shadow-lg min-h-[70px]">
           <div className="relative w-[106px] h-[40px]">
             <img
               src={logo}
@@ -244,7 +306,7 @@ const Sidebar: React.FC<SidebarProps> = ({
         </div>
 
         {/* Nav */}
-        <nav className="p-3 space-y-2 max-h-[70vh] overflow-y-auto">
+        <nav className="p-3 space-y-2 max-h-[70vh] overflow-y-auto custom-scroll">
           {filteredNavItems.map((item) => (
             <NavItem
               key={item.pageKey}

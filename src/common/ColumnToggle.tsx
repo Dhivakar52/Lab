@@ -22,7 +22,7 @@ export default function ColumnToggle<T>({ table }: Props<T>) {
       {/* Button */}
       <button
         onClick={() => setOpen((prev) => !prev)}
-        className="flex items-center gap-2 px-3 py-2 border rounded-lg bg-white hover:bg-gray-50"
+        className="flex items-center gap-2 px-3 py-2 border border-gray-300 rounded-lg bg-white hover:bg-gray-50"
       >
         <Settings size={16} />
         Columns
@@ -33,7 +33,6 @@ export default function ColumnToggle<T>({ table }: Props<T>) {
         <div className="absolute right-0 mt-2 w-48 bg-white border rounded-lg shadow-lg z-50 p-2 space-y-1">
           
           {table.getAllLeafColumns().map((column) => {
-            // 🚫 Don't allow hiding action column
             if (column.id === "action") return null;
 
             return (

@@ -17,6 +17,9 @@ import VerifyOtp from './pages/auth/Login/VerifyOtp';
 import ResetPassword from './pages/auth/Login/ResetPassword';
 import SiteModule from './components/StudyModule/SiteRegistrationModule/SiteModule.tsx';
 import AmendmentModule from './components/StudyModule/StudyAmendmentModule/AmendmentModule.tsx';
+import Adverse from './components/Subject/AdverseEvents/Adverse.tsx';
+import Subject from './components/Subject/SubjectEnrollment/Subject.tsx';
+import VisitSchedule from './components/VisitSchedulingModule/VisitSchedule.tsx';
 
 //import PresidentLevelDetail from './components/PresidentLevel/PresidentLevelDetail.tsx';
 
@@ -25,6 +28,7 @@ import AmendmentModule from './components/StudyModule/StudyAmendmentModule/Amend
 
 
 import Dashboard from './components/Dashboard/Dashboard.tsx';
+import StudyMasterStepper from './components/StudyModule/StudyMasterModule/StudyMasterStepper.tsx';
 // -------------------------
 // Main page components
 // -------------------------
@@ -40,6 +44,9 @@ const pageComponents: Record<string, React.ReactNode> = {
   'Study': <Study  />,
   'AmendmentModule': <AmendmentModule />,
   'SiteModule': <SiteModule />,
+  'Enrollment':<Subject/>,
+  'Adverse': <Adverse/>,
+  'Visit':<VisitSchedule/>
 
   // 'My Nominations': <NominationPage />,
   
@@ -65,6 +72,7 @@ const adminSubPages: Record<string, React.ReactNode> = {
 // Allowed roles for admin sub-pages
 // -------------------------
 const adminSubPageRoles: Record<string, UserRole[]> = {
+  
   'award-categories': ['admin'],
   'entities-departments': ['admin'],
   'nomination-cycle': ['admin'],
@@ -195,6 +203,30 @@ const App: React.FC = () => {
     </ProtectedRoute>
   }
 />
+<Route
+  path="/subject/enrollment"
+  element={
+    <ProtectedRoute userRole={userRole} allowedRoles={['admin']}>
+      <Subject />
+    </ProtectedRoute>
+  }
+/>
+<Route
+  path="/subject/adverse"
+  element={
+    <ProtectedRoute userRole={userRole} allowedRoles={['admin']}>
+      <Adverse />
+    </ProtectedRoute>
+  }
+/>
+<Route
+          path="/new-add"
+          element={
+            <ProtectedRoute userRole={userRole} allowedRoles={getAllowedRoles('President Details')}>
+            <StudyMasterStepper/>
+            </ProtectedRoute>
+          }
+        />
         <Route path="/forgot" element={<ForgotPassword/>} />
        <Route path="*" element={<Navigate to="/home" replace />} />
      </Route>

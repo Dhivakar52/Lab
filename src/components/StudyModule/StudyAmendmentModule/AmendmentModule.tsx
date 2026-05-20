@@ -1,5 +1,4 @@
 import { useMemo, useState, useEffect } from "react";
-import { Menu } from "lucide-react";
 import {
   useReactTable,
   getCoreRowModel,
@@ -13,6 +12,7 @@ import { DataTable } from "../../../common/DataTable";
 import Pagination from "../../../common/Pagination";
 import TableSearch from "../../../common/TableSearch";
 import ColumnToggle from "../../../common/ColumnToggle";
+import { ActionMenu } from "../../../common/ActionMenu";
 
 // ✅ TYPE
 type StudyVersion = {
@@ -52,7 +52,6 @@ const StudyVersionTable = () => {
     []
   );
 
-  // ✅ STATES
   const [globalFilter, setGlobalFilter] = useState("");
   const [columnVisibility, setColumnVisibility] = useState({});
   const [openMenuId, setOpenMenuId] = useState<number | null>(null);
@@ -100,65 +99,22 @@ const StudyVersionTable = () => {
       },
 
       { accessorKey: "actionType", header: "Action Type" },
-
-      // ✅ ACTION MENU
-      {
-        id: "actions",
-        header: "Actions",
-        enableHiding: false,
-
-        cell: ({ row }) => {
-          const item = row.original;
-          const isOpen = openMenuId === item.id;
-
-          return (
-            <div
-              className="relative menu-container"
-              onClick={(e) => e.stopPropagation()}
-            >
-              {/* BUTTON */}
-              <button
-                onClick={(e) => {
-                  e.stopPropagation();
-                  setOpenMenuId((prev) =>
-                    prev === item.id ? null : item.id
-                  );
-                }}
-                className="p-2 rounded hover:bg-gray-100"
-              >
-                <Menu size={18} />
-              </button>
-
-              {/* DROPDOWN */}
-              {isOpen && (
-                <div className="absolute right-0 mt-2 w-32 bg-white border rounded-lg shadow-lg z-[9999] transition-all duration-150">
-
-                  <button
-                    onClick={() => {
-                      console.log("View:", item);
-                      setOpenMenuId(null);
-                    }}
-                    className="block w-full px-3 py-2 text-left hover:bg-gray-100 text-sm"
-                  >
-                    View
-                  </button>
-
-                  <button
-                    onClick={() => {
-                      console.log("Edit:", item);
-                      setOpenMenuId(null);
-                    }}
-                    className="block w-full px-3 py-2 text-left hover:bg-gray-100 text-sm"
-                  >
-                    Edit
-                  </button>
-
-                </div>
-              )}
-            </div>
-          );
-        },
-      },
+    {
+         id: "actions",
+         header: "Actions",
+         cell: ({ row }) => {
+           const item = row.original;
+       
+           return (
+             <ActionMenu
+               item={item}
+               onView={(data) => console.log("View:", data)}
+               onEdit={(data) => console.log("Edit:", data)}
+                  onDelete={(data) => console.log("onDelete:", data)}
+             />
+           );
+         },
+       }
     ],
     [openMenuId]
   );

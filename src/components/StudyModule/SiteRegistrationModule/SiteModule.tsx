@@ -1,5 +1,5 @@
-import { useState, useEffect } from "react";
-import { Menu } from "lucide-react";
+import { useMemo, useState, useEffect, useCallback, useRef } from "react";
+
 
 import {
   useReactTable,
@@ -15,6 +15,8 @@ import { DataTable } from "../../../common/DataTable";
 import Pagination from "../../../common/Pagination";
 import TableSearch from "../../../common/TableSearch";
 import ColumnToggle from "../../../common/ColumnToggle";
+import { ActionMenu } from "../../../common/ActionMenu";
+
 
 // ✅ TYPE
 type SiteRegistration = {
@@ -30,179 +32,142 @@ type SiteRegistration = {
 
 // ✅ COMPONENT
 const SiteModule = () => {
-
-  // ✅ DATA
-  const siteRegistrationData: SiteRegistration[] = [
-    {
-      id: 1,
-      site: "SITE001",
-      code: "ST001",
-      study: "Apollo",
-      city: "Chennai",
-      investigatorType: "Dr",
-      investigatorName: "Kumar",
-      status: "Active",
-    },
-    {
-      id: 2,
-      site: "SITE002",
-      code: "ST002",
-      study: "SRM",
-      city: "Hospital",
-      investigatorType: "Dr",
-      investigatorName: "Raj",
-      status: "Draft",
-    },
-  ];
+  // ✅ DATA (memoized)
+  const siteRegistrationData: SiteRegistration[] = useMemo(
+    () => [
+      {
+        id: 1,
+        site: "SITE001",
+        code: "ST001",
+        study: "Apollo",
+        city: "Chennai",
+        investigatorType: "Dr",
+        investigatorName: "Kumar",
+        status: "Active",
+      },
+      {
+        id: 2,
+        site: "SITE002",
+        code: "ST002",
+        study: "SRM",
+        city: "Hospital",
+        investigatorType: "Dr",
+        investigatorName: "Raj",
+        status: "Draft",
+      },
+    ],
+    []
+  );
 
   // ✅ STATES
   const [globalFilter, setGlobalFilter] = useState("");
   const [columnVisibility, setColumnVisibility] = useState({});
   const [openMenuId, setOpenMenuId] = useState<number | null>(null);
+  const [loading, setLoading] = useState(false); // Add loading state
+  const tableWrapperRef = useRef<HTMLDivElement>(null); // Add ref for table wrapper
 
-  // ✅ CLOSE MENU
+  // ✅ CLOSE MENU (optimized)
   useEffect(() => {
-    const close = () => setOpenMenuId(null);
+    const close = (e: MouseEvent) => {
+      const target = e.target as HTMLElement;
 
-    window.addEventListener("click", close);
+      if (!target.closest(".menu-container")) {
+        setOpenMenuId(null);
+      }
+    };
 
-    return () => window.removeEventListener("click", close);
+    document.addEventListener("click", close);
+    return () => document.removeEventListener("click", close);
   }, []);
 
-  // ✅ ACTIONS
-  const handleToggleMenu = (
-    id: number,
-    e: React.MouseEvent
-  ) => {
-    e.stopPropagation();
-
-    setOpenMenuId((prev) =>
-      prev === id ? null : id
-    );
-  };
-
-  const handleView = (row: SiteRegistration) => {
+  // ✅ ACTIONS (memoized to prevent unnecessary re-renders)
+  const handleView = useCallback((row: SiteRegistration) => {
     console.log("View:", row);
-
     setOpenMenuId(null);
-  };
+  }, []);
 
-  const handleEdit = (row: SiteRegistration) => {
+  const handleEdit = useCallback((row: SiteRegistration) => {
     console.log("Edit:", row);
-
     setOpenMenuId(null);
-  };
+  }, []);
 
-  const handleDelete = (row: SiteRegistration) => {
+  const handleDelete = useCallback((row: SiteRegistration) => {
     console.log("Delete:", row);
-
     setOpenMenuId(null);
-  };
+  }, []);
 
-  // ✅ COLUMNS
-  const siteRegistrationColumns: ColumnDef<SiteRegistration>[] = [
-    {
-      accessorKey: "site",
-      header: "Site",
-    },
-    {
-      accessorKey: "code",
-      header: "Code",
-    },
-    {
-      accessorKey: "study",
-      header: "Study",
-    },
-    {
-      accessorKey: "city",
-      header: "City",
-    },
-    {
-      accessorKey: "investigatorType",
-      header: "Type",
-    },
-    {
-      accessorKey: "investigatorName",
-      header: "Name",
-    },
+  const handleToggleMenu = useCallback((id: number, e: React.MouseEvent) => {
+    e.stopPropagation();
+    setOpenMenuId((prev) => (prev === id ? null : id));
+  }, []);
 
-    {
-      accessorKey: "status",
-      header: "Status",
-
-      cell: ({ getValue }) => {
-        const value = getValue<string>();
-
-        return (
-          <span
-            className={`px-2 py-1 rounded text-xs font-medium ${
-              value === "Active"
-                ? "bg-green-100 text-green-700"
-                : "bg-yellow-100 text-yellow-700"
-            }`}
-          >
-            {value}
-          </span>
-        );
+  // ✅ COLUMNS (memoized with all dependencies)
+  const siteRegistrationColumns: ColumnDef<SiteRegistration>[] = useMemo(
+    () => [
+      {
+        accessorKey: "site",
+        header: "Site",
       },
-    },
+      {
+        accessorKey: "code",
+        header: "Code",
+      },
+      {
+        accessorKey: "study",
+        header: "Study",
+      },
+      {
+        accessorKey: "city",
+        header: "City",
+      },
+      {
+        accessorKey: "investigatorType",
+        header: "Type",
+      },
+      {
+        accessorKey: "investigatorName",
+        header: "Name",
+      },
+      {
+        accessorKey: "status",
+        header: "Status",
+        cell: ({ getValue }) => {
+          const value = getValue<string>();
 
-    // ✅ HAMBURGER MENU
-    {
+          return (
+            <span
+              className={`px-2 py-1 rounded text-xs font-medium ${
+                value === "Active"
+                  ? "bg-green-100 text-green-700"
+                  : "bg-yellow-100 text-yellow-700"
+              }`}
+            >
+              {value}
+            </span>
+          );
+        },
+      },
+
+
+ {
       id: "actions",
       header: "Actions",
-
       cell: ({ row }) => {
         const item = row.original;
-        const isOpen = openMenuId === item.id;
-
+    
         return (
-          <div
-            className="relative"
-            onClick={(e) => e.stopPropagation()}
-          >
-            {/* MENU BUTTON */}
-            <button
-              onClick={(e) =>
-                handleToggleMenu(item.id, e)
-              }
-              className="p-2 rounded hover:bg-gray-100"
-            >
-              <Menu size={18} />
-            </button>
-
-            {/* DROPDOWN */}
-            {isOpen && (
-              <div className="absolute right-0 mt-2 w-32 bg-white border rounded-lg shadow-lg z-[9999]">
-
-                <button
-                  onClick={() => handleView(item)}
-                  className="block w-full px-3 py-2 text-left hover:bg-gray-100 text-sm"
-                >
-                  View
-                </button>
-
-                <button
-                  onClick={() => handleEdit(item)}
-                  className="block w-full px-3 py-2 text-left hover:bg-gray-100 text-sm"
-                >
-                  Edit
-                </button>
-
-                <button
-                  onClick={() => handleDelete(item)}
-                  className="block w-full px-3 py-2 text-left hover:bg-red-50 text-red-600 text-sm"
-                >
-                  Delete
-                </button>
-
-              </div>
-            )}
-          </div>
+          <ActionMenu
+            item={item}
+            onView={(data) => console.log("View:", data)}
+            onEdit={(data) => console.log("Edit:", data)}
+               onDelete={(data) => console.log("onDelete:", data)}
+          />
         );
       },
-    },
-  ];
+    }
+    ],
+    [openMenuId, handleToggleMenu, handleView, handleEdit, handleDelete] // ✅ Added all dependencies
+  );
 
   // ✅ PAGINATION
   const [pagination, setPagination] = useState({
@@ -210,7 +175,7 @@ const SiteModule = () => {
     pageSize: 10,
   });
 
-  // ✅ TABLE
+  // ✅ TABLE INSTANCE
   const table = useReactTable({
     data: siteRegistrationData,
     columns: siteRegistrationColumns,
@@ -236,10 +201,8 @@ const SiteModule = () => {
   return (
     <div className="p-6">
       <div className="bg-white shadow-md rounded-lg p-6">
-
         {/* HEADER */}
         <div className="flex justify-end items-center mb-4 gap-3">
-
           <TableSearch
             value={globalFilter}
             onChange={setGlobalFilter}
@@ -249,18 +212,18 @@ const SiteModule = () => {
           <ColumnToggle table={table} />
         </div>
 
-        {/* TABLE */}
+        {/* TABLE - Added missing props */}
         <DataTable
           table={table}
           columns={siteRegistrationColumns}
+          loading={loading} // Added loading prop
+          tableWrapperRef={tableWrapperRef} // Added ref prop
         />
 
         {/* PAGINATION */}
         <Pagination
           table={table}
-          totalCount={
-            table.getFilteredRowModel().rows.length
-          }
+          totalCount={table.getFilteredRowModel().rows.length}
         />
       </div>
     </div>

@@ -1,5 +1,4 @@
-import { useMemo, useState, useEffect } from "react";
-import { Menu } from "lucide-react";
+import { useMemo, useState, useEffect, useCallback } from "react";
 import {
   useReactTable,
   getCoreRowModel,
@@ -11,116 +10,101 @@ import type { ColumnDef } from "@tanstack/react-table";
 
 import { DataTable } from "../../../common/DataTable";
 import Pagination from "../../../common/Pagination";
-import CustomPanel from "../../../common/CustomPanel";
 import TableSearch from "../../../common/TableSearch";
 import ColumnToggle from "../../../common/ColumnToggle";
+import { ActionMenu } from "../../../common/ActionMenu";
+import NavigateButton from "../../../common/NavigateButton";
 
 // ✅ TYPE
-type Study = {
+type StudyVersion = {
   id: number;
-  studyCode: string;
-  protocolNo: string;
-  sponsor: string;
-  phase: string;
-  piName: string;
-  status: string;
+  study: string;
+  code: string;
+  oldVersion: string;
+  versionDate: string;
+  newStatus: string;
+  actionType: string;
 };
 
-const StudyTable = () => {
+const StudyVersionTable = () => {
 
-  // ✅ DATA (Demo)
-  const data: Study[] = useMemo(
+  // ✅ DATA (memoized)
+  const data: StudyVersion[] = useMemo(
     () => [
       {
         id: 1,
-        studyCode: "ST001",
-        protocolNo: "PROT-001",
-        sponsor: "Pfizer",
-        phase: "II",
-        piName: "Dr Kumar",
-        status: "Active",
+        study: "ST001",
+        code: "v1.0",
+        oldVersion: "v2.0",
+        versionDate: "12-Feb-26",
+        newStatus: "Active",
+        actionType: "View",
       },
       {
         id: 2,
-        studyCode: "ST002",
-        protocolNo: "PROT-002",
-        sponsor: "IQVIA",
-        phase: "III",
-        piName: "Dr Raj",
-        status: "Draft",
+        study: "ST002",
+        code: "v2.0",
+        oldVersion: "v2.1",
+        versionDate: "15-Feb-26",
+        newStatus: "Draft",
+        actionType: "View/Edit",
       },
-      
-      
     ],
     []
   );
 
-  // ✅ STATES
   const [globalFilter, setGlobalFilter] = useState("");
   const [columnVisibility, setColumnVisibility] = useState({});
   const [openMenuId, setOpenMenuId] = useState<number | null>(null);
 
-  const [isPanelOpen, setIsPanelOpen] = useState(false);
-  const [selectedStudy, setSelectedStudy] = useState<Study | null>(null);
-
-  // ✅ CLOSE DROPDOWN
-  useEffect(() => {
-    const close = () => setOpenMenuId(null);
-    window.addEventListener("click", close);
-    return () => window.removeEventListener("click", close);
-  }, []);
-
-  // ✅ PANEL
-  const handleOpenPanel = (study: Study) => {
-    setSelectedStudy(study);
-    setIsPanelOpen(true);
-  };
-
-  const handleClosePanel = () => {
-    setIsPanelOpen(false);
-    setSelectedStudy(null);
-  };
-
-  const handleSave = () => {
-    console.log("Saved:", selectedStudy);
-    setIsPanelOpen(false);
-  };
-
-  // ✅ DROPDOWN
-  const handleToggleMenu = (id: number, e: React.MouseEvent) => {
+  // ✅ ACTION HANDLERS
+  const handleToggleMenu = useCallback((id: number, e: React.MouseEvent) => {
     e.stopPropagation();
     setOpenMenuId((prev) => (prev === id ? null : id));
-  };
+  }, []);
 
-  const handleView = (study: Study) => {
-    handleOpenPanel(study);
+  const handleView = useCallback((item: StudyVersion) => {
+    console.log("View:", item);
     setOpenMenuId(null);
-  };
+  }, []);
 
-  const handleEdit = (study: Study) => {
-    handleOpenPanel(study);
+  const handleEdit = useCallback((item: StudyVersion) => {
+    console.log("Edit:", item);
     setOpenMenuId(null);
-  };
+  }, []);
 
-  const handleDelete = (study: Study) => {
-    console.log("Delete:", study);
+  const handleDelete = useCallback((item: StudyVersion) => {
+    console.log("Delete:", item);
     setOpenMenuId(null);
-  };
+  }, []);
 
-  // ✅ COLUMNS
-  const columns: ColumnDef<Study>[] = useMemo(
+  // ✅ CLOSE DROPDOWN WHEN CLICKING OUTSIDE
+  useEffect(() => {
+    const handleClickOutside = (e: MouseEvent) => {
+      const target = e.target as HTMLElement;
+      if (!target.closest(".menu-container")) {
+        setOpenMenuId(null);
+      }
+    };
+
+    document.addEventListener("click", handleClickOutside);
+    return () => document.removeEventListener("click", handleClickOutside);
+  }, []);
+
+  // ✅ COLUMNS (memoized)
+  const columns: ColumnDef<StudyVersion>[] = useMemo(
     () => [
-      { accessorKey: "studyCode", header: "Study Code" },
-      { accessorKey: "protocolNo", header: "Protocol No" },
-      { accessorKey: "sponsor", header: "Sponsor" },
-      { accessorKey: "phase", header: "Phase" },
-      { accessorKey: "piName", header: "PI Name" },
+      { accessorKey: "study", header: "Study" },
+      { accessorKey: "code", header: "Code" },
+      { accessorKey: "oldVersion", header: "Old Version" },
+      { accessorKey: "versionDate", header: "Version Date" },
 
       {
-        accessorKey: "status",
+        accessorKey: "newStatus",
         header: "Status",
         cell: ({ getValue }) => {
           const value = getValue<string>();
+
           return (
             <span
               className={`px-2 py-1 rounded text-xs font-medium ${
@@ -135,51 +119,26 @@ const StudyTable = () => {
         },
       },
 
-      {
-        id: "action",
-        header: "Actions",
-        enableHiding: false,
-        cell: ({ row }) => {
-          const study = row.original;
-          const isOpen = openMenuId === study.id;
+      { accessorKey: "actionType", header: "Action Type" },
 
-          return (
-            <div className="relative" onClick={(e) => e.stopPropagation()}>
-              <button
-                onClick={(e) => handleToggleMenu(study.id, e)}
-                className="p-2 rounded hover:bg-gray-100"
-              >
-                <Menu size={18} />
-              </button>
-
-              {isOpen && (
-                <div className="absolute right-0 mt-2 w-32 bg-white border rounded-lg shadow-lg z-[9999]">
-                  <button
-                    onClick={() => handleView(study)}
-                    className="block w-full px-3 py-2 text-left hover:bg-gray-100 text-sm"
-                  >
-                    View
-                  </button>
-                  <button
-                    onClick={() => handleEdit(study)}
-                    className="block w-full px-3 py-2 text-left hover:bg-gray-100 text-sm"
-                  >
-                    Edit
-                  </button>
-                  <button
-                    onClick={() => handleDelete(study)}
-                    className="block w-full px-3 py-2 text-left hover:bg-red-50 text-red-600 text-sm"
-                  >
-                    Delete
-                  </button>
-                </div>
-              )}
-            </div>
-          );
-        },
+ {
+      id: "actions",
+      header: "Actions",
+      cell: ({ row }) => {
+        const item = row.original;
+    
+        return (
+          <ActionMenu
+            item={item}
+            onView={(data) => console.log("View:", data)}
+            onEdit={(data) => console.log("Edit:", data)}
+               onDelete={(data) => console.log("onDelete:", data)}
+          />
+        );
       },
+    }
     ],
-    [openMenuId]
+    [openMenuId, handleToggleMenu, handleView, handleEdit, handleDelete]
   );
 
   // ✅ PAGINATION
@@ -188,7 +147,7 @@ const StudyTable = () => {
     pageSize: 10,
   });
 
-  // ✅ TABLE
+  // ✅ TABLE INSTANCE
   const table = useReactTable({
     data,
     columns,
@@ -197,13 +156,14 @@ const StudyTable = () => {
       globalFilter,
       columnVisibility,
     },
+
     onPaginationChange: setPagination,
     onGlobalFilterChange: setGlobalFilter,
     onColumnVisibilityChange: setColumnVisibility,
 
     getCoreRowModel: getCoreRowModel(),
-    getSortedRowModel: getSortedRowModel(),
     getPaginationRowModel: getPaginationRowModel(),
+    getSortedRowModel: getSortedRowModel(),
     getFilteredRowModel: getFilteredRowModel(),
 
     globalFilterFn: "includesString",
@@ -218,9 +178,12 @@ const StudyTable = () => {
           <TableSearch
             value={globalFilter}
             onChange={setGlobalFilter}
-            placeholder="Search study..."
+            placeholder="Search..."
           />
+
           <ColumnToggle table={table} />
+          <NavigateButton label="New Add" path="/new-add" />
+
         </div>
 
         {/* TABLE */}
@@ -231,28 +194,10 @@ const StudyTable = () => {
           table={table}
           totalCount={table.getFilteredRowModel().rows.length}
         />
-      </div>
 
-      {/* PANEL */}
-      <CustomPanel
-        isOpen={isPanelOpen}
-        title="Study Details"
-        onClose={handleClosePanel}
-        onSave={handleSave}
-      >
-        {selectedStudy && (
-          <div className="space-y-3">
-            <div><b>Study Code:</b> {selectedStudy.studyCode}</div>
-            <div><b>Protocol:</b> {selectedStudy.protocolNo}</div>
-            <div><b>Sponsor:</b> {selectedStudy.sponsor}</div>
-            <div><b>Phase:</b> {selectedStudy.phase}</div>
-            <div><b>PI:</b> {selectedStudy.piName}</div>
-            <div><b>Status:</b> {selectedStudy.status}</div>
-          </div>
-        )}
-      </CustomPanel>
+      </div>
     </div>
   );
 };
 
-export default StudyTable;
+export default StudyVersionTable;

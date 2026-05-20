@@ -76,8 +76,12 @@ const headerTitleMap: Record<string, string> = {
         return "Study Amendment";
       case "/study/site":
         return "Site Registration";  
-      case "/my-nominations":
-        return "Nomination Management";
+        case "/subject/enrollment":
+        return "Subject Enrollment";
+      case "/subject/adverse":
+        return "Adverse Event Tracking";  
+      case "/visit":
+        return "Visit Scheduling";
       case "/referral-approval":
       case "/referral-detail":
         return "Referral Approval";

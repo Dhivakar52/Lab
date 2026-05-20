@@ -46,7 +46,7 @@ export default function StudyMasterStepper() {
 
   return (
     <div className="">
-      <Card className="border-0 shadow-2xl overflow-hidden bg-white/80 backdrop-blur-sm">
+      <Card className="border-0 m-[30px] shadow-2xl overflow-hidden bg-white/80 backdrop-blur-sm">
         {/* Top progress bar */}
         <div className="h-1 bg-gray-100">
           <div
