@@ -63,7 +63,7 @@ const SiteModule = () => {
   const [globalFilter, setGlobalFilter] = useState("");
   const [columnVisibility, setColumnVisibility] = useState({});
   const [openMenuId, setOpenMenuId] = useState<number | null>(null);
-  const [loading, setLoading] = useState(false); // Add loading state
+  const [loading, _setLoading] = useState(false); // Add loading state
   const tableWrapperRef = useRef<HTMLDivElement>(null); // Add ref for table wrapper
 
   // ✅ CLOSE MENU (optimized)

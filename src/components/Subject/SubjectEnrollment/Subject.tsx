@@ -1,5 +1,5 @@
 import { useMemo, useState, useEffect, useCallback } from "react";
-import { Menu } from "lucide-react";
+
 import {
   useReactTable,
   getCoreRowModel,
@@ -86,15 +86,15 @@ const Subject = () => {
     []
   );
 
-  const handleView = (item: Subject) => {
-    console.log("View:", item);
-    setOpenMenuId(null);
-  };
+//   const handleView = (item: Subject) => {
+//     console.log("View:", item);
+//     setOpenMenuId(null);
+//   };
 
-  const handleEdit = (item: Subject) => {
-    console.log("Edit:", item);
-    setOpenMenuId(null);
-  };
+//   const handleEdit = (item: Subject) => {
+//     console.log("Edit:", item);
+//     setOpenMenuId(null);
+//   };
 
   const columns: ColumnDef<Subject>[] = useMemo(
     () => [
