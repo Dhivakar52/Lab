@@ -10,8 +10,9 @@ export default function FormWrapper({
   children,
   onSubmit,
   onCancel,
+    columns = 3,
   // isValid = true,
-  columns = 3,
+
 }: {
   title: string;
   children: ReactNode;
