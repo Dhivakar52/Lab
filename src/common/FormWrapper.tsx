@@ -10,7 +10,7 @@ export default function FormWrapper({
   children,
   onSubmit,
   onCancel,
-  isValid = true,
+  // isValid = true,
   columns = 3,
 }: {
   title: string;
