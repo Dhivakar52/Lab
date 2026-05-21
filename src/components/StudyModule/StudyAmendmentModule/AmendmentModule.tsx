@@ -13,6 +13,8 @@ import Pagination from "../../../common/Pagination";
 import TableSearch from "../../../common/TableSearch";
 import ColumnToggle from "../../../common/ColumnToggle";
 import { ActionMenu } from "../../../common/ActionMenu";
+import NavigateButton from "../../../common/NavigateButton";
+import { Plus } from "lucide-react";
 
 // ✅ TYPE
 type StudyVersion = {
@@ -22,35 +24,135 @@ type StudyVersion = {
   oldVersion: string;
   versionDate: string;
   newStatus: string;
-  actionType: string;
 };
 
 const StudyVersionTable = () => {
 
-  // ✅ DATA (memoized)
-  const data: StudyVersion[] = useMemo(
-    () => [
-      {
-        id: 1,
-        study: "ST001",
-        code: "v1.0",
-        oldVersion: "v2.0",
-        versionDate: "12-Feb-26",
-        newStatus: "Active",
-        actionType: "View",
-      },
-      {
-        id: 2,
-        study: "ST002",
-        code: "v2.0",
-        oldVersion: "v2.1",
-        versionDate: "15-Feb-26",
-        newStatus: "Draft",
-        actionType: "View/Edit",
-      },
-    ],
-    []
-  );
+ const data: StudyVersion[] = useMemo(
+  () => [
+    {
+      id: 1,
+      study: "ST001",
+      code: "v1.0",
+      oldVersion: "v0.9",
+      versionDate: "01-Jan-26",
+      newStatus: "Active",
+    },
+    {
+      id: 2,
+      study: "ST002",
+      code: "v1.1",
+      oldVersion: "v1.0",
+      versionDate: "05-Jan-26",
+      newStatus: "Draft",
+    },
+    {
+      id: 3,
+      study: "ST003",
+      code: "v2.0",
+      oldVersion: "v1.5",
+      versionDate: "10-Jan-26",
+      newStatus: "Active",
+    },
+    {
+      id: 4,
+      study: "ST004",
+      code: "v2.1",
+      oldVersion: "v2.0",
+      versionDate: "12-Jan-26",
+      newStatus: "Inactive",
+    },
+    {
+      id: 5,
+      study: "ST005",
+      code: "v3.0",
+      oldVersion: "v2.5",
+      versionDate: "15-Jan-26",
+      newStatus: "Draft",
+    },
+    {
+      id: 6,
+      study: "ST006",
+      code: "v3.1",
+      oldVersion: "v3.0",
+      versionDate: "18-Jan-26",
+      newStatus: "Active",
+    },
+    {
+      id: 7,
+      study: "ST007",
+      code: "v4.0",
+      oldVersion: "v3.5",
+      versionDate: "20-Jan-26",
+      newStatus: "Draft",
+    },
+    {
+      id: 8,
+      study: "ST008",
+      code: "v4.1",
+      oldVersion: "v4.0",
+      versionDate: "22-Jan-26",
+      newStatus: "Active",
+    },
+    {
+      id: 9,
+      study: "ST009",
+      code: "v5.0",
+      oldVersion: "v4.5",
+      versionDate: "25-Jan-26",
+      newStatus: "Inactive",
+    },
+    {
+      id: 10,
+      study: "ST010",
+      code: "v5.1",
+      oldVersion: "v5.0",
+      versionDate: "28-Jan-26",
+      newStatus: "Active",
+    },
+    {
+      id: 11,
+      study: "ST011",
+      code: "v6.0",
+      oldVersion: "v5.5",
+      versionDate: "01-Feb-26",
+      newStatus: "Draft",
+    },
+    {
+      id: 12,
+      study: "ST012",
+      code: "v6.1",
+      oldVersion: "v6.0",
+      versionDate: "03-Feb-26",
+      newStatus: "Active",
+    },
+    {
+      id: 13,
+      study: "ST013",
+      code: "v7.0",
+      oldVersion: "v6.5",
+      versionDate: "06-Feb-26",
+      newStatus: "Inactive",
+    },
+    {
+      id: 14,
+      study: "ST014",
+      code: "v7.1",
+      oldVersion: "v7.0",
+      versionDate: "08-Feb-26",
+      newStatus: "Draft",
+    },
+    {
+      id: 15,
+      study: "ST015",
+      code: "v8.0",
+      oldVersion: "v7.5",
+      versionDate: "12-Feb-26",
+      newStatus: "Active",
+    },
+  ],
+  []
+);
 
   const [globalFilter, setGlobalFilter] = useState("");
   const [columnVisibility, setColumnVisibility] = useState({});
@@ -98,7 +200,7 @@ const StudyVersionTable = () => {
         },
       },
 
-      { accessorKey: "actionType", header: "Action Type" },
+      
     {
          id: "actions",
          header: "Actions",
@@ -160,6 +262,11 @@ const StudyVersionTable = () => {
           />
 
           <ColumnToggle table={table} />
+  <NavigateButton
+   label="Add Study"
+   path="/study/amendment/new-add"
+   icon={<Plus size={18} />}
+ />
         </div>
 
         {/* TABLE */}

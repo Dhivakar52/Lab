@@ -16,6 +16,8 @@ import Pagination from "../../../common/Pagination";
 import TableSearch from "../../../common/TableSearch";
 import ColumnToggle from "../../../common/ColumnToggle";
 import { ActionMenu } from "../../../common/ActionMenu";
+import NavigateButton from "../../../common/NavigateButton";
+import { Plus } from "lucide-react";
 
 
 // ✅ TYPE
@@ -32,32 +34,111 @@ type SiteRegistration = {
 
 // ✅ COMPONENT
 const SiteModule = () => {
-  // ✅ DATA (memoized)
-  const siteRegistrationData: SiteRegistration[] = useMemo(
-    () => [
-      {
-        id: 1,
-        site: "SITE001",
-        code: "ST001",
-        study: "Apollo",
-        city: "Chennai",
-        investigatorType: "Dr",
-        investigatorName: "Kumar",
-        status: "Active",
-      },
-      {
-        id: 2,
-        site: "SITE002",
-        code: "ST002",
-        study: "SRM",
-        city: "Hospital",
-        investigatorType: "Dr",
-        investigatorName: "Raj",
-        status: "Draft",
-      },
-    ],
-    []
-  );
+const siteRegistrationData: SiteRegistration[] = useMemo(
+  () => [
+    {
+      id: 1,
+      site: "SITE001",
+      code: "ST001",
+      study: "Apollo",
+      city: "Chennai",
+      investigatorType: "Dr",
+      investigatorName: "Kumar",
+      status: "Active",
+    },
+    {
+      id: 2,
+      site: "SITE002",
+      code: "ST002",
+      study: "SRM",
+      city: "Coimbatore",
+      investigatorType: "Dr",
+      investigatorName: "Raj",
+      status: "Draft",
+    },
+    {
+      id: 3,
+      site: "SITE003",
+      code: "ST003",
+      study: "Fortis",
+      city: "Madurai",
+      investigatorType: "Dr",
+      investigatorName: "Anitha",
+      status: "Active",
+    },
+    {
+      id: 4,
+      site: "SITE004",
+      code: "ST004",
+      study: "MIOT",
+      city: "Chennai",
+      investigatorType: "Dr",
+      investigatorName: "Suresh",
+      status: "Inactive",
+    },
+    {
+      id: 5,
+      site: "SITE005",
+      code: "ST005",
+      study: "Vijaya",
+      city: "Salem",
+      investigatorType: "Dr",
+      investigatorName: "Priya",
+      status: "Active",
+    },
+    {
+      id: 6,
+      site: "SITE006",
+      code: "ST006",
+      study: "Apollo",
+      city: "Trichy",
+      investigatorType: "Dr",
+      investigatorName: "Mohan",
+      status: "Draft",
+    },
+    {
+      id: 7,
+      site: "SITE007",
+      code: "ST007",
+      study: "SRM",
+      city: "Vellore",
+      investigatorType: "Dr",
+      investigatorName: "Divya",
+      status: "Active",
+    },
+    {
+      id: 8,
+      site: "SITE008",
+      code: "ST008",
+      study: "Fortis",
+      city: "Erode",
+      investigatorType: "Dr",
+      investigatorName: "Karthik",
+      status: "Inactive",
+    },
+    {
+      id: 9,
+      site: "SITE009",
+      code: "ST009",
+      study: "MIOT",
+      city: "Chennai",
+      investigatorType: "Dr",
+      investigatorName: "Lakshmi",
+      status: "Active",
+    },
+    {
+      id: 10,
+      site: "SITE010",
+      code: "ST010",
+      study: "Vijaya",
+      city: "Madurai",
+      investigatorType: "Dr",
+      investigatorName: "Arun",
+      status: "Draft",
+    },
+  ],
+  []
+);
 
   // ✅ STATES
   const [globalFilter, setGlobalFilter] = useState("");
@@ -210,14 +291,20 @@ const SiteModule = () => {
           />
 
           <ColumnToggle table={table} />
+            <NavigateButton
+  label="Add Site"
+  path="/study/site/new-add"
+  icon={<Plus size={18} />}
+  />
+
         </div>
 
-        {/* TABLE - Added missing props */}
+     
         <DataTable
           table={table}
           columns={siteRegistrationColumns}
-          loading={loading} // Added loading prop
-          tableWrapperRef={tableWrapperRef} // Added ref prop
+          loading={loading} 
+          tableWrapperRef={tableWrapperRef} 
         />
 
         {/* PAGINATION */}

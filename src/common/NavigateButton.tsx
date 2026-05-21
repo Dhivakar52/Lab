@@ -1,14 +1,17 @@
 import { useNavigate } from "react-router-dom";
+import type { ReactNode } from "react";
 
 type NavigateButtonProps = {
   label: string;
   path: string;
+  icon?: ReactNode; // 👈 dynamic icon
   className?: string;
 };
 
 export default function NavigateButton({
   label,
   path,
+  icon,
   className = "",
 }: NavigateButtonProps) {
   const navigate = useNavigate();
@@ -16,9 +19,10 @@ export default function NavigateButton({
   return (
     <button
       onClick={() => navigate(path)}
-      className={`bg-blue-600 text-white px-4 py-2 rounded ${className}`}
+      className={`flex items-center gap-2 px-4 py-2 rounded ${className} themeColor`}
     >
-      {label}
+      {icon && <span className="flex items-center">{icon}</span>}
+      <span>{label}</span>
     </button>
   );
 }

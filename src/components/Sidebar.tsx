@@ -46,7 +46,7 @@ interface NavigationItem {
 }
 
 const navigationItems: NavigationItem[] = [
-  { icon: Home, label: 'Home', path: '/home', pageKey: 'Home' },
+  // { icon: Home, label: 'Home', path: '/home', pageKey: 'Home' },
 
   // ✅ STUDY
   {
@@ -80,12 +80,12 @@ const navigationItems: NavigationItem[] = [
   },
 
   // ✅ ADMIN
-  {
-    icon: BrickWallShield,
-    label: 'Admin',
-    path: '/admin',
-    pageKey: 'Admin',
-  },
+  // {
+  //   icon: BrickWallShield,
+  //   label: 'Admin',
+  //   path: '/admin',
+  //   pageKey: 'Admin',
+  // },
 ];
 
 // -------------------------
@@ -111,22 +111,24 @@ const NavItem = ({
   const hasChildren = item.children && item.children.length > 0;
 
   // ✅ FIXED: Check if this item or any of its children is active
-  const isActive = () => {
-    // If current item has a path and matches exactly
-    if (item.path && location.pathname === item.path) {
-      return true;
-    }
-    
-    // If current item has children and any child path matches
-    if (hasChildren) {
-      return item.children!.some((child) => location.pathname === child.path);
-    }
-    
-    return false;
-  };
+ const isActive = () => {
+  if (item.path && location.pathname.startsWith(item.path)) {
+    return true;
+  }
+  
+  if (hasChildren) {
+    return item.children!.some((child) =>
+      location.pathname.startsWith(child.path || "")
+    );
+  }
+  
+  return false;
+};
 
   const isParentOfActive = hasChildren && 
-    item.children!.some((child) => location.pathname === child.path);
+  item.children!.some((child) =>
+    location.pathname.startsWith(child.path || "")
+  );
 
   // Auto expand parent if child is active
   useEffect(() => {

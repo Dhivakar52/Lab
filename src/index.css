@@ -41,14 +41,16 @@
 .custom-scroll::-webkit-scrollbar-thumb:hover {
   background-color: var(--dashboard-theme-color); 
 }
-.nominate-form,
-.nominate-form input,
-.nominate-form textarea,
-.nominate-form select,
-.nominate-form [role="combobox"] {
-  border-color: #00000033 !important;
+.btn-theme-save {
+    background: linear-gradient(
+        90deg,
+        rgb(16, 185, 129) 16%,  
+        rgb(5, 150, 105) 100%   
+    );
+    border-left: 4px solid white;
+    color: white;
+    border-radius: 9px;
 }
-
 .btn-theme-reject {
     background: linear-gradient(
         90deg,
@@ -59,6 +61,7 @@
     color: white;
     border-radius: 9px;
 }
+
 
 .btn-theme-edit {
     background: linear-gradient(
@@ -71,12 +74,32 @@
     color: white;
     border-radius: 9px;
 }
+input, select, textarea ,button {
+    border: 1px solid #e6e9ef;
+    border-radius: 6px;
+   
+    font-size: 14px;
+    transition: border-color 0.2s ease;
+}
+.menu-container button{
+   border: 0px solid #e6e9ef;
+}
 
-.btn-theme{
-    background: linear-gradient(90deg, rgb(8, 128, 94) 16%, rgb(24, 97, 174) 100%);
-    border-left: 4px solid white;
-    color: white;
-    border-radius: 9px;
+input:focus,
+select:focus,
+textarea:focus,
+button:focus,
+input:active,
+select:active,
+textarea:active,
+button:active {
+    outline: none;
+    border-color: var(--dashboard-theme-color); 
+    box-shadow: none;
+    
+}
+button:hover {
+    opacity: 0.6;
 }
 
 table td {
@@ -91,35 +114,6 @@ th{
   padding: 0 25px !important;
 }
 
-/* Small arrow buttons */
-.mySwiper .swiper-button-prev,
-.mySwiper .swiper-button-next {
-  top: 65% !important;
-  transform: translateY(-50%);
-  color: #1e88e5;
-  width: 24px;
-  height: 24px;
-}
-
-/* Small arrow icons */
-.mySwiper .swiper-button-prev::after,
-.mySwiper .swiper-button-next::after {
-  font-size: 16px;   /* smaller icon */
-}
-
-/* Position arrows near card edge */
-.mySwiper .swiper-button-prev {
-  left: 20px;
-}
-
-.mySwiper .swiper-button-next {
-  right: 0px;
-}
-/* ===== Avatar Gradient (Reusable) ===== */
-/* .avatar-gradient {
-  @apply w-9 h-9 sm:w-11 sm:h-11 rounded-full flex items-center justify-center text-base sm:text-lg font-semibold text-white shrink-0;
-  background: linear-gradient(90deg, rgb(8,128,94) 16%, rgb(24,97,174) 100%);
-} */
 
 /* Mobile hide */
 @media (max-width: 480px) {
@@ -141,19 +135,7 @@ th{
   position: relative;
 }
 
-.awardSwiper .swiper-pagination-bullet {
-  width: 6px;
-  height: 6px;
-  background: #d1d5db; /* gray */
-  opacity: 1;
-  transition: all 0.3s ease;
-}
 
-.awardSwiper .swiper-pagination-bullet-active {
-  width: 22px;              /* 👈 length perusa */
-  border-radius: 999px;
-  background: #22c55e;      /* 👈 green */
-}
 /* Profile Card CSS */
 .exact-card {
   width: 100%;
@@ -185,70 +167,13 @@ th{
   justify-content: center;
   gap: 12px;
 }
-.action-pill {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  font-size: 12px;
-  padding: 6px 12px;
-  border-radius: 8px;       
-  border: 1px solid #e5e7eb;
-  background: #ffffff;
-  color: #374151;
-}
-.exactSwiper .swiper-pagination {
-  bottom: 0;
-  position: relative;
-  margin-top: 12px;
-}
-.exact-card {
-  min-height: 110px;  
-}
-.custom-dot {
-  width: 8px;
-  height: 8px;
-  background: #d1d5db;   
-  border-radius: 999px;
-  display: inline-block;
-  margin: 0 4px;
-  transition: all 0.35s ease;
-}
-.swiper-pagination-bullet-active.custom-dot {
-  width: 26px;          
-  background: #16a34a;  
-}
+
 thead th{
         font-size: 13px !important;
     color: #6d6d6d !important;
 }
 
-@keyframes highlightPulse {
-  0% {
-    background-color: rgba(59, 130, 246, 0);
-    border-left: 4px solid transparent;
-  }
-  25% {
-    background-color: rgba(59, 130, 246, 0.1);
-    border-left: 4px solid #3b82f6;
-  }
-  50% {
-    background-color: rgba(59, 130, 246, 0.15);
-    border-left: 4px solid #3b82f6;
-  }
-  75% {
-    background-color: rgba(59, 130, 246, 0.1);
-    border-left: 4px solid #3b82f6;
-  }
-  100% {
-    background-color: rgba(59, 130, 246, 0);
-    border-left: 4px solid transparent;
-  }
-}
 
-.highlight-pulse {
-  animation: highlightPulse 2s ease-in-out;
-  border-radius: 8px;
-}
 
 [data-post-id] {
   scroll-margin-top: 80px;

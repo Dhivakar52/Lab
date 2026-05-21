@@ -20,6 +20,8 @@ import AmendmentModule from './components/StudyModule/StudyAmendmentModule/Amend
 import Adverse from './components/Subject/AdverseEvents/Adverse.tsx';
 import Subject from './components/Subject/SubjectEnrollment/Subject.tsx';
 import VisitSchedule from './components/VisitSchedulingModule/VisitSchedule.tsx';
+import AmendmentForm from './components/StudyModule/StudyAmendmentModule/AmendmentForm.tsx';
+import SiteForm from './components/StudyModule/SiteRegistrationModule/SiteForm.tsx';
 
 //import PresidentLevelDetail from './components/PresidentLevel/PresidentLevelDetail.tsx';
 
@@ -110,6 +112,8 @@ const App: React.FC = () => {
 
   if (userRole === undefined) return null; // wait for role
 
+  
+
   return (
     <AuthProvider>
   
@@ -127,7 +131,8 @@ const App: React.FC = () => {
        {Object.entries(pageComponents).map(([label, component]) => {
          const path = '/' + label.toLowerCase().replace(/\s+/g, '-');
          const allowedRoles = getAllowedRoles(label);
-
+         console.log("userRole:", userRole);
+console.log("allowedRoles:", allowedRoles);
          return (
            <Route
              key={label}
@@ -219,14 +224,26 @@ const App: React.FC = () => {
     </ProtectedRoute>
   }
 />
+{/* <Route
+  path="/study/master/new-add"
+  element={
+    <ProtectedRoute userRole={userRole} allowedRoles={['admin']}>
+      <StudyMasterStepper />
+    </ProtectedRoute>
+  }
+/> */}
 <Route
-          path="/new-add"
-          element={
-            <ProtectedRoute userRole={userRole} allowedRoles={getAllowedRoles('President Details')}>
-            <StudyMasterStepper/>
-            </ProtectedRoute>
-          }
-        />
+  path="/study/master/new-add"
+  element={<StudyMasterStepper />}
+/>
+<Route
+  path="/study/amendment/new-add"
+  element={<AmendmentForm />}
+/>
+<Route
+  path="/study/site/new-add"
+  element={<SiteForm />}
+/>
         <Route path="/forgot" element={<ForgotPassword/>} />
        <Route path="*" element={<Navigate to="/home" replace />} />
      </Route>
